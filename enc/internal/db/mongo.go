@@ -9,9 +9,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 
-	"enc/internal/bot"
-    "enc/internal/bot/queue"
 	"enc/config"
+	"enc/internal/bot"
+	"enc/internal/bot/queue"
 )
 
 var (
@@ -167,7 +167,7 @@ func SaveAll(ctx context.Context) {
 
 func SaveQueue(ctx context.Context) {
 	if !useMongo || QueueCol == nil {
-        SaveQueueLocal()
+		SaveQueueLocal()
 		//if err := SaveQueueLocal(); err != nil {
 		// 	zap.L().Warn("SaveQueueLocal failed", zap.Error(err))
 		//}
@@ -198,7 +198,7 @@ func SaveBatchQueue(ctx context.Context) {
 
 func SaveTempUsers(ctx context.Context) {
 	if !useMongo || UsersCol == nil {
-        SaveTempUsersLocal()
+		SaveTempUsersLocal()
 		// if err := SaveTempUsersLocal(); err != nil {
 		//	zap.L().Warn("SaveTempUsersLocal failed", zap.Error(err))
 		//}
@@ -214,7 +214,7 @@ func SaveTempUsers(ctx context.Context) {
 
 func SaveFFmpegArgs(ctx context.Context) {
 	if !useMongo || CodeCol == nil {
-        SaveSettingsLocal()
+		SaveSettingsLocal()
 		//if err := SaveSettingsLocal(); err != nil {
 		//	zap.L().Warn("SaveFFmpegArgsLocal failed", zap.Error(err))
 		//}
@@ -237,7 +237,7 @@ func SaveFFmpegArgs(ctx context.Context) {
 
 func SaveMuxArgs(ctx context.Context) {
 	if !useMongo || CodeCol == nil {
-        SaveSettingsLocal()
+		SaveSettingsLocal()
 		//if err := SaveMuxArgsLocal(); err != nil {
 		//	zap.L().Warn("SaveMuxArgsLocal failed", zap.Error(err))
 		//}
@@ -253,7 +253,7 @@ func SaveMuxArgs(ctx context.Context) {
 
 func SaveRSSDict(ctx context.Context) {
 	if !useMongo || RSSCol == nil {
-        SaveRSSLocal()
+		SaveRSSLocal()
 		//if err := SaveRSSLocal(); err != nil {
 		//	zap.L().Warn("SaveRSSLocal failed", zap.Error(err))
 		//}
@@ -270,7 +270,7 @@ func SaveRSSDict(ctx context.Context) {
 // SaveFilterSettings persists bot.Autoname and bot.CustomRename.
 func SaveFilterSettings(ctx context.Context) {
 	if !useMongo || FilterCol == nil {
-        SaveSettingsLocal()
+		SaveSettingsLocal()
 		//if err := SaveSettingsLocal(); err != nil {
 		//	zap.L().Warn("SaveSettingsLocal (filters) failed", zap.Error(err))
 		//}

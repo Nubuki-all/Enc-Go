@@ -1,12 +1,12 @@
 package entimer
 
 import (
-    "fmt"
+	"fmt"
 	"sync"
 	"time"
 
 	"enc/config"
-    "enc/internal/bot"
+	"enc/internal/bot"
 	"go.uber.org/zap"
 )
 

@@ -4,10 +4,10 @@ package startup
 import (
 	"context"
 	"fmt"
-    "path/filepath"
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -17,11 +17,11 @@ import (
 	"go.uber.org/zap"
 
 	"enc/config"
-    "enc/internal/bot"
-    "enc/internal/clients"
+	"enc/internal/bot"
+	"enc/internal/bot/entimer"
+	"enc/internal/clients"
 	"enc/internal/db"
-    "enc/internal/bot/entimer"
-    "enc/internal/utils/random"
+	"enc/internal/utils/random"
 	//"enc/internal/localdb"
 	//"enc/internal/rss"
 	//"enc/internal/utils"
@@ -37,9 +37,9 @@ func After(ctx context.Context) {
 	go startQbit()
 
 	// 3) Kick off your scheduler and auto‐jobs
-	//rss.Scheduler.Start()
-	//go workers.AutoStatus(ctx)
-	//go workers.AutoTranscode(ctx)
+	// rss.Scheduler.Start()
+	// go workers.AutoStatus(ctx)
+	// go workers.AutoTranscode(ctx)
 
 	// 4) Setup OS signal handlers for graceful shutdown
 	sigCh := make(chan os.Signal, 1)
@@ -64,7 +64,7 @@ func After(ctx context.Context) {
 	entimer.Timer.Start()
 
 	// 7) Reset the encode job state
-	//workers.ResetEncodeJob(true)
+	// workers.ResetEncodeJob(true)
 
 	// 8) After a delay, trigger your background \"something\" task
 	//go func() {
@@ -205,7 +205,7 @@ func onTermination(ctx context.Context) {
 		db.SaveAll(ctx)
 		if db.UseMongo() {
 			db.Client.Disconnect(ctx)
-		}// else {
+		} // else {
 		//	localdb.SaveQueueLocal()
 		//	localdb.SaveSettingsLocal()
 		//	localdb.SaveTempUsersLocal()

@@ -11,14 +11,14 @@ import (
 	"gorm.io/gorm/clause"
 	"gorm.io/gorm/logger"
 
-	"enc/internal/bot"
-    "enc/internal/bot/queue"
 	"enc/config"
+	"enc/internal/bot"
+	"enc/internal/bot/queue"
 )
 
 // queueRecord stores the ordered queue as JSON
 type queueRecord struct {
-	BotID string           `gorm:"primaryKey"`
+	BotID string             `gorm:"primaryKey"`
 	Queue []queue.QueueEntry `gorm:"type:TEXT"`
 }
 

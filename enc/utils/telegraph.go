@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"enc/internal/clients"
 	"enc/config"
+	"enc/internal/clients"
 
 	"github.com/celestix/telegraph-go/v2"
 )
