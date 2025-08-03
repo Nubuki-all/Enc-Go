@@ -1,11 +1,12 @@
-name: pyLint
+name: GoLint
 on: push
 jobs:
-  PEP8:
+  Lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-go@v4
+      - name: Setup Go
+        uses: actions/setup-go@v4
         with:
           go-version: '^1.23.3'
       - name: Setup Python
