@@ -21,9 +21,9 @@ import (
     "enc/internal/clients"
 	"enc/internal/db"
     "enc/internal/bot/entimer"
+    "enc/internal/utils/random"
 	//"enc/internal/localdb"
 	//"enc/internal/rss"
-	//"enc/internal/teleclient"
 	//"enc/internal/utils"
 	//"enc/internal/workers"
 )
@@ -31,7 +31,7 @@ import (
 // After wires up background workers, RPC & torrent clients, and hook handlers.
 func After(ctx context.Context) {
 	// 1) Start your RPC (aria2) process and API client
-	go startRPC(ctx)
+	go startRPC()
 
 	// 2) Start qbittorrent-nox instances
 	go startQbit()
@@ -77,7 +77,7 @@ func After(ctx context.Context) {
 }
 
 // startRPC launches aria2c in RPC mode, then connects the Go API client
-func startRPC(ctx context.Context) {
+func startRPC() {
 	cmd := exec.Command("aria2c",
 		"--enable-rpc=true",
 		"--rpc-listen-port="+strconv.Itoa(config.Conf.Aria2Port),
@@ -154,12 +154,12 @@ func onStart(ctx context.Context) {
 	for _, owner := range strings.Fields(config.Conf.Owner) {
 		if id, err := strconv.Atoi(owner); err == nil {
 			clients.Client.SendMessage(ctx, id,
-				fmt.Sprintf("**I'm %s %s**", utils.Enquip(), utils.Enmoji()))
+				fmt.Sprintf("**I'm %s %s**", random.Enquip(), random.Enmoji()))
 		}
 	}
 	if config.Conf.LogChannel != 0 {
-		teleclient.SendMessage(ctx, config.Conf.LogChannel,
-			fmt.Sprintf("**Bot is %s %s**", utils.Enquip(), utils.Enmoji()))
+		clients.Client.SendMessage(ctx, config.Conf.LogChannel,
+			fmt.Sprintf("**Bot is %s %s**", random.Enquip(), random.Enmoji()))
 	}
 	// report aria2/qbit status
 	status := fmt.Sprintf("**Aria2:** `%v`\n**Qbit:** `%v`",
@@ -168,7 +168,7 @@ func onStart(ctx context.Context) {
 	if config.Conf.LogChannel != 0 {
 		dev = config.Conf.LogChannel
 	}
-	teleclient.SendMessage(ctx, dev, status)
+	clients.Client.SendMessage(ctx, dev, status)
 }
 
 // onRestart handles “restart” or “update” command‐line flags
@@ -195,39 +195,32 @@ func onRestart() error {
 	} else {
 		return nil
 	}
-	return teleclient.EditMessageText(chatID, msgID, msg)
+	return clients.Client.EditMessageText(chatID, msgID, msg)
 }
 
 // onTermination sends a farewell and cleans up
 func onTermination(ctx context.Context) {
 	defer func() {
 		// persist state
-		db.SaveQueue(ctx)
-		db.SaveBatchQueue(ctx)
-		db.SaveTempUsers(ctx)
-		db.SaveFilterSettings(ctx)
-		db.SaveFFmpegArgs(ctx)
-		db.SaveMuxArgs(ctx)
-		db.SaveRSSDict(ctx)
-		// local fallback or Mongo disconnect
+		db.SaveAll(ctx)
 		if db.UseMongo() {
 			db.Client.Disconnect(ctx)
-		} else {
-			localdb.SaveQueueLocal()
-			localdb.SaveSettingsLocal()
-			localdb.SaveTempUsersLocal()
-			localdb.SaveRSSLocal()
-		}
+		}// else {
+		//	localdb.SaveQueueLocal()
+		//	localdb.SaveSettingsLocal()
+		//	localdb.SaveTempUsersLocal()
+		//	localdb.SaveRSSLocal()
+		//}
 		os.Exit(0)
 	}()
 
-	farewell := fmt.Sprintf("**I'm %s %s**", utils.Enquip2(), utils.Enmoji2())
+	farewell := fmt.Sprintf("**I'm %s %s**", random.Enquip2(), random.Enmoji2())
 	if config.Conf.LogChannel != 0 {
-		teleclient.SendMessage(ctx, config.Conf.LogChannel, farewell)
+		clients.Client.SendMessage(ctx, config.Conf.LogChannel, farewell)
 	} else {
 		for _, owner := range strings.Fields(config.Conf.Owner) {
 			if id, err := strconv.Atoi(owner); err == nil {
-				teleclient.SendMessage(ctx, id, farewell)
+				clients.Client.SendMessage(ctx, id, farewell)
 			}
 		}
 	}

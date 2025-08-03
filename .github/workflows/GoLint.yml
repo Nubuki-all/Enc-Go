@@ -5,6 +5,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '^1.23.3'
       - name: Setup Python
         uses: actions/setup-python@v1
         with:
@@ -20,10 +23,22 @@ jobs:
         run: |
           isort bot
           black --fast bot
+      - name: update golang dependencies
+        run: cd enc && go get -u && go mod tidy
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.1 # Specify a golangci-lint version
+          working-directory: enc
+          args: --issues-exit-code=0 # Exit with 0 even if issues are found, useful for reformatting
+      - name: Install gofumpt
+        run: go install mvdan.cc/gofumpt@latest
+      - name: reformat go
+        run: cd enc && gofumpt -l -w .
       # commit changes
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: 'pyLint: auto-fixes'
+          commit_message: 'GoLint: auto-fixes'
           commit_options: '--no-verify'
           repository: .
           commit_user_name: Nubuki-all
