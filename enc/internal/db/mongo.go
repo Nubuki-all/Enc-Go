@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -11,7 +10,8 @@ import (
 	"go.uber.org/zap"
 
 	"enc/internal/bot"
-	"enc/internal/config"
+    "enc/internal/bot/queue"
+	"enc/config"
 )
 
 var (
@@ -84,9 +84,9 @@ func LoadQueue() {
 	if !useMongo || QueueCol == nil {
 		return
 	}
-	doc := QueueCol.FindOne(context.Background(), bson.M{"_id": config.Conf.BotID})
+	doc := QueueCol.FindOne(context.Background(), bson.M{"_id": config.Rconf.BotID})
 	var result struct {
-		Queue []bot.QueueEntry `bson:"queue"`
+		Queue []queue.QueueEntry `bson:"queue"`
 	}
 	if err := doc.Decode(&result); err != nil {
 		if err != mongo.ErrNoDocuments {
@@ -103,7 +103,7 @@ func loadMap(coll *mongo.Collection, key string, target *map[string]interface{})
 	if !useMongo {
 		return
 	}
-	doc := coll.FindOne(context.Background(), bson.M{"_id": config.Conf.BotID})
+	doc := coll.FindOne(context.Background(), bson.M{"_id": config.Rconf.BotID})
 	var result bson.M
 	if err := doc.Decode(&result); err != nil {
 		if err != mongo.ErrNoDocuments {
@@ -124,7 +124,7 @@ func loadSlice(coll *mongo.Collection, key string, target *[]string) {
 	if !useMongo {
 		return
 	}
-	doc := coll.FindOne(context.Background(), bson.M{"_id": config.Conf.BotID})
+	doc := coll.FindOne(context.Background(), bson.M{"_id": config.Rconf.BotID})
 	var result bson.M
 	if err := doc.Decode(&result); err != nil {
 		return
@@ -144,7 +144,7 @@ func loadString(coll *mongo.Collection, key string, target *string) {
 	if !useMongo {
 		return
 	}
-	doc := coll.FindOne(context.Background(), bson.M{"_id": config.Conf.BotID})
+	doc := coll.FindOne(context.Background(), bson.M{"_id": config.Rconf.BotID})
 	var result bson.M
 	if err := doc.Decode(&result); err != nil {
 		return
@@ -167,12 +167,13 @@ func SaveAll(ctx context.Context) {
 
 func SaveQueue(ctx context.Context) {
 	if !useMongo || QueueCol == nil {
-		if err := SaveQueueLocal(); err != nil {
-			zap.L().Warn("SaveQueueLocal failed", zap.Error(err))
-		}
+        SaveQueueLocal()
+		//if err := SaveQueueLocal(); err != nil {
+		// 	zap.L().Warn("SaveQueueLocal failed", zap.Error(err))
+		//}
 		return
 	}
-	filter := bson.M{"_id": config.Conf.BotID}
+	filter := bson.M{"_id": config.Rconf.BotID}
 	update := bson.M{"$set": bson.M{"queue": bot.Queue.AsSlice()}}
 	opts := options.Update().SetUpsert(true)
 	if _, err := QueueCol.UpdateOne(ctx, filter, update, opts); err != nil {
@@ -187,7 +188,7 @@ func SaveBatchQueue(ctx context.Context) {
 		}
 		return
 	}
-	filter := bson.M{"_id": config.Conf.BotID}
+	filter := bson.M{"_id": config.Rconf.BotID}
 	update := bson.M{"$set": bson.M{"batches": bot.BatchQueue}}
 	opts := options.Update().SetUpsert(true)
 	if _, err := QueueCol.UpdateOne(ctx, filter, update, opts); err != nil {
@@ -197,12 +198,13 @@ func SaveBatchQueue(ctx context.Context) {
 
 func SaveTempUsers(ctx context.Context) {
 	if !useMongo || UsersCol == nil {
-		if err := SaveTempUsersLocal(); err != nil {
-			zap.L().Warn("SaveTempUsersLocal failed", zap.Error(err))
-		}
+        SaveTempUsersLocal()
+		// if err := SaveTempUsersLocal(); err != nil {
+		//	zap.L().Warn("SaveTempUsersLocal failed", zap.Error(err))
+		//}
 		return
 	}
-	filter := bson.M{"_id": config.Conf.BotID}
+	filter := bson.M{"_id": config.Rconf.BotID}
 	update := bson.M{"$set": bson.M{"t_users": bot.TempUsers}}
 	opts := options.Update().SetUpsert(true)
 	if _, err := UsersCol.UpdateOne(ctx, filter, update, opts); err != nil {
@@ -212,12 +214,13 @@ func SaveTempUsers(ctx context.Context) {
 
 func SaveFFmpegArgs(ctx context.Context) {
 	if !useMongo || CodeCol == nil {
-		if err := SaveSettingsLocal(); err != nil {
-			zap.L().Warn("SaveFFmpegArgsLocal failed", zap.Error(err))
-		}
+        SaveSettingsLocal()
+		//if err := SaveSettingsLocal(); err != nil {
+		//	zap.L().Warn("SaveFFmpegArgsLocal failed", zap.Error(err))
+		//}
 		return
 	}
-	filter := bson.M{"_id": config.Conf.BotID}
+	filter := bson.M{"_id": config.Rconf.BotID}
 	update := bson.M{
 		"$set": bson.M{
 			"ffmpeg":  bot.FFmpegArgs,
@@ -234,12 +237,13 @@ func SaveFFmpegArgs(ctx context.Context) {
 
 func SaveMuxArgs(ctx context.Context) {
 	if !useMongo || CodeCol == nil {
-		if err := SaveMuxArgsLocal(); err != nil {
-			zap.L().Warn("SaveMuxArgsLocal failed", zap.Error(err))
-		}
+        SaveSettingsLocal()
+		//if err := SaveMuxArgsLocal(); err != nil {
+		//	zap.L().Warn("SaveMuxArgsLocal failed", zap.Error(err))
+		//}
 		return
 	}
-	filter := bson.M{"_id": config.Conf.BotID}
+	filter := bson.M{"_id": config.Rconf.BotID}
 	update := bson.M{"$set": bson.M{"mux_args": bot.MuxArgs}}
 	opts := options.Update().SetUpsert(true)
 	if _, err := CodeCol.UpdateOne(ctx, filter, update, opts); err != nil {
@@ -249,12 +253,13 @@ func SaveMuxArgs(ctx context.Context) {
 
 func SaveRSSDict(ctx context.Context) {
 	if !useMongo || RSSCol == nil {
-		if err := SaveRSSLocal(); err != nil {
-			zap.L().Warn("SaveRSSLocal failed", zap.Error(err))
-		}
+        SaveRSSLocal()
+		//if err := SaveRSSLocal(); err != nil {
+		//	zap.L().Warn("SaveRSSLocal failed", zap.Error(err))
+		//}
 		return
 	}
-	filter := bson.M{"_id": config.Conf.BotID}
+	filter := bson.M{"_id": config.Rconf.BotID}
 	update := bson.M{"$set": bson.M{"rss": bot.RSSDict}}
 	opts := options.Update().SetUpsert(true)
 	if _, err := RSSCol.UpdateOne(ctx, filter, update, opts); err != nil {
@@ -265,12 +270,13 @@ func SaveRSSDict(ctx context.Context) {
 // SaveFilterSettings persists bot.Autoname and bot.CustomRename.
 func SaveFilterSettings(ctx context.Context) {
 	if !useMongo || FilterCol == nil {
-		if err := SaveSettingsLocal(); err != nil {
-			zap.L().Warn("SaveSettingsLocal (filters) failed", zap.Error(err))
-		}
+        SaveSettingsLocal()
+		//if err := SaveSettingsLocal(); err != nil {
+		//	zap.L().Warn("SaveSettingsLocal (filters) failed", zap.Error(err))
+		//}
 		return
 	}
-	filter := bson.M{"_id": config.Conf.BotID}
+	filter := bson.M{"_id": config.Rconf.BotID}
 	update := bson.M{"$set": bson.M{
 		"autoname":   bot.Autoname,
 		"cus_rename": bot.CustomRename,

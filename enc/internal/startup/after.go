@@ -4,6 +4,7 @@ package startup
 import (
 	"context"
 	"fmt"
+    "path/filepath"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -15,14 +16,16 @@ import (
 	"github.com/siku2/arigo"
 	"go.uber.org/zap"
 
-	"enc/internal/bot"
-	"enc/internal/config"
+	"enc/config"
+    "enc/internal/bot"
+    "enc/internal/clients"
 	"enc/internal/db"
-	"enc/internal/localdb"
-	"enc/internal/rss"
-	"enc/internal/teleclient"
-	"enc/internal/utils"
-	"enc/internal/workers"
+    "enc/internal/bot/entimer"
+	//"enc/internal/localdb"
+	//"enc/internal/rss"
+	//"enc/internal/teleclient"
+	//"enc/internal/utils"
+	//"enc/internal/workers"
 )
 
 // After wires up background workers, RPC & torrent clients, and hook handlers.
@@ -34,9 +37,9 @@ func After(ctx context.Context) {
 	go startQbit()
 
 	// 3) Kick off your scheduler and auto‐jobs
-	rss.Scheduler.Start()
-	go workers.AutoStatus(ctx)
-	go workers.AutoTranscode(ctx)
+	//rss.Scheduler.Start()
+	//go workers.AutoStatus(ctx)
+	//go workers.AutoTranscode(ctx)
 
 	// 4) Setup OS signal handlers for graceful shutdown
 	sigCh := make(chan os.Signal, 1)
@@ -58,16 +61,16 @@ func After(ctx context.Context) {
 	}
 
 	// 6) Start the encoding‐pause timer
-	utils.EnTimer.Start()
+	entimer.Timer.Start()
 
 	// 7) Reset the encode job state
-	workers.ResetEncodeJob(true)
+	//workers.ResetEncodeJob(true)
 
 	// 8) After a delay, trigger your background \"something\" task
-	go func() {
-		time.Sleep(30 * time.Second)
-		workers.Something(ctx)
-	}()
+	//go func() {
+	//	time.Sleep(30 * time.Second)
+	//	workers.Something(ctx)
+	//}()
 
 	// 9) Mark the bot as started
 	bot.Started = true
@@ -98,7 +101,7 @@ func startRPC(ctx context.Context) {
 		return
 	}
 	time.Sleep(1 * time.Second)
-	err := gid.Delete()
+	err = gid.Delete()
 	if err != nil {
 		zap.L().Error("aria2 API test cleanup failed", zap.Error(err))
 		return
@@ -150,7 +153,7 @@ func startQbit() {
 func onStart(ctx context.Context) {
 	for _, owner := range strings.Fields(config.Conf.Owner) {
 		if id, err := strconv.Atoi(owner); err == nil {
-			teleclient.SendMessage(ctx, id,
+			clients.Client.SendMessage(ctx, id,
 				fmt.Sprintf("**I'm %s %s**", utils.Enquip(), utils.Enmoji()))
 		}
 	}

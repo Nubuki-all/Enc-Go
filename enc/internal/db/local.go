@@ -1,7 +1,6 @@
 package db
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 
@@ -13,13 +12,14 @@ import (
 	"gorm.io/gorm/logger"
 
 	"enc/internal/bot"
-	"enc/internal/config"
+    "enc/internal/bot/queue"
+	"enc/config"
 )
 
 // queueRecord stores the ordered queue as JSON
 type queueRecord struct {
 	BotID string           `gorm:"primaryKey"`
-	Queue []bot.QueueEntry `gorm:"type:TEXT"`
+	Queue []queue.QueueEntry `gorm:"type:TEXT"`
 }
 
 // settingRecord stores simple string settings
@@ -86,7 +86,7 @@ func LoadLocalDB() {
 
 	// Load queue
 	var qr queueRecord
-	if err := localdb.First(&qr, "bot_id = ?", config.Conf.BotID).Error; err == nil {
+	if err := localdb.First(&qr, "bot_id = ?", config.Rconf.BotID).Error; err == nil {
 		if len(qr.Queue) > 0 {
 			bot.Queue.LoadFromSlice(qr.Queue)
 			zap.L().Info("Loaded queue from SQLite", zap.Int("count", len(qr.Queue)))
@@ -95,7 +95,7 @@ func LoadLocalDB() {
 
 	// Load settings
 	var settings []settingRecord
-	if err := localdb.Find(&settings, "bot_id = ?", config.Conf.BotID).Error; err == nil {
+	if err := localdb.Find(&settings, "bot_id = ?", config.Rconf.BotID).Error; err == nil {
 		for _, r := range settings {
 			switch r.Key {
 			case "autoname":
@@ -118,7 +118,7 @@ func LoadLocalDB() {
 
 	// Load arrays (e.g. temp users)
 	var arrs []arrRecord
-	if err := localdb.Find(&arrs, "bot_id = ?", config.Conf.BotID).Error; err == nil {
+	if err := localdb.Find(&arrs, "bot_id = ?", config.Rconf.BotID).Error; err == nil {
 		for _, a := range arrs {
 			if a.Key == "t_users" {
 				bot.TempUsers = a.Value
@@ -128,7 +128,7 @@ func LoadLocalDB() {
 
 	// Load maps (e.g. RSSDict)
 	var maps []mapRecord
-	if err := localdb.Find(&maps, "bot_id = ?", config.Conf.BotID).Error; err == nil {
+	if err := localdb.Find(&maps, "bot_id = ?", config.Rconf.BotID).Error; err == nil {
 		for _, m := range maps {
 			if m.Key == "rss" {
 				var mp map[string]interface{}
@@ -147,7 +147,7 @@ func SaveQueueLocal() {
 	if config.Conf.DatabaseURL != "" || localdb == nil {
 		return
 	}
-	obj := queueRecord{BotID: config.Conf.BotID, Queue: bot.Queue.AsSlice()}
+	obj := queueRecord{BotID: config.Rconf.BotID, Queue: bot.Queue.AsSlice()}
 	localdb.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "bot_id"}},
 		UpdateAll: true,
@@ -169,7 +169,7 @@ func SaveSettingsLocal() {
 		"mux_args":   bot.MuxArgs,
 	}
 	for k, v := range toSave {
-		rec := settingRecord{BotID: config.Conf.BotID, Key: k, Value: v}
+		rec := settingRecord{BotID: config.Rconf.BotID, Key: k, Value: v}
 		localdb.Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "bot_id"}, {Name: "key"}},
 			UpdateAll: true,
@@ -182,7 +182,7 @@ func SaveTempUsersLocal() {
 	if config.Conf.DatabaseURL != "" || localdb == nil {
 		return
 	}
-	rec := arrRecord{BotID: config.Conf.BotID, Key: "t_users", Value: bot.TempUsers}
+	rec := arrRecord{BotID: config.Rconf.BotID, Key: "t_users", Value: bot.TempUsers}
 	localdb.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "bot_id"}, {Name: "key"}},
 		UpdateAll: true,
@@ -199,7 +199,7 @@ func SaveRSSLocal() {
 		zap.L().Warn("could not marshal RSSDict", zap.Error(err))
 		return
 	}
-	rec := mapRecord{BotID: config.Conf.BotID, Key: "rss", Value: string(data)}
+	rec := mapRecord{BotID: config.Rconf.BotID, Key: "rss", Value: string(data)}
 	localdb.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "bot_id"}, {Name: "key"}},
 		UpdateAll: true,
@@ -208,7 +208,7 @@ func SaveRSSLocal() {
 
 // SaveBatchQueueLocal persists bot.BatchQueue to SQLite
 func SaveBatchQueueLocal() error {
-	if config.Conf.DatabaseURL != "" || db == nil {
+	if config.Conf.DatabaseURL != "" || localdb == nil {
 		return nil
 	}
 	// store BatchQueue as JSON in the same queueRecord table under key "batches"
@@ -218,11 +218,11 @@ func SaveBatchQueueLocal() error {
 		return err
 	}
 	rec := settingRecord{
-		BotID: config.Conf.BotID,
+		BotID: config.Rconf.BotID,
 		Key:   "batches",
 		Value: string(data),
 	}
-	return db.Clauses(clause.OnConflict{
+	return localdb.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "bot_id"}, {Name: "key"}},
 		UpdateAll: true,
 	}).Create(&rec).Error

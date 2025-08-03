@@ -85,6 +85,7 @@ type RuntimeConfig struct {
 	Aria2            interface{}
 	BatchIncoming    []interface{}
 	BatchQueue       map[string]interface{}
+    BotID            string
 	Cached           bool
 	CachedDL         bool
 	CustomRename     interface{}
@@ -292,6 +293,7 @@ func LoadConfig() error {
 		Rconf.ReleaseName = formatReleaseName(releaser)
 		Rconf.ReleaseNameB = Rconf.ReleaseName
 	}
+    Rconf.BotID = strings.SplitN(Conf.BotToken, ":", 2)[0]
 
 	return nil
 }
