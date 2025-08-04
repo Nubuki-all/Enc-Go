@@ -11,6 +11,7 @@ import (
 
 	"enc/config"
 	"enc/internal/bot"
+	"enc/internal/logger"
 	"enc/internal/bot/queue"
 )
 
@@ -39,7 +40,7 @@ func UseMongo() bool {
 func InitMongo(ctx context.Context) error {
 	// If no URL provided, skip Mongo entirely
 	if config.Conf.DatabaseURL == "" {
-		zap.L().Info("DATABASE_URL unset — using local DB fallback")
+		logger.InfoW("DATABASE_URL unset — using local DB fallback")
 		useMongo = false
 		return nil
 	}
@@ -51,7 +52,7 @@ func InitMongo(ctx context.Context) error {
 
 	client, err := mongo.Connect(ctx, opts)
 	if err != nil {
-		zap.L().Warn("MongoDB connection failed — falling back to local DB", zap.Error(err))
+		logger.WarnW("MongoDB connection failed — falling back to local DB", zap.Error(err))
 		useMongo = false
 		return nil
 	}
@@ -60,7 +61,7 @@ func InitMongo(ctx context.Context) error {
 	pingCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 	if err := client.Ping(pingCtx, nil); err != nil {
-		zap.L().Warn("MongoDB ping failed — falling back to local DB", zap.Error(err))
+		logger.WarnW("MongoDB ping failed — falling back to local DB", zap.Error(err))
 		useMongo = false
 		return nil
 	}
@@ -75,7 +76,7 @@ func InitMongo(ctx context.Context) error {
 	UsersCol = database.Collection("users")
 
 	useMongo = true
-	zap.L().Info("MongoDB initialized successfully")
+	logger.InfoW("MongoDB initialized successfully")
 	return nil
 }
 
@@ -90,12 +91,12 @@ func LoadQueue() {
 	}
 	if err := doc.Decode(&result); err != nil {
 		if err != mongo.ErrNoDocuments {
-			zap.L().Warn("LoadQueue decode error", zap.Error(err))
+			logger.WarnW("LoadQueue decode error", zap.Error(err))
 		}
 		return
 	}
 	bot.Queue.LoadFromSlice(result.Queue)
-	zap.L().Info("Queue loaded from MongoDB", zap.Int("count", len(result.Queue)))
+	logger.InfoW("Queue loaded from MongoDB", zap.Int("count", len(result.Queue)))
 }
 
 // loadMap reads a sub-document under key into the target map
@@ -107,7 +108,7 @@ func LoadMap(coll *mongo.Collection, key string, target *map[string]interface{})
 	var result bson.M
 	if err := doc.Decode(&result); err != nil {
 		if err != mongo.ErrNoDocuments {
-			zap.L().Warn("loadMap decode error", zap.Error(err), zap.String("key", key))
+			logger.WarnW("loadMap decode error", zap.Error(err), zap.String("key", key))
 		}
 		return
 	}
@@ -169,7 +170,7 @@ func SaveQueue(ctx context.Context) {
 	if !useMongo || QueueCol == nil {
 		SaveQueueLocal()
 		//if err := SaveQueueLocal(); err != nil {
-		// 	zap.L().Warn("SaveQueueLocal failed", zap.Error(err))
+		// 	logger.WarnW("SaveQueueLocal failed", zap.Error(err))
 		//}
 		return
 	}
@@ -177,14 +178,14 @@ func SaveQueue(ctx context.Context) {
 	update := bson.M{"$set": bson.M{"queue": bot.Queue.AsSlice()}}
 	opts := options.Update().SetUpsert(true)
 	if _, err := QueueCol.UpdateOne(ctx, filter, update, opts); err != nil {
-		zap.L().Warn("SaveQueue failed", zap.Error(err))
+		logger.WarnW("SaveQueue failed", zap.Error(err))
 	}
 }
 
 func SaveBatchQueue(ctx context.Context) {
 	if !useMongo || QueueCol == nil {
 		if err := SaveBatchQueueLocal(); err != nil {
-			zap.L().Warn("SaveBatchQueueLocal failed", zap.Error(err))
+			logger.WarnW("SaveBatchQueueLocal failed", zap.Error(err))
 		}
 		return
 	}
@@ -192,7 +193,7 @@ func SaveBatchQueue(ctx context.Context) {
 	update := bson.M{"$set": bson.M{"batches": bot.BatchQueue}}
 	opts := options.Update().SetUpsert(true)
 	if _, err := QueueCol.UpdateOne(ctx, filter, update, opts); err != nil {
-		zap.L().Warn("SaveBatchQueue failed", zap.Error(err))
+		logger.WarnW("SaveBatchQueue failed", zap.Error(err))
 	}
 }
 
@@ -200,7 +201,7 @@ func SaveTempUsers(ctx context.Context) {
 	if !useMongo || UsersCol == nil {
 		SaveTempUsersLocal()
 		// if err := SaveTempUsersLocal(); err != nil {
-		//	zap.L().Warn("SaveTempUsersLocal failed", zap.Error(err))
+		//	logger.WarnW("SaveTempUsersLocal failed", zap.Error(err))
 		//}
 		return
 	}
@@ -208,7 +209,7 @@ func SaveTempUsers(ctx context.Context) {
 	update := bson.M{"$set": bson.M{"t_users": bot.TempUsers}}
 	opts := options.Update().SetUpsert(true)
 	if _, err := UsersCol.UpdateOne(ctx, filter, update, opts); err != nil {
-		zap.L().Warn("SaveTempUsers failed", zap.Error(err))
+		logger.WarnW("SaveTempUsers failed", zap.Error(err))
 	}
 }
 
@@ -216,7 +217,7 @@ func SaveFFmpegArgs(ctx context.Context) {
 	if !useMongo || CodeCol == nil {
 		SaveSettingsLocal()
 		//if err := SaveSettingsLocal(); err != nil {
-		//	zap.L().Warn("SaveFFmpegArgsLocal failed", zap.Error(err))
+		//	logger.WarnW("SaveFFmpegArgsLocal failed", zap.Error(err))
 		//}
 		return
 	}
@@ -231,7 +232,7 @@ func SaveFFmpegArgs(ctx context.Context) {
 	}
 	opts := options.Update().SetUpsert(true)
 	if _, err := CodeCol.UpdateOne(ctx, filter, update, opts); err != nil {
-		zap.L().Warn("SaveFFmpegArgs failed", zap.Error(err))
+		logger.WarnW("SaveFFmpegArgs failed", zap.Error(err))
 	}
 }
 
@@ -239,7 +240,7 @@ func SaveMuxArgs(ctx context.Context) {
 	if !useMongo || CodeCol == nil {
 		SaveSettingsLocal()
 		//if err := SaveMuxArgsLocal(); err != nil {
-		//	zap.L().Warn("SaveMuxArgsLocal failed", zap.Error(err))
+		//	logger.WarnW("SaveMuxArgsLocal failed", zap.Error(err))
 		//}
 		return
 	}
@@ -247,7 +248,7 @@ func SaveMuxArgs(ctx context.Context) {
 	update := bson.M{"$set": bson.M{"mux_args": bot.MuxArgs}}
 	opts := options.Update().SetUpsert(true)
 	if _, err := CodeCol.UpdateOne(ctx, filter, update, opts); err != nil {
-		zap.L().Warn("SaveMuxArgs failed", zap.Error(err))
+		logger.WarnW("SaveMuxArgs failed", zap.Error(err))
 	}
 }
 
@@ -255,7 +256,7 @@ func SaveRSSDict(ctx context.Context) {
 	if !useMongo || RSSCol == nil {
 		SaveRSSLocal()
 		//if err := SaveRSSLocal(); err != nil {
-		//	zap.L().Warn("SaveRSSLocal failed", zap.Error(err))
+		//	logger.WarnW("SaveRSSLocal failed", zap.Error(err))
 		//}
 		return
 	}
@@ -263,7 +264,7 @@ func SaveRSSDict(ctx context.Context) {
 	update := bson.M{"$set": bson.M{"rss": bot.RSSDict}}
 	opts := options.Update().SetUpsert(true)
 	if _, err := RSSCol.UpdateOne(ctx, filter, update, opts); err != nil {
-		zap.L().Warn("SaveRSSDict failed", zap.Error(err))
+		logger.WarnW("SaveRSSDict failed", zap.Error(err))
 	}
 }
 
@@ -272,7 +273,7 @@ func SaveFilterSettings(ctx context.Context) {
 	if !useMongo || FilterCol == nil {
 		SaveSettingsLocal()
 		//if err := SaveSettingsLocal(); err != nil {
-		//	zap.L().Warn("SaveSettingsLocal (filters) failed", zap.Error(err))
+		//	logger.WarnW("SaveSettingsLocal (filters) failed", zap.Error(err))
 		//}
 		return
 	}
@@ -283,6 +284,6 @@ func SaveFilterSettings(ctx context.Context) {
 	}}
 	opts := options.Update().SetUpsert(true)
 	if _, err := FilterCol.UpdateOne(ctx, filter, update, opts); err != nil {
-		zap.L().Warn("SaveFilterSettings failed", zap.Error(err))
+		logger.WarnW("SaveFilterSettings failed", zap.Error(err))
 	}
 }

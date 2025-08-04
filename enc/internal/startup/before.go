@@ -13,6 +13,7 @@ import (
 	"enc/internal/bot"
 	"enc/internal/bot/entimer"
 	"enc/internal/db"
+	"enc/internal/logger"
 	"go.uber.org/zap"
 )
 
@@ -31,7 +32,7 @@ func Initialize() {
 func DetectDocker() {
 	if _, err := os.Stat("/tgenc"); err == nil {
 		bot.DockerDeployed = true
-		zap.L().Info("Docker: Yes")
+		logger.InfoW("Docker: Yes")
 	}
 }
 
@@ -43,30 +44,30 @@ func DownloadThumbnail() {
 
 	resp, err := http.Get(thumbURL)
 	if err != nil {
-		zap.L().Warn("Failed to download thumbnail", zap.Error(err))
+		logger.WarnW("Failed to download thumbnail", zap.Error(err))
 		return
 	}
 	defer resp.Body.Close()
 
 	out, err := os.Create(".thumb.jpg")
 	if err != nil {
-		zap.L().Warn("Failed to create thumbnail file", zap.Error(err))
+		logger.WarnW("Failed to create thumbnail file", zap.Error(err))
 		return
 	}
 	defer out.Close()
 
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
-		zap.L().Warn("Failed to write thumbnail file", zap.Error(err))
+		logger.WarnW("Failed to write thumbnail file", zap.Error(err))
 	} else {
-		zap.L().Info("Downloaded thumbnail to .thumb.jpg")
+		logger.InfoW("Downloaded thumbnail to .thumb.jpg")
 	}
 }
 
 func SetupCustomRename() {
 	if v := config.Conf.CustomRename; v != "" {
 		bot.CustomRename = v
-		zap.L().Info("Custom rename enabled", zap.String("template", v))
+		logger.InfoW("Custom rename enabled", zap.String("template", v))
 	}
 }
 
@@ -82,7 +83,7 @@ func DownloadLinks() {
 		}
 		resp, err := http.Get(link)
 		if err != nil {
-			zap.L().Warn("Failed to download link", zap.String("url", link), zap.Error(err))
+			logger.WarnW("Failed to download link", zap.String("url", link), zap.Error(err))
 			continue
 		}
 		defer resp.Body.Close()
@@ -94,15 +95,15 @@ func DownloadLinks() {
 		}
 		out, err := os.Create(fn)
 		if err != nil {
-			zap.L().Warn("Cannot create file", zap.String("file", fn), zap.Error(err))
+			logger.WarnW("Cannot create file", zap.String("file", fn), zap.Error(err))
 			continue
 		}
 		_, err = io.Copy(out, resp.Body)
 		out.Close()
 		if err != nil {
-			zap.L().Warn("Failed writing file", zap.String("file", fn), zap.Error(err))
+			logger.WarnW("Failed writing file", zap.String("file", fn), zap.Error(err))
 		} else {
-			zap.L().Info("Downloaded link", zap.String("url", link), zap.String("file", fn))
+			logger.InfoW("Downloaded link", zap.String("url", link), zap.String("file", fn))
 		}
 	}
 }
@@ -110,7 +111,7 @@ func DownloadLinks() {
 func SetupFlags() {
 	if config.Conf.NoTempPM {
 		bot.TempOnlyInGroup = true
-		zap.L().Info("Only allow PM in groups")
+		logger.InfoW("Only allow PM in groups")
 	}
 	if config.Conf.ReportFailed {
 		bot.ReportFailedDl = true
@@ -149,7 +150,7 @@ func EnsureDirectories() {
 	}
 	for _, d := range dirs {
 		if err := os.MkdirAll(d, 0o755); err != nil {
-			zap.L().Warn("Could not create dir", zap.String("dir", d), zap.Error(err))
+			logger.WarnW("Could not create dir", zap.String("dir", d), zap.Error(err))
 		}
 	}
 }
@@ -165,7 +166,7 @@ func AddTempUsers() {
 			continue
 		}
 		bot.TempUsers = append(bot.TempUsers, t)
-		zap.L().Info("Added temp user", zap.String("user", t))
+		logger.InfoW("Added temp user", zap.String("user", t))
 	}
 }
 
@@ -184,18 +185,18 @@ func LoadDB() {
 	defer cancel()
 
 	if err := db.InitMongo(ctx); err != nil {
-		zap.L().Warn("database initialization failed, falling back to local", zap.Error(err))
+		logger.WarnW("database initialization failed, falling back to local", zap.Error(err))
 	}
 
 	// 2) If we didn’t connect to Mongo, use local loader and return
 	if !db.UseMongo() {
-		zap.L().Info("Using local DB fallback")
+		logger.InfoW("Using local DB fallback")
 		db.LoadLocalDB()
 		return
 	}
 
 	// 3) Otherwise, load persisted state into bot.* variables
-	zap.L().Info("Loading state from MongoDB")
+	logger.InfoW("Loading state from MongoDB")
 	db.LoadMap(db.QueueCol, "batches", &bot.BatchQueue)
 	db.LoadQueue()
 	db.LoadMap(db.RSSCol, "rss", &bot.RSSDict)
@@ -211,5 +212,5 @@ func LoadDB() {
 	db.LoadString(db.CodeCol, "ffmpeg4", &bot.FFmpeg4Args)
 	db.LoadString(db.CodeCol, "mux_args", &bot.MuxArgs)
 
-	zap.L().Info("startup: state loaded from database")
+	logger.InfoW("startup: state loaded from database")
 }

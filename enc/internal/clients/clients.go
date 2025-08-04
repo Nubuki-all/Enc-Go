@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"go.uber.org/zap"
 	"github.com/celestix/telegraph-go/v2"
 	"github.com/gotd/contrib/middleware/ratelimit"
 	"github.com/gotd/td/telegram"
@@ -21,6 +22,7 @@ import (
 	"github.com/gotd/contrib/middleware/floodwait"
 	_ "github.com/mattn/go-sqlite3"
 	"gorm.io/driver/sqlite"
+	"enc/internal/logger"
 )
 
 var (
@@ -46,7 +48,7 @@ func InitTelegraph() {
 		AuthorName: config.Rconf.TgpAuthor,
 	})
 	if err != nil {
-		log.Fatalf("could not create Telegraph account: %v", err)
+		logger.Errorf("could not create Telegraph account: %v", err)
 	}
 }
 
@@ -54,7 +56,7 @@ func InitTelegramClient() {
 	var err error
 	// Initializing flood waiter, which will wait for stated duration if "FLOOD_WAIT" error occurred
 	waiter := floodwait.NewWaiter().WithCallback(func(ctx context.Context, wait floodwait.FloodWait) {
-		fmt.Printf("Waiting for flood, dur: %d\n", wait.Duration)
+		logger.WarnW("Waiting for flood,", zap.String("duration", wait.Duration))
 	})
 	// Initializing ratelimiter, which will allow at most 30 requests to Telegram in 100ms
 	ratelimiter := ratelimit.New(rate.Every(time.Millisecond*100), 30)
@@ -78,9 +80,9 @@ func InitTelegramClient() {
 		},
 	)
 	if err != nil {
-		log.Fatalln("failed to start client:", err)
+		logger.Criticalf("failed to start client:", err)
 	}
 
-	fmt.Printf("client (@%s) has been started...\n", Client.Self.Username)
+	logger.Infof("client (@%s) has been started...\n", Client.Self.Username)
 	Context = Client.CreateContext()
 }

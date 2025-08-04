@@ -78,9 +78,9 @@ func LoadLocalDB() {
 	if config.Conf.DatabaseURL != "" {
 		return
 	}
-	zap.L().Info("Initializing SQLite fallback...")
+	logger.InfoW("Initializing SQLite fallback...")
 	if err := InitLocalDB(); err != nil {
-		zap.L().Warn("LocalDB init error", zap.Error(err))
+		logger.WarnW("LocalDB init error", zap.Error(err))
 		return
 	}
 
@@ -89,7 +89,7 @@ func LoadLocalDB() {
 	if err := localdb.First(&qr, "bot_id = ?", config.Rconf.BotID).Error; err == nil {
 		if len(qr.Queue) > 0 {
 			bot.Queue.LoadFromSlice(qr.Queue)
-			zap.L().Info("Loaded queue from SQLite", zap.Int("count", len(qr.Queue)))
+			logger.InfoW("Loaded queue from SQLite", zap.Int("count", len(qr.Queue)))
 		}
 	}
 
@@ -139,7 +139,7 @@ func LoadLocalDB() {
 		}
 	}
 
-	zap.L().Info("SQLite state loaded")
+	logger.InfoW("SQLite state loaded")
 }
 
 // SaveQueueLocal writes current queue to SQLite
@@ -196,7 +196,7 @@ func SaveRSSLocal() {
 	}
 	data, err := json.Marshal(bot.RSSDict)
 	if err != nil {
-		zap.L().Warn("could not marshal RSSDict", zap.Error(err))
+		logger.WarnW("could not marshal RSSDict", zap.Error(err))
 		return
 	}
 	rec := mapRecord{BotID: config.Rconf.BotID, Key: "rss", Value: string(data)}

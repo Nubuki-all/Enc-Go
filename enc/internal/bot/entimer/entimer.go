@@ -5,9 +5,12 @@ import (
 	"sync"
 	"time"
 
+	"go.uber.org/zap"
+
 	"enc/config"
 	"enc/internal/bot"
-	"go.uber.org/zap"
+	"enc/internal/bot/state"
+	"enc/internal/logger"
 )
 
 var Timer = NewEnTimer()
@@ -50,7 +53,7 @@ func (et *EnTimer) loop() {
 	for range ticker.C {
 		et.mu.Lock()
 		paused := et.indPause || et.timeLeft > 0
-		bot.Paused = paused
+		bot.Paused.Set(state.DefaultPause, paused)
 
 		if paused {
 			status := "Paused "
@@ -59,7 +62,8 @@ func (et *EnTimer) loop() {
 			} else {
 				status += "for " + fmt.Sprint(et.timeLeft) + "s"
 			}
-			zap.L().Info(status)
+			fmt.Println(status)
+			// zap.L().Info(status)
 
 			if et.timeLeft > 0 {
 				et.timeLeft--
@@ -77,7 +81,7 @@ func (et *EnTimer) loop() {
 		if len(et.msgs) > 0 {
 			for _, m := range et.msgs {
 				if err := m.Edit("**Timer ended or cancelled and bot has been unpaused.**"); err != nil {
-					zap.L().Warn("EnTimer: message edit failed", zap.Error(err))
+					logger.WarnW("EnTimer: message edit failed", zap.Error(err))
 				}
 			}
 			et.msgs = nil
@@ -110,5 +114,5 @@ func (et *EnTimer) StopTimer() {
 	et.timeLeft = 0
 	et.indPause = false
 	et.msgs = nil
-	bot.Paused = false
+	bot.Paused.Set(state.DefaultPause, false)
 }

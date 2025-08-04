@@ -13,6 +13,9 @@ import (
 
 // PostToTelegraph publishes a acct, retrying on network errors.
 func PostToTelegraph(title, text string) (*telegraph.Page, error) {
+	if clients.TgpClient == nil {
+		return nil, fmt.Errorf("PostToTelegraph failed because client wasn't successfully initialized")
+	}
 	// Derive author and URL (once)
 	author := config.Rconf.TgpAuthor
 	authorURL := config.Rconf.TgpAuthorUrl

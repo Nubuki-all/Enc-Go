@@ -2,6 +2,7 @@ package bot
 
 import (
 	"enc/internal/bot/queue"
+	"enc/internal/bot/state"
 	"github.com/siku2/arigo"
 )
 
@@ -10,7 +11,6 @@ var (
 	CaptionParse    bool
 	DockerDeployed  bool
 	TempOnlyInGroup bool
-	Paused          bool
 	ReportFailedDl  bool
 	ReportFailedEnc bool
 	SAS             bool
@@ -31,7 +31,10 @@ var (
 	MuxArgs     string
 )
 
+var ReleaseVersion string
+
 var (
 	Aria2Client *arigo.Client
 	Queue       = queue.NewQueue()
+	Paused      = &state.PauseState{}
 )

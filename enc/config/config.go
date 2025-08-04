@@ -298,8 +298,8 @@ func LoadConfig() error {
 	return nil
 }
 
-func init() {
-	if err := LoadConfig(); err != nil {
-		log.Fatalf("Failed to load config: %v", err)
-	}
-}
+//func init() {
+//	if err := LoadConfig(); err != nil {
+//		log.Fatalf("Failed to load config: %v", err)
+//	}
+//}

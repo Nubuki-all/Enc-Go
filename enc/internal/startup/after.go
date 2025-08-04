@@ -23,6 +23,7 @@ import (
 	"enc/internal/clients"
 	"enc/internal/db"
 	"enc/utils/random"
+	"enc/internal/logger"
 	//"enc/internal/localdb"
 	//"enc/internal/rss"
 	//"enc/internal/utils"
@@ -53,7 +54,7 @@ func After(ctx context.Context) {
 	// 5) Handle a restart/update invocation from os.Args
 	if len(os.Args) == 3 {
 		if err := onRestart(); err != nil {
-			zap.L().Warn("onRestart failed", zap.Error(err))
+			logger.WarnW("onRestart failed", zap.Error(err))
 		}
 	} else {
 		// give processes a moment, then send onStart notifications
@@ -86,25 +87,25 @@ func startRPC() {
 		"--allow-overwrite=true",
 	)
 	if err := cmd.Start(); err != nil {
-		zap.L().Error("failed to start aria2c", zap.Error(err))
+		logger.ErrorW("failed to start aria2c", zap.Error(err))
 		return
 	}
 	// wait a moment then create API client
 	time.Sleep(1 * time.Second)
 	client, err := arigo.Dial(fmt.Sprint("ws://localhost:", config.Conf.Aria2Port, "/jsonrpc"), "")
 	if err != nil {
-		zap.L().Error("aria2 API init failed", zap.Error(err))
+		logger.ErrorW("aria2 API init failed", zap.Error(err))
 		return
 	}
 	gid, err := client.AddURI(arigo.URIs("https://nyaa.si/download/1752639.torrent"), nil)
 	if err != nil {
-		zap.L().Error("aria2 API test download failed", zap.Error(err))
+		logger.ErrorW("aria2 API test download failed", zap.Error(err))
 		return
 	}
 	time.Sleep(1 * time.Second)
 	err = gid.Delete()
 	if err != nil {
-		zap.L().Error("aria2 API test cleanup failed", zap.Error(err))
+		logger.ErrorW("aria2 API test cleanup failed", zap.Error(err))
 		return
 	}
 	bot.Aria2Client = &client
@@ -116,7 +117,7 @@ func startQbit() {
 	// Determine working directory at runtime
 	wd, err := os.Getwd()
 	if err != nil {
-		zap.L().Error("could not get working directory", zap.Error(err))
+		logger.ErrorW("could not get working directory", zap.Error(err))
 		return
 	}
 	anyStarted := false
@@ -137,7 +138,7 @@ func startQbit() {
 
 		cmd := exec.Command("qbittorrent-nox", args...)
 		if err := cmd.Start(); err != nil {
-			zap.L().Warn("failed to start qbittorrent-nox",
+			logger.WarnW("failed to start qbittorrent-nox",
 				zap.Int("port", p),
 				zap.Strings("args", args),
 				zap.Error(err),
