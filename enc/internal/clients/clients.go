@@ -26,7 +26,7 @@ import (
 var (
 	Client     *gotgproto.Client
 	Context    *ext.Context
-    TgpAccount *telegraph.Account
+	TgpAccount *telegraph.Account
 	TgpClient  *telegraph.TelegraphClient
 )
 
@@ -82,5 +82,5 @@ func InitTelegramClient() {
 	}
 
 	fmt.Printf("client (@%s) has been started...\n", Client.Self.Username)
-    Context = Client.CreateContext()
+	Context = Client.CreateContext()
 }

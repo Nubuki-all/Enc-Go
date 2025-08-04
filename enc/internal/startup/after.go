@@ -13,9 +13,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gotd/td/tg"
 	"github.com/siku2/arigo"
 	"go.uber.org/zap"
-    "github.com/gotd/td/tg"
 
 	"enc/config"
 	"enc/internal/bot"
@@ -155,28 +155,29 @@ func onStart(ctx context.Context) {
 	for _, owner := range strings.Fields(config.Conf.Owner) {
 		if id, err := strconv.Atoi(owner); err == nil {
 			clients.Context.SendMessage(int64(id), &tg.MessagesSendMessageRequest{
-                Message: fmt.Sprintf("**I'm %s %s**", random.Enquip(), random.Enmoji())},
-            )
+				Message: fmt.Sprintf("**I'm %s %s**", random.Enquip(), random.Enmoji()),
+			},
+			)
 		}
 	}
 	if config.Conf.LogChannel != 0 {
 		clients.Context.SendMessage(
-            config.Conf.LogChannel, &tg.MessagesSendMessageRequest{
-                Message: fmt.Sprintf("**Bot is %s %s**", random.Enquip(), random.Enmoji()),
-            },
-        )
+			config.Conf.LogChannel, &tg.MessagesSendMessageRequest{
+				Message: fmt.Sprintf("**Bot is %s %s**", random.Enquip(), random.Enmoji()),
+			},
+		)
 	}
 	// report aria2/qbit status
 	status := fmt.Sprintf("**Aria2:** `%v`\n**Qbit:** `%v`",
 		bot.SAS, bot.SQS)
 	own_, _ := strconv.Atoi(strings.Split(config.Conf.Owner, " ")[0])
-    id_ := int64(own_)
+	id_ := int64(own_)
 	if config.Conf.LogChannel != 0 {
 		id_ = config.Conf.LogChannel
 	}
 	clients.Context.SendMessage(id_, &tg.MessagesSendMessageRequest{
-        Message: status,
-    })
+		Message: status,
+	})
 }
 
 // onRestart handles “restart” or “update” command‐line flags
@@ -204,13 +205,13 @@ func onRestart() error {
 		return nil
 	}
 	_, err := clients.Context.EditMessage(
-        int64(chatID),
-        &tg.MessagesEditMessageRequest{
-            ID: msgID,
-            Message: msg,
-        },
-    )
-    return err
+		int64(chatID),
+		&tg.MessagesEditMessageRequest{
+			ID:      msgID,
+			Message: msg,
+		},
+	)
+	return err
 }
 
 // onTermination sends a farewell and cleans up
@@ -232,14 +233,14 @@ func onTermination(ctx context.Context) {
 	farewell := fmt.Sprintf("**I'm %s %s**", random.Enquip2(), random.Enmoji2())
 	if config.Conf.LogChannel != 0 {
 		clients.Context.SendMessage(config.Conf.LogChannel, &tg.MessagesSendMessageRequest{
-            Message: farewell,
-            })
+			Message: farewell,
+		})
 	} else {
 		for _, owner := range strings.Fields(config.Conf.Owner) {
 			if id, err := strconv.Atoi(owner); err == nil {
 				clients.Context.SendMessage(int64(id), &tg.MessagesSendMessageRequest{
-                    Message: farewell,
-                    })
+					Message: farewell,
+				})
 			}
 		}
 	}
