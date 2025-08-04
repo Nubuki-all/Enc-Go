@@ -50,6 +50,7 @@ func Pause(idx int, on bool) error {
 		return fmt.Errorf("invalid pause index %d", idx)
 	}
 	PauseByType(pt, on)
+	return nil
 }
 
 // GetPauseStatus returns whether a specific pause type is set
