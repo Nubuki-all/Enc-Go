@@ -46,7 +46,7 @@ type Config struct {
 	FSticker              string
 	LocalDBPath           string
 	LockOnStartup         bool
-	LogChannel            int
+	LogChannel            int64
 	LogsInChannel         bool
 	MICap                 bool
 	MuxArgs               string
@@ -227,7 +227,7 @@ func LoadConfig() error {
 		FSticker:              viper.GetString("FSTICKER"),
 		LocalDBPath:           viper.GetString("LOCAL_DB_PATH"),
 		LockOnStartup:         viper.GetBool("LOCK_ON_STARTUP"),
-		LogChannel:            viper.GetInt("LOG_CHANNEL"),
+		LogChannel:            viper.GetInt64("LOG_CHANNEL"),
 		LogsInChannel:         viper.GetBool("LOGS_IN_CHANNEL"),
 		MICap:                 viper.GetBool("MI_IN_CAPTION"),
 		MuxArgs:               viper.GetString("MUX_ARGS"),

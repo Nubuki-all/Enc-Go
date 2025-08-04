@@ -15,13 +15,14 @@ import (
 
 	"github.com/siku2/arigo"
 	"go.uber.org/zap"
+    "github.com/gotd/td/tg"
 
 	"enc/config"
 	"enc/internal/bot"
 	"enc/internal/bot/entimer"
 	"enc/internal/clients"
 	"enc/internal/db"
-	"enc/internal/utils/random"
+	"enc/utils/random"
 	//"enc/internal/localdb"
 	//"enc/internal/rss"
 	//"enc/internal/utils"
@@ -153,22 +154,29 @@ func startQbit() {
 func onStart(ctx context.Context) {
 	for _, owner := range strings.Fields(config.Conf.Owner) {
 		if id, err := strconv.Atoi(owner); err == nil {
-			clients.Client.SendMessage(ctx, id,
-				fmt.Sprintf("**I'm %s %s**", random.Enquip(), random.Enmoji()))
+			clients.Context.SendMessage(int64(id), &tg.MessagesSendMessageRequest{
+                Message: fmt.Sprintf("**I'm %s %s**", random.Enquip(), random.Enmoji())},
+            )
 		}
 	}
 	if config.Conf.LogChannel != 0 {
-		clients.Client.SendMessage(ctx, config.Conf.LogChannel,
-			fmt.Sprintf("**Bot is %s %s**", random.Enquip(), random.Enmoji()))
+		clients.Context.SendMessage(
+            config.Conf.LogChannel, &tg.MessagesSendMessageRequest{
+                Message: fmt.Sprintf("**Bot is %s %s**", random.Enquip(), random.Enmoji()),
+            },
+        )
 	}
 	// report aria2/qbit status
 	status := fmt.Sprintf("**Aria2:** `%v`\n**Qbit:** `%v`",
 		bot.SAS, bot.SQS)
-	dev := config.Conf.Dev
+	own_, _ := strconv.Atoi(strings.Split(config.Conf.Owner, " ")[0])
+    id_ := int64(own_)
 	if config.Conf.LogChannel != 0 {
-		dev = config.Conf.LogChannel
+		id_ = config.Conf.LogChannel
 	}
-	clients.Client.SendMessage(ctx, dev, status)
+	clients.Context.SendMessage(id_, &tg.MessagesSendMessageRequest{
+        Message: status,
+    })
 }
 
 // onRestart handles “restart” or “update” command‐line flags
@@ -195,7 +203,14 @@ func onRestart() error {
 	} else {
 		return nil
 	}
-	return clients.Client.EditMessageText(chatID, msgID, msg)
+	_, err := clients.Context.EditMessage(
+        int64(chatID),
+        &tg.MessagesEditMessageRequest{
+            ID: msgID,
+            Message: msg,
+        },
+    )
+    return err
 }
 
 // onTermination sends a farewell and cleans up
@@ -216,11 +231,15 @@ func onTermination(ctx context.Context) {
 
 	farewell := fmt.Sprintf("**I'm %s %s**", random.Enquip2(), random.Enmoji2())
 	if config.Conf.LogChannel != 0 {
-		clients.Client.SendMessage(ctx, config.Conf.LogChannel, farewell)
+		clients.Context.SendMessage(config.Conf.LogChannel, &tg.MessagesSendMessageRequest{
+            Message: farewell,
+            })
 	} else {
 		for _, owner := range strings.Fields(config.Conf.Owner) {
 			if id, err := strconv.Atoi(owner); err == nil {
-				clients.Client.SendMessage(ctx, id, farewell)
+				clients.Context.SendMessage(int64(id), &tg.MessagesSendMessageRequest{
+                    Message: farewell,
+                    })
 			}
 		}
 	}

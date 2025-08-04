@@ -16,7 +16,7 @@ import (
 	"github.com/celestix/gotgproto"
 	//"github.com/celestix/gotgproto/dispatcher/handlers"
 	//"github.com/celestix/gotgproto/dispatcher/handlers/filters"
-	//"github.com/celestix/gotgproto/ext"
+	"github.com/celestix/gotgproto/ext"
 	"github.com/celestix/gotgproto/sessionMaker"
 	"github.com/gotd/contrib/middleware/floodwait"
 	_ "github.com/mattn/go-sqlite3"
@@ -25,7 +25,8 @@ import (
 
 var (
 	Client     *gotgproto.Client
-	TgpAccount *telegraph.Account
+	Context    *ext.Context
+    TgpAccount *telegraph.Account
 	TgpClient  *telegraph.TelegraphClient
 )
 
@@ -81,4 +82,5 @@ func InitTelegramClient() {
 	}
 
 	fmt.Printf("client (@%s) has been started...\n", Client.Self.Username)
+    Context = Client.CreateContext()
 }
