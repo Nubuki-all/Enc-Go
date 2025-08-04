@@ -1,6 +1,4 @@
-// You can edit this code!
-// Click here and start typing.
-package main
+package logger
 
 // Init sets up the global zap logger (and a sugared alias),
 // writing to stdout + a rotating file
