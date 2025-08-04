@@ -1,13 +1,13 @@
 package startup
 
 import (
-    "context"
+	"context"
 	"io"
 	"net/http"
 	"os"
-    "path/filepath"
-    "strings"
-    "time"
+	"path/filepath"
+	"strings"
+	"time"
 
 	"enc/config"
 	"enc/internal/bot"
