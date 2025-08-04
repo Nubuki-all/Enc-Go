@@ -45,7 +45,7 @@ type Config struct {
 	FSThreshold           int
 	FSticker              string
 	JsonLog               bool
- 	LocalDBPath           string
+	LocalDBPath           string
 	LockOnStartup         bool
 	LogChannel            int64
 	LogsInChannel         bool

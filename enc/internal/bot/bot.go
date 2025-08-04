@@ -23,7 +23,7 @@ var (
 	BatchQueue      map[string]any
 	ECancel         map[string]any
 	RSSDict         map[string]any
-	UCancel         []any 
+	UCancel         []any
 	PreviewBatch    any
 	PreviewList     any
 )
