@@ -2,8 +2,6 @@ package clients
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -56,7 +54,7 @@ func InitTelegramClient() {
 	var err error
 	// Initializing flood waiter, which will wait for stated duration if "FLOOD_WAIT" error occurred
 	waiter := floodwait.NewWaiter().WithCallback(func(ctx context.Context, wait floodwait.FloodWait) {
-		logger.WarnW("Waiting for flood,", zap.String("duration", wait.Duration))
+		logger.WarnW("Waiting for flood,", zap.Int("duration", wait.Duration))
 	})
 	// Initializing ratelimiter, which will allow at most 30 requests to Telegram in 100ms
 	ratelimiter := ratelimit.New(rate.Every(time.Millisecond*100), 30)

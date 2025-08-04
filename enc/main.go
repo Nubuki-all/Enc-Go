@@ -9,14 +9,14 @@ import (
 )
 
 func main() {
-	if err := logger.Init("logs.txt"); err != nil {
+	if err := logger.Init(config.Conf.LogFileName, config.Conf.JsonLog); err != nil {
 		log.Fatalf("logger init error: %v", err)
 	}
 	defer logger.Logger.Sync()
-	if err := config.LoadConfig(); err != nil {
-		logger.CriticalW("config error: %v", err)
-	}
 	logger.Logger.Info(strings.Repeat("=", 30))
+	if config.Rconf.Error != nil {
+		logger.Criticalf("Failed to load config: %v", config.Rconf.Error)
+	}
 
 	// … rest of your app …
 }

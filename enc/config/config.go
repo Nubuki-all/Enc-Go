@@ -44,10 +44,12 @@ type Config struct {
 	FlCap                 bool
 	FSThreshold           int
 	FSticker              string
-	LocalDBPath           string
+	JsonLog               bool
+ 	LocalDBPath           string
 	LockOnStartup         bool
 	LogChannel            int64
 	LogsInChannel         bool
+	LogFileName           string
 	MICap                 bool
 	MuxArgs               string
 	NoBanner              bool
@@ -92,6 +94,7 @@ type RuntimeConfig struct {
 	DisplayAddDLInfo bool
 	DockerDeployed   bool
 	ECancel          map[string]interface{}
+	Error            error
 	GroupEnc         bool
 	GroupEncList     []interface{}
 	MaxMessageLength int
@@ -110,6 +113,7 @@ type RuntimeConfig struct {
 	RSSDict          map[string]interface{}
 	RSSRanOnce       bool
 	SAS              bool
+	SET              bool
 	SQS              bool
 	Started          bool
 	TempOnlyInGroup  bool
@@ -175,6 +179,7 @@ func LoadConfig() error {
 	viper.SetDefault("FFMPEG", `ffmpeg -i "%s" -preset ultrafast -c:v libx265 -crf 27 -map 0:v -c:a aac -map 0:a -c:s copy -map 0:s? "%s"`)
 	viper.SetDefault("FINISHED_PROGRESS_STR", "🧡")
 	viper.SetDefault("FLOOD_SLEEP_THRESHOLD", 600)
+	viper.SetDefault("LOG_FILE_NAME", "logs.txt")
 	viper.SetDefault("MI_IN_CAPTION", true)
 	viper.SetDefault("PAUSE_ON_DL_INFO", true)
 	viper.SetDefault("QBIT_PORT", 8090)
@@ -225,10 +230,12 @@ func LoadConfig() error {
 		FlCap:                 viper.GetBool("FILENAME_AS_CAPTION"),
 		FSThreshold:           viper.GetInt("FLOOD_SLEEP_THRESHOLD"),
 		FSticker:              viper.GetString("FSTICKER"),
+		JsonLog:               viper.GetBool("JSON_LOGFILE"),
 		LocalDBPath:           viper.GetString("LOCAL_DB_PATH"),
 		LockOnStartup:         viper.GetBool("LOCK_ON_STARTUP"),
 		LogChannel:            viper.GetInt64("LOG_CHANNEL"),
 		LogsInChannel:         viper.GetBool("LOGS_IN_CHANNEL"),
+		LogFileName:           viper.GetString("LOG_FILE_NAME"),
 		MICap:                 viper.GetBool("MI_IN_CAPTION"),
 		MuxArgs:               viper.GetString("MUX_ARGS"),
 		NoBanner:              viper.GetBool("NO_BANNER"),
@@ -294,12 +301,19 @@ func LoadConfig() error {
 		Rconf.ReleaseNameB = Rconf.ReleaseName
 	}
 	Rconf.BotID = strings.SplitN(Conf.BotToken, ":", 2)[0]
+	// Rconf.SET = true
 
 	return nil
 }
 
-//func init() {
-//	if err := LoadConfig(); err != nil {
-//		log.Fatalf("Failed to load config: %v", err)
-//	}
-//}
+func init() {
+	if err := LoadConfig(); err != nil {
+		// log.Printf("Failed to load config: %v", err)
+		Conf = &Config{
+			LogFileName: "logs.txt",
+		}
+		Rconf = &RuntimeConfig{
+			Error: err
+		}
+	}
+}

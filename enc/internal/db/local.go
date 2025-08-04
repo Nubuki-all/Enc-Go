@@ -9,11 +9,12 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"gorm.io/gorm/logger"
+	"moul.io/zapgorm2"
 
 	"enc/config"
 	"enc/internal/bot"
 	"enc/internal/bot/queue"
+	"enc/internal/logger"
 )
 
 // queueRecord stores the ordered queue as JSON
@@ -55,8 +56,9 @@ func InitLocalDB() error {
 		path = ".encbot.db"
 	}
 	var err error
+	glogger := zapgorm2.New(logger.Logger)
 	localdb, err = gorm.Open(sqlite.Open(path), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Silent),
+		Logger: glogger,
 	})
 	if err != nil {
 		return fmt.Errorf("local sqlite open failed: %w", err)

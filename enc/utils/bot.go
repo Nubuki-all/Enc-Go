@@ -1,9 +1,12 @@
 package utils
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"enc/internal/bot"
+	"enc/internal/bot/queue"
 	"enc/internal/bot/state"
 )
 
@@ -57,7 +60,7 @@ func GetPauseStatusByType(pt state.PauseType) bool {
 func GetPauseStatus(idx int) (bool, error) {
 	pt, ok := IndexToPauseType(idx)
 	if !ok {
-		return nil, fmt.Errorf("invalid pause index %d", idx)
+		return false, fmt.Errorf("invalid pause index %d", idx)
 	}
 	return GetPauseStatusByType(pt), nil
 }
@@ -107,7 +110,7 @@ func GetPreviewer() interface{} {
 }
 
 // GetQueue returns the main queue
-func GetQueue() map[string]interface{} {
+func GetQueue() queue.Queue {
 	return bot.Queue
 }
 
@@ -115,7 +118,7 @@ func GetQueue() map[string]interface{} {
 func GetVar(name string) interface{} {
 	switch nameLower := strings.ToLower(name); nameLower {
 	case "groupenc":
-		return bot.GroupEncList
+		return bot.GroupEnc
 	case "version2":
 		return bot.ReleaseVersion
 	case "paused":

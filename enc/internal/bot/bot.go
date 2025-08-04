@@ -10,6 +10,7 @@ var (
 	AnilistParse    bool
 	CaptionParse    bool
 	DockerDeployed  bool
+	GroupEnc        bool
 	TempOnlyInGroup bool
 	ReportFailedDl  bool
 	ReportFailedEnc bool
@@ -19,7 +20,12 @@ var (
 	CustomRename    string
 	TempUsers       []string
 	BatchQueue      map[string]any
+	ECancel         map[string]any
 	RSSDict         map[string]any
+	UCancel         []any 
+	BatchIng        any
+	PreviewBatch    any
+	PreviewList     any
 )
 
 var (
