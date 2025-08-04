@@ -14,9 +14,9 @@ import (
 
 	"enc/config"
 	"github.com/celestix/gotgproto"
-	"github.com/celestix/gotgproto/dispatcher/handlers"
-	"github.com/celestix/gotgproto/dispatcher/handlers/filters"
-	"github.com/celestix/gotgproto/ext"
+	//"github.com/celestix/gotgproto/dispatcher/handlers"
+	//"github.com/celestix/gotgproto/dispatcher/handlers/filters"
+	//"github.com/celestix/gotgproto/ext"
 	"github.com/celestix/gotgproto/sessionMaker"
 	"github.com/gotd/contrib/middleware/floodwait"
 	_ "github.com/mattn/go-sqlite3"
