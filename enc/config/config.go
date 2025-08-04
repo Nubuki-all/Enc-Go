@@ -313,7 +313,7 @@ func init() {
 			LogFileName: "logs.txt",
 		}
 		Rconf = &RuntimeConfig{
-			Error: err
+			Error: err,
 		}
 	}
 }

@@ -19,11 +19,11 @@ var (
 	Started         bool
 	CustomRename    string
 	TempUsers       []string
+	BatchIng        []string
 	BatchQueue      map[string]any
 	ECancel         map[string]any
 	RSSDict         map[string]any
 	UCancel         []any 
-	BatchIng        any
 	PreviewBatch    any
 	PreviewList     any
 )
