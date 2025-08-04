@@ -11,8 +11,8 @@ import (
 
 	"enc/config"
 	"enc/internal/bot"
-	"enc/internal/logger"
 	"enc/internal/bot/queue"
+	"enc/internal/logger"
 )
 
 var (
