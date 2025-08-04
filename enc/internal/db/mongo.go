@@ -99,7 +99,7 @@ func LoadQueue() {
 }
 
 // loadMap reads a sub-document under key into the target map
-func loadMap(coll *mongo.Collection, key string, target *map[string]interface{}) {
+func LoadMap(coll *mongo.Collection, key string, target *map[string]interface{}) {
 	if !useMongo {
 		return
 	}
@@ -120,7 +120,7 @@ func loadMap(coll *mongo.Collection, key string, target *map[string]interface{})
 }
 
 // loadSlice reads an array of strings under key into the target slice
-func loadSlice(coll *mongo.Collection, key string, target *[]string) {
+func LoadSlice(coll *mongo.Collection, key string, target *[]string) {
 	if !useMongo {
 		return
 	}
@@ -140,7 +140,7 @@ func loadSlice(coll *mongo.Collection, key string, target *[]string) {
 }
 
 // loadString reads a string under key into the target string pointer
-func loadString(coll *mongo.Collection, key string, target *string) {
+func LoadString(coll *mongo.Collection, key string, target *string) {
 	if !useMongo {
 		return
 	}

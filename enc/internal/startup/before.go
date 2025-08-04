@@ -1,9 +1,13 @@
 package startup
 
 import (
+    "context"
 	"io"
 	"net/http"
 	"os"
+    "path/filepath"
+    "strings"
+    "time"
 
 	"enc/config"
 	"enc/internal/bot"
@@ -192,20 +196,20 @@ func LoadDB() {
 
 	// 3) Otherwise, load persisted state into bot.* variables
 	zap.L().Info("Loading state from MongoDB")
-	db.loadMap(db.QueueCol, "batches", &bot.BatchQueue)
+	db.LoadMap(db.QueueCol, "batches", &bot.BatchQueue)
 	db.LoadQueue()
-	db.loadMap(db.RSSCol, "rss", &bot.RSSDict)
+	db.LoadMap(db.RSSCol, "rss", &bot.RSSDict)
 
-	db.loadSlice(db.UsersCol, "t_users", &bot.TempUsers)
+	db.LoadSlice(db.UsersCol, "t_users", &bot.TempUsers)
 
-	db.loadString(db.FilterCol, "autoname", &bot.Autoname)
-	db.loadString(db.FilterCol, "cus_rename", &bot.CustomRename)
+	db.LoadString(db.FilterCol, "autoname", &bot.Autoname)
+	db.LoadString(db.FilterCol, "cus_rename", &bot.CustomRename)
 
-	db.loadString(db.CodeCol, "ffmpeg", &bot.FFmpegArgs)
-	db.loadString(db.CodeCol, "ffmpeg2", &bot.FFmpeg2Args)
-	db.loadString(db.CodeCol, "ffmpeg3", &bot.FFmpeg3Args)
-	db.loadString(db.CodeCol, "ffmpeg4", &bot.FFmpeg4Args)
-	db.loadString(db.CodeCol, "mux_args", &bot.MuxArgs)
+	db.LoadString(db.CodeCol, "ffmpeg", &bot.FFmpegArgs)
+	db.LoadString(db.CodeCol, "ffmpeg2", &bot.FFmpeg2Args)
+	db.LoadString(db.CodeCol, "ffmpeg3", &bot.FFmpeg3Args)
+	db.LoadString(db.CodeCol, "ffmpeg4", &bot.FFmpeg4Args)
+	db.LoadString(db.CodeCol, "mux_args", &bot.MuxArgs)
 
 	zap.L().Info("startup: state loaded from database")
 }
