@@ -110,7 +110,7 @@ func GetPreviewer() interface{} {
 }
 
 // GetQueue returns the main queue
-func GetQueue() queue.Queue {
+func GetQueue() *queue.Queue {
 	return bot.Queue
 }
 
