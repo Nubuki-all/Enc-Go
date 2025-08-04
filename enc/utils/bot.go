@@ -54,12 +54,12 @@ func GetPauseStatusByType(pt state.PauseType) bool {
     return bot.Paused.Get(pt)
 }
 
-func GetPauseStatus(idx int) bool, error{
+func GetPauseStatus(idx int) (bool, error){
     pt, ok := IndexToPauseType(idx)
     if !ok {
-        return fmt.Errorf("invalid pause index %d", idx)
+        return nil, fmt.Errorf("invalid pause index %d", idx)
     }
-    return GetPauseStatusByType(pt)
+    return GetPauseStatusByType(pt), nil
 }
 
 // RmPause clears the given pause type after duration if still set
