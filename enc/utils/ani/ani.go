@@ -38,24 +38,24 @@ var AnimeQuery = `query ($id: Int, $idMal:Int, $search: String, $type: MediaType
 
 // Media holds AniList media info
 type Media struct {
-	ID                 int      `json:"id"`
-	IDMal              int      `json:"idMal"`
-	Title              Title    `json:"title"`
-	Format             string   `json:"format"`
-	Status             string   `json:"status"`
-	Description        string   `json:"description"`
-	Season             string   `json:"season"`
-	Episodes           int      `json:"episodes"`
-	Duration           int      `json:"duration"`
-	CountryOfOrigin    string   `json:"countryOfOrigin"`
-	Source             string   `json:"source"`
-	CoverImage         Image    `json:"coverImage"`
-	BannerImage        string   `json:"bannerImage"`
-	Genres             []string `json:"genres"`
-	AverageScore       int      `json:"averageScore"`
-	NextAiringEpisode  NextEp   `json:"nextAiringEpisode"`
-	IsAdult            bool     `json:"isAdult"`
-	SiteURL            string   `json:"siteUrl"`
+	ID                int      `json:"id"`
+	IDMal             int      `json:"idMal"`
+	Title             Title    `json:"title"`
+	Format            string   `json:"format"`
+	Status            string   `json:"status"`
+	Description       string   `json:"description"`
+	Season            string   `json:"season"`
+	Episodes          int      `json:"episodes"`
+	Duration          int      `json:"duration"`
+	CountryOfOrigin   string   `json:"countryOfOrigin"`
+	Source            string   `json:"source"`
+	CoverImage        Image    `json:"coverImage"`
+	BannerImage       string   `json:"bannerImage"`
+	Genres            []string `json:"genres"`
+	AverageScore      int      `json:"averageScore"`
+	NextAiringEpisode NextEp   `json:"nextAiringEpisode"`
+	IsAdult           bool     `json:"isAdult"`
+	SiteURL           string   `json:"siteUrl"`
 }
 
 type Title struct {
@@ -69,7 +69,7 @@ type Image struct {
 }
 
 type NextEp struct {
-	AiringAt       int `json:"airingAt"`
+	AiringAt        int `json:"airingAt"`
 	TimeUntilAiring int `json:"timeUntilAiring"`
 	Episode         int `json:"episode"`
 }
@@ -83,7 +83,9 @@ type GraphQLRequest struct {
 // GraphQLResponse wraps the AniList response
 type GraphQLResponse struct {
 	Data   map[string]Media `json:"data"`
-	Errors []struct { Message string `json:"message"` } `json:"errors"`
+	Errors []struct {
+		Message string `json:"message"`
+	} `json:"errors"`
 }
 
 // GetAniInfo fetches media info from AniList
@@ -107,8 +109,12 @@ func GetAniInfo(search string, id, idMal *int, asHtml bool) (*Media, error) {
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
 	var gqlResp struct {
-		Data struct { Media Media `json:"Media"` } `json:"data"`
-		Errors []struct{ Message string `json:"message"` } `json:"errors"`
+		Data struct {
+			Media Media `json:"Media"`
+		} `json:"data"`
+		Errors []struct {
+			Message string `json:"message"`
+		} `json:"errors"`
 	}
 	if err := json.Unmarshal(body, &gqlResp); err != nil {
 		return nil, err
