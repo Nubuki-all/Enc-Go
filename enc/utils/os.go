@@ -1,18 +1,20 @@
 package utils
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
+	//"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
-	"sync"
-	"time"
+	/*"sync"
+	"time"*/
+	"syscall"
 )
 
 // Enshell runs a shell command and returns the output and error

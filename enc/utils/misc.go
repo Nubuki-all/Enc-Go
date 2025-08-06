@@ -38,7 +38,7 @@ func IsURL(u string) bool {
 // ReplaceProxy reads replace_proxy.txt and applies proxy rules
 func ReplaceProxy(url string) string {
 	file := "replace_proxy.txt"
-	if url == "" || !fileExists(file) {
+	if url == "" || !FileExists(file) {
 		return url
 	}
 	lines, err := readLines(file)
@@ -119,7 +119,7 @@ func ListToStr(lst []string, sep string, start int, numbered bool) string {
 
 // TxtToStr reads a file and returns its contents as a string
 func TxtToStr(path string) (string, error) {
-	if !fileExists(path) {
+	if !FileExists(path) {
 		return "", nil
 	}
 	data, err := ioutil.ReadFile(path)
