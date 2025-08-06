@@ -1,199 +1,196 @@
 package utils
 
 import (
-    "fmt"
-    "io/ioutil"
-    "os"
-    "path/filepath"
-    "regexp"
-    "strings"
-    "strconv"
-    "bufio"
+	"bufio"
 	"errors"
+	"fmt"
 	"hash/crc32"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
-    "enc/config"
+	"enc/config"
 )
 
 // Regex patterns
 var (
-    MagnetRegex = regexp.MustCompile(`magnet:\?xt=urn:[a-z0-9]+:[a-zA-Z0-9]{32}`)
-    URLRegex    = regexp.MustCompile(`^(https?://|ftp://)?(www\.)?[^/\s]+\.[^/\s:]+(:\d+)?(/[^?\s]*[\s\S]*)?(\?[^#\s]*[\s\S]*)?(#.*)?$`)
+	MagnetRegex = regexp.MustCompile(`magnet:\?xt=urn:[a-z0-9]+:[a-zA-Z0-9]{32}`)
+	URLRegex    = regexp.MustCompile(`^(https?://|ftp://)?(www\.)?[^/\s]+\.[^/\s:]+(:\d+)?(/[^?\s]*[\s\S]*)?(\?[^#\s]*[\s\S]*)?(#.*)?$`)
 )
 
 // IsMagnet checks if the given link is a magnet URL
 func IsMagnet(link string) bool {
-    return MagnetRegex.MatchString(link)
+	return MagnetRegex.MatchString(link)
 }
 
 // IsURL checks if the given string is a URL
 func IsURL(u string) bool {
-    return URLRegex.MatchString(u)
+	return URLRegex.MatchString(u)
 }
 
 // ReplaceProxy reads replace_proxy.txt and applies proxy rules
 func ReplaceProxy(url string) string {
-    file := "replace_proxy.txt"
-    if url == "" || !fileExists(file) {
-        return url
-    }
-    lines, err := readLines(file)
-    if err != nil {
-        return url
-    }
-    for _, line := range lines {
-        parts := strings.Fields(line)
-        if len(parts) < 2 {
-            continue
-        }
-        search, proxy := parts[0], parts[1]
-        if strings.HasPrefix(url, search) {
-            if strings.HasSuffix(proxy, "=") {
-                return proxy + url
-            }
-            return strings.Replace(url, search, proxy, 1)
-        }
-    }
-    return url
+	file := "replace_proxy.txt"
+	if url == "" || !fileExists(file) {
+		return url
+	}
+	lines, err := readLines(file)
+	if err != nil {
+		return url
+	}
+	for _, line := range lines {
+		parts := strings.Fields(line)
+		if len(parts) < 2 {
+			continue
+		}
+		search, proxy := parts[0], parts[1]
+		if strings.HasPrefix(url, search) {
+			if strings.HasSuffix(proxy, "=") {
+				return proxy + url
+			}
+			return strings.Replace(url, search, proxy, 1)
+		}
+	}
+	return url
 }
 
 // CheckCmds returns true if command ends exactly with any of the matches plus suffix
 func CheckCmds(command string, matches ...string) bool {
-    for _, m := range matches {
-        full := m + config.Conf.CmdSuffix
-        if strings.HasSuffix(command, full) {
-            return true
-        }
-    }
-    return false
+	for _, m := range matches {
+		full := m + config.Conf.CmdSuffix
+		if strings.HasSuffix(command, full) {
+			return true
+		}
+	}
+	return false
 }
 
 // Gfn returns the fully-qualified name of a function (package path + name)
 func Gfn(fn interface{}) string {
-    // Not directly possible in Go; return placeholder
-    return fmt.Sprintf("%T", fn)
+	// Not directly possible in Go; return placeholder
+	return fmt.Sprintf("%T", fn)
 }
 
 // StringEscape unescapes escaped characters in a string
 func StringEscape(s string) string {
-    // Go strings handle escapes; as placeholder simply return original
-    return s
+	// Go strings handle escapes; as placeholder simply return original
+	return s
 }
 
 // StringEscape unescapes escaped characters in a string
 func stringEscape(s string) string {
-    if s == "" {
-        return s
-    }
-    // Wrap in quotes so strconv.Unquote can process escape sequences
-    quoted := "\"" + strings.ReplaceAll(s, "\"", "\\\"") + "\""
-    unq, err := strconv.Unquote(quoted)
-    if err != nil {
-        return s
-    }
-    return unq
+	if s == "" {
+		return s
+	}
+	// Wrap in quotes so strconv.Unquote can process escape sequences
+	quoted := "\"" + strings.ReplaceAll(s, "\"", "\\\"") + "\""
+	unq, err := strconv.Unquote(quoted)
+	if err != nil {
+		return s
+	}
+	return unq
 }
-
 
 // ListToStr joins a slice of items into a string, optionally numbered
 func ListToStr(lst []string, sep string, start int, numbered bool) string {
-    if sep == "" {
-        sep = " "
-    }
-    var sb strings.Builder
-    if numbered {
-        for i, item := range lst {
-            sb.WriteString(fmt.Sprintf("%d. `%s`%s", start+i, item, sep))
-        }
-    } else {
-        for _, item := range lst {
-            sb.WriteString(item + sep)
-        }
-    }
-    result := sb.String()
-    return strings.TrimSuffix(result, sep)
+	if sep == "" {
+		sep = " "
+	}
+	var sb strings.Builder
+	if numbered {
+		for i, item := range lst {
+			sb.WriteString(fmt.Sprintf("%d. `%s`%s", start+i, item, sep))
+		}
+	} else {
+		for _, item := range lst {
+			sb.WriteString(item + sep)
+		}
+	}
+	result := sb.String()
+	return strings.TrimSuffix(result, sep)
 }
 
 // TxtToStr reads a file and returns its contents as a string
 func TxtToStr(path string) (string, error) {
-    if !fileExists(path) {
-        return "", nil
-    }
-    data, err := ioutil.ReadFile(path)
-    if err != nil {
-        return "", err
-    }
-    return strings.TrimSpace(string(data)), nil
+	if !fileExists(path) {
+		return "", nil
+	}
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(data)), nil
 }
 
 // File extension checks
 func IsAudioFile(name string) bool {
-    exts := []string{".aac", ".mp3", ".m4a", ".flac", ".opus", ".wav"}
-    return hasExt(name, exts)
+	exts := []string{".aac", ".mp3", ".m4a", ".flac", ".opus", ".wav"}
+	return hasExt(name, exts)
 }
 
 func IsSubtitleFile(name string) bool {
-    exts := []string{".ass", ".srt", ".txt", ".pgs"}
-    return hasExt(name, exts)
+	exts := []string{".ass", ".srt", ".txt", ".pgs"}
+	return hasExt(name, exts)
 }
 
 func IsVideoFile(name string) bool {
-    exts := []string{
-        ".3g2", ".3gp", ".3gp2", ".3gpp", ".avc", ".avd", ".avi",
-        ".evo", ".fli", ".flv", ".flx", ".m4u", ".m4v", ".mkv",
-        ".mov", ".movie", ".mp21", ".mp2v", ".mp4", ".mp4v", ".mpeg",
-        ".mpg", ".mpg2", ".xvid",
-    }
-    return hasExt(name, exts)
+	exts := []string{
+		".3g2", ".3gp", ".3gp2", ".3gpp", ".avc", ".avd", ".avi",
+		".evo", ".fli", ".flv", ".flx", ".m4u", ".m4v", ".mkv",
+		".mov", ".movie", ".mp21", ".mp2v", ".mp4", ".mp4v", ".mpeg",
+		".mpg", ".mpg2", ".xvid",
+	}
+	return hasExt(name, exts)
 }
 
 func IsSupportedFile(name string) bool {
-    return IsAudioFile(name) || IsSubtitleFile(name) || IsVideoFile(name)
+	return IsAudioFile(name) || IsSubtitleFile(name) || IsVideoFile(name)
 }
 
 // GetReadableFileSize formats bytes as human-readable units
 func GetReadableFileSize(size int64) string {
-    if size <= 0 {
-        return "0B"
-    }
-    units := []string{"B", "KB", "MB", "GB", "TB", "PB"}
-    var i int
-    fsize := float64(size)
-    for fsize >= 1024 && i < len(units)-1 {
-        fsize /= 1024
-        i++
-    }
-    return fmt.Sprintf("%.2f%s", fsize, units[i])
+	if size <= 0 {
+		return "0B"
+	}
+	units := []string{"B", "KB", "MB", "GB", "TB", "PB"}
+	var i int
+	fsize := float64(size)
+	for fsize >= 1024 && i < len(units)-1 {
+		fsize /= 1024
+		i++
+	}
+	return fmt.Sprintf("%.2f%s", fsize, units[i])
 }
 
 // helpers
 func fileExists(path string) bool {
-    info, err := os.Stat(path)
-    return err == nil && !info.IsDir()
+	info, err := os.Stat(path)
+	return err == nil && !info.IsDir()
 }
 
 func readLines(path string) ([]string, error) {
-    data, err := ioutil.ReadFile(path)
-    if err != nil {
-        return nil, err
-    }
-    return strings.Split(strings.ReplaceAll(string(data), "\r\n", "\n"), "\n"), nil
+	data, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return strings.Split(strings.ReplaceAll(string(data), "\r\n", "\n"), "\n"), nil
 }
 
 func hasExt(name string, exts []string) bool {
-    lower := strings.ToLower(filepath.Ext(name))
-    for _, e := range exts {
-        if lower == e {
-            return true
-        }
-    }
-    return false
+	lower := strings.ToLower(filepath.Ext(name))
+	for _, e := range exts {
+		if lower == e {
+			return true
+		}
+	}
+	return false
 }
-
 
 // GetHTML fetches the HTML content of the given link.
 func GetHTML(link string) (string, error) {
@@ -414,14 +411,14 @@ func GetCodec(filePath string) (string, error) {
 	}
 	code := string(data)
 	tags := map[string]string{
-		"360":      "360p",
-		"480":      "480p",
-		"720":      "720p",
-		"1080":     "1080p",
-		"x264":     "AVC",
-		"x265":     "HEVC",
+		"360":       "360p",
+		"480":       "480p",
+		"720":       "720p",
+		"1080":      "1080p",
+		"x264":      "AVC",
+		"x265":      "HEVC",
 		"libsvtav1": "AV1",
-		"svt_av1":  "AV1",
+		"svt_av1":   "AV1",
 	}
 	var out []string
 	for k, v := range tags {
