@@ -105,13 +105,13 @@ func (e *EncodeJob) Reset(force bool) {
 }
 
 // fileExists checks if the given path exists and is a file
-func fileExists(path string) bool {
-	info, err := os.Stat(path)
-	if err != nil {
-		return false
-	}
-	return !info.IsDir()
-}
+//func fileExists(path string) bool {
+//	info, err := os.Stat(path)
+//	if err != nil {
+//		return false
+//	}
+//	return !info.IsDir()
+//}
 
 // JobsCount returns how many ffmpeg scripts are pending
 type PendingInfo struct {

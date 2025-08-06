@@ -1,10 +1,11 @@
 package utils
 
 import (
-	"bufio"
+	//"bufio"
 	"errors"
 	"fmt"
 	"hash/crc32"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -197,7 +198,7 @@ func GetHTML(link string) (string, error) {
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
-	resp, err := client.Get(replaceProxy(link))
+	resp, err := client.Get(ReplaceProxy(link))
 	if err != nil {
 		return "", err
 	}
