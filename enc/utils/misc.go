@@ -170,10 +170,10 @@ func GetReadableFileSize(size int64) string {
 }
 
 // helpers
-func fileExists(path string) bool {
-	info, err := os.Stat(path)
-	return err == nil && !info.IsDir()
-}
+//func fileExists(path string) bool {
+//	info, err := os.Stat(path)
+//	return err == nil && !info.IsDir()
+//}
 
 func readLines(path string) ([]string, error) {
 	data, err := ioutil.ReadFile(path)
