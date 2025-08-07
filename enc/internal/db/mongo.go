@@ -316,7 +316,7 @@ func SaveFilterSettings(ctx context.Context) {
 
 // SaveFilterData persists filter settings using MongoDB or SQL based on configuration.
 func SaveFilterData(ctx context.Context) {
-	if !UseMongo || FilterCol == nil {
+	if !useMongo || FilterCol == nil {
 		SaveFilterDataLocal()
 		return
 	}

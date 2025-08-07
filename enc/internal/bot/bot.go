@@ -44,4 +44,8 @@ var (
 	Filters     = &types.FilterData{}
 	Queue       = types.NewQueue()
 	Paused      = &state.PauseState{}
+	RGCaptionFilters = []*types.RGCaptionFilterData{}
+	NameFilters = []*types.MatchedFilterData{}
+	ReleaseFilters = []*types.MatchedFilterData{}
+	RenameFilters =  []*types.RenameFilterData{}
 )

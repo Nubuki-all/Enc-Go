@@ -17,6 +17,8 @@ import (
 	"time"
 
 	"enc/config"
+	"enc/internal/bot"
+	"enc/internal/bot/types"
 )
 
 // Regex patterns
@@ -392,25 +394,17 @@ func CRC32(filename string) (string, error) {
 }
 
 // GetCodecs returns combined codec strings for multiple files.
-func GetCodecs(files []string) (string, error) {
+func GetCodecs(slices []string) string {
 	var out []string
-	for _, f := range files {
-		c, err := GetCodec(f)
-		if err != nil {
-			return "", err
-		}
+	for _, s := range slices {
+		c := GetCodec(s)
 		out = append(out, c)
 	}
 	return strings.Join(out, ", "), nil
 }
 
 // GetCodec extracts codec tags from an ffmpeg output file.
-func GetCodec(filePath string) (string, error) {
-	data, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		return "", err
-	}
-	code := string(data)
+func GetCodec(str string) string {
 	tags := map[string]string{
 		"360":       "360p",
 		"480":       "480p",
@@ -423,17 +417,74 @@ func GetCodec(filePath string) (string, error) {
 	}
 	var out []string
 	for k, v := range tags {
-		if strings.Contains(code, k) {
+		if strings.Contains(str, k) {
 			out = append(out, "["+v+"]")
 		}
 	}
 	return strings.Join(out, " "), nil
 }
 
-// AutoRename applies renaming rules based on refunc patterns.
-func AutoRename(parsedName, originalName, refunc string, caption, general bool) (interface{}, string) {
-	// Implementation omitted for brevity; translate Python logic here
-	return true, originalName
+// AutoRename applies renaming rules based on Renamefilters.
+func AutoRename(parsedName, originalName string, caption, banner bool) (bool, string) {
+    var filter *types.RenameFilterData
+    for _, rf := range bot.RenameFilters {
+        if rf.CaseSensitive == true {
+            if strings.ToLower(rf.Match) != strings.ToLower(originalName) {
+                continue
+            }
+        } else if rf.Match != originalName {
+            continue
+        } else {
+            continue
+        }
+        filter = rf
+        break
+    }
+    if filter == nil {
+        return true, originalName
+    }
+    defaultFunc := func() string {
+    	if rf.ReplaceName == "00" {
+    		return originalName
+    	} else {
+    		return rf.ReplaceName
+    	}
+    }
+    captionFunc := func() string {
+    	capOpt := rf.ReplaceCaption
+    	var outCap string
+    	if capOpt == "0" {
+    		outCap = parsedName
+    	} else if capOpt == "1" || capOpt == "" {
+    		outCap = defaultFunc()
+    	} else if capOpt == "00" {
+    		outCap = originalName
+    	} else {
+    		outCap = capOpt
+    	}
+    	return outCap
+    } 
+    bannerFunc := func() string {
+    	bannerOpt := rf.ReplaceBanner
+    	var outStr string
+    	if bannerOpt == "1" {
+    		outStr = captionFunc()
+    	} else if bannerOpt == "0" {
+    		outStr = defaultFunc()
+    	} else if bannerOpt == "" || bannerOpt == "00" {
+    		outStr = originalName
+    	} else {
+    		outStr = bannerOpt
+    	}
+    	return outStr
+    }
+    if caption {
+    	return rf.DisableAnilist, captionFunc()
+    } else banner {
+    	return rf.DisableAnilist, bannerFunc()
+    } else {
+    	return rf.DisableAnilist, defaultFunc()
+    }
 }
 
 // TextFilter reads three filter files and returns their contents.

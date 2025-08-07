@@ -2,6 +2,7 @@ package db
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	_ "github.com/mattn/go-sqlite3"

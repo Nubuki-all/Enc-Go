@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -13,6 +12,7 @@ import (
 
 	"go.uber.org/zap"
 	"golang.org/x/text/language"
+	"github.com/5rahim/tanuki"
 
 	"enc/intenal/bot/types"
 	"enc/internal/bot"
@@ -25,24 +25,70 @@ const (
 )
 
 // GraphQL query templates
-var AnimeQuery = `query ($id: Int, $idMal:Int, $search: String, $type: MediaType, $asHtml: Boolean) {
-  Media (id: $id, idMal: $idMal, search: $search, type: $type) {
+var AnimeQuery = `
+query ($id: Int, $idMal: Int, $search: String, $type: MediaType, $asHtml: Boolean) {
+  Media(id: $id, idMal: $idMal, search: $search, type: $type) {
     id
     idMal
-    title { romaji english native }
-    format status description(asHtml: $asHtml)
-    startDate { year month day }
-    season episodes duration countryOfOrigin source(trailer:{site,thumbnail})
-    coverImage{extraLarge} bannerImage genres averageScore
-    nextAiringEpisode { airingAt timeUntilAiring episode }
-    isAdult
-    characters(role:MAIN,page:1,perPage:10) {
-      nodes { id name{full native} image{large} description(asHtml:$asHtml) siteUrl }
+    title {
+      romaji
+      english
+      native
     }
-    studios(isMain:true){ nodes{ name siteUrl }}
+    format
+    status
+    description(asHtml: $asHtml)
+    startDate {
+      year
+      month
+      day
+    }
+    season
+    episodes
+    duration
+    countryOfOrigin
+    source
+    trailer {
+      id
+      site
+      thumbnail
+    }
+    coverImage {
+      extraLarge
+    }
+    bannerImage
+    genres
+    averageScore
+    nextAiringEpisode {
+      airingAt
+      timeUntilAiring
+      episode
+    }
+    isAdult
+    characters(role: MAIN, page: 1, perPage: 10) {
+      nodes {
+        id
+        name {
+          full
+          native
+        }
+        image {
+          large
+        }
+        description(asHtml: $asHtml)
+        siteUrl
+      }
+    }
+    studios(isMain: true) {
+      nodes {
+        name
+        siteUrl
+      }
+    }
     siteUrl
   }
 }`
+
 
 // Media holds AniList media info
 type Media struct {
@@ -115,7 +161,7 @@ func GetAniInfo(search string, id, idMal *int, asHtml bool) (*Media, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	body, _ := ioutil.ReadAll(resp.Body)
+	//body, _ := ioutil.ReadAll(resp.Body)
 	var gqlResp struct {
 		Data struct {
 			Media Media `json:"Media"`
@@ -124,9 +170,10 @@ func GetAniInfo(search string, id, idMal *int, asHtml bool) (*Media, error) {
 			Message string `json:"message"`
 		} `json:"errors"`
 	}
-	if err := json.Unmarshal(body, &gqlResp); err != nil {
-		return nil, err
-	}
+	err = json.NewDecoder(resp.Body).Decode(&gqlResp)
+    if err != nil {
+        return nil, err
+    }
 	if len(gqlResp.Errors) > 0 {
 		return nil, fmt.Errorf("AniList error: %s", gqlResp.Errors[0].Message)
 	}
@@ -352,7 +399,8 @@ func langTagToRegion(langTag string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	region := tag.Region()
+	region, _ := tag.Region()
+	
 	if region.IsUnknown() {
 		return "", fmt.Errorf("unknown region for language tag: %s", langTag)
 	}
@@ -457,3 +505,185 @@ func ParseName(filename string) (map[string]string, error) {
 
 // Additional functions like FilterName, GenerateCaption, DynamicThumb, etc.
 // can be added here following similar stubs and TODOs for complex logic.
+
+type ParseResult struct {
+    fileName   string
+    mediainfoName string
+}
+
+// Media and GetAniInfo assumed defined as you shared.
+
+// ParseName applies tanuki + AniList + your filters + codecs to build filenames.
+func ParseName(
+    rawName string,
+    direct string,
+    useAniList bool,
+    filterOverride *types.FilterData,
+    version string,
+    folder string,
+    encString string,
+) (ParseResult, error) {
+    // 1) Direct override
+    if direct != "" {
+        return ParseResult{direct, direct}, nil
+    }
+
+    // 2) First-pass parse for “orTitle”
+    baseParsed := tanuki.Parse(rawName)
+
+    // 3) Apply your filters (returns filteredName, fil2, fil3)
+    filteredName, fil2, fil3 := FilterName(rawName, filterOverride)
+
+    // 4) Second-pass parse for the real fields
+    p := tanuki.Parse(filteredName)
+
+    // 5) Extract and normalize fields
+    title := p.AnimeTitle
+    orTitle := baseParsed.AnimeTitle
+    epi := p.EpisodeNumber
+    season := p.AnimeSeason
+    relGroup := p.ReleaseGroup
+    relInfo := p.ReleaseInformation
+    year := p.AnimeYear
+    epTitle := p.EpisodeTitle
+    source := p.Source
+
+    // Normalize season (“01”→“1”, drop “1”)
+    if season != "" {
+        season = strings.TrimLeft(season, "0")
+        if season == "" {
+            season = "1"
+        }
+        if season == "1" {
+            season = ""
+        }
+    }
+
+    // Wrap release info in brackets
+    ri := ""
+    if relInfo != "" {
+        ri = fmt.Sprintf("[%s]", relInfo)
+    }
+
+    if title == "" {
+        return ParseResult{}, fmt.Errorf("parsing failed for %q", rawName)
+    }
+    if year != "" {
+        title = fmt.Sprintf("%s %s", title, year)
+    }
+
+    // 6) Build input-file path
+    if !strings.HasSuffix(folder, "/") {
+        folder += "/"
+    }
+    infile := filepath.Join(folder, filteredName)
+
+    // 7) Codecs
+    codec := utils.GetCodec(encString)
+    // 8) AniList lookup, if enabled
+    var (
+        con   string
+        te    string
+        useAL = useAniList
+    )
+    if !bot.AnilistParse && useAL {
+        media, err := GetAniInfo(title, nil, nil, false)
+        if err != nil {
+            // disable further AniList overrides
+            logger.Warn("AniList lookup failed", "error", err)
+            useAL = false
+        } else {
+            // English title fallback
+            if eng := media.Title.English; eng != "" {
+                title = eng
+            }
+            // romaji fallback
+            if title == "" {
+                title = media.Title.Romaji
+            }
+            con = media.CountryOfOrigin
+            te = strconv.Itoa(media.Episodes)
+            // zero-pad if epi had leading zero
+            if strings.HasPrefix(epi, "0") {
+                te = "0" + te
+            }
+            con = ConvertISO(con)
+        }
+    }
+
+    // 9) Audio/subtitle tag
+    aTag, _ := GetFileTag(infile, false, false)
+    if aTag == "" {
+        aTag, _ = GetCusTag(filteredName, relGroup, false)
+    }
+    if aTag == "" && useAL {
+        // use country code if nothing else
+        aTag = con
+    }
+
+    // 10) Title truncation
+    shortTitle := title
+    if len(shortTitle) > 33 {
+        shortTitle = shortTitle[:32] + "…"
+        shortTitle = strings.SplitN(shortTitle, ":", 2)[0]
+    }
+
+    // 11) Custom-rename
+    if bot.CustomRename != "" {
+        out, _ := CustomRename(shortTitle, season, epi, aTag, codec)
+        return ParseResult{out, out}, nil
+    }
+
+    // 12) Build primary filename
+    var primary strings.Builder
+    primary.WriteString(config.Conf.ReleaseName)
+    primary.WriteString(" ")
+    primary.WriteString(shortTitle)
+    if season != "" {
+        primary.WriteString(" S")
+        primary.WriteString(season)
+    }
+    if epi != "" {
+        primary.WriteString(" - ")
+        primary.WriteString(epi)
+    }
+    if version != "" {
+        primary.WriteString("v")
+        primary.WriteString(version)
+    }
+    if ri == "[END]" || (te != "" && te == epi && season == "") {
+        primary.WriteString(" [END]")
+    }
+    if aTag != "" {
+        primary.WriteString(" [")
+        primary.WriteString(aTag)
+        primary.WriteString("]")
+    }
+    primary.WriteString(".mkv")
+
+    // 13) Build secondary filename
+    sec := primary.String()
+    sec = strings.Replace(sec, shortTitle, title, 1)
+    if config.Conf.ReleaseNameB != "" {
+        sec = strings.Replace(sec, config.ReleaseName, config.ReleaseNameB, 1)
+    }
+    if epTitle != "" && aTag != "" {
+        sec = strings.Replace(
+            sec,
+            fmt.Sprintf("[%s]", aTag),
+            fmt.Sprintf("- %s [%s]", epTitle, aTag),
+            1,
+        )
+    }
+    if codec != "" {
+        sec += " " + codec
+    }
+    if source != "" {
+        sec += " [" + source + "]"
+    }
+
+    return ParseResult{
+        Primary:   primary.String(),
+        Secondary: sec,
+    }, nil
+}

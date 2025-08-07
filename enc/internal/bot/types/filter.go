@@ -5,3 +5,24 @@ type FilterData struct {
 	Fil2 string `bson:"fil2" json:"fil2"`
 	Fil3 string `bson:"fil3" json:"fil3"`
 }
+
+
+type RGCaptionFilterData struct {
+	Match string      `bson:"match" json:"match"`
+	Data []string     `bson:"data" json:"data"`
+}
+
+type MatchedFilterData struct {
+	Match      string `bson:"match" json:"match"`
+	FileTag    string `bson:"filetag" json:"filetag"`
+	CaptionTag string `bson:"captiontag" json:"captiontag"`
+}
+
+type RenameFilterData struct {
+	Match          string `bson:"match" json:"match"`
+	ReplaceName    string `bson:"replacename" json:"replacename"`
+	ReplaceCaption string `bson:"replacecaption" json:"replacecaption"`
+	ReplaceBanner  string `bson:"replacebanner" json:"replacebanner"`
+	CaseSensitive  bool   `bson:"casesensitive" json:"casesensitive"`
+	DisableAnilist bool   `bson:"disableanilist" json:"disableanilist"`
+}
