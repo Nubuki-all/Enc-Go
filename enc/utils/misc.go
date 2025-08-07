@@ -480,7 +480,7 @@ func AutoRename(parsedName, originalName string, caption, banner bool) (bool, st
     }
     if caption {
     	return rf.DisableAnilist, captionFunc()
-    } else banner {
+    } else if banner {
     	return rf.DisableAnilist, bannerFunc()
     } else {
     	return rf.DisableAnilist, defaultFunc()

@@ -8,12 +8,14 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"strconv"
 	"time"
 
 	"go.uber.org/zap"
 	"golang.org/x/text/language"
 	"github.com/5rahim/tanuki"
 
+	"enc/config"
 	"enc/intenal/bot/types"
 	"enc/internal/bot"
 	"enc/internal/logger"
@@ -399,9 +401,9 @@ func langTagToRegion(langTag string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	region, _ := tag.Region()
+	region, confidence := tag.Region()
 	
-	if region.IsUnknown() {
+	if confidence < 1 {
 		return "", fmt.Errorf("unknown region for language tag: %s", langTag)
 	}
 	return region.String(), nil
@@ -497,18 +499,12 @@ func CustomRename(title, season, episode, audio, codec string) (string, string) 
 	return res, res
 }
 
-// ParseName extracts anime info from file name (stub)
-func ParseName(filename string) (map[string]string, error) {
-	// TODO: integrate with anitopy equivalent or simple regex parsing
-	return nil, nil
-}
-
 // Additional functions like FilterName, GenerateCaption, DynamicThumb, etc.
 // can be added here following similar stubs and TODOs for complex logic.
 
 type ParseResult struct {
-    fileName   string
-    mediainfoName string
+    FileName   string
+    MediaInfoName string
 }
 
 // Media and GetAniInfo assumed defined as you shared.
@@ -529,24 +525,24 @@ func ParseName(
     }
 
     // 2) First-pass parse for “orTitle”
-    baseParsed := tanuki.Parse(rawName)
+    baseParsed := tanuki.Parse(rawName, tanuki.DefaultOptions)
 
     // 3) Apply your filters (returns filteredName, fil2, fil3)
-    filteredName, fil2, fil3 := FilterName(rawName, filterOverride)
+    filteredName, fil2, fil3 := filterName(rawName, filterOverride)
 
     // 4) Second-pass parse for the real fields
-    p := tanuki.Parse(filteredName)
+    p := tanuki.Parse(filteredName, tanuki.DefaultOptions)
 
     // 5) Extract and normalize fields
     title := p.AnimeTitle
     orTitle := baseParsed.AnimeTitle
-    epi := p.EpisodeNumber
-    season := p.AnimeSeason
+    epi := p.EpisodeNumber[0]
+    season := p.AnimeSeason[0]
     relGroup := p.ReleaseGroup
     relInfo := p.ReleaseInformation
     year := p.AnimeYear
     epTitle := p.EpisodeTitle
-    source := p.Source
+    sources := p.Source
 
     // Normalize season (“01”→“1”, drop “1”)
     if season != "" {
@@ -560,11 +556,16 @@ func ParseName(
     }
 
     // Wrap release info in brackets
-    ri := ""
-    if relInfo != "" {
-        ri = fmt.Sprintf("[%s]", relInfo)
+    
+    slice2String := func(slice []string) string {
+    	var sb strings.Builder
+    	for _, x := range slice {
+    		sb.WriteString(fmt.Sprintf("[%s]", x))
+    	}
+        return sb.String()
     }
-
+    ri := slice2String(relInfo)
+    source := slice2String(sources)
     if title == "" {
         return ParseResult{}, fmt.Errorf("parsing failed for %q", rawName)
     }
@@ -679,11 +680,11 @@ func ParseName(
         sec += " " + codec
     }
     if source != "" {
-        sec += " [" + source + "]"
+        sec += source
     }
 
     return ParseResult{
-        Primary:   primary.String(),
-        Secondary: sec,
+        FileName:   primary.String(),
+        MediaInfoName: sec,
     }, nil
 }
