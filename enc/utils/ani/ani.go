@@ -636,7 +636,7 @@ func ParseName(
 
 	// 12) Build primary filename
 	var primary strings.Builder
-	primary.WriteString(config.Conf.ReleaseName)
+	primary.WriteString(config.Rconf.ReleaseName)
 	primary.WriteString(" ")
 	primary.WriteString(shortTitle)
 	if season != "" {
@@ -665,7 +665,7 @@ func ParseName(
 	sec := primary.String()
 	sec = strings.Replace(sec, shortTitle, title, 1)
 	if config.Conf.ReleaseNameB != "" {
-		sec = strings.Replace(sec, config.ReleaseName, config.ReleaseNameB, 1)
+		sec = strings.Replace(sec, config.Rconf.ReleaseName, config.Rconf.ReleaseNameB, 1)
 	}
 	if epTitle != "" && aTag != "" {
 		sec = strings.Replace(

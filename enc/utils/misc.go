@@ -400,7 +400,7 @@ func GetCodecs(slices []string) string {
 		c := GetCodec(s)
 		out = append(out, c)
 	}
-	return strings.Join(out, ", "), nil
+	return strings.Join(out, ", ")
 }
 
 // GetCodec extracts codec tags from an ffmpeg output file.
@@ -421,7 +421,7 @@ func GetCodec(str string) string {
 			out = append(out, "["+v+"]")
 		}
 	}
-	return strings.Join(out, " "), nil
+	return strings.Join(out, " ")
 }
 
 // AutoRename applies renaming rules based on Renamefilters.
@@ -444,14 +444,14 @@ func AutoRename(parsedName, originalName string, caption, banner bool) (bool, st
 		return true, originalName
 	}
 	defaultFunc := func() string {
-		if rf.ReplaceName == "00" {
+		if filter.ReplaceName == "00" {
 			return originalName
 		} else {
-			return rf.ReplaceName
+			return filter.ReplaceName
 		}
 	}
 	captionFunc := func() string {
-		capOpt := rf.ReplaceCaption
+		capOpt := filter.ReplaceCaption
 		var outCap string
 		if capOpt == "0" {
 			outCap = parsedName
@@ -465,7 +465,7 @@ func AutoRename(parsedName, originalName string, caption, banner bool) (bool, st
 		return outCap
 	}
 	bannerFunc := func() string {
-		bannerOpt := rf.ReplaceBanner
+		bannerOpt := filter.ReplaceBanner
 		var outStr string
 		if bannerOpt == "1" {
 			outStr = captionFunc()
@@ -479,11 +479,11 @@ func AutoRename(parsedName, originalName string, caption, banner bool) (bool, st
 		return outStr
 	}
 	if caption {
-		return rf.DisableAnilist, captionFunc()
+		return filter.DisableAnilist, captionFunc()
 	} else if banner {
-		return rf.DisableAnilist, bannerFunc()
+		return filter.DisableAnilist, bannerFunc()
 	} else {
-		return rf.DisableAnilist, defaultFunc()
+		return filter.DisableAnilist, defaultFunc()
 	}
 }
 
