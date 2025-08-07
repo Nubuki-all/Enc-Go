@@ -140,7 +140,7 @@ func GetAniInfo(search string, id, idMal *int, asHtml bool) (*Media, error) {
 func GetCusTag(fn, rg string, caption bool) (string, error) {
 	nameFilter, releaseFilter, captionFilter, err := utils.TextFilter()
 	if err != nil {
-		 return "", err
+		return "", err
 	}
 
 	var releaseTag string
