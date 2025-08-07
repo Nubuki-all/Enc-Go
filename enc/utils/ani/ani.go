@@ -138,7 +138,10 @@ func GetAniInfo(search string, id, idMal *int, asHtml bool) (*Media, error) {
 // rg: release group identifier
 // caption: whether to apply caption-specific logic
 func GetCusTag(fn, rg string, caption bool) (string, error) {
-	nameFilter, releaseFilter, captionFilter := utils.TextFilter()
+	nameFilter, releaseFilter, captionFilter, err := utils.TextFilter()
+	if err != nil {
+		 return "", err
+	}
 
 	var releaseTag string
 	// Process release_group filter
@@ -404,7 +407,7 @@ func filterName(name string, filter *types.FilterData) (string, string, string) 
 	} else if bot.Filters != nil {
 		fil = bot.Filters
 	} else {
-		fil := types.FilterData{}
+		return name, fil2, fil3
 	}
 	if s := fil.Fil1; s != "" {
 		for _, line := range strings.Split(s, "|") {

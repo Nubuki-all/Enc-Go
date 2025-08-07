@@ -47,7 +47,7 @@ type mapRecord struct {
 // FilterRecord holds all filter settings in one JSON column.
 type FilterRecord struct {
 	BotID string         `gorm:"column:bot_id;primaryKey"`
-	Data  bot.FilterData `gorm:"column:data;type:JSON"` // JSON column
+	Data  types.FilterData `gorm:"column:data;type:JSON"` // JSON column
 }
 
 // TableName ensures GORM uses your `filters` table.

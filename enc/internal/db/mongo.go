@@ -158,18 +158,19 @@ func LoadString(coll *mongo.Collection, key string, target *string) {
 
 // LoadFilterData reads FilterData from Mongo in the single‐document style
 // that your SaveFilterData currently writes.
-func LoadFilterData(coll *mongo.Collection, key strinh) {
-	if !UseMongo || FilterCol == nil {
-		return LoadFilterDataLocal()
+func LoadFilterData(coll *mongo.Collection, key string) {
+	if !useMongo || FilterCol == nil {
+		LoadFilterDataLocal()
+		return
 	}
 
 	// Wrapper type to match the stored shape
 	var doc struct {
-		FilterData bot.FilterData `bson:"filterData"`
+		FilterData types.FilterData `bson:"filterData"`
 	}
 
 	err := FilterCol.
-		FindOne(ctx, bson.M{"_id": config.Rconf.BotID}).
+		FindOne(context.Background(), bson.M{"_id": config.Rconf.BotID}).
 		Decode(&doc)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {

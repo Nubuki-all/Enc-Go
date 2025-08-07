@@ -41,7 +41,7 @@ var ReleaseVersion string
 
 var (
 	Aria2Client *arigo.Client
-	filters     = &types.FilterData{}
+	Filters     = &types.FilterData{}
 	Queue       = types.NewQueue()
 	Paused      = &state.PauseState{}
 )
