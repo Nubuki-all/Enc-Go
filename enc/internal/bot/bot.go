@@ -1,7 +1,7 @@
 package bot
 
 import (
-	"enc/internal/bot/queue"
+	"enc/internal/bot/types"
 	"enc/internal/bot/state"
 	"github.com/siku2/arigo"
 )
@@ -41,6 +41,9 @@ var ReleaseVersion string
 
 var (
 	Aria2Client *arigo.Client
-	Queue       = queue.NewQueue()
+	filters     = &types.FilterData{}
+	Queue       = types.NewQueue()
 	Paused      = &state.PauseState{}
 )
+
+

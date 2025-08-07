@@ -10,17 +10,19 @@ import (
 	"github.com/gotd/td/telegram"
 	"go.uber.org/zap"
 	"golang.org/x/time/rate"
-
-	"enc/config"
-	"github.com/celestix/gotgproto"
-	//"github.com/celestix/gotgproto/dispatcher/handlers"
-	//"github.com/celestix/gotgproto/dispatcher/handlers/filters"
-	"enc/internal/logger"
 	"github.com/celestix/gotgproto/ext"
+	"github.com/celestix/gotgproto"
 	"github.com/celestix/gotgproto/sessionMaker"
 	"github.com/gotd/contrib/middleware/floodwait"
 	_ "github.com/mattn/go-sqlite3"
 	"gorm.io/driver/sqlite"
+	
+	//"github.com/celestix/gotgproto/dispatcher/handlers"
+	//"github.com/celestix/gotgproto/dispatcher/handlers/filters"
+	
+	"enc/config"
+	"enc/internal/logger"
+	
 )
 
 var (

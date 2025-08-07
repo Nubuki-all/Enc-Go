@@ -1,4 +1,4 @@
-package queue
+package types
 
 // QueueKey uniquely identifies an incoming message
 type QueueKey struct {
@@ -12,7 +12,7 @@ type QueueEntry struct {
 	Name      string    `bson:"name"`
 	Sender    [2]int64  `bson:"sender"`  // [sender_id, message_id]
 	Version   string    `bson:"version"` // cust_v or get_v()
-	Filter    string    `bson:"filter"`  // cust_fil or get_f()
+	Filter    FilterData    `bson:"filter"`  // holds Fil1, Fil2, Fil3
 	Source    [2]string `bson:"source"`  // e.g. {"tg","None"}
 	ForceName string    `bson:"force_name"`
 	AniList   bool      `bson:"anilist"` // true/false

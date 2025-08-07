@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"enc/internal/bot"
-	"enc/internal/bot/queue"
+	"enc/internal/bot/types"
 	"enc/internal/bot/state"
 )
 
@@ -111,7 +111,7 @@ func GetPreviewer() interface{} {
 }
 
 // GetQueue returns the main queue
-func GetQueue() *queue.Queue {
+func GetQueue() *types.Queue {
 	return bot.Queue
 }
 

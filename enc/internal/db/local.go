@@ -13,14 +13,14 @@ import (
 
 	"enc/config"
 	"enc/internal/bot"
-	"enc/internal/bot/queue"
+	"enc/internal/bot/types"
 	"enc/internal/logger"
 )
 
 // queueRecord stores the ordered queue as JSON
 type queueRecord struct {
 	BotID string             `gorm:"primaryKey"`
-	Queue []queue.QueueEntry `gorm:"type:TEXT"`
+	Queue []types.QueueEntry `gorm:"type:TEXT"`
 }
 
 // settingRecord stores simple string settings
@@ -43,6 +43,18 @@ type mapRecord struct {
 	Key   string `gorm:"primaryKey"`
 	Value string // JSON-serialized map[string]interface{}
 }
+
+// FilterRecord holds all filter settings in one JSON column.
+type FilterRecord struct {
+    BotID string               `gorm:"column:bot_id;primaryKey"`
+    Data  bot.FilterData  `gorm:"column:data;type:JSON"` // JSON column
+}
+
+// TableName ensures GORM uses your `filters` table.
+func (FilterRecord) TableName() string {
+    return "filters"
+}
+
 
 var localdb *gorm.DB
 
@@ -73,6 +85,22 @@ func InitLocalDB() error {
 		return fmt.Errorf("sqlite migrate: %w", err)
 	}
 	return nil
+}
+
+// LoadFilterDataLocal reads the JSON column back into a FilterData struct.
+// If no record exists yet, returns
+func LoadFilterDataLocal() {
+    var rec FilterRecord
+    err := localdb.First(&rec, "bot_id = ?", config.Rconf.BotID).Error
+    if err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            return
+        }
+        logger.ErrorW(err.Error())
+        return
+    }
+    bot.Filters = &rec.Data
+    return
 }
 
 // LoadLocalDB is called during startup to hydrate bot state
@@ -140,6 +168,8 @@ func LoadLocalDB() {
 			}
 		}
 	}
+	// --- NEW: Load FilterData from mapRecord ---
+	LoadFilterDataLocal()
 
 	logger.InfoW("SQLite state loaded")
 }
@@ -228,4 +258,23 @@ func SaveBatchQueueLocal() error {
 		Columns:   []clause.Column{{Name: "bot_id"}, {Name: "key"}},
 		UpdateAll: true,
 	}).Create(&rec).Error
+}
+
+
+// SaveFilterDataLocal writes the entire FilterData struct into one JSON column.
+// On conflict (same bot_id), it updates the row.
+func SaveFilterDataLocal() {
+    rec := FilterRecord{
+        BotID: config.Rconf.BotID,
+        Data:  *bot.Filters,
+    }
+    err := localdb.Clauses(clause.OnConflict{
+            Columns:   []clause.Column{{Name: "bot_id"}},
+            UpdateAll: true,
+        }).
+        Create(&rec).
+        Error
+    if err != nil{
+    	logger.ErrorW(err.Error())
+    }
 }
