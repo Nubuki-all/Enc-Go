@@ -6,10 +6,9 @@ type FilterData struct {
 	Fil3 string `bson:"fil3" json:"fil3"`
 }
 
-
 type RGCaptionFilterData struct {
-	Match string      `bson:"match" json:"match"`
-	Data []string     `bson:"data" json:"data"`
+	Match string   `bson:"match" json:"match"`
+	Data  []string `bson:"data" json:"data"`
 }
 
 type MatchedFilterData struct {

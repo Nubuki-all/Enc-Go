@@ -7,13 +7,13 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/5rahim/tanuki"
 	"go.uber.org/zap"
 	"golang.org/x/text/language"
-	"github.com/5rahim/tanuki"
 
 	"enc/config"
 	"enc/intenal/bot/types"
@@ -91,7 +91,6 @@ query ($id: Int, $idMal: Int, $search: String, $type: MediaType, $asHtml: Boolea
   }
 }`
 
-
 // Media holds AniList media info
 type Media struct {
 	ID                int      `json:"id"`
@@ -163,7 +162,7 @@ func GetAniInfo(search string, id, idMal *int, asHtml bool) (*Media, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	//body, _ := ioutil.ReadAll(resp.Body)
+	// body, _ := ioutil.ReadAll(resp.Body)
 	var gqlResp struct {
 		Data struct {
 			Media Media `json:"Media"`
@@ -173,9 +172,9 @@ func GetAniInfo(search string, id, idMal *int, asHtml bool) (*Media, error) {
 		} `json:"errors"`
 	}
 	err = json.NewDecoder(resp.Body).Decode(&gqlResp)
-    if err != nil {
-        return nil, err
-    }
+	if err != nil {
+		return nil, err
+	}
 	if len(gqlResp.Errors) > 0 {
 		return nil, fmt.Errorf("AniList error: %s", gqlResp.Errors[0].Message)
 	}
@@ -402,7 +401,7 @@ func langTagToRegion(langTag string) (string, error) {
 		return "", err
 	}
 	region, confidence := tag.Region()
-	
+
 	if confidence < 1 {
 		return "", fmt.Errorf("unknown region for language tag: %s", langTag)
 	}
@@ -503,188 +502,188 @@ func CustomRename(title, season, episode, audio, codec string) (string, string) 
 // can be added here following similar stubs and TODOs for complex logic.
 
 type ParseResult struct {
-    FileName   string
-    MediaInfoName string
+	FileName      string
+	MediaInfoName string
 }
 
 // Media and GetAniInfo assumed defined as you shared.
 
 // ParseName applies tanuki + AniList + your filters + codecs to build filenames.
 func ParseName(
-    rawName string,
-    direct string,
-    useAniList bool,
-    filterOverride *types.FilterData,
-    version string,
-    folder string,
-    encString string,
+	rawName string,
+	direct string,
+	useAniList bool,
+	filterOverride *types.FilterData,
+	version string,
+	folder string,
+	encString string,
 ) (ParseResult, error) {
-    // 1) Direct override
-    if direct != "" {
-        return ParseResult{direct, direct}, nil
-    }
+	// 1) Direct override
+	if direct != "" {
+		return ParseResult{direct, direct}, nil
+	}
 
-    // 2) First-pass parse for “orTitle”
-    baseParsed := tanuki.Parse(rawName, tanuki.DefaultOptions)
+	// 2) First-pass parse for “orTitle”
+	baseParsed := tanuki.Parse(rawName, tanuki.DefaultOptions)
 
-    // 3) Apply your filters (returns filteredName, fil2, fil3)
-    filteredName, fil2, fil3 := filterName(rawName, filterOverride)
+	// 3) Apply your filters (returns filteredName, fil2, fil3)
+	filteredName, fil2, fil3 := filterName(rawName, filterOverride)
 
-    // 4) Second-pass parse for the real fields
-    p := tanuki.Parse(filteredName, tanuki.DefaultOptions)
+	// 4) Second-pass parse for the real fields
+	p := tanuki.Parse(filteredName, tanuki.DefaultOptions)
 
-    // 5) Extract and normalize fields
-    title := p.AnimeTitle
-    orTitle := baseParsed.AnimeTitle
-    epi := p.EpisodeNumber[0]
-    season := p.AnimeSeason[0]
-    relGroup := p.ReleaseGroup
-    relInfo := p.ReleaseInformation
-    year := p.AnimeYear
-    epTitle := p.EpisodeTitle
-    sources := p.Source
+	// 5) Extract and normalize fields
+	title := p.AnimeTitle
+	orTitle := baseParsed.AnimeTitle
+	epi := p.EpisodeNumber[0]
+	season := p.AnimeSeason[0]
+	relGroup := p.ReleaseGroup
+	relInfo := p.ReleaseInformation
+	year := p.AnimeYear
+	epTitle := p.EpisodeTitle
+	sources := p.Source
 
-    // Normalize season (“01”→“1”, drop “1”)
-    if season != "" {
-        season = strings.TrimLeft(season, "0")
-        if season == "" {
-            season = "1"
-        }
-        if season == "1" {
-            season = ""
-        }
-    }
+	// Normalize season (“01”→“1”, drop “1”)
+	if season != "" {
+		season = strings.TrimLeft(season, "0")
+		if season == "" {
+			season = "1"
+		}
+		if season == "1" {
+			season = ""
+		}
+	}
 
-    // Wrap release info in brackets
-    
-    slice2String := func(slice []string) string {
-    	var sb strings.Builder
-    	for _, x := range slice {
-    		sb.WriteString(fmt.Sprintf("[%s]", x))
-    	}
-        return sb.String()
-    }
-    ri := slice2String(relInfo)
-    source := slice2String(sources)
-    if title == "" {
-        return ParseResult{}, fmt.Errorf("parsing failed for %q", rawName)
-    }
-    if year != "" {
-        title = fmt.Sprintf("%s %s", title, year)
-    }
+	// Wrap release info in brackets
 
-    // 6) Build input-file path
-    if !strings.HasSuffix(folder, "/") {
-        folder += "/"
-    }
-    infile := filepath.Join(folder, filteredName)
+	slice2String := func(slice []string) string {
+		var sb strings.Builder
+		for _, x := range slice {
+			sb.WriteString(fmt.Sprintf("[%s]", x))
+		}
+		return sb.String()
+	}
+	ri := slice2String(relInfo)
+	source := slice2String(sources)
+	if title == "" {
+		return ParseResult{}, fmt.Errorf("parsing failed for %q", rawName)
+	}
+	if year != "" {
+		title = fmt.Sprintf("%s %s", title, year)
+	}
 
-    // 7) Codecs
-    codec := utils.GetCodec(encString)
-    // 8) AniList lookup, if enabled
-    var (
-        con   string
-        te    string
-        useAL = useAniList
-    )
-    if !bot.AnilistParse && useAL {
-        media, err := GetAniInfo(title, nil, nil, false)
-        if err != nil {
-            // disable further AniList overrides
-            logger.Warn("AniList lookup failed", "error", err)
-            useAL = false
-        } else {
-            // English title fallback
-            if eng := media.Title.English; eng != "" {
-                title = eng
-            }
-            // romaji fallback
-            if title == "" {
-                title = media.Title.Romaji
-            }
-            con = media.CountryOfOrigin
-            te = strconv.Itoa(media.Episodes)
-            // zero-pad if epi had leading zero
-            if strings.HasPrefix(epi, "0") {
-                te = "0" + te
-            }
-            con = ConvertISO(con)
-        }
-    }
+	// 6) Build input-file path
+	if !strings.HasSuffix(folder, "/") {
+		folder += "/"
+	}
+	infile := filepath.Join(folder, filteredName)
 
-    // 9) Audio/subtitle tag
-    aTag, _ := GetFileTag(infile, false, false)
-    if aTag == "" {
-        aTag, _ = GetCusTag(filteredName, relGroup, false)
-    }
-    if aTag == "" && useAL {
-        // use country code if nothing else
-        aTag = con
-    }
+	// 7) Codecs
+	codec := utils.GetCodec(encString)
+	// 8) AniList lookup, if enabled
+	var (
+		con   string
+		te    string
+		useAL = useAniList
+	)
+	if !bot.AnilistParse && useAL {
+		media, err := GetAniInfo(title, nil, nil, false)
+		if err != nil {
+			// disable further AniList overrides
+			logger.Warn("AniList lookup failed", "error", err)
+			useAL = false
+		} else {
+			// English title fallback
+			if eng := media.Title.English; eng != "" {
+				title = eng
+			}
+			// romaji fallback
+			if title == "" {
+				title = media.Title.Romaji
+			}
+			con = media.CountryOfOrigin
+			te = strconv.Itoa(media.Episodes)
+			// zero-pad if epi had leading zero
+			if strings.HasPrefix(epi, "0") {
+				te = "0" + te
+			}
+			con = ConvertISO(con)
+		}
+	}
 
-    // 10) Title truncation
-    shortTitle := title
-    if len(shortTitle) > 33 {
-        shortTitle = shortTitle[:32] + "…"
-        shortTitle = strings.SplitN(shortTitle, ":", 2)[0]
-    }
+	// 9) Audio/subtitle tag
+	aTag, _ := GetFileTag(infile, false, false)
+	if aTag == "" {
+		aTag, _ = GetCusTag(filteredName, relGroup, false)
+	}
+	if aTag == "" && useAL {
+		// use country code if nothing else
+		aTag = con
+	}
 
-    // 11) Custom-rename
-    if bot.CustomRename != "" {
-        out, _ := CustomRename(shortTitle, season, epi, aTag, codec)
-        return ParseResult{out, out}, nil
-    }
+	// 10) Title truncation
+	shortTitle := title
+	if len(shortTitle) > 33 {
+		shortTitle = shortTitle[:32] + "…"
+		shortTitle = strings.SplitN(shortTitle, ":", 2)[0]
+	}
 
-    // 12) Build primary filename
-    var primary strings.Builder
-    primary.WriteString(config.Conf.ReleaseName)
-    primary.WriteString(" ")
-    primary.WriteString(shortTitle)
-    if season != "" {
-        primary.WriteString(" S")
-        primary.WriteString(season)
-    }
-    if epi != "" {
-        primary.WriteString(" - ")
-        primary.WriteString(epi)
-    }
-    if version != "" {
-        primary.WriteString("v")
-        primary.WriteString(version)
-    }
-    if ri == "[END]" || (te != "" && te == epi && season == "") {
-        primary.WriteString(" [END]")
-    }
-    if aTag != "" {
-        primary.WriteString(" [")
-        primary.WriteString(aTag)
-        primary.WriteString("]")
-    }
-    primary.WriteString(".mkv")
+	// 11) Custom-rename
+	if bot.CustomRename != "" {
+		out, _ := CustomRename(shortTitle, season, epi, aTag, codec)
+		return ParseResult{out, out}, nil
+	}
 
-    // 13) Build secondary filename
-    sec := primary.String()
-    sec = strings.Replace(sec, shortTitle, title, 1)
-    if config.Conf.ReleaseNameB != "" {
-        sec = strings.Replace(sec, config.ReleaseName, config.ReleaseNameB, 1)
-    }
-    if epTitle != "" && aTag != "" {
-        sec = strings.Replace(
-            sec,
-            fmt.Sprintf("[%s]", aTag),
-            fmt.Sprintf("- %s [%s]", epTitle, aTag),
-            1,
-        )
-    }
-    if codec != "" {
-        sec += " " + codec
-    }
-    if source != "" {
-        sec += source
-    }
+	// 12) Build primary filename
+	var primary strings.Builder
+	primary.WriteString(config.Conf.ReleaseName)
+	primary.WriteString(" ")
+	primary.WriteString(shortTitle)
+	if season != "" {
+		primary.WriteString(" S")
+		primary.WriteString(season)
+	}
+	if epi != "" {
+		primary.WriteString(" - ")
+		primary.WriteString(epi)
+	}
+	if version != "" {
+		primary.WriteString("v")
+		primary.WriteString(version)
+	}
+	if ri == "[END]" || (te != "" && te == epi && season == "") {
+		primary.WriteString(" [END]")
+	}
+	if aTag != "" {
+		primary.WriteString(" [")
+		primary.WriteString(aTag)
+		primary.WriteString("]")
+	}
+	primary.WriteString(".mkv")
 
-    return ParseResult{
-        FileName:   primary.String(),
-        MediaInfoName: sec,
-    }, nil
+	// 13) Build secondary filename
+	sec := primary.String()
+	sec = strings.Replace(sec, shortTitle, title, 1)
+	if config.Conf.ReleaseNameB != "" {
+		sec = strings.Replace(sec, config.ReleaseName, config.ReleaseNameB, 1)
+	}
+	if epTitle != "" && aTag != "" {
+		sec = strings.Replace(
+			sec,
+			fmt.Sprintf("[%s]", aTag),
+			fmt.Sprintf("- %s [%s]", epTitle, aTag),
+			1,
+		)
+	}
+	if codec != "" {
+		sec += " " + codec
+	}
+	if source != "" {
+		sec += source
+	}
+
+	return ParseResult{
+		FileName:      primary.String(),
+		MediaInfoName: sec,
+	}, nil
 }

@@ -5,6 +5,7 @@ go 1.23.3
 toolchain go1.23.11
 
 require (
+	github.com/5rahim/tanuki v0.1.6
 	github.com/celestix/gotgproto v1.0.0-beta21
 	github.com/celestix/telegraph-go/v2 v2.0.4
 	github.com/gotd/contrib v0.21.0
@@ -14,7 +15,7 @@ require (
 	github.com/spf13/viper v1.20.1
 	go.mongodb.org/mongo-driver v1.17.4
 	go.uber.org/zap v1.27.0
-	golang.org/x/text v0.27.0
+	golang.org/x/text v0.28.0
 	golang.org/x/time v0.12.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gorm.io/driver/sqlite v1.6.0
@@ -77,7 +78,7 @@ require (
 	golang.org/x/mod v0.26.0 // indirect
 	golang.org/x/net v0.42.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
-	golang.org/x/sys v0.34.0 // indirect
+	golang.org/x/sys v0.35.0 // indirect
 	golang.org/x/tools v0.35.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
