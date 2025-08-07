@@ -159,32 +159,27 @@ func LoadString(coll *mongo.Collection, key string, target *string) {
 // LoadFilterData reads FilterData from Mongo in the single‐document style
 // that your SaveFilterData currently writes.
 func LoadFilterData(coll *mongo.Collection, key strinh) {
-    if !UseMongo || FilterCol == nil {
-        return LoadFilterDataLocal()
-    }
+	if !UseMongo || FilterCol == nil {
+		return LoadFilterDataLocal()
+	}
 
-    // Wrapper type to match the stored shape
-    var doc struct {
-        FilterData bot.FilterData `bson:"filterData"`
-    }
+	// Wrapper type to match the stored shape
+	var doc struct {
+		FilterData bot.FilterData `bson:"filterData"`
+	}
 
-    err := FilterCol.
-        FindOne(ctx, bson.M{"_id": config.Rconf.BotID}).
-        Decode(&doc)
-
-    if err != nil {
-        if err == mongo.ErrNoDocuments {
-            return
-        }
-        logger.ErrorW(err.Error())
-        return
-    }
-    bot.Filters = &doc.FilterData
-
+	err := FilterCol.
+		FindOne(ctx, bson.M{"_id": config.Rconf.BotID}).
+		Decode(&doc)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return
+		}
+		logger.ErrorW(err.Error())
+		return
+	}
+	bot.Filters = &doc.FilterData
 }
-
-
-
 
 func SaveAll(ctx context.Context) {
 	SaveQueue(ctx)
@@ -320,19 +315,19 @@ func SaveFilterSettings(ctx context.Context) {
 
 // SaveFilterData persists filter settings using MongoDB or SQL based on configuration.
 func SaveFilterData(ctx context.Context) {
-    if !UseMongo || FilterCol == nil {
-        SaveFilterDataLocal()
-        return
-    }
+	if !UseMongo || FilterCol == nil {
+		SaveFilterDataLocal()
+		return
+	}
 
-    // Upsert one document, with _id = BotID and a single "filterData" field
-    filter := bson.M{"_id": config.Rconf.BotID}
-    update := bson.M{"$set": bson.M{
-        "filterData": bot.Filters,
-    }}
-    opts := options.Update().SetUpsert(true)
+	// Upsert one document, with _id = BotID and a single "filterData" field
+	filter := bson.M{"_id": config.Rconf.BotID}
+	update := bson.M{"$set": bson.M{
+		"filterData": bot.Filters,
+	}}
+	opts := options.Update().SetUpsert(true)
 
-    if _, err := FilterCol.UpdateOne(ctx, filter, update, opts); err != nil {
-        logger.WarnW("SaveFilterData (Mongo) failed", zap.Error(err))
-    }
+	if _, err := FilterCol.UpdateOne(ctx, filter, update, opts); err != nil {
+		logger.WarnW("SaveFilterData (Mongo) failed", zap.Error(err))
+	}
 }

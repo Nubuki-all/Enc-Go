@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"enc/internal/bot"
-	"enc/internal/bot/types"
 	"enc/internal/bot/state"
+	"enc/internal/bot/types"
 )
 
 // AddTempUser appends an ID to bot.TempUsers

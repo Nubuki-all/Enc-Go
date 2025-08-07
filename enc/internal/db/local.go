@@ -46,15 +46,14 @@ type mapRecord struct {
 
 // FilterRecord holds all filter settings in one JSON column.
 type FilterRecord struct {
-    BotID string               `gorm:"column:bot_id;primaryKey"`
-    Data  bot.FilterData  `gorm:"column:data;type:JSON"` // JSON column
+	BotID string         `gorm:"column:bot_id;primaryKey"`
+	Data  bot.FilterData `gorm:"column:data;type:JSON"` // JSON column
 }
 
 // TableName ensures GORM uses your `filters` table.
 func (FilterRecord) TableName() string {
-    return "filters"
+	return "filters"
 }
-
 
 var localdb *gorm.DB
 
@@ -90,17 +89,17 @@ func InitLocalDB() error {
 // LoadFilterDataLocal reads the JSON column back into a FilterData struct.
 // If no record exists yet, returns
 func LoadFilterDataLocal() {
-    var rec FilterRecord
-    err := localdb.First(&rec, "bot_id = ?", config.Rconf.BotID).Error
-    if err != nil {
-        if errors.Is(err, gorm.ErrRecordNotFound) {
-            return
-        }
-        logger.ErrorW(err.Error())
-        return
-    }
-    bot.Filters = &rec.Data
-    return
+	var rec FilterRecord
+	err := localdb.First(&rec, "bot_id = ?", config.Rconf.BotID).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return
+		}
+		logger.ErrorW(err.Error())
+		return
+	}
+	bot.Filters = &rec.Data
+	return
 }
 
 // LoadLocalDB is called during startup to hydrate bot state
@@ -260,21 +259,20 @@ func SaveBatchQueueLocal() error {
 	}).Create(&rec).Error
 }
 
-
 // SaveFilterDataLocal writes the entire FilterData struct into one JSON column.
 // On conflict (same bot_id), it updates the row.
 func SaveFilterDataLocal() {
-    rec := FilterRecord{
-        BotID: config.Rconf.BotID,
-        Data:  *bot.Filters,
-    }
-    err := localdb.Clauses(clause.OnConflict{
-            Columns:   []clause.Column{{Name: "bot_id"}},
-            UpdateAll: true,
-        }).
-        Create(&rec).
-        Error
-    if err != nil{
-    	logger.ErrorW(err.Error())
-    }
+	rec := FilterRecord{
+		BotID: config.Rconf.BotID,
+		Data:  *bot.Filters,
+	}
+	err := localdb.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "bot_id"}},
+		UpdateAll: true,
+	}).
+		Create(&rec).
+		Error
+	if err != nil {
+		logger.ErrorW(err.Error())
+	}
 }

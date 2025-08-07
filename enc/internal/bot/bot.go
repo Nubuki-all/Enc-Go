@@ -1,8 +1,8 @@
 package bot
 
 import (
-	"enc/internal/bot/types"
 	"enc/internal/bot/state"
+	"enc/internal/bot/types"
 	"github.com/siku2/arigo"
 )
 
@@ -45,5 +45,3 @@ var (
 	Queue       = types.NewQueue()
 	Paused      = &state.PauseState{}
 )
-
-

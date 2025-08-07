@@ -8,15 +8,15 @@ type QueueKey struct {
 
 // QueueEntry holds all the data from your Python list
 type QueueEntry struct {
-	Key       QueueKey  `bson:"key"`
-	Name      string    `bson:"name"`
-	Sender    [2]int64  `bson:"sender"`  // [sender_id, message_id]
-	Version   string    `bson:"version"` // cust_v or get_v()
-	Filter    FilterData    `bson:"filter"`  // holds Fil1, Fil2, Fil3
-	Source    [2]string `bson:"source"`  // e.g. {"tg","None"}
-	ForceName string    `bson:"force_name"`
-	AniList   bool      `bson:"anilist"` // true/false
-	URI       string    `bson:"uri"`     // generic URI
+	Key       QueueKey   `bson:"key"`
+	Name      string     `bson:"name"`
+	Sender    [2]int64   `bson:"sender"`  // [sender_id, message_id]
+	Version   string     `bson:"version"` // cust_v or get_v()
+	Filter    FilterData `bson:"filter"`  // holds Fil1, Fil2, Fil3
+	Source    [2]string  `bson:"source"`  // e.g. {"tg","None"}
+	ForceName string     `bson:"force_name"`
+	AniList   bool       `bson:"anilist"` // true/false
+	URI       string     `bson:"uri"`     // generic URI
 }
 
 // Queue is a FIFO container with fast lookup

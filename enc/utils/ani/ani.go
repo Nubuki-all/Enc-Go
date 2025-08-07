@@ -10,12 +10,12 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-	
-	"golang.org/x/text/language"
+
 	"go.uber.org/zap"
-	
-	"enc/internal/bot"
+	"golang.org/x/text/language"
+
 	"enc/intenal/bot/types"
+	"enc/internal/bot"
 	"enc/internal/logger"
 	"enc/utils"
 )
@@ -133,14 +133,12 @@ func GetAniInfo(search string, id, idMal *int, asHtml bool) (*Media, error) {
 	return &gqlResp.Data.Media, nil
 }
 
-
 // GetCusTag determines a custom release or file tag based on filter files.
 // fn: filename or release identifier to check
 // rg: release group identifier
 // caption: whether to apply caption-specific logic
 func GetCusTag(fn, rg string, caption bool) (string, error) {
-	
-	nameFilter, releaseFilter, captionFilter := utils.TextFilter() 
+	nameFilter, releaseFilter, captionFilter := utils.TextFilter()
 
 	var releaseTag string
 	// Process release_group filter
@@ -346,7 +344,6 @@ func GetFileTag(infile string, caption, audioOnly bool) (string, error) {
 	return "", nil
 }
 
-
 func langTagToRegion(langTag string) (string, error) {
 	tag, err := language.Parse(langTag)
 	if err != nil {
@@ -369,21 +366,20 @@ func countryCodeToFlag(countryCode string) string {
 	return string(firstChar) + string(secondChar)
 }
 
-
 // GetFlag returns country flag emoji for a given country code
 func GetFlag(lanCode string) string {
 	if lanCode == "?" {
 		return lanCode
 	}
 	var countryCode string
-	var err         error
+	var err error
 	// force "ara" to return arabia's flag
 	if lanCode == "ara" {
 		countryCode = "SA"
 	} else {
 		countryCode, err = langTagToRegion(lanCode)
 	}
-	if err != nil{
+	if err != nil {
 		logger.WarnW("Error fetching flag for:", zap.String("lang", lanCode), zap.Error(err))
 		return "🇱🇱"
 	}
@@ -405,7 +401,7 @@ func filterName(name string, filter *types.FilterData) (string, string, string) 
 	var fil2, fil3 string
 	if filter != nil {
 		fil = filter
-	} else if bot.Filters != nil{
+	} else if bot.Filters != nil {
 		fil = bot.Filters
 	} else {
 		fil := types.FilterData{}
@@ -423,7 +419,7 @@ func filterName(name string, filter *types.FilterData) (string, string, string) 
 	}
 	return name, fil2, fil3
 }
- 
+
 // CustomRename applies the bot-defined rename pattern.
 // It replaces placeholders like {title}, {season}, {episode}, {audio}, {codec}.
 func CustomRename(title, season, episode, audio, codec string) (string, string) {
@@ -449,7 +445,6 @@ func CustomRename(title, season, episode, audio, codec string) (string, string) 
 	res = strings.TrimSpace(res) + ".mkv"
 	return res, res
 }
-
 
 // ParseName extracts anime info from file name (stub)
 func ParseName(filename string) (map[string]string, error) {
