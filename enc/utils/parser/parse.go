@@ -526,8 +526,9 @@ func QParseT(name, ver string, fil *types.FilterData) (string, error) {
 	if parsed.AnimeYear != "" {
 		parts = append(parts, parsed.AnimeYear)
 	}
-	if parsed.AnimeSeason != "" {
-		parts = append(parts, parsed.AnimeSeason)
+	season := parsed.AnimeSeason[0]
+	if season != "" {
+		parts = append(parts, season)
 	}
 
 	return strings.Join(parts, " "), nil
