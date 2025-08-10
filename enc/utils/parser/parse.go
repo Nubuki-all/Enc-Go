@@ -49,7 +49,7 @@ func ParseName(
 	baseParsed := tanuki.Parse(rawName, tanuki.DefaultOptions)
 
 	// 3) Apply your filters (returns filteredName, fil2, fil3)
-	filteredName, fil2, fil3 := FilterName(rawName, filterOverride)
+	filteredName, fil2, _ := FilterName(rawName, filterOverride)
 
 	// 4) Second-pass parse for the real fields
 	p := tanuki.Parse(filteredName, tanuki.DefaultOptions)
@@ -75,7 +75,7 @@ func ParseName(
 
 	// Wrap release info in brackets
 
-	releaseInfo = slice2String(relInfo)
+	relInfo = slice2String(relInfo)
 	source := slice2String(sources)
 	if title == "" {
 		return ParseResult{}, fmt.Errorf("parsing failed for %q", rawName)
@@ -96,6 +96,7 @@ func ParseName(
 	var (
 		con   string
 		te    string
+		aTag  string
 		useAL = useAniList
 	)
 	if bot.AnilistParse && useAL {
@@ -125,7 +126,12 @@ func ParseName(
 
 	// 9) Audio/subtitle tag
 	if conOverride != "" {
-		aTag := conOverride
+		aTag = conOverride
+	} else if fil2 != "" && !strings.EqualFold(fil2, "auto") {
+		// if fil2 is non-empty and not "auto", override; if fil2 is empty we preserve existing capInfo
+		if !strings.EqualFold(fil2, "disable") {
+			aTag = fil2
+		}
 	} else {
 		aTag, _ := GetFileTag(infile, false, false)
 		if aTag == "" {
@@ -136,7 +142,7 @@ func ParseName(
 			aTag = con
 		}
 		if aTag == "" {
-			aTag = GetFileTag(infile, false, true)
+			aTag, _ = GetFileTag(infile, false, true)
 			if aTag == "?" {
 				aTag = ""
 			}
@@ -179,7 +185,7 @@ func ParseName(
 		primary.WriteString("v")
 		primary.WriteString(version)
 	}
-	if releaseInfo == "[END]" || (te != "" && te == epi && season == "") {
+	if relInfo == "[END]" || (te != "" && te == epi && season == "") {
 		primary.WriteString(" [END]")
 	}
 	if aTag != "" {
@@ -230,7 +236,7 @@ func CustCap(
 	filter *types.FilterData,
 	codecOverride string,
 	direct string,
-	pFile encString,
+	encString string,
 ) (string, error) {
 	// Direct override
 	if direct != "" {
@@ -238,14 +244,14 @@ func CustCap(
 	}
 
 	// If FL_CAP is true, return just the filename wrapped in code ticks
-	if config.Conf.FL_CAP {
+	if config.Conf.FlCap {
 		return fmt.Sprintf("`%s`", fname), nil
 	}
 
-	// If EXT_CAP is disabled, fallback to simplecap (assumes SimpleCap exists)
-	if !config.Conf.EXT_CAP {
-		return SimpleCap(name, fname, useAniList, custType, folder, ver, encoder, filter, ccodec, direct, pFile)
-	}
+	// If ExtCap is disabled, fallback to simplecap (assumes SimpleCap exists)
+	//if !config.Conf.ExtCap {
+	//	return SimpleCap(name, fname, useAniList, custType, folder, ver, encoder, filter, ccodec, direct, encString)
+	//}
 
 	// Main logic
 	var caption string
@@ -255,7 +261,7 @@ func CustCap(
 	}()
 
 	// Apply filters (equivalent to filter_name)
-	fName, fil2, fil3 := FilterName(name, filter)
+	fName, _, fil3 := FilterName(name, filter)
 
 	// Parse with tanuki
 	baseParsed := tanuki.Parse(name, tanuki.DefaultOptions)
@@ -274,10 +280,10 @@ func CustCap(
 	releaseGroup := parsed.ReleaseGroup
 	releaseInfo := parsed.ReleaseInformation
 	episodeTitle := parsed.EpisodeTitle
-	yr := parsed.AnimeYear
-	sorces := parsed.Source
+	//yr := parsed.AnimeYear
+	sources := parsed.Source
 
-	releaseInfo = slice2String(relInfo)
+	releaseInfo = slice2String(releaseInfo)
 	source := slice2String(sources)
 	// sanitize episode title against not_allowed
 	notAllowed := []string{"END", "MULTi", "WEB", "WEB-DL", "DDP5.1", "DDP2.0", "AAC2"}
@@ -293,15 +299,15 @@ func CustCap(
 	if title == "" {
 		om := strings.SplitN(fname, ".", 2)[0]
 		ot := strings.SplitN(om, "@", 2)[0]
-		caption = fmt.Sprintf("**%s**\n**🔗 %s**", ot, config.Conf.C_LINK)
-		return caption, fmt.Errorf("parsing failed for %q", rawName)
+		caption = fmt.Sprintf("**%s**\n**🔗 %s**", ot, config.Conf.CLink)
+		return caption, fmt.Errorf("parsing failed for %q", name)
 	}
 
 	outPath := filepath.Join(folder, fname)
 
 	// caption decorator default
 	if ccd == "" {
-		ccd = config.Conf.CAP_DECO
+		ccd = config.Conf.CapDeco
 	}
 
 	rIsEnd := (releaseInfo == "[END]")
@@ -368,7 +374,7 @@ func CustCap(
 
 	// Auto-rename (assumes AutoRename returns (ok bool, out string, err error))
 
-	_, title = utils.AutoRename(title, orTitle, ar, true, false) // caption=true, general=false
+	_, title = utils.AutoRename(title, orTitle, true, false) // caption=true, general=false
 	// compute CRC32 and post MediaInfo URL if file exists
 	var crc32s string
 	var miURL string
@@ -472,7 +478,7 @@ func CustCap(
 	}
 
 	captionBuilder.WriteString(fmt.Sprintf("**%s CRC32:** `[%s]`\n", ccd, crc32s))
-	captionBuilder.WriteString(fmt.Sprintf("**🔗 %s**", config.Conf.C_LINK))
+	captionBuilder.WriteString(fmt.Sprintf("**🔗 %s**", config.Conf.CLink))
 
 	caption = captionBuilder.String()
 

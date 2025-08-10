@@ -16,9 +16,10 @@ import (
 // DynamicThumb tries to download a cover image for `name` and save it to `thumb`.
 // Returns (title, episode, season, releaseGroup, err). It mirrors the Python function
 // and swallows most errors (returns nil error unless download explicitly fails).
-func DynamicThumb(ctx context.Context, name string, thumb string, useAniList bool, filter *types.FilterData) (title, epi, sn, rg string) {
+func DynamicThumb(ctx context.Context, name string, thumb string, useAniList bool, filter *types.FilterData) (string, string, string, string) {
 	// Default outputs
-	var title, epi, sn, rg string
+	var title, episode, season, releaseGroup string
+	var anilistOverride bool
 
 	// 1) Apply filters (equivalent to filter_name)
 	filtered, _, _ := FilterName(name, filter) // returns (filteredName, fil2, fil3)
@@ -71,14 +72,14 @@ func DynamicThumb(ctx context.Context, name string, thumb string, useAniList boo
 		// fallback to parsed title
 		tTitle = title
 		if aerr != nil {
-			logger.Warnw("AniList lookup failed", zap.Error(err))
+			logger.WarnW("AniList lookup failed", zap.Error(err))
 		}
 	}
 
 	// form search string with season if present
 	searchTitle := tTitle
-	if sn != "" {
-		searchTitle = tTitle + " " + sn
+	if season != "" {
+		searchTitle = tTitle + " " + season
 	}
 
 	// Try AniList for searchTitle then for tTitle

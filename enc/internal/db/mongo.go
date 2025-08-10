@@ -178,7 +178,7 @@ func LoadFilterData(coll *mongo.Collection) {
 		logger.ErrorW(err.Error())
 		return
 	}
-	bot.Filters = &doc.FilterData
+	bot.Filters = doc.FilterData
 }
 
 // LoadRGExtendedFilters reads back the “rg_extended” slice.
@@ -196,7 +196,7 @@ func LoadRGExtendedFilters(coll *mongo.Collection) {
 		logger.ErrorW(err.Error())
 		return
 	}
-	bot.RGExtendedFilters = &doc.RGExtended
+	bot.RGExtendedFilters = doc.RGExtended
 }
 
 // LoadMatchedFilters reads back the “matched_filters” slice.
@@ -208,7 +208,7 @@ func LoadMatchedFilters(coll *mongo.Collection) {
 		Names    []*types.MatchedFilterData `bson:"name_filters"`
 		Releases []*types.MatchedFilterData `bson:"release_filters"`
 	}
-	err := coll.FindOne(ctx, bson.M{"_id": config.Rconf.BotID}).Decode(&doc)
+	err := coll.FindOne(context.Background(), bson.M{"_id": config.Rconf.BotID}).Decode(&doc)
 	if err == mongo.ErrNoDocuments {
 		return
 	} else if err != nil {
@@ -216,7 +216,7 @@ func LoadMatchedFilters(coll *mongo.Collection) {
 		return
 	}
 	bot.NameFilters = &doc.Names
-	bot.ReleaseFilters = &doc.Releases
+	bot.ReleaseFilters = doc.Releases
 }
 
 // LoadRenameFilters reads back the “rename_filters” slice.
@@ -227,14 +227,14 @@ func LoadRenameFilters(coll *mongo.Collection) {
 	var doc struct {
 		Rename []*types.RenameFilterData `bson:"rename_filters"`
 	}
-	err := coll.FindOne(ctx, bson.M{"_id": config.Rconf.BotID}).Decode(&doc)
+	err := coll.FindOne(context.Background(), bson.M{"_id": config.Rconf.BotID}).Decode(&doc)
 	if err == mongo.ErrNoDocuments {
 		return
 	} else if err != nil {
 		logger.ErrorW(err.Error())
 		return
 	}
-	bot.RenameFilters = &doc.Rename
+	bot.RenameFilters = doc.Rename
 }
 
 func SaveAll(ctx context.Context) {
@@ -419,7 +419,7 @@ func SaveMatchedFilters(ctx context.Context) {
 		"release_filters": bot.ReleaseFilters,
 	}}
 	opts := options.Update().SetUpsert(true)
-	if _, err := coll.UpdateOne(ctx, filter, update, opts); err != nil {
+	if _, err := FilterCol.UpdateOne(ctx, filter, update, opts); err != nil {
 		logger.WarnW("SaveMatchedFilters (Mongo) failed", zap.Error(err))
 	}
 }
@@ -433,7 +433,7 @@ func SaveRenameFilters(ctx context.Context) {
 	filter := bson.M{"_id": config.Rconf.BotID}
 	update := bson.M{"$set": bson.M{"rename_filters": bot.RenameFilters}}
 	opts := options.Update().SetUpsert(true)
-	if _, err := coll.UpdateOne(ctx, filter, update, opts); err != nil {
+	if _, err := FilterCol.UpdateOne(ctx, filter, update, opts); err != nil {
 		logger.WarnW("SaveRenameFilters (Mongo) failed", zap.Error(err))
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"golang.org/x/text/language"
+	"go.uber.org/zap"
 
 	"enc/intenal/bot/types"
 	"enc/internal/bot"
@@ -71,6 +72,7 @@ func GetCusTag(name, releaseGroup string, caption bool) string {
 		return outStr.String()
 	}
 	itemFunc := func(filters []*types.MatchedFilterData) string {
+		var outStr strings.Builder
 		for _, filter := range filters {
 			if filter.CaseSensitive {
 				if !strings.Contains(name, filter.Match) {
@@ -297,8 +299,8 @@ func FilterName(name string, filter *types.FilterData) (string, string, string) 
 			name = strings.ReplaceAll(name, line, "")
 		}
 	}
-	fil2 := fil.Fil2
-	fil3 := fil.Fil3
+	fil2 = fil.Fil2
+	fil3 = fil.Fil3
 	return name, fil2, fil3
 }
 

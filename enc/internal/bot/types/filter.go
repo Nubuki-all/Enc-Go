@@ -9,6 +9,7 @@ type FilterData struct {
 type RGExtendedFilterData struct {
 	Match string               `bson:"match" json:"match"`
 	Data  []*MatchedFilterData `bson:"data" json:"data"`
+	CaseSensitive  bool   `bson:"casesensitive" json:"casesensitive"`
 }
 
 type MatchedFilterData struct {
