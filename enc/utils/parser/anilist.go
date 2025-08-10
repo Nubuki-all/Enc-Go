@@ -80,28 +80,28 @@ query ($id: Int, $idMal: Int, $search: String, $type: MediaType, $asHtml: Boolea
 
 // Media holds AniList media info (matches the GraphQL selection)
 type Media struct {
-	ID                int                      `json:"id"`
-	IDMal             int                      `json:"idMal"`
-	Title             Title                    `json:"title"`
-	Format            string                   `json:"format"`
-	Status            string                   `json:"status"`
-	Description       string                   `json:"description"` // HTML when asHtml=true
-	StartDate         StartDate                `json:"startDate"`
-	Season            string                   `json:"season"`
-	Episodes          int                      `json:"episodes"`
-	Duration          int                      `json:"duration"`
-	CountryOfOrigin   string                   `json:"countryOfOrigin"`
-	Source            string                   `json:"source"`
-	Trailer           *Trailer                 `json:"trailer,omitempty"`
-	CoverImage        Image                    `json:"coverImage"`
-	BannerImage       string                   `json:"bannerImage"`
-	Genres            []string                 `json:"genres"`
-	AverageScore      int                      `json:"averageScore"`
-	NextAiringEpisode *NextEp                  `json:"nextAiringEpisode,omitempty"`
-	IsAdult           bool                     `json:"isAdult"`
-	Characters        CharacterConnection      `json:"characters"`
-	Studios           StudioConnection         `json:"studios"`
-	SiteURL           string                   `json:"siteUrl"`
+	ID                int                 `json:"id"`
+	IDMal             int                 `json:"idMal"`
+	Title             Title               `json:"title"`
+	Format            string              `json:"format"`
+	Status            string              `json:"status"`
+	Description       string              `json:"description"` // HTML when asHtml=true
+	StartDate         StartDate           `json:"startDate"`
+	Season            string              `json:"season"`
+	Episodes          int                 `json:"episodes"`
+	Duration          int                 `json:"duration"`
+	CountryOfOrigin   string              `json:"countryOfOrigin"`
+	Source            string              `json:"source"`
+	Trailer           *Trailer            `json:"trailer,omitempty"`
+	CoverImage        Image               `json:"coverImage"`
+	BannerImage       string              `json:"bannerImage"`
+	Genres            []string            `json:"genres"`
+	AverageScore      int                 `json:"averageScore"`
+	NextAiringEpisode *NextEp             `json:"nextAiringEpisode,omitempty"`
+	IsAdult           bool                `json:"isAdult"`
+	Characters        CharacterConnection `json:"characters"`
+	Studios           StudioConnection    `json:"studios"`
+	SiteURL           string              `json:"siteUrl"`
 }
 
 // simple title block
@@ -143,11 +143,11 @@ type CharacterConnection struct {
 }
 
 type CharacterNode struct {
-	ID          int           `json:"id"`
-	Name        CharacterName `json:"name"`
+	ID          int            `json:"id"`
+	Name        CharacterName  `json:"name"`
 	Image       CharacterImage `json:"image"`
-	Description string        `json:"description"` // HTML when asHtml=true
-	SiteURL     string        `json:"siteUrl"`
+	Description string         `json:"description"` // HTML when asHtml=true
+	SiteURL     string         `json:"siteUrl"`
 }
 
 type CharacterName struct {
@@ -168,7 +168,6 @@ type StudioNode struct {
 	Name    string `json:"name"`
 	SiteURL string `json:"siteUrl"`
 }
-
 
 // GraphQLRequest defines the request payload
 type GraphQLRequest struct {

@@ -9,8 +9,8 @@ import (
 	"text/template"
 	"time"
 
-	"go.uber.org/zap"
 	"github.com/dustin/go-humanize"
+	"go.uber.org/zap"
 )
 
 // Template used for the final markdown message. Using text/template avoids
@@ -32,20 +32,20 @@ const animeTemplate = "" +
 
 // data passed into the template
 type animeTemplateData struct {
-	CFlag       string
-	Romaji      string
-	IDM         int
-	IDMal       int
-	Source      string
-	Formats     string
-	Genre       string
-	Season      interface{}
-	Episodes    interface{}
-	Status      string
-	AirOn       string
-	Score       interface{}
-	Adult       bool
-	TrailerLink string
+	CFlag        string
+	Romaji       string
+	IDM          int
+	IDMal        int
+	Source       string
+	Formats      string
+	Genre        string
+	Season       interface{}
+	Episodes     interface{}
+	Status       string
+	AirOn        string
+	Score        interface{}
+	Adult        bool
+	TrailerLink  string
 	SynopsisLink string
 }
 

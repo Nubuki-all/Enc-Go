@@ -8,6 +8,7 @@ require (
 	github.com/5rahim/tanuki v0.1.6
 	github.com/celestix/gotgproto v1.0.0-beta21
 	github.com/celestix/telegraph-go/v2 v2.0.4
+	github.com/dustin/go-humanize v1.0.1
 	github.com/gotd/contrib v0.21.0
 	github.com/gotd/td v0.130.0
 	github.com/mattn/go-sqlite3 v1.14.30
@@ -30,7 +31,6 @@ require (
 	github.com/cenkalti/rpc2 v0.0.0-20180727162946-9642ea02d0aa // indirect
 	github.com/coder/websocket v1.8.13 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
-	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
