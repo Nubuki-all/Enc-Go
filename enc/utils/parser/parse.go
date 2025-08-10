@@ -261,7 +261,7 @@ func CustCap(
 	}()
 
 	// Apply filters (equivalent to filter_name)
-	fName, fil2, fil3, := FilterName(name, filter)
+	fName, fil2, fil3 := FilterName(name, filter)
 	
 
 	// Parse with tanuki

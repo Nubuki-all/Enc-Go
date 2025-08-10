@@ -50,8 +50,8 @@ type mapRecord struct {
 	Value string // JSON-serialized map[string]interface{}
 }
 
-// FilterRecord holds all filter settings in one JSON column.
-type FilterRecord struct {
+// filterRecord holds all filter settings in one JSON column.
+type filterRecord struct {
 	BotID string           `gorm:"column:bot_id;primaryKey"`
 	Data  *types.FilterData `gorm:"column:data;type:JSON"` // JSON column
 	NameFilters    []*types.MatchedFilterData     `gorm:"column:name_filters;type:JSON"`
@@ -61,7 +61,7 @@ type FilterRecord struct {
 }
 
 // TableName ensures GORM uses your `filters` table.
-func (FilterRecord) TableName() string {
+func (filterRecord) TableName() string {
 	return "filters"
 }
 
@@ -164,8 +164,8 @@ func LoadLocalDB() {
 	}
 
 
-	var rec FilterRecord
-	err := db.First(&rec, "bot_id = ?", config.Rconf.BotID).Error
+	var rec filterRecord
+	err := localdb.First(&rec, "bot_id = ?", config.Rconf.BotID).Error
     if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return
@@ -173,11 +173,11 @@ func LoadLocalDB() {
 		logger.ErrorW(err.Error())
 		return
 	}
-	bot.Filters = &rec.Data
-	bot.RGExtendedFilters = &rec.RGExtended
-	bot.NameFilters = &rec.NameFilters
-	bot.ReleaseFilters = &rec.ReleaseFilters
-	bot.RenameFilters = &rec.RenameFilters
+	bot.Filters = rec.Data
+	bot.RGExtendedFilters = rec.RGExtended
+	bot.NameFilters = rec.NameFilters
+	bot.ReleaseFilters = rec.ReleaseFilters
+	bot.RenameFilters = rec.RenameFilters
 	logger.InfoW("SQLite state loaded")
 }
 
@@ -270,7 +270,7 @@ func SaveBatchQueueLocal() error {
 // SaveFilterDataLocal writes the entire FilterData struct into one JSON column.
 // On conflict (same bot_id), it updates the row.
 func SaveFilterDataLocal() {
-	rec := FilterRecord{
+	rec := filterRecord{
 		BotID: config.Rconf.BotID,
 		Data:  bot.Filters,
 	}

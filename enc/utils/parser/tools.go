@@ -22,7 +22,7 @@ func GetCusTag(name, releaseGroup string, caption bool) string {
 		if releaseGroup == "" || len(bot.ReleaseFilters) == 0 {
 			return ""
 		}
-		for _ filter := range bot.ReleaseFilters {
+		for _, filter := range bot.ReleaseFilters {
 			if filter.CaseSensitive {
 				if filter.Match != releaseGroup {
 					continue
@@ -42,7 +42,7 @@ func GetCusTag(name, releaseGroup string, caption bool) string {
 	}
 	nameFunc := func() string {
 		var outStr strings.Builder
-		for _ filter := range bot.NameFilters {
+		for _, filter := range bot.NameFilters {
 			if filter.CaseSensitive {
 				if !strings.Contains(name, filter.Match) {
 					continue
@@ -72,7 +72,7 @@ func GetCusTag(name, releaseGroup string, caption bool) string {
 		return outStr.String()
 	}
 	itemFunc := func(filters []*types.MatchedFilterData) string {
-		for _ filter := range filters {
+		for _, filter := range filters {
 			if filter.CaseSensitive {
 				if !strings.Contains(name, filter.Match) {
 					continue
