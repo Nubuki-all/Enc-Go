@@ -15,7 +15,6 @@ import (
 	"enc/utils"
 )
 
-
 func FPost(
 	name string,
 	out string,

@@ -7,8 +7,11 @@ import (
 	"enc/internal/bot"
 )
 
-var EInfo = NewEncodeInfo()
-var EJob = NewEncodeJob()
+var (
+	EInfo = NewEncodeInfo()
+	EJob  = NewEncodeJob()
+)
+
 // QbitC represents a qBittorrent job status
 // Equivalent to Python's Qbit_c
 // Count: number of files
