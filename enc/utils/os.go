@@ -113,13 +113,13 @@ func MediaInfoHTML(ctx context.Context, file string, full bool) (string, error) 
 
 func PostMediaInfo(path string) (string, error ) {
 	mInfo, err := MediaInfoHTML(context.Background(), path, true)
-	if err != nil(
+	if err != nil {
 		return "", err
-	)
+	}
 	page, err2 := PostToTelegraph("MediaInfo", minfo)
-	if err2 != nil(
+	if err2 != nil {
 		return "", err2
-	)
+	}
 	return page.Url
 }
 

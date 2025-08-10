@@ -87,7 +87,7 @@ func DynamicThumb(ctx context.Context, name string, thumb string, useAniList boo
 	} else if media3, err3 := GetAniInfo(tTitle, nil, nil, false); err3 == nil && media3 != nil {
 		coverURL = media3.CoverImage.ExtraLarge
 	} else {
-		logger.WarnW("Could not fetch Cover Url for:" zap.String("Title", title))
+		logger.WarnW("Could not fetch Cover Url for:", zap.String("Title", title))
 		coverURL = ""
 	}
 

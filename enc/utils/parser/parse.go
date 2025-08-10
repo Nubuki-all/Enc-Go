@@ -23,7 +23,7 @@ type ParseResult struct {
 }
 
 
-slice2String := func(slice []string) string {
+ func slice2String(slice []string) string {
 	var sb strings.Builder
 	for _, x := range slice {
 		sb.WriteString(fmt.Sprintf("[%s]", x))

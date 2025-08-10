@@ -161,6 +161,7 @@ func LoadLocalDB() {
 				}
 			}
 		}
+	}
 
 
 	var rec FilterRecord
