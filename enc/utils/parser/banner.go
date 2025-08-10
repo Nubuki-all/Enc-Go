@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
 	"github.com/5rahim/tanuki"
 	"go.uber.org/zap"
-	
+
 	"enc/config"
 	"enc/intenal/bot/types"
 	"enc/internal/bot"
 	"enc/internal/logger"
 	"enc/utils"
 )
-
 
 func FPost(ctx context.Context,
 	name string,
@@ -76,7 +76,7 @@ func FPost(ctx context.Context,
 	}
 
 	var anilistOverride bool
-	
+
 	anilistOverride, title = utils.AutoRename(title, title, false, true)
 	if anilistOverride {
 		anilist = false
@@ -103,8 +103,8 @@ func FPost(ctx context.Context,
 		var media2 *Media
 		if err != nil {
 			logger.WarnW("AniList lookup failed", zap.Error(err))
-	    } else {
-	    	if season != "" {
+		} else {
+			if season != "" {
 				sTitle := strings.TrimSpace(title + " " + season)
 				media2, _ = GetAniInfo(sTitle, nil, nil, false)
 			}
@@ -171,7 +171,7 @@ func FPost(ctx context.Context,
 			n := strings.ReplaceAll(s, " ", "_")
 			n = strings.ReplaceAll(n, "-", "_")
 			segs = append(segs, "#"+n)
-			
+
 		}
 		genreStr = strings.Join(segs, " ") + " "
 	}
