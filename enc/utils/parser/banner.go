@@ -14,7 +14,7 @@ import (
 	"enc/utils"
 )
 
-.
+
 func FPost(ctx context.Context,
 	name string,
 	out string,
