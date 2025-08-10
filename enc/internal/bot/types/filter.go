@@ -7,16 +7,16 @@ type FilterData struct {
 }
 
 type RGExtendedFilterData struct {
-	Match string   `bson:"match" json:"match"`
+	Match string               `bson:"match" json:"match"`
 	Data  []*MatchedFilterData `bson:"data" json:"data"`
 }
 
 type MatchedFilterData struct {
-	Match      string `bson:"match" json:"match"`
-	FileTag    string `bson:"filetag" json:"filetag"`
-	CaptionTag string `bson:"captiontag" json:"captiontag"`
-	CaseSensitive bool `bson:"casesensitive" json:"casesensitive"`
-	MatchOnce   bool `bson:"matchonce" json:"matchonce"`
+	Match         string `bson:"match" json:"match"`
+	FileTag       string `bson:"filetag" json:"filetag"`
+	CaptionTag    string `bson:"captiontag" json:"captiontag"`
+	CaseSensitive bool   `bson:"casesensitive" json:"casesensitive"`
+	MatchOnce     bool   `bson:"matchonce" json:"matchonce"`
 }
 
 type RenameFilterData struct {

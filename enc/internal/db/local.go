@@ -18,7 +18,6 @@ import (
 	"enc/internal/logger"
 )
 
-
 // ————————————————————————————————
 // GORM models for SQL fallback
 // ————————————————————————————————
@@ -52,12 +51,12 @@ type mapRecord struct {
 
 // filterRecord holds all filter settings in one JSON column.
 type filterRecord struct {
-	BotID string           `gorm:"column:bot_id;primaryKey"`
-	Data  *types.FilterData `gorm:"column:data;type:JSON"` // JSON column
-	NameFilters    []*types.MatchedFilterData     `gorm:"column:name_filters;type:JSON"`
-    ReleaseFilters []*types.MatchedFilterData     `gorm:"column:release_filters;type:JSON"`
-    RGExtended     []*types.RGExtendedFilterData `gorm:"column:rg_extended;type:JSON"`
-    RenameFilters  []*types.RenameFilterData      `gorm:"column:rename_filters;type:JSON"`
+	BotID          string                        `gorm:"column:bot_id;primaryKey"`
+	Data           *types.FilterData             `gorm:"column:data;type:JSON"` // JSON column
+	NameFilters    []*types.MatchedFilterData    `gorm:"column:name_filters;type:JSON"`
+	ReleaseFilters []*types.MatchedFilterData    `gorm:"column:release_filters;type:JSON"`
+	RGExtended     []*types.RGExtendedFilterData `gorm:"column:rg_extended;type:JSON"`
+	RenameFilters  []*types.RenameFilterData     `gorm:"column:rename_filters;type:JSON"`
 }
 
 // TableName ensures GORM uses your `filters` table.
@@ -95,7 +94,6 @@ func InitLocalDB() error {
 	}
 	return nil
 }
-
 
 // LoadLocalDB is called during startup to hydrate bot state
 func LoadLocalDB() {
@@ -163,10 +161,9 @@ func LoadLocalDB() {
 		}
 	}
 
-
 	var rec filterRecord
 	err := localdb.First(&rec, "bot_id = ?", config.Rconf.BotID).Error
-    if err != nil {
+	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return
 		}
@@ -286,68 +283,68 @@ func SaveFilterDataLocal() {
 }
 
 func SaveRGExtendedFiltersLocal() {
-    rec := filterRecord{
-    	BotID: config.Rconf.BotID,
-    	RGExtended: bot.RGExtendedFilters,
-    }
-    err := localdb.Clauses(clause.OnConflict{
-    	Columns:   []clause.Column{{Name: "bot_id"}},
-        UpdateAll: true,
-    }).
-        Create(&rec).
-        Error
-    if err != nil {
+	rec := filterRecord{
+		BotID:      config.Rconf.BotID,
+		RGExtended: bot.RGExtendedFilters,
+	}
+	err := localdb.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "bot_id"}},
+		UpdateAll: true,
+	}).
+		Create(&rec).
+		Error
+	if err != nil {
 		logger.ErrorW(err.Error())
-    }
+	}
 }
 
 // SaveNameFiltersLocal writes the NameFilters slice.
 func SaveNameFiltersLocal() {
-    rec := filterRecord{
-    	BotID: config.Rconf.BotID,
-    	NameFilters: bot.NameFilters,
-    }
-    err := localdb.Clauses(clause.OnConflict{
-    	Columns:   []clause.Column{{Name: "bot_id"}},
-    	UpdateAll: true,
-    }).
-        Create(&rec).
-        Error
-    if err != nil {
+	rec := filterRecord{
+		BotID:       config.Rconf.BotID,
+		NameFilters: bot.NameFilters,
+	}
+	err := localdb.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "bot_id"}},
+		UpdateAll: true,
+	}).
+		Create(&rec).
+		Error
+	if err != nil {
 		logger.ErrorW(err.Error())
-    }
+	}
 }
 
 // SaveReleaseFiltersLocal writes the ReleaseFilters slice.
 func SaveReleaseFiltersLocal() {
-    rec := filterRecord{
-    	BotID: config.Rconf.BotID,
-    	ReleaseFilters: bot.ReleaseFilters,
-    }
-    err := localdb.Clauses(clause.OnConflict{
-    	Columns:   []clause.Column{{Name: "bot_id"}},
-    	UpdateAll: true,
-    }).
-        Create(&rec).
-        Error
-    if err != nil {
+	rec := filterRecord{
+		BotID:          config.Rconf.BotID,
+		ReleaseFilters: bot.ReleaseFilters,
+	}
+	err := localdb.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "bot_id"}},
+		UpdateAll: true,
+	}).
+		Create(&rec).
+		Error
+	if err != nil {
 		logger.ErrorW(err.Error())
-    }
+	}
 }
 
 // SaveRenameFiltersLocal writes the Rename array.
 func SaveRenameFiltersLocal() {
-    rec := filterRecord{
-    	BotID: config.Rconf.BotID,
-    	RenameFilters: bot.RenameFilters,
-    }
-    err := localdb.Clauses(clause.OnConflict{
-    	Columns:   []clause.Column{{Name: "bot_id"}},
-    	UpdateAll: true,
-    }).
-        Create(&rec).
-        Error
-    if err != nil {
+	rec := filterRecord{
+		BotID:         config.Rconf.BotID,
+		RenameFilters: bot.RenameFilters,
+	}
+	err := localdb.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "bot_id"}},
+		UpdateAll: true,
+	}).
+		Create(&rec).
+		Error
+	if err != nil {
 		logger.ErrorW(err.Error())
-    }
+	}
 }

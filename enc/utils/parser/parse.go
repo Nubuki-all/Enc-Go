@@ -16,21 +16,19 @@ import (
 	"enc/utils"
 )
 
-
 type ParseResult struct {
 	FileName      string
 	MediaInfoName string
 }
 
-
- func slice2String(slice []string) string {
+func slice2String(slice []string) string {
 	var sb strings.Builder
 	for _, x := range slice {
 		sb.WriteString(fmt.Sprintf("[%s]", x))
 	}
 	return sb.String()
 }
-	
+
 // ParseName applies tanuki + AniList + your filters + codecs to build filenames.
 func ParseName(
 	rawName string,
@@ -76,7 +74,6 @@ func ParseName(
 	}
 
 	// Wrap release info in brackets
-
 
 	releaseInfo = slice2String(relInfo)
 	source := slice2String(sources)
@@ -152,7 +149,7 @@ func ParseName(
 		shortTitle = shortTitle[:32] + "…"
 		shortTitle = strings.SplitN(shortTitle, ":", 2)[0]
 	}
-	
+
 	_, newTitle := utils.AutoRename(shortTitle, orTitle, false, false)
 	if newTitle != shortTitle {
 		title = newTitle
@@ -219,8 +216,6 @@ func ParseName(
 	}, nil
 }
 
-
-
 // CustCap builds a caption for a given source file (mirror of Python custcap).
 // It returns the caption string (or a fallback if an error happens).
 func CustCap(
@@ -237,7 +232,6 @@ func CustCap(
 	direct string,
 	pFile encString,
 ) (string, error) {
-
 	// Direct override
 	if direct != "" {
 		return fmt.Sprintf("`%s`", direct), nil
@@ -262,7 +256,6 @@ func CustCap(
 
 	// Apply filters (equivalent to filter_name)
 	fName, fil2, fil3 := FilterName(name, filter)
-	
 
 	// Parse with tanuki
 	baseParsed := tanuki.Parse(name, tanuki.DefaultOptions)
@@ -283,7 +276,7 @@ func CustCap(
 	episodeTitle := parsed.EpisodeTitle
 	yr := parsed.AnimeYear
 	sorces := parsed.Source
-	
+
 	releaseInfo = slice2String(relInfo)
 	source := slice2String(sources)
 	// sanitize episode title against not_allowed
@@ -326,7 +319,7 @@ func CustCap(
 	// cust_type takes precedence
 	if custType != "" {
 		capInfo = custType
-	} else if (fil3 != "" && !strings.EqualFold(fil3, "auto")) {
+	} else if fil3 != "" && !strings.EqualFold(fil3, "auto") {
 		// if fil3 is non-empty and not "auto", override; if fil3 is empty we preserve existing capInfo
 		if !strings.EqualFold(fil3, "disable") {
 			capInfo = fil3
@@ -337,7 +330,6 @@ func CustCap(
 			capInfo, _ = GetFileTag(outPath, true, false)
 		}
 	}
-	
 
 	// AniList lookup (get episodes count / english title) — optional
 	var totalEpisodes string
@@ -398,8 +390,8 @@ func CustCap(
 	// Placeholders supported: {title}, {episode}, {season}, {ver}, {encoder}, {codec}, {crc32s}, {ccd}
 	formatCtx := map[string]string{
 		"title":   title,
-		"episode":     episode,
-		"season":      season,
+		"episode": episode,
+		"season":  season,
 		"ver":     ver,
 		"encoder": encoder,
 		"codec":   codec,

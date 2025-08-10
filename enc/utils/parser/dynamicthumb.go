@@ -7,10 +7,10 @@ import (
 	"github.com/5rahim/tanuki"
 	"go.uber.org/zap"
 
-	"enc/internal/logger"
-	"enc/internal/utils"
 	"enc/internal/bot"
+	"enc/internal/logger"
 	"enc/internal/types"
+	"enc/internal/utils"
 )
 
 // DynamicThumb tries to download a cover image for `name` and save it to `thumb`.
@@ -52,7 +52,7 @@ func DynamicThumb(ctx context.Context, name string, thumb string, useAniList boo
 	}
 
 	// If parsing is turned off or global config disables AniList, stop here
-	if !(bot.AnilistParse && useAniList){
+	if !(bot.AnilistParse && useAniList) {
 		return title, episode, season, releaseGroup
 	}
 
@@ -102,5 +102,3 @@ func DynamicThumb(ctx context.Context, name string, thumb string, useAniList boo
 
 	return title, episode, season, releaseGroup
 }
-
- 

@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 )
 
-
 // downloadToFile downloads the given URL and writes to outPath.
 // It creates directories as needed. Returns error on failure.
 func downloadToFile(ctx context.Context, url string, outPath string) error {

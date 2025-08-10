@@ -1,9 +1,9 @@
 package utils
 
 import (
-	"context"
 	"bufio"
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	//"io"
@@ -14,8 +14,8 @@ import (
 	"strconv"
 	"strings"
 	//"sync"
-	"time"
 	"syscall"
+	"time"
 )
 
 // Enshell runs a shell command and returns the output and error
@@ -27,7 +27,6 @@ func Enshell(cmd string) (stdout string, stderr string, err error) {
 	err = c.Run()
 	return outBuf.String(), errBuf.String(), err
 }
-
 
 const (
 	// max output size like your Python truncation threshold
@@ -111,7 +110,7 @@ func MediaInfoHTML(ctx context.Context, file string, full bool) (string, error) 
 	return output, nil
 }
 
-func PostMediaInfo(path string) (string, error ) {
+func PostMediaInfo(path string) (string, error) {
 	mInfo, err := MediaInfoHTML(context.Background(), path, true)
 	if err != nil {
 		return "", err

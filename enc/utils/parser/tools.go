@@ -12,7 +12,6 @@ import (
 	"enc/utils"
 )
 
-
 // GetCusTag determines a custom release or file tag based on filter files.
 // name: filename or release identifier to check
 // releaseGroup: release group identifier

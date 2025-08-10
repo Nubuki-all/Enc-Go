@@ -8,9 +8,6 @@ import (
 	"os"
 )
 
-
-
-
 const (
 	GraphQLEndpoint = "https://graphql.anilist.co"
 )
