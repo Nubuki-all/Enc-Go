@@ -235,8 +235,6 @@ func AnimeArch(query string, useMal bool) (string, string, error) {
 	return coverImg, out.String(), nil
 }
 
-
-
 // AiringAnim returns (coverImgURL, formattedMessage, error).
 // If useMal is true and query is numeric it will call AniList with idMal.
 // This mirrors the Python airing_anim logic.

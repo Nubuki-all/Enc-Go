@@ -211,7 +211,7 @@ func LoadDB() {
 	db.LoadString(db.CodeCol, "ffmpeg3", &bot.FFmpeg3Args)
 	db.LoadString(db.CodeCol, "ffmpeg4", &bot.FFmpeg4Args)
 	db.LoadString(db.CodeCol, "mux_args", &bot.MuxArgs)
-	
+
 	db.LoadFilterData(db.FilterCol)
 	db.LoadRGExtendedFilters(db.FilterCol)
 	db.LoadMatchedFilters(db.FilterCol)

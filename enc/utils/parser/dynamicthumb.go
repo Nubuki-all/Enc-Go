@@ -2,8 +2,8 @@ package parser
 
 import (
 	"context"
-	"strings"
 	"strconv"
+	"strings"
 
 	"github.com/5rahim/tanuki"
 	"go.uber.org/zap"
