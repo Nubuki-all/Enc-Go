@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"golang.org/x/text/language"
 	"go.uber.org/zap"
+	"golang.org/x/text/language"
 
 	"enc/intenal/bot/types"
 	"enc/internal/bot"

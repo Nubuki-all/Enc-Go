@@ -280,7 +280,7 @@ func CustCap(
 	releaseGroup := parsed.ReleaseGroup
 	releaseInfo := parsed.ReleaseInformation
 	episodeTitle := parsed.EpisodeTitle
-	//yr := parsed.AnimeYear
+	// yr := parsed.AnimeYear
 	sources := parsed.Source
 
 	releaseInfo = slice2String(releaseInfo)
