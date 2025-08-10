@@ -126,7 +126,6 @@ func Criticalf(template string, args ...interface{}) {
 }
 
 // InfoW logs a message with structured context.
-// Usage: logger.InfoW("Queue loaded from MongoDB", zap.Int("count", len(result.Queue)))
 func InfoW(msg string, fields ...zap.Field) {
 	Logger.Info(msg, fields...)
 }

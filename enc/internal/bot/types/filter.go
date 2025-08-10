@@ -6,15 +6,17 @@ type FilterData struct {
 	Fil3 string `bson:"fil3" json:"fil3"`
 }
 
-type RGCaptionFilterData struct {
+type RGExtendedFilterData struct {
 	Match string   `bson:"match" json:"match"`
-	Data  []string `bson:"data" json:"data"`
+	Data  []*MatchedFilterData `bson:"data" json:"data"`
 }
 
 type MatchedFilterData struct {
 	Match      string `bson:"match" json:"match"`
 	FileTag    string `bson:"filetag" json:"filetag"`
 	CaptionTag string `bson:"captiontag" json:"captiontag"`
+	CaseSensitive bool `bson:"casesensitive" json:"casesensitive"`
+	MatchOnce   bool `bson:"matchonce" json:"matchonce"`
 }
 
 type RenameFilterData struct {

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"bufio"
 	"bytes"
 	"encoding/json"
@@ -12,8 +13,8 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	/*"sync"
-	"time"*/
+	//"sync"
+	"time"
 	"syscall"
 )
 
@@ -25,6 +26,101 @@ func Enshell(cmd string) (stdout string, stderr string, err error) {
 	c.Stderr = &errBuf
 	err = c.Run()
 	return outBuf.String(), errBuf.String(), err
+}
+
+
+const (
+	// max output size like your Python truncation threshold
+	maxHTMLSize = 65536
+)
+
+// ChooseMediaInfoBinary decides which mediainfo binary to call.
+//
+// It prefers, in order:
+//  1. env var MEDIATOOL (if set)
+//  2. .bin/<os>-<arch>/mediainfo
+//  3. .bin/mediainfo
+func ChooseMediaInfoBinary() string {
+	if v := os.Getenv("MEDIAINFOPATH"); v != "" {
+		return v
+	}
+	// prefer per-platform folder, e.g. .bin/linux-amd64/mediainfo
+	perPlatform := filepath.Join(".bin", runtime.GOOS+"-"+runtime.GOARCH, "mediainfo")
+	if _, err := os.Stat(perPlatform); err == nil {
+		return perPlatform
+	}
+	// fallback to .bin/mediainfo
+	fallback := filepath.Join(".bin", "mediainfo")
+	return fallback
+}
+
+// MediaInfoHTML runs mediainfo and returns HTML output.
+//
+// ctx: caller's context (used for timeout/cancel)
+// file: path to the media file
+// full: whether to request full output (adds --Full / -f)
+func MediaInfoHTML(ctx context.Context, file string, full bool) (string, error) {
+	bin := ChooseMediaInfoBinary()
+
+	// ensure binary exists
+	if info, err := os.Stat(bin); err != nil || info.IsDir() {
+		return "", fmt.Errorf("mediainfo binary not found at %s", bin)
+	}
+
+	// build args
+	args := []string{"--Output=HTML"}
+	if full {
+		// mediainfo supports -f/--Full; some builds accept "--Full" as well.
+		// use the long form to be explicit:
+		args = append(args, "--Full")
+	}
+	args = append(args, file)
+
+	// give it a reasonable timeout to avoid hanging processes
+	// if ctx already has a deadline, use it; otherwise wrap with 15s
+	var cancel context.CancelFunc
+	if _, ok := ctx.Deadline(); !ok {
+		ctx, cancel = context.WithTimeout(ctx, 15*time.Second)
+	} else {
+		cancel = func() {}
+	}
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, bin, args...)
+	out, err := cmd.CombinedOutput()
+	output := string(out)
+
+	// If process failed but produced output, return both
+	if err != nil {
+		// If no output at all, return the error
+		if len(output) == 0 {
+			return "", fmt.Errorf("mediainfo failed: %w", err)
+		}
+	}
+
+	// Truncate to avoid huge payloads
+	if len(output) > maxHTMLSize {
+		// keep ~65430 bytes plus truncation notice (matches original).
+		cut := 65430
+		if cut > len(output) {
+			cut = len(output)
+		}
+		output = output[:cut] + "<strong>...<strong><br><br><strong>(TRUNCATED DUE TO CONTENT EXCEEDING MAX LENGTH)<strong>"
+	}
+
+	return output, nil
+}
+
+func PostMediaInfo(path string) (string, error ) {
+	mInfo, err := MediaInfoHTML(context.Background(), path, true)
+	if err != nil(
+		return "", err
+	)
+	page, err2 := PostToTelegraph("MediaInfo", minfo)
+	if err2 != nil(
+		return "", err2
+	)
+	return page.Url
 }
 
 // IsRunning checks if a process is still running
