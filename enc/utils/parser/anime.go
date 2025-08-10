@@ -209,8 +209,8 @@ func AnimeArch(query string, useMal bool) (string, string, error) {
 	}
 	synopsisLink := ""
 	if titleH != "" {
-		if u, perr := utils.PostToTelegraph(titleH, pageBuf.String()); perr == nil {
-			synopsisLink = u
+		if p, perr := utils.PostToTelegraph(titleH, pageBuf.String()); perr == nil {
+			synopsisLink = p.Url
 		} else {
 			zap.L().Warn(perr.Error())
 		}
