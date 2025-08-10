@@ -18,6 +18,7 @@ import (
 )
 
 func Initialize() {
+	DetectDocker()
 	DownloadThumbnail()
 	SetupCustomRename()
 	DownloadLinks()
@@ -203,7 +204,6 @@ func LoadDB() {
 
 	db.LoadSlice(db.UsersCol, "t_users", &bot.TempUsers)
 
-	db.LoadString(db.FilterCol, "autoname", &bot.Autoname)
 	db.LoadString(db.FilterCol, "cus_rename", &bot.CustomRename)
 
 	db.LoadString(db.CodeCol, "ffmpeg", &bot.FFmpegArgs)
@@ -211,6 +211,11 @@ func LoadDB() {
 	db.LoadString(db.CodeCol, "ffmpeg3", &bot.FFmpeg3Args)
 	db.LoadString(db.CodeCol, "ffmpeg4", &bot.FFmpeg4Args)
 	db.LoadString(db.CodeCol, "mux_args", &bot.MuxArgs)
+	
+	db.LoadFilterData(db.FilterCol)
+	db.LoadRGExtendedFilters(db.FilterCol)
+	db.LoadMatchedFilters(db.FilterCol)
+	db.LoadRenameFilters(db.FilterCol)
 
-	logger.InfoW("startup: state loaded from database")
+	logger.InfoW("startup: State loaded from mongodb database")
 }

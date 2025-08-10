@@ -120,8 +120,6 @@ func LoadLocalDB() {
 	if err := localdb.Find(&settings, "bot_id = ?", config.Rconf.BotID).Error; err == nil {
 		for _, r := range settings {
 			switch r.Key {
-			case "autoname":
-				bot.Autoname = r.Value
 			case "cus_rename":
 				bot.CustomRename = r.Value
 			case "ffmpeg":
@@ -196,7 +194,6 @@ func SaveSettingsLocal() {
 		return
 	}
 	toSave := map[string]string{
-		"autoname":   bot.Autoname,
 		"cus_rename": bot.CustomRename,
 		"ffmpeg":     bot.FFmpegArgs,
 		"ffmpeg2":    bot.FFmpeg2Args,

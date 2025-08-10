@@ -3,6 +3,7 @@ package parser
 import (
 	"context"
 	"strings"
+	"strconv"
 
 	"github.com/5rahim/tanuki"
 	"go.uber.org/zap"
@@ -35,12 +36,14 @@ func DynamicThumb(ctx context.Context, name string, thumb string, useAniList boo
 	season = parsed.AnimeSeason[0]
 	releaseGroup = parsed.ReleaseGroup
 
-	// If season is an array in your wrapper adapt accordingly; here we handle leading zeros
 	if season != "" {
-		// strip leading zeros like Python: "01" -> "1"
-		season = strings.TrimLeft(season, "0")
+		if strings.HasPrefix(season, "0") {
+			if i, errConv := strconv.Atoi(season); errConv == nil {
+				season = strconv.Itoa(i)
+			}
+		}
 		if season == "1" {
-			season = "" // same as Python (drop "1")
+			season = ""
 		}
 	}
 

@@ -159,7 +159,7 @@ func LoadString(coll *mongo.Collection, key string, target *string) {
 // LoadFilterData reads FilterData from Mongo in the single‐document style
 // that your SaveFilterData currently writes.
 func LoadFilterData(coll *mongo.Collection) {
-	if !useMongo || FilterCol == nil {
+	if !useMongo {
 		return
 	}
 
@@ -353,7 +353,7 @@ func SaveRSSDict(ctx context.Context) {
 	}
 }
 
-// SaveFilterSettings persists bot.Autoname and bot.CustomRename.
+// SaveFilterSettings persists bot.CustomRename.
 func SaveFilterSettings(ctx context.Context) {
 	if !useMongo || FilterCol == nil {
 		SaveSettingsLocal()
@@ -364,7 +364,6 @@ func SaveFilterSettings(ctx context.Context) {
 	}
 	filter := bson.M{"_id": config.Rconf.BotID}
 	update := bson.M{"$set": bson.M{
-		"autoname":   bot.Autoname,
 		"cus_rename": bot.CustomRename,
 	}}
 	opts := options.Update().SetUpsert(true)

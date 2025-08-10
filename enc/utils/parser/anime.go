@@ -61,18 +61,6 @@ func MakeItRW(unixTS int64, asCountdown bool) string {
 	return t.Format("Jan 2, 2006")
 }
 
-// countryFlag returns a regional indicator emoji for a 2-letter country code.
-// If input is not 2 letters, returns the original input.
-func countryFlag(code string) string {
-	code = strings.TrimSpace(strings.ToUpper(code))
-	if len(code) != 2 {
-		return code
-	}
-	r1 := rune(code[0]) - 'A' + 0x1F1E6
-	r2 := rune(code[1]) - 'A' + 0x1F1E6
-	return string([]rune{r1, r2})
-}
-
 // AnimeArch performs the AniList lookup and returns (coverImageURL, message, error).
 // `useMal` corresponds to Python arg.m (if true, treat numeric query as MAL id).
 func AnimeArch(query string, useMal bool) (string, string, error) {
@@ -245,4 +233,82 @@ func AnimeArch(query string, useMal bool) (string, string, error) {
 	}
 
 	return coverImg, out.String(), nil
+}
+
+
+
+// AiringAnim returns (coverImgURL, formattedMessage, error).
+// If useMal is true and query is numeric it will call AniList with idMal.
+// This mirrors the Python airing_anim logic.
+func AiringAnim(query string, useMal bool) (coverImg string, out string, err error) {
+	// Prepare id pointers if query is numeric
+	var idPtr *int
+	var idMalPtr *int
+	if n, perr := strconv.Atoi(query); perr == nil {
+		if useMal {
+			idMalPtr = &n
+		} else {
+			idPtr = &n
+		}
+	}
+
+	// Call AniList using your GetAniInfo helper. Use asHtml=true (like Python).
+	media, err := GetAniInfo(query, idPtr, idMalPtr, true)
+	if err != nil {
+		return "", "", fmt.Errorf("GetAniInfo error: %w", err)
+	}
+	if media == nil {
+		return "", "", fmt.Errorf("no media returned")
+	}
+
+	// Extract fields
+	mid := media.ID
+	romaji := media.Title.Romaji
+	english := media.Title.English
+	native := media.Title.Native
+	status := media.Status
+	episodes := media.Episodes
+	country := media.CountryOfOrigin
+	cFlag := countryCodeToFlag(country)
+	source := media.Source
+	coverImg = media.CoverImage.ExtraLarge
+	genres := media.Genres
+	genre := ""
+	if len(genres) > 0 {
+		if len(genres) == 1 {
+			genre = genres[0]
+		} else {
+			genre = strings.Join(genres, ", ")
+		}
+	}
+	score := media.AverageScore
+
+	// next airing
+	var airOn string
+	var epNum int
+	if media.NextAiringEpisode != nil {
+		airOn = MakeItRW(int64(media.NextAiringEpisode.AiringAt), true) // as_countdown True
+		epNum = media.NextAiringEpisode.Episode
+	}
+
+	// pick displayed title (english or romaji)
+	title_ := english
+	if title_ == "" {
+		title_ = romaji
+	}
+
+	// Build output the same way as Python
+	var b strings.Builder
+	b.WriteString(fmt.Sprintf("[%s] **%s** \n   (`%s`)", cFlag, native, title_))
+	b.WriteString(fmt.Sprintf("\n\n**ID:** `%d`", mid))
+	b.WriteString(fmt.Sprintf("\n**Status:** `%s`\n", status))
+	b.WriteString(fmt.Sprintf("**Source:** `%s`\n", source))
+	b.WriteString(fmt.Sprintf("**Score:** `%d`\n", score))
+	b.WriteString(fmt.Sprintf("**Genres:** `%s`\n", genre))
+	if airOn != "" {
+		b.WriteString(fmt.Sprintf("**Airing Episode:** `[%d/%d]`\n", epNum, episodes))
+		b.WriteString(fmt.Sprintf("\n`%s`", airOn))
+	}
+
+	return coverImg, b.String(), nil
 }

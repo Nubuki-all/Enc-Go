@@ -6,6 +6,7 @@ import (
 
 	"enc/config"
 	"enc/internal/logger"
+	"enc/internal/startup"
 )
 
 func main() {
@@ -17,6 +18,7 @@ func main() {
 	if config.Rconf.Error != nil {
 		logger.Criticalf("Failed to load config: %v", config.Rconf.Error)
 	}
+	startup.Initialize()
 
 	// … rest of your app …
 }
