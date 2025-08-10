@@ -15,7 +15,8 @@ import (
 	"enc/utils"
 )
 
-func FPost(ctx context.Context,
+
+func FPost(
 	name string,
 	out string,
 	anilist bool,
@@ -33,7 +34,9 @@ func FPost(ctx context.Context,
 	defer func() {
 		// Here any unexpected panic -> log and return nil-equivalent values and an error.
 		if r := recover(); r != nil {
-			logger.ErrorW("panic: %v", zap.Error(r))
+			if err, ok := r.(error); ok {
+				logger.Errorf("panic: %v", err)
+			}
 			picURL = ""
 			msg = ""
 			err = fmt.Errorf("panic: %v", r)
@@ -87,7 +90,7 @@ func FPost(ctx context.Context,
 	if fcodec != "" {
 		codec = fcodec
 	} else {
-		codec = utils.GetCodecs(utils.Einfo.PendingInfo().List)
+		codec = utils.GetCodecs(utils.EJob.PendingInfo().List)
 	}
 
 	// Try to fetch anilist info, similar to the inner try/except
@@ -114,9 +117,9 @@ func FPost(ctx context.Context,
 				title = titleR
 			}
 			if media2 != nil {
-				idStr = media2.ID
+				idStr = strconv.Itoa(media2.ID)
 			} else {
-				idStr = media.ID
+				idStr = strconv.Itoa(media.ID)
 			}
 			picURL = "https://img.anili.st/media/" + idStr
 			con = media.CountryOfOrigin
@@ -141,7 +144,7 @@ func FPost(ctx context.Context,
 		if aInfo != "" {
 			var aParts []string
 			for _, part := range strings.Split(aInfo, "|") {
-				f, _ := GetFlag(part)
+				f := GetFlag(part)
 				aParts = append(aParts, f)
 			}
 			aLangFlags = strings.Join(aParts, ", ")
@@ -149,7 +152,7 @@ func FPost(ctx context.Context,
 		if sInfo != "" {
 			var sParts []string
 			for _, part := range strings.Split(sInfo, "|") {
-				f, _ := GetFlag(part)
+				f := GetFlag(part)
 				sParts = append(sParts, f)
 			}
 			sLangFlags = strings.Join(sParts, ", ")
