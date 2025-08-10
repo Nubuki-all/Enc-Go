@@ -32,7 +32,7 @@ func DynamicThumb(ctx context.Context, name string, thumb string, useAniList boo
 	// adapt these field names if your tanuki wrapper differs
 	title = parsed.AnimeTitle
 	episode = parsed.EpisodeNumber[0]
-	season := parsed.AnimeSeason[0]
+	season = parsed.AnimeSeason[0]
 	releaseGroup = parsed.ReleaseGroup
 
 	// If season is an array in your wrapper adapt accordingly; here we handle leading zeros
@@ -72,7 +72,7 @@ func DynamicThumb(ctx context.Context, name string, thumb string, useAniList boo
 		// fallback to parsed title
 		tTitle = title
 		if aerr != nil {
-			logger.WarnW("AniList lookup failed", zap.Error(err))
+			logger.WarnW("AniList lookup failed", zap.Error(aerr))
 		}
 	}
 

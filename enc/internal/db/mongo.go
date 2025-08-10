@@ -215,7 +215,7 @@ func LoadMatchedFilters(coll *mongo.Collection) {
 		logger.ErrorW(err.Error())
 		return
 	}
-	bot.NameFilters = &doc.Names
+	bot.NameFilters = doc.Names
 	bot.ReleaseFilters = doc.Releases
 }
 

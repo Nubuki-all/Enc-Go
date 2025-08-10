@@ -75,7 +75,7 @@ func ParseName(
 
 	// Wrap release info in brackets
 
-	relInfo = slice2String(relInfo)
+	releaseInfo := slice2String(relInfo)
 	source := slice2String(sources)
 	if title == "" {
 		return ParseResult{}, fmt.Errorf("parsing failed for %q", rawName)
@@ -103,7 +103,7 @@ func ParseName(
 		media, err := GetAniInfo(title, nil, nil, false)
 		if err != nil {
 			// disable further AniList overrides
-			logger.Warnw("AniList lookup failed", zap.Error(err))
+			logger.WarnW("AniList lookup failed", zap.Error(err))
 			useAL = false
 		} else {
 			// English title fallback
@@ -185,7 +185,7 @@ func ParseName(
 		primary.WriteString("v")
 		primary.WriteString(version)
 	}
-	if relInfo == "[END]" || (te != "" && te == epi && season == "") {
+	if releaseInfo == "[END]" || (te != "" && te == epi && season == "") {
 		primary.WriteString(" [END]")
 	}
 	if aTag != "" {
@@ -278,12 +278,12 @@ func CustCap(
 		}
 	}
 	releaseGroup := parsed.ReleaseGroup
-	releaseInfo := parsed.ReleaseInformation
+	relInfo := parsed.ReleaseInformation
 	episodeTitle := parsed.EpisodeTitle
 	// yr := parsed.AnimeYear
 	sources := parsed.Source
 
-	releaseInfo = slice2String(releaseInfo)
+	releaseInfo: = slice2String(relInfo)
 	source := slice2String(sources)
 	// sanitize episode title against not_allowed
 	notAllowed := []string{"END", "MULTi", "WEB", "WEB-DL", "DDP5.1", "DDP2.0", "AAC2"}

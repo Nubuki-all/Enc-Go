@@ -115,11 +115,11 @@ func PostMediaInfo(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	page, err2 := PostToTelegraph("MediaInfo", minfo)
+	page, err2 := PostToTelegraph("MediaInfo", mInfo)
 	if err2 != nil {
 		return "", err2
 	}
-	return page.Url
+	return page.Url, nil
 }
 
 // IsRunning checks if a process is still running
