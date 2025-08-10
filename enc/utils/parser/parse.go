@@ -283,7 +283,7 @@ func CustCap(
 	// yr := parsed.AnimeYear
 	sources := parsed.Source
 
-	releaseInfo: = slice2String(relInfo)
+	releaseInfo := slice2String(relInfo)
 	source := slice2String(sources)
 	// sanitize episode title against not_allowed
 	notAllowed := []string{"END", "MULTi", "WEB", "WEB-DL", "DDP5.1", "DDP2.0", "AAC2"}

@@ -10,21 +10,6 @@ jobs:
         with:
           go-version-file: 'enc/go.mod'
           cache-dependency-path: 'enc/go.sum'
-      - name: Setup Python
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.11
-      - name: Install Python lint libraries
-        run: |
-          pip install autopep8 autoflake isort black
-      - name: Check for showstoppers
-        run: autopep8 --verbose --in-place --recursive --aggressive --aggressive .
-      - name: Remove unused imports and variables
-        run: autoflake --in-place --recursive --remove-all-unused-imports --remove-unused-variables --ignore-init-module-imports .
-      - name: lint with isort and black
-        run: |
-          isort bot
-          black --fast bot
       - name: update golang dependencies
         run: cd enc && go get -u && go mod tidy
       - name: Run golangci-lint
