@@ -76,43 +76,99 @@ query ($id: Int, $idMal: Int, $search: String, $type: MediaType, $asHtml: Boolea
   }
 }`
 
-// Media holds AniList media info
+// ---- structs ----
+
+// Media holds AniList media info (matches the GraphQL selection)
 type Media struct {
-	ID                int      `json:"id"`
-	IDMal             int      `json:"idMal"`
-	Title             Title    `json:"title"`
-	Format            string   `json:"format"`
-	Status            string   `json:"status"`
-	Description       string   `json:"description"`
-	Season            string   `json:"season"`
-	Episodes          int      `json:"episodes"`
-	Duration          int      `json:"duration"`
-	CountryOfOrigin   string   `json:"countryOfOrigin"`
-	Source            string   `json:"source"`
-	CoverImage        Image    `json:"coverImage"`
-	BannerImage       string   `json:"bannerImage"`
-	Genres            []string `json:"genres"`
-	AverageScore      int      `json:"averageScore"`
-	NextAiringEpisode NextEp   `json:"nextAiringEpisode"`
-	IsAdult           bool     `json:"isAdult"`
-	SiteURL           string   `json:"siteUrl"`
+	ID                int                      `json:"id"`
+	IDMal             int                      `json:"idMal"`
+	Title             Title                    `json:"title"`
+	Format            string                   `json:"format"`
+	Status            string                   `json:"status"`
+	Description       string                   `json:"description"` // HTML when asHtml=true
+	StartDate         StartDate                `json:"startDate"`
+	Season            string                   `json:"season"`
+	Episodes          int                      `json:"episodes"`
+	Duration          int                      `json:"duration"`
+	CountryOfOrigin   string                   `json:"countryOfOrigin"`
+	Source            string                   `json:"source"`
+	Trailer           *Trailer                 `json:"trailer,omitempty"`
+	CoverImage        Image                    `json:"coverImage"`
+	BannerImage       string                   `json:"bannerImage"`
+	Genres            []string                 `json:"genres"`
+	AverageScore      int                      `json:"averageScore"`
+	NextAiringEpisode *NextEp                  `json:"nextAiringEpisode,omitempty"`
+	IsAdult           bool                     `json:"isAdult"`
+	Characters        CharacterConnection      `json:"characters"`
+	Studios           StudioConnection         `json:"studios"`
+	SiteURL           string                   `json:"siteUrl"`
 }
 
+// simple title block
 type Title struct {
 	Romaji  string `json:"romaji"`
 	English string `json:"english"`
 	Native  string `json:"native"`
 }
 
+// cover image
 type Image struct {
 	ExtraLarge string `json:"extraLarge"`
 }
 
+// trailer object can be nil
+type Trailer struct {
+	ID        string `json:"id"`
+	Site      string `json:"site"`
+	Thumbnail string `json:"thumbnail"`
+}
+
+// start date block
+type StartDate struct {
+	Year  int `json:"year"`
+	Month int `json:"month"`
+	Day   int `json:"day"`
+}
+
+// next airing episode (may be nil)
 type NextEp struct {
 	AiringAt        int `json:"airingAt"`
 	TimeUntilAiring int `json:"timeUntilAiring"`
 	Episode         int `json:"episode"`
 }
+
+// characters connection + node
+type CharacterConnection struct {
+	Nodes []CharacterNode `json:"nodes"`
+}
+
+type CharacterNode struct {
+	ID          int           `json:"id"`
+	Name        CharacterName `json:"name"`
+	Image       CharacterImage `json:"image"`
+	Description string        `json:"description"` // HTML when asHtml=true
+	SiteURL     string        `json:"siteUrl"`
+}
+
+type CharacterName struct {
+	Full   string `json:"full"`
+	Native string `json:"native"`
+}
+
+type CharacterImage struct {
+	Large string `json:"large"`
+}
+
+// studios connection + node
+type StudioConnection struct {
+	Nodes []StudioNode `json:"nodes"`
+}
+
+type StudioNode struct {
+	Name    string `json:"name"`
+	SiteURL string `json:"siteUrl"`
+}
+
 
 // GraphQLRequest defines the request payload
 type GraphQLRequest struct {

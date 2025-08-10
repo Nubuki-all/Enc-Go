@@ -116,9 +116,9 @@ func FPost(
 				title = titleR
 			}
 			if media2 != nil {
-				idStr = strconv.Itoa(media2.ID)
+				idStr, _ = strconv.Itoa(media2.ID)
 			} else {
-				idStr = strconv.Itoa(media.ID)
+				idStr, _ = strconv.Itoa(media.ID)
 			}
 			picURL = "https://img.anili.st/media/" + idStr
 			con = media.CountryOfOrigin
