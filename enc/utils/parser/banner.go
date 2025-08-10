@@ -98,7 +98,7 @@ func FPost(
 	var idStr string
 	var genres []string
 
-	if !(bot.AnilistParse && useAL) || direct != "" {
+	if !(bot.AnilistParse && anilist) || direct != "" {
 		logger.DebugW("Parsing turned off")
 	} else {
 		media, err := GetAniInfo(title, nil, nil, false)
