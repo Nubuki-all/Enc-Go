@@ -132,7 +132,7 @@ var (
 )
 
 var requiredEnvVars = []string{
-	"API_ID",
+	"APP_ID",
 	"API_HASH",
 	"BOT_TOKEN",
 }
