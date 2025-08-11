@@ -149,6 +149,7 @@ func formatReleaseName(name string) string {
 func LoadConfig() error {
 	viper.SetConfigFile(".env")
 	viper.SetConfigType("env")
+	viper.AddConfigPath(".")
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
