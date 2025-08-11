@@ -97,9 +97,6 @@ func InitLocalDB() error {
 
 // LoadLocalDB is called during startup to hydrate bot state
 func LoadLocalDB() {
-	if config.Conf.DatabaseURL != "" {
-		return
-	}
 	logger.InfoW("Initializing SQLite fallback...")
 	if err := InitLocalDB(); err != nil {
 		logger.WarnW("LocalDB init error", zap.Error(err))

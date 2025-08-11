@@ -48,7 +48,7 @@ func InitMongo(ctx context.Context) error {
 	// Try to connect to MongoDB with a short timeout
 	opts := options.Client().
 		ApplyURI(config.Conf.DatabaseURL).
-		SetServerSelectionTimeout(5 * time.Second)
+		SetServerSelectionTimeout(30 * time.Second)
 
 	client, err := mongo.Connect(ctx, opts)
 	if err != nil {
