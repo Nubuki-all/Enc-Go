@@ -182,7 +182,7 @@ func contains(slice []string, s string) bool {
 
 func LoadDB() {
 	// 1) Initialize Mongo (or switch to local fallback)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	if err := db.InitMongo(ctx); err != nil {

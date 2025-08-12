@@ -68,9 +68,6 @@ var localdb *gorm.DB
 
 // InitLocalDB sets up the SQLite file & tables
 func InitLocalDB() error {
-	if config.Conf.DatabaseURL != "" {
-		return nil
-	}
 	path := config.Conf.LocalDBPath
 	if path == "" {
 		path = ".encbot.db"
