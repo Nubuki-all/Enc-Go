@@ -26,7 +26,7 @@ import (
 	"enc/utils/random"
 	//"enc/internal/localdb"
 	//"enc/internal/rss"
-	//"enc/internal/utils"
+	"enc/internal/utils"
 	//"enc/internal/workers"
 )
 
@@ -152,11 +152,13 @@ func startQbit() {
 }
 
 // onStart sends a startup notification to owners and log channel
-func onStart(ctx context.Context) {
+func onStart() {
 	for _, owner := range strings.Fields(config.Conf.Owner) {
-		if id, err := strconv.Atoi(owner); err == nil {
-			_, cerr := clients.Context.SendMessage(int64(id), &tg.MessagesSendMessageRequest{
+		if id, err := strconv.ParseInt(owner, 10, 64); err == nil {
+			peer, _ := utils.FetchPeer(clients.Context, id)
+			_, cerr := clients.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
 				Message: fmt.Sprintf("**I'm %s %s**", random.Enquip(), random.Enmoji()),
+				Peer: peer,
 			},
 			)
 			if cerr != nil {
