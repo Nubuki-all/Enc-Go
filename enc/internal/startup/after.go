@@ -156,6 +156,7 @@ func onStart() {
 	for _, owner := range strings.Fields(config.Conf.Owner) {
 		if id, err := strconv.ParseInt(owner, 10, 64); err == nil {
 			peer, _ := utils.GetPeer(clients.Context, id)
+			fmt.Println(peer)
 			_, cerr := clients.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
 				Message: fmt.Sprintf("**I'm %s %s**", random.Enquip(), random.Enmoji()),
 				Peer:    peer,
