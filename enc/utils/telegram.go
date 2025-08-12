@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/celestix/gotgproto"
+	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 )
 
-func FetchPeer(ctx *gotgproto.Context, id int64) (tg.InputPeerClass, error) {
+func FetchPeer(ctx *ext.Context, id int64) (tg.InputPeerClass, error) {
     peer, ok := ctx.PeerStorage.GetInputPeerByID(id)
     if ok {
         return peer, nil
@@ -17,7 +17,7 @@ func FetchPeer(ctx *gotgproto.Context, id int64) (tg.InputPeerClass, error) {
     }
 }
 
-func GetPeer(ctx *gotgproto.Context, id int64) (tg.InputPeerClass, error) {
+func GetPeer(ctx *ext.Context, id int64) (tg.InputPeerClass, error) {
 	// 1️⃣ First try PeerStorage
 	if peer, ok := ctx.PeerStorage.GetInputPeerByID(id); ok {
 		return peer, nil
