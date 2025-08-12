@@ -248,7 +248,7 @@ type CodeEntry struct {
 }
 
 var (
-	storage = make(map[int]CodeEntry)
+	Storage = make(map[int]CodeEntry)
 	mutex   sync.RWMutex
 )
 
@@ -257,15 +257,15 @@ func Code(data, infile, outfile string, user, stime interface{}, index ...int) (
 	mutex.Lock()
 	defer mutex.Unlock()
 	if len(index) == 0 {
-		key := len(storage)
-		storage[key] = CodeEntry{Data: data}
+		key := len(Storage)
+		Storage[key] = CodeEntry{Data: data}
 		return strconv.Itoa(key), nil
 	}
 	idx := index[0]
-	if _, ok := storage[idx]; !ok {
+	if _, ok := Storage[idx]; !ok {
 		return "", errors.New("invalid index")
 	}
-	storage[idx] = CodeEntry{Data: data, InFile: infile, OutFile: outfile, User: user, Stime: stime}
+	Storage[idx] = CodeEntry{Data: data, InFile: infile, OutFile: outfile, User: user, Stime: stime}
 	return "", nil
 }
 
@@ -286,12 +286,12 @@ func Decode(key interface{}, pop bool) (CodeEntry, bool) {
 	default:
 		return CodeEntry{}, false
 	}
-	entry, ok := storage[idx]
+	entry, ok := Storage[idx]
 	if !ok {
 		return CodeEntry{}, false
 	}
 	if pop {
-		delete(storage, idx)
+		delete(Storage, idx)
 	}
 	return entry, true
 }
