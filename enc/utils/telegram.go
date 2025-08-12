@@ -12,7 +12,6 @@ import (
 
 
 func GetPeer(ctx *ext.Context, id int64) (tg.InputPeerClass, error) {
-	empty := tg.InputPeerEmpty{}
 	peer := ctx.PeerStorage.GetInputPeerById(id)
 	if _, isEmpty := peer.(*tg.InputPeerEmpty); !isEmpty {
 		return peer, nil
