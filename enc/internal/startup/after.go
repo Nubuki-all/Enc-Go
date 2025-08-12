@@ -31,7 +31,7 @@ import (
 )
 
 // After wires up background workers, RPC & torrent clients, and hook handlers.
-func After(ctx context.Context) {
+func Finalize(ctx context.Context) {
 	// 1) Start your RPC (aria2) process and API client
 	go startRPC()
 

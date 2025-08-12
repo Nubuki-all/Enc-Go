@@ -84,4 +84,5 @@ func InitTelegramClient() {
 
 	logger.Infof("client (@%s) has been started...\n", Client.Self.Username)
 	Context = Client.CreateContext()
+	
 }

@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
 	"strings"
 
 	"enc/config"
+	"enc/internal/clients"
 	"enc/internal/logger"
 	"enc/internal/startup"
 )
@@ -19,6 +21,9 @@ func main() {
 		logger.Criticalf("Failed to load config: %v", config.Rconf.Error)
 	}
 	startup.Initialize()
+	clients.InitTelegraph()
+	clients.InitTelegramClient()
+	startup.Finalize(context.Background())
 
 	// … rest of your app …
 }
