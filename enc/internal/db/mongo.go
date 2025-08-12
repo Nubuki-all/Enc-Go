@@ -58,7 +58,7 @@ func InitMongo(ctx context.Context) error {
 	}
 
 	// Ping the server to verify connectivity
-	pingCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	pingCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 	if err := client.Ping(pingCtx, nil); err != nil {
 		logger.WarnW("MongoDB ping failed — falling back to local DB", zap.Error(err))
