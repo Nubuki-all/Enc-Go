@@ -59,7 +59,7 @@ func Finalize(ctx context.Context) {
 	} else {
 		// give processes a moment, then send onStart notifications
 		time.Sleep(1 * time.Second)
-		onStart(ctx)
+		onStart()
 	}
 
 	// 6) Start the encoding‐pause timer
