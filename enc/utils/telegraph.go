@@ -4,16 +4,17 @@ package utils
 import (
 	"fmt"
 	"time"
+	
+	"github.com/celestix/telegraph-go/v2"
 
 	"enc/config"
-	"enc/internal/clients"
-
-	"github.com/celestix/telegraph-go/v2"
+	tgph "enc/internal/clients/telegraph"
+	//tele "enc/internal/clients/telegram"
 )
 
 // PostToTelegraph publishes a acct, retrying on network errors.
 func PostToTelegraph(title, text string) (*telegraph.Page, error) {
-	if clients.TgpClient == nil {
+	if tgph.Client == nil {
 		return nil, fmt.Errorf("PostToTelegraph failed because client wasn't successfully initialized")
 	}
 	// Derive author and URL (once)
@@ -32,8 +33,8 @@ func PostToTelegraph(title, text string) (*telegraph.Page, error) {
 	var lastErr error
 	// Use the Account object directly to create pages
 	for i := 0; i < 5; i++ {
-		page, err := clients.TgpAccount.CreatePage(
-			clients.TgpClient,
+		page, err := tgph.Account.CreatePage(
+			tgph.Client,
 			title,
 			text,
 			&telegraph.PageOpts{

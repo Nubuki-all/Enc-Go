@@ -20,12 +20,13 @@ import (
 	"enc/config"
 	"enc/internal/bot"
 	"enc/internal/bot/entimer"
-	"enc/internal/clients"
+	"enc/internal/clients/telegram"
+	"enc/internal/clients/telegraph"
 	"enc/internal/db"
 	"enc/internal/logger"
 	"enc/utils"
 	"enc/utils/random"
-	//"enc/internal/localdb"
+	"enc/utils/tele"
 	//"enc/internal/rss"
 	//"enc/internal/workers"
 )
@@ -155,11 +156,13 @@ func startQbit() {
 func onStart() {
 	for _, owner := range strings.Fields(config.Conf.Owner) {
 		if id, err := strconv.ParseInt(owner, 10, 64); err == nil {
-			peer, perr := utils.GetPeer(clients.Context, id)
-			fmt.Println(peer, id, perr)
-			_, cerr := clients.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
-				Message: fmt.Sprintf("**I'm %s %s**", random.Enquip(), random.Enmoji()),
+			peer, perr := tele.GetPeer(id)
+			//fmt.Println(peer, id, perr)
+			text, entities, _ := tele.MarkdownToTelegram(fmt.Sprintf("**I'm %s %s**", random.Enquip(), random.Enmoji()))
+			_, cerr := telegram.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
+				Message: text,
 				Peer:    peer,
+				Entities: entities,
 			},
 			)
 			if cerr != nil {
@@ -170,7 +173,7 @@ func onStart() {
 		}
 	}
 	if config.Conf.LogChannel != 0 {
-		clients.Context.SendMessage(
+		telegram.Context.SendMessage(
 			config.Conf.LogChannel, &tg.MessagesSendMessageRequest{
 				Message: fmt.Sprintf("**Bot is %s %s**", random.Enquip(), random.Enmoji()),
 			},
@@ -179,12 +182,13 @@ func onStart() {
 	// report aria2/qbit status
 	status := fmt.Sprintf("**Aria2:** `%v`\n**Qbit:** `%v`",
 		bot.SAS, bot.SQS)
-	own_, _ := strconv.Atoi(strings.Split(config.Conf.Owner, " ")[0])
-	id_ := int64(own_)
+	var id int64
 	if config.Conf.LogChannel != 0 {
-		id_ = config.Conf.LogChannel
+		id = config.Conf.LogChannel
+	} else {
+		id, _ = strconv.ParseInt((strings.Split(config.Conf.Owner, " ")[0]), 10, 64)
 	}
-	clients.Context.SendMessage(id_, &tg.MessagesSendMessageRequest{
+	telegram.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
 		Message: status,
 	})
 }
@@ -197,7 +201,7 @@ func onRestart() error {
 	if len(parts) != 2 {
 		return fmt.Errorf("invalid restart arg: %s", arg)
 	}
-	chatID, _ := strconv.Atoi(parts[0])
+	chatID, _ := strconv.ParseInt(parts[0], 10, 64)
 	msgID, _ := strconv.Atoi(parts[1])
 
 	var msg string
@@ -213,8 +217,8 @@ func onRestart() error {
 	} else {
 		return nil
 	}
-	_, err := clients.Context.EditMessage(
-		int64(chatID),
+	_, err := telegram.Context.EditMessage(
+		chatID,
 		&tg.MessagesEditMessageRequest{
 			ID:      msgID,
 			Message: msg,
@@ -241,13 +245,13 @@ func onTermination(ctx context.Context) {
 
 	farewell := fmt.Sprintf("**I'm %s %s**", random.Enquip2(), random.Enmoji2())
 	if config.Conf.LogChannel != 0 {
-		clients.Context.SendMessage(config.Conf.LogChannel, &tg.MessagesSendMessageRequest{
+		telegram.Context.SendMessage(config.Conf.LogChannel, &tg.MessagesSendMessageRequest{
 			Message: farewell,
 		})
 	} else {
 		for _, owner := range strings.Fields(config.Conf.Owner) {
-			if id, err := strconv.Atoi(owner); err == nil {
-				clients.Context.SendMessage(int64(id), &tg.MessagesSendMessageRequest{
+			if id, err := strconv.ParseInt(owner, 10, 64); err == nil {
+				telegram.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
 					Message: farewell,
 				})
 			}

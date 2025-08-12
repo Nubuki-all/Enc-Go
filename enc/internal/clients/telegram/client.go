@@ -1,14 +1,12 @@
-package clients
+package telegram
 
 import (
 	"context"
-	"net/http"
 	"time"
 
 	"github.com/celestix/gotgproto"
 	"github.com/celestix/gotgproto/ext"
 	"github.com/celestix/gotgproto/sessionMaker"
-	"github.com/celestix/telegraph-go/v2"
 	"github.com/gotd/contrib/middleware/floodwait"
 	"github.com/gotd/contrib/middleware/ratelimit"
 	"github.com/gotd/td/telegram"
@@ -27,31 +25,10 @@ import (
 var (
 	Client     *gotgproto.Client
 	Context    *ext.Context
-	TgpAccount *telegraph.Account
-	TgpClient  *telegraph.TelegraphClient
 )
 
-// InitTelegraph must be called once (e.g. from main.init()) after config is loaded.
 
-func InitTelegraph() {
-	TgpClient = telegraph.GetTelegraphClient(&telegraph.ClientOpt{
-		ApiUrl: config.Conf.TelegraphAPI,
-		HttpClient: &http.Client{
-			Timeout: 6 * time.Second,
-		},
-	})
-
-	var err error
-	// Create a single account (Mediainfo) and store it
-	TgpAccount, err = TgpClient.CreateAccount("Mediainfo", &telegraph.CreateAccountOpts{
-		AuthorName: config.Rconf.TgpAuthor,
-	})
-	if err != nil {
-		logger.Errorf("could not create Telegraph account: %v", err)
-	}
-}
-
-func InitTelegramClient() {
+func InitClient() {
 	var err error
 	// Initializing flood waiter, which will wait for stated duration if "FLOOD_WAIT" error occurred
 	waiter := floodwait.NewWaiter().WithCallback(func(ctx context.Context, wait floodwait.FloodWait) {

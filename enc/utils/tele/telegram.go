@@ -1,4 +1,4 @@
-package utils
+package tele
 
 import (
 	"fmt"
@@ -6,12 +6,16 @@ import (
 	"strings"
 
 	"github.com/celestix/gotgproto/ext"
+	"github.com/celestix/gotgproto/parsemode"
 	"github.com/celestix/gotgproto/storage"
 	"github.com/gotd/td/tg"
+	
+	"enc/internal/clients/telegram"
 )
 
 
-func GetPeer(ctx *ext.Context, id int64) (tg.InputPeerClass, error) {
+func GetPeer(id int64) (tg.InputPeerClass, error) {
+	ctx := telegram.Context
 	peer := ctx.PeerStorage.GetInputPeerById(id)
 	if _, isEmpty := peer.(*tg.InputPeerEmpty); !isEmpty {
 		return peer, nil
