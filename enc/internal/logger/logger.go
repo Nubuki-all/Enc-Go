@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	Logger *zap.Logger
-	Sugar  *zap.SugaredLogger
+	Logger, wrapperLogger *zap.Logger
+	Sugar,  wrapperSugar *zap.SugaredLogger
 )
 
 func Init(logFile string, useJSON bool) error {
@@ -71,79 +71,83 @@ func Init(logFile string, useJSON bool) error {
 		zap.AddStacktrace(zapcore.ErrorLevel),
 	)
 	Sugar = Logger.Sugar()
+
+	wrapperLogger = Logger.WithOptions(zap.AddCallerSkip(1))
+	wrapperSugar = wrapperLogger.Sugar()
+
 	zap.ReplaceGlobals(Logger)
 	return nil
 }
 
 // Info logs a message at InfoLevel. Arguments are handled in fmt.Sprint.
 func Info(args ...interface{}) {
-	Sugar.Info(args...)
+	wrapperSugar.Info(args...)
 }
 
 // Infof logs a formatted message at InfoLevel.
 func Infof(template string, args ...interface{}) {
-	Sugar.Infof(template, args...)
+	wrapperSugar.Infof(template, args...)
 }
 
 // Debug logs a message at DebugLevel.
 func Debug(args ...interface{}) {
-	Sugar.Debug(args...)
+	wrapperSugar.Debug(args...)
 }
 
 // Debugf logs a formatted message at DebugLevel.
 func Debugf(template string, args ...interface{}) {
-	Sugar.Debugf(template, args...)
+	wrapperSugar.Debugf(template, args...)
 }
 
 // Warn logs a message at WarnLevel.
 func Warn(args ...interface{}) {
-	Sugar.Warn(args...)
+	wrapperSugar.Warn(args...)
 }
 
 // Warnf logs a formatted message at WarnLevel.
 func Warnf(template string, args ...interface{}) {
-	Sugar.Warnf(template, args...)
+	wrapperSugar.Warnf(template, args...)
 }
 
 // Error logs a message at ErrorLevel.
 func Error(args ...interface{}) {
-	Sugar.Error(args...)
+	wrapperSugar.Error(args...)
 }
 
 // Errorf logs a formatted message at ErrorLevel.
 func Errorf(template string, args ...interface{}) {
-	Sugar.Errorf(template, args...)
+	wrapperSugar.Errorf(template, args...)
 }
 
 // Critical logs a message at FatalLevel and then calls os.Exit(1).
 func Critical(args ...interface{}) {
-	Sugar.Fatal(args...)
+	wrapperSugar.Fatal(args...)
 }
 
 // Criticalf logs a formatted message at FatalLevel and then calls os.Exit(1).
 func Criticalf(template string, args ...interface{}) {
-	Sugar.Fatalf(template, args...)
+	wrapperSugar.Fatalf(template, args...)
 }
 
 // InfoW logs a message with structured context.
 func InfoW(msg string, fields ...zap.Field) {
-	Logger.Info(msg, fields...)
+	wrapperLogger.Info(msg, fields...)
 }
 
 // Likewise for WarnW, ErrorW, DebugW, CriticalW:
 func WarnW(msg string, fields ...zap.Field) {
-	Logger.Warn(msg, fields...)
+	wrapperLogger.Warn(msg, fields...)
 }
 
 func ErrorW(msg string, fields ...zap.Field) {
-	Logger.Error(msg, fields...)
+	wrapperLogger.Error(msg, fields...)
 }
 
 func DebugW(msg string, fields ...zap.Field) {
-	Logger.Debug(msg, fields...)
+	wrapperLogger.Debug(msg, fields...)
 }
 
 // CriticalW uses Fatal (which calls os.Exit after logging).
 func CriticalW(msg string, fields ...zap.Field) {
-	Logger.Fatal(msg, fields...)
+	wrapperLogger.Fatal(msg, fields...)
 }
