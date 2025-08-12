@@ -2,36 +2,40 @@ package utils
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/celestix/gotgproto/ext"
+	"github.com/celestix/gotgproto/storage"
 	"github.com/gotd/td/tg"
 )
 
 func FetchPeer(ctx *ext.Context, id int64) (tg.InputPeerClass, error) {
-	peer, ok := ctx.PeerStorage.GetInputPeerByID(id)
+	peer, ok := ctx.PeerStorage.GetInputPeerById(id)
 	if ok {
 		return peer, nil
-	} else {
-		return GetPeer(ctx, id)
 	}
+	return GetPeer(ctx, id)
 }
 
 func GetPeer(ctx *ext.Context, id int64) (tg.InputPeerClass, error) {
-	// 1️⃣ First try PeerStorage
-	if peer, ok := ctx.PeerStorage.GetInputPeerByID(id); ok {
+	if peer, ok := ctx.PeerStorage.GetInputPeerById(id); ok {
 		return peer, nil
 	}
 
-	// 2️⃣ Detect channel/supergroup vs user
 	idStr := fmt.Sprint(id)
 	isChannel := strings.HasPrefix(idStr, "-100")
 
 	if isChannel {
-		// Channel/Supergroup
-		chats, err := ctx.Raw.ChannelsGetChannels(ctx, []tg.InputChannelClass{
+		// Extract raw channel ID from the peer ID
+		channelID, err := strconv.ParseInt(idStr[4:], 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse channel ID: %w", err)
+		}
+
+		chatsClass, err := ctx.Raw.ChannelsGetChannels(ctx, []tg.InputChannelClass{
 			&tg.InputChannel{
-				ChannelID:  id,
+				ChannelID:  channelID,
 				AccessHash: 0,
 			},
 		})
@@ -39,13 +43,15 @@ func GetPeer(ctx *ext.Context, id int64) (tg.InputPeerClass, error) {
 			return nil, fmt.Errorf("failed to fetch channel: %w", err)
 		}
 
+		chats := chatsClass.GetChats()
 		if len(chats) > 0 {
 			if ch, ok := chats[0].(*tg.Channel); ok {
 				peer := &tg.InputPeerChannel{
 					ChannelID:  ch.ID,
 					AccessHash: ch.AccessHash,
 				}
-				ctx.PeerStorage.Put(peer)
+				// Store with correct AddPeer signature
+				ctx.PeerStorage.AddPeer(id, ch.AccessHash, storage.TypeChannel, ch.Username)
 				return peer, nil
 			}
 		}
@@ -67,7 +73,8 @@ func GetPeer(ctx *ext.Context, id int64) (tg.InputPeerClass, error) {
 					UserID:     u.ID,
 					AccessHash: u.AccessHash,
 				}
-				ctx.PeerStorage.Put(peer)
+				// Store with correct AddPeer signature
+				ctx.PeerStorage.AddPeer(id, u.AccessHash, storage.TypeUser, u.Username)
 				return peer, nil
 			}
 		}
