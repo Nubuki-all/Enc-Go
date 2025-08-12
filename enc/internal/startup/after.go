@@ -159,6 +159,8 @@ func onStart(ctx context.Context) {
 				Message: fmt.Sprintf("**I'm %s %s**", random.Enquip(), random.Enmoji()),
 			},
 			)
+		} else if err != nil {
+			logger.ErrorW(err.Error())
 		}
 	}
 	if config.Conf.LogChannel != 0 {

@@ -268,7 +268,10 @@ func LoadConfig() error {
 		UVS:                   viper.GetBool("UPLOAD_VIDEO_AS_SPOILER"),
 		Workers:               viper.GetInt("WORKERS"),
 	}
-
+	
+	if !strings.HasSuffix(Conf.TelegraphAPI, "/") {
+		Conf.TelegraphAPI += "/"
+	}
 	// Initialize runtime config with defaults
 	Rconf = &RuntimeConfig{
 		BatchQueue:   make(map[string]interface{}),
