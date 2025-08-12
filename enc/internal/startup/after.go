@@ -18,6 +18,7 @@ import (
 	"go.uber.org/zap"
 
 	"enc/config"
+	"enc/utils"
 	"enc/internal/bot"
 	"enc/internal/bot/entimer"
 	"enc/internal/clients"
@@ -26,7 +27,6 @@ import (
 	"enc/utils/random"
 	//"enc/internal/localdb"
 	//"enc/internal/rss"
-	"enc/internal/utils"
 	//"enc/internal/workers"
 )
 
