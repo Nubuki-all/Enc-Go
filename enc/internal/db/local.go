@@ -74,6 +74,7 @@ func InitLocalDB() error {
 	}
 	var err error
 	glogger := zapgorm2.New(logger.Logger)
+	glogger.IgnoreRecordNotFoundError = true
 	localdb, err = gorm.Open(sqlite.Open(path), &gorm.Config{
 		Logger: glogger,
 	})
