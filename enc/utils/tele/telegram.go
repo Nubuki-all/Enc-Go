@@ -9,10 +9,9 @@ import (
 	"github.com/celestix/gotgproto/parsemode"
 	"github.com/celestix/gotgproto/storage"
 	"github.com/gotd/td/tg"
-	
+
 	"enc/internal/clients/telegram"
 )
-
 
 func GetPeer(id int64) (tg.InputPeerClass, error) {
 	ctx := telegram.Context

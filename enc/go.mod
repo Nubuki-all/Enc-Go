@@ -14,6 +14,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.31
 	github.com/siku2/arigo v0.2.0
 	github.com/spf13/viper v1.20.1
+	github.com/yuin/goldmark v1.7.13
 	go.mongodb.org/mongo-driver v1.17.4
 	go.uber.org/zap v1.27.0
 	golang.org/x/text v0.28.0

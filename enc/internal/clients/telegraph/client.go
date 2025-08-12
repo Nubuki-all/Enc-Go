@@ -1,4 +1,5 @@
 package telegraph
+
 import (
 	"net/http"
 	"time"
@@ -10,10 +11,8 @@ import (
 	"enc/internal/logger"
 )
 
-
-
 var (
-    Account *telegraph.Account
+	Account *telegraph.Account
 	Client  *telegraph.TelegraphClient
 )
 

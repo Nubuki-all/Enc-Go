@@ -23,10 +23,9 @@ import (
 )
 
 var (
-	Client     *gotgproto.Client
-	Context    *ext.Context
+	Client  *gotgproto.Client
+	Context *ext.Context
 )
-
 
 func InitClient() {
 	var err error

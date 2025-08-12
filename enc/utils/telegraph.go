@@ -4,12 +4,12 @@ package utils
 import (
 	"fmt"
 	"time"
-	
+
 	"github.com/celestix/telegraph-go/v2"
 
 	"enc/config"
 	tgph "enc/internal/clients/telegraph"
-	//tele "enc/internal/clients/telegram"
+	// tele "enc/internal/clients/telegram"
 )
 
 // PostToTelegraph publishes a acct, retrying on network errors.
