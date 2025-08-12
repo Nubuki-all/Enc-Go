@@ -5,6 +5,7 @@ package logger
 
 import (
 	"os"
+	"log"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -13,10 +14,23 @@ import (
 
 var (
 	Logger, wrapperLogger *zap.Logger
-	Sugar,  wrapperSugar *zap.SugaredLogger
+	Sugar,  wrapperSugar  *zap.SugaredLogger
 )
 
+func truncateLogFile(path string) error {
+    // If file exists, truncate to zero length. If not, create it.
+    f, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
+    if err != nil {
+        return err
+    }
+    return f.Close()
+}
+
+
 func Init(logFile string, useJSON bool) error {
+	if err := truncateLogFile(logFile); err != nil {
+        log.Printf("failed to truncate log: %v", err)
+    }
 	// Rotating file output
 	lj := &lumberjack.Logger{
 		Filename:   logFile,
