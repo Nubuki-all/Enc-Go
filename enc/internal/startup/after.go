@@ -18,12 +18,12 @@ import (
 	"go.uber.org/zap"
 
 	"enc/config"
-	"enc/utils"
 	"enc/internal/bot"
 	"enc/internal/bot/entimer"
 	"enc/internal/clients"
 	"enc/internal/db"
 	"enc/internal/logger"
+	"enc/utils"
 	"enc/utils/random"
 	//"enc/internal/localdb"
 	//"enc/internal/rss"
@@ -158,7 +158,7 @@ func onStart() {
 			peer, _ := utils.FetchPeer(clients.Context, id)
 			_, cerr := clients.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
 				Message: fmt.Sprintf("**I'm %s %s**", random.Enquip(), random.Enmoji()),
-				Peer: peer,
+				Peer:    peer,
 			},
 			)
 			if cerr != nil {

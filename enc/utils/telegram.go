@@ -9,12 +9,12 @@ import (
 )
 
 func FetchPeer(ctx *ext.Context, id int64) (tg.InputPeerClass, error) {
-    peer, ok := ctx.PeerStorage.GetInputPeerByID(id)
-    if ok {
-        return peer, nil
-    } else {
-        return GetPeer(ctx, id)
-    }
+	peer, ok := ctx.PeerStorage.GetInputPeerByID(id)
+	if ok {
+		return peer, nil
+	} else {
+		return GetPeer(ctx, id)
+	}
 }
 
 func GetPeer(ctx *ext.Context, id int64) (tg.InputPeerClass, error) {
