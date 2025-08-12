@@ -155,10 +155,13 @@ func startQbit() {
 func onStart(ctx context.Context) {
 	for _, owner := range strings.Fields(config.Conf.Owner) {
 		if id, err := strconv.Atoi(owner); err == nil {
-			clients.Context.SendMessage(int64(id), &tg.MessagesSendMessageRequest{
+			_, cerr := clients.Context.SendMessage(int64(id), &tg.MessagesSendMessageRequest{
 				Message: fmt.Sprintf("**I'm %s %s**", random.Enquip(), random.Enmoji()),
 			},
 			)
+			if cerr != nil {
+				logger.ErrorW(cerr.Error())
+			}
 		} else if err != nil {
 			logger.ErrorW(err.Error())
 		}
