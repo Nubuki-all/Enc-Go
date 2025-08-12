@@ -85,7 +85,7 @@ func InitLocalDB() error {
 	sqlDB.Exec("PRAGMA journal_mode=WAL;")
 
 	// Auto-migrate schemas
-	err = localdb.AutoMigrate(&queueRecord{}, &settingRecord{}, &arrRecord{}, &mapRecord{}, &filterRecord)
+	err = localdb.AutoMigrate(&queueRecord{}, &settingRecord{}, &arrRecord{}, &mapRecord{}, &filterRecord{})
 	if err != nil {
 		return fmt.Errorf("sqlite migrate: %w", err)
 	}
