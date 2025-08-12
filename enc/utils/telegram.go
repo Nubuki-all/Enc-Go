@@ -10,7 +10,6 @@ import (
 	"github.com/gotd/td/tg"
 )
 
-
 func GetPeer(ctx *ext.Context, id int64) (tg.InputPeerClass, error) {
 	if peer := ctx.PeerStorage.GetInputPeerById(id); peer != tg.InputPeerEmpty {
 		return peer, nil
