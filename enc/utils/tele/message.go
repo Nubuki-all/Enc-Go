@@ -28,7 +28,7 @@ func NewMsgFromGotg(m *gp.Message, c *ext.Context, chatID int64, userID int64) *
 		Ctx: c,
 		ChatID: chatID,
 		UserID: userID,
-		ID:  m.Message.ID
+		ID:  m.Message.ID,
 	}
 }
 
