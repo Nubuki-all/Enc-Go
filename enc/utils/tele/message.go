@@ -27,7 +27,7 @@ func EditMessage(id int64, msgID int, text string) error {
 	pText, entities, _ := parser.Parse(text, true)
 	// ParseMarkdown(text, true)
 	_, err := telegram.Context.EditMessage(id, &tg.MessagesEditMessageRequest{
-		ID:      msgID,
+		ID:       msgID,
 		Message:  pText,
 		Peer:     peer,
 		Entities: entities,

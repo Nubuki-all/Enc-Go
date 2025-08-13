@@ -52,203 +52,201 @@ func removeSurrogates(s string) string {
 	return string(decoded)
 }
 
-
 // utf16Units returns how many UTF-16 code units are needed for s.
 func utf16Units(s string) int {
-    cnt := 0
-    for _, r := range s {
-        if r > 0xFFFF {
-            cnt += 2
-        } else {
-            cnt += 1
-        }
-    }
-    return cnt
+	cnt := 0
+	for _, r := range s {
+		if r > 0xFFFF {
+			cnt += 2
+		} else {
+			cnt += 1
+		}
+	}
+	return cnt
 }
 
 // runeIndexFromUTF16Offset returns the rune index in s that corresponds to the given
 // UTF-16 code-unit offset. If offset is beyond end, returns len([]rune(s)).
 func runeIndexFromUTF16Offset(s string, offset int) int {
-    runes := []rune(s)
-    count := 0
-    for i, r := range runes {
-        cu := 1
-        if r > 0xFFFF {
-            cu = 2
-        }
-        if count+cu > offset {
-            return i
-        }
-        count += cu
-    }
-    return len(runes)
+	runes := []rune(s)
+	count := 0
+	for i, r := range runes {
+		cu := 1
+		if r > 0xFFFF {
+			cu = 2
+		}
+		if count+cu > offset {
+			return i
+		}
+		count += cu
+	}
+	return len(runes)
 }
-
 
 // Parse converts HTML-like input into plain UTF-8 message and gotd/td entities.
 // Accepts normal UTF-8 input; surrogate expansion is handled internally.
 // Returned Entities have Offsets/Lengths expressed in UTF-16 code units (as ints).
 func Parse(input string) (*ParserResult, error) {
-    // Use UTF-8 input for tokenizer (do NOT expand surrogates here)
-    z := htmlpkg.NewTokenizer(strings.NewReader(input))
+	// Use UTF-8 input for tokenizer (do NOT expand surrogates here)
+	z := htmlpkg.NewTokenizer(strings.NewReader(input))
 
-    var buf bytes.Buffer
-    tagEntities := map[string][]tg.MessageEntityClass{}
-    var finished []tg.MessageEntityClass
+	var buf bytes.Buffer
+	tagEntities := map[string][]tg.MessageEntityClass{}
+	var finished []tg.MessageEntityClass
 
-    // posUTF16 counts UTF-16 code units consumed so far
-    posUTF16 := 0
+	// posUTF16 counts UTF-16 code units consumed so far
+	posUTF16 := 0
 
-    pushEntity := func(tag string, ent tg.MessageEntityClass) {
-        tagEntities[tag] = append(tagEntities[tag], ent)
-    }
-    popEntity := func(tag string) {
-        stack := tagEntities[tag]
-        if len(stack) == 0 {
-            return
-        }
-        ent := stack[len(stack)-1]
-        tagEntities[tag] = stack[:len(stack)-1]
-        if len(tagEntities[tag]) == 0 {
-            delete(tagEntities, tag)
-        }
-        finished = append(finished, ent)
-    }
+	pushEntity := func(tag string, ent tg.MessageEntityClass) {
+		tagEntities[tag] = append(tagEntities[tag], ent)
+	}
+	popEntity := func(tag string) {
+		stack := tagEntities[tag]
+		if len(stack) == 0 {
+			return
+		}
+		ent := stack[len(stack)-1]
+		tagEntities[tag] = stack[:len(stack)-1]
+		if len(tagEntities[tag]) == 0 {
+			delete(tagEntities, tag)
+		}
+		finished = append(finished, ent)
+	}
 
-    for {
-        tt := z.Next()
-        switch tt {
-        case htmlpkg.ErrorToken:
-            if z.Err() == io.EOF {
-                goto DONE
-            }
-            return nil, z.Err()
-        case htmlpkg.TextToken:
-            data := string(z.Text())
-            data = stdhtml.UnescapeString(data)
-            // update entity lengths using UTF-16 code unit counts
-            addLen := utf16Units(data)
-            for _, ents := range tagEntities {
-                for _, e := range ents {
-                    switch v := e.(type) {
-                    case *tg.MessageEntityBold:
-                        v.Length += addLen
-                    case *tg.MessageEntityItalic:
-                        v.Length += addLen
-                    case *tg.MessageEntityUnderline:
-                        v.Length += addLen
-                    case *tg.MessageEntityStrike:
-                        v.Length += addLen
-                    case *tg.MessageEntityBlockquote:
-                        v.Length += addLen
-                    case *tg.MessageEntityCode:
-                        v.Length += addLen
-                    case *tg.MessageEntityPre:
-                        v.Length += addLen
-                    case *tg.MessageEntitySpoiler:
-                        v.Length += addLen
-                    case *tg.MessageEntityTextURL:
-                        v.Length += addLen
-                    case *tg.MessageEntityCustomEmoji:
-                        v.Length += addLen
-                    default:
-                        _ = v
-                    }
-                }
-            }
-            buf.WriteString(data)
-            posUTF16 += addLen
+	for {
+		tt := z.Next()
+		switch tt {
+		case htmlpkg.ErrorToken:
+			if z.Err() == io.EOF {
+				goto DONE
+			}
+			return nil, z.Err()
+		case htmlpkg.TextToken:
+			data := string(z.Text())
+			data = stdhtml.UnescapeString(data)
+			// update entity lengths using UTF-16 code unit counts
+			addLen := utf16Units(data)
+			for _, ents := range tagEntities {
+				for _, e := range ents {
+					switch v := e.(type) {
+					case *tg.MessageEntityBold:
+						v.Length += addLen
+					case *tg.MessageEntityItalic:
+						v.Length += addLen
+					case *tg.MessageEntityUnderline:
+						v.Length += addLen
+					case *tg.MessageEntityStrike:
+						v.Length += addLen
+					case *tg.MessageEntityBlockquote:
+						v.Length += addLen
+					case *tg.MessageEntityCode:
+						v.Length += addLen
+					case *tg.MessageEntityPre:
+						v.Length += addLen
+					case *tg.MessageEntitySpoiler:
+						v.Length += addLen
+					case *tg.MessageEntityTextURL:
+						v.Length += addLen
+					case *tg.MessageEntityCustomEmoji:
+						v.Length += addLen
+					default:
+						_ = v
+					}
+				}
+			}
+			buf.WriteString(data)
+			posUTF16 += addLen
 
-        case htmlpkg.StartTagToken:
-            name, hasAttr := z.TagName()
-            tag := strings.ToLower(string(name))
-            attrMap := map[string]string{}
-            if hasAttr {
-                for {
-                    k, v, more := z.TagAttr()
-                    attrMap[string(k)] = string(v)
-                    if !more {
-                        break
-                    }
-                }
-            }
-            offset := posUTF16
-            switch tag {
-            case "b", "strong":
-                pushEntity(tag, &tg.MessageEntityBold{Offset: offset, Length: 0})
-            case "i", "em":
-                pushEntity(tag, &tg.MessageEntityItalic{Offset: offset, Length: 0})
-            case "u":
-                pushEntity(tag, &tg.MessageEntityUnderline{Offset: offset, Length: 0})
-            case "s", "del", "strike":
-                pushEntity(tag, &tg.MessageEntityStrike{Offset: offset, Length: 0})
-            case "blockquote":
-                pushEntity(tag, &tg.MessageEntityBlockquote{Offset: offset, Length: 0})
-            case "code":
-                pushEntity(tag, &tg.MessageEntityCode{Offset: offset, Length: 0})
-            case "pre":
-                lang := ""
-                if v, ok := attrMap["language"]; ok {
-                    lang = v
-                }
-                pushEntity(tag, &tg.MessageEntityPre{Offset: offset, Length: 0, Language: lang})
-            case "spoiler":
-                pushEntity(tag, &tg.MessageEntitySpoiler{Offset: offset, Length: 0})
-            case "a":
-                href := ""
-                if v, ok := attrMap["href"]; ok {
-                    href = v
-                }
-                pushEntity(tag, &tg.MessageEntityTextURL{Offset: offset, Length: 0, URL: href})
-            case "emoji":
-                idStr := attrMap["id"]
-                if idStr == "" {
-                    continue
-                }
-                idNum, err := strconv.ParseInt(idStr, 10, 64)
-                if err != nil {
-                    continue
-                }
-                pushEntity(tag, &tg.MessageEntityCustomEmoji{Offset: offset, Length: 0, DocumentID: idNum})
-            default:
-                // ignore
-            }
+		case htmlpkg.StartTagToken:
+			name, hasAttr := z.TagName()
+			tag := strings.ToLower(string(name))
+			attrMap := map[string]string{}
+			if hasAttr {
+				for {
+					k, v, more := z.TagAttr()
+					attrMap[string(k)] = string(v)
+					if !more {
+						break
+					}
+				}
+			}
+			offset := posUTF16
+			switch tag {
+			case "b", "strong":
+				pushEntity(tag, &tg.MessageEntityBold{Offset: offset, Length: 0})
+			case "i", "em":
+				pushEntity(tag, &tg.MessageEntityItalic{Offset: offset, Length: 0})
+			case "u":
+				pushEntity(tag, &tg.MessageEntityUnderline{Offset: offset, Length: 0})
+			case "s", "del", "strike":
+				pushEntity(tag, &tg.MessageEntityStrike{Offset: offset, Length: 0})
+			case "blockquote":
+				pushEntity(tag, &tg.MessageEntityBlockquote{Offset: offset, Length: 0})
+			case "code":
+				pushEntity(tag, &tg.MessageEntityCode{Offset: offset, Length: 0})
+			case "pre":
+				lang := ""
+				if v, ok := attrMap["language"]; ok {
+					lang = v
+				}
+				pushEntity(tag, &tg.MessageEntityPre{Offset: offset, Length: 0, Language: lang})
+			case "spoiler":
+				pushEntity(tag, &tg.MessageEntitySpoiler{Offset: offset, Length: 0})
+			case "a":
+				href := ""
+				if v, ok := attrMap["href"]; ok {
+					href = v
+				}
+				pushEntity(tag, &tg.MessageEntityTextURL{Offset: offset, Length: 0, URL: href})
+			case "emoji":
+				idStr := attrMap["id"]
+				if idStr == "" {
+					continue
+				}
+				idNum, err := strconv.ParseInt(idStr, 10, 64)
+				if err != nil {
+					continue
+				}
+				pushEntity(tag, &tg.MessageEntityCustomEmoji{Offset: offset, Length: 0, DocumentID: idNum})
+			default:
+				// ignore
+			}
 
-        case htmlpkg.EndTagToken:
-            name, _ := z.TagName()
-            tag := strings.ToLower(string(name))
-            popEntity(tag)
+		case htmlpkg.EndTagToken:
+			name, _ := z.TagName()
+			tag := strings.ToLower(string(name))
+			popEntity(tag)
 
-        case htmlpkg.SelfClosingTagToken:
-            name, hasAttr := z.TagName()
-            tag := strings.ToLower(string(name))
-            attrMap := map[string]string{}
-            if hasAttr {
-                for {
-                    k, v, more := z.TagAttr()
-                    attrMap[string(k)] = string(v)
-                    if !more {
-                        break
-                    }
-                }
-            }
-            offset := posUTF16
-            switch tag {
-            case "emoji":
-                idStr := attrMap["id"]
-                if idStr == "" {
-                    continue
-                }
-                idNum, err := strconv.ParseInt(idStr, 10, 64)
-                if err != nil {
-                    continue
-                }
-                finished = append(finished, &tg.MessageEntityCustomEmoji{Offset: offset, Length: 0, DocumentID: idNum})
-            default:
-            }
-        default:
-        }
-    }
+		case htmlpkg.SelfClosingTagToken:
+			name, hasAttr := z.TagName()
+			tag := strings.ToLower(string(name))
+			attrMap := map[string]string{}
+			if hasAttr {
+				for {
+					k, v, more := z.TagAttr()
+					attrMap[string(k)] = string(v)
+					if !more {
+						break
+					}
+				}
+			}
+			offset := posUTF16
+			switch tag {
+			case "emoji":
+				idStr := attrMap["id"]
+				if idStr == "" {
+					continue
+				}
+				idNum, err := strconv.ParseInt(idStr, 10, 64)
+				if err != nil {
+					continue
+				}
+				finished = append(finished, &tg.MessageEntityCustomEmoji{Offset: offset, Length: 0, DocumentID: idNum})
+			default:
+			}
+		default:
+		}
+	}
 
 DONE:
 
@@ -356,8 +354,8 @@ DONE:
 	})
 
 	res := &ParserResult{
-	    Message: buf.String(),
-	    Entities: ents,
+		Message:  buf.String(),
+		Entities: ents,
 	}
 	return res, nil
 }
