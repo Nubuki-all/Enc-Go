@@ -189,7 +189,7 @@ func onStart() {
 	}
 	text, entities, _ := tele.ParseMarkdown(status, true)
 	telegram.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
-		Message: text,
+		Message:  text,
 		Entities: entities,
 	})
 }
