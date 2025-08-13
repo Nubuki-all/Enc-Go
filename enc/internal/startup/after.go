@@ -157,7 +157,7 @@ func onStart() {
 		if id, err := strconv.ParseInt(owner, 10, 64); err == nil {
 			peer, _ := tele.GetPeer(id)
 			// fmt.Println(peer, id, perr)
-			text, entities, _ := tele.MarkdownToEntities(fmt.Sprintf("**I'm %s %s**", random.Enquip(), random.Enmoji()))
+			text, entities, _ := tele.MarkdownToEntities(fmt.Sprintf("**I'm %s %s**", random.Enquip(), random.Enmoji()), true)
 			_, cerr := telegram.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
 				Message:  text,
 				Peer:     peer,
