@@ -402,8 +402,6 @@ func Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
 			endTag := fmt.Sprintf("](tg://user?id=%d)", ent.UserID)
 			insertions = append(insertions, ins{end, endTag})
 			insertions = append(insertions, ins{start, startTag})
-		}
-				
 		case *tg.MessageEntityCustomEmoji:
 			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
 			DocumentID := ent.DocumentID
