@@ -396,19 +396,19 @@ func Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
 			endTag := fmt.Sprintf("](%s)", url)
 			insertions = append(insertions, ins{end, endTag})
 			insertions = append(insertions, ins{start, startTag})
-		case *tg.MessageEntityMention:
+		case *tg.MessageEntityMentionName:
 			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
-			if tm, ok := ent.(*tg.MessageEntityMention); ok && tm.User != nil {
-				startTag := "["
-				endTag := fmt.Sprintf("](tg://user?id=%d)", tm.User.ID)
-				insertions = append(insertions, ins{end, endTag})
-				insertions = append(insertions, ins{start, startTag})
-			}
+			startTag := "["
+			endTag := fmt.Sprintf("](tg://user?id=%d)", ent.UserID)
+			insertions = append(insertions, ins{end, endTag})
+			insertions = append(insertions, ins{start, startTag})
+		}
+				
 		case *tg.MessageEntityCustomEmoji:
 			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
-			DocumentID := ent.CustomEmojiID
+			DocumentID := ent.DocumentID
 			startTag := "!["
-			endTag := fmt.Sprintf("](tg://emoji?id=%d)", emojiID)
+			endTag := fmt.Sprintf("](tg://emoji?id=%d)", DocumentID)
 			insertions = append(insertions, ins{end, endTag})
 			insertions = append(insertions, ins{start, startTag})
 		default:
