@@ -275,6 +275,6 @@ func utf16Len(s string) int {
 }
 
 func init() {
-	text, _, _ := MarkdownToEntities("Some text")
+	text, _, _ := MarkdownToEntities("Some text", true)
 	fmt.Println(text)
 }
