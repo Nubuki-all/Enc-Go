@@ -3,7 +3,7 @@ package htmlparser
 import (
 	"bytes"
 	"fmt"
-	"html"
+	stdhtml "html"
 	"io"
 	"sort"
 	"strconv"
@@ -11,18 +11,18 @@ import (
 	"unicode/utf16"
 
 	"github.com/gotd/td/tg"
-	"golang.org/x/net/html"
+	htmlpkg "golang.org/x/net/html"
 )
 
-// ParserResult is returned by Parse.
+// ParserResult holds parse results.
 type ParserResult struct {
 	Message  string
 	Entities []tg.MessageEntityClass
 }
 
-// addSurrogatesForOffsets converts a UTF-8 string into a synthetic string where
-// each UTF-16 code unit corresponds to exactly one rune. This makes integer
-// offsets (which Telegram measures in UTF-16 code units) usable as rune offsets.
+// addSurrogatesForOffsets converts UTF-8 string into a surrogate-expanded
+// representation where each UTF-16 code unit corresponds to one rune.
+// This simplifies offset/length arithmetic.
 func addSurrogatesForOffsets(s string) string {
 	var u16 []uint16
 	for _, r := range []rune(s) {
@@ -33,14 +33,14 @@ func addSurrogatesForOffsets(s string) string {
 			u16 = append(u16, uint16(hi), uint16(lo))
 		}
 	}
-	out := make([]rune, len(u16))
+	outRunes := make([]rune, len(u16))
 	for i, v := range u16 {
-		out[i] = rune(v)
+		outRunes[i] = rune(v)
 	}
-	return string(out)
+	return string(outRunes)
 }
 
-// removeSurrogates converts the surrogate-expanded string back to the original UTF-8 string.
+// removeSurrogates decodes surrogate-expanded string back to original UTF-8.
 func removeSurrogates(s string) string {
 	r := []rune(s)
 	u16 := make([]uint16, len(r))
@@ -51,26 +51,27 @@ func removeSurrogates(s string) string {
 	return string(decoded)
 }
 
-// Parse parses HTML-like input into plain text and gotd/td entities.
-// It calls surrogate helpers internally, so pass normal UTF-8 input.
-// The returned Message is plain UTF-8 (ready to send) and Entities
-// have Offset/Length in UTF-16 code units (as required by Telegram).
+// Parse converts HTML-like input into plain UTF-8 message and gotd/td entities.
+// Accepts normal UTF-8 input; surrogate expansion is handled internally.
 func Parse(input string) (*ParserResult, error) {
-	// Expand to surrogate-friendly string internally
-	surrogate := addSurrogatesForOffsets(input)
+	// Expand to surrogate-friendly form so entity offsets are computed in UTF-16 code units.
+	surr := addSurrogatesForOffsets(input)
 
-	z := html.NewTokenizer(strings.NewReader(surrogate))
+	z := htmlpkg.NewTokenizer(strings.NewReader(surr))
 
 	var buf bytes.Buffer
-	// tag -> stack of open entities
+	// map tag name -> stack of currently open entities
 	tagEntities := map[string][]tg.MessageEntityClass{}
-	// finished entities in closing order
+	// finished entities (in order they were closed)
 	var finished []tg.MessageEntityClass
 
-	// helpers
+	// current rune position within surrogate-expanded text (equals UTF-16 code units)
+	pos := 0
+
 	pushEntity := func(tag string, ent tg.MessageEntityClass) {
 		tagEntities[tag] = append(tagEntities[tag], ent)
 	}
+
 	popEntity := func(tag string) {
 		stack := tagEntities[tag]
 		if len(stack) == 0 {
@@ -87,16 +88,18 @@ func Parse(input string) (*ParserResult, error) {
 	for {
 		tt := z.Next()
 		switch tt {
-		case html.ErrorToken:
+		case htmlpkg.ErrorToken:
 			if z.Err() == io.EOF {
 				goto DONE
 			}
 			return nil, z.Err()
-		case html.TextToken:
+		case htmlpkg.TextToken:
 			data := string(z.Text())
-			data = html.UnescapeString(data)
-			// increment length for all open entities
-			addLen := int32(len([]rune(data))) // surrogate-expanded => rune count == UTF-16 code units
+			// Unescape HTML entities
+			data = stdhtml.UnescapeString(data)
+			// length in runes (surrogate-expanded => rune count == UTF-16 code units)
+			addLen := len([]rune(data))
+			// increase length on each open entity
 			for _, ents := range tagEntities {
 				for _, e := range ents {
 					switch v := e.(type) {
@@ -116,7 +119,7 @@ func Parse(input string) (*ParserResult, error) {
 						v.Length += addLen
 					case *tg.MessageEntitySpoiler:
 						v.Length += addLen
-					case *tg.MessageEntityTextUrl:
+					case *tg.MessageEntityTextURL:
 						v.Length += addLen
 					case *tg.MessageEntityCustomEmoji:
 						v.Length += addLen
@@ -126,7 +129,8 @@ func Parse(input string) (*ParserResult, error) {
 				}
 			}
 			buf.WriteString(data)
-		case html.StartTagToken:
+			pos += addLen
+		case htmlpkg.StartTagToken:
 			name, hasAttr := z.TagName()
 			tag := strings.ToLower(string(name))
 			attrMap := map[string]string{}
@@ -139,7 +143,7 @@ func Parse(input string) (*ParserResult, error) {
 					}
 				}
 			}
-			offset := int32(buf.Len())
+			offset := pos
 			switch tag {
 			case "b", "strong":
 				pushEntity(tag, &tg.MessageEntityBold{Offset: offset, Length: 0})
@@ -158,7 +162,8 @@ func Parse(input string) (*ParserResult, error) {
 				if v, ok := attrMap["language"]; ok {
 					lang = v
 				}
-				// MessageEntityPre has Language *string in gotd/td
+				// MessageEntityPre in gotd uses Offset/Length ints and a Language string field (may vary by version)
+				// Using pointer to string if supported by your gotd version; if not, adjust accordingly.
 				pushEntity(tag, &tg.MessageEntityPre{Offset: offset, Length: 0, Language: &lang})
 			case "spoiler":
 				pushEntity(tag, &tg.MessageEntitySpoiler{Offset: offset, Length: 0})
@@ -167,11 +172,10 @@ func Parse(input string) (*ParserResult, error) {
 				if v, ok := attrMap["href"]; ok {
 					href = v
 				}
-				pushEntity(tag, &tg.MessageEntityTextUrl{Offset: offset, Length: 0, URL: href})
+				pushEntity(tag, &tg.MessageEntityTextURL{Offset: offset, Length: 0, URL: href})
 			case "emoji":
 				idStr := attrMap["id"]
 				if idStr == "" {
-					// ignore
 					continue
 				}
 				idNum, err := strconv.ParseInt(idStr, 10, 64)
@@ -180,13 +184,13 @@ func Parse(input string) (*ParserResult, error) {
 				}
 				pushEntity(tag, &tg.MessageEntityCustomEmoji{Offset: offset, Length: 0, CustomEmojiID: idNum})
 			default:
-				// ignore unknown tags
+				// ignore unknown
 			}
-		case html.EndTagToken:
+		case htmlpkg.EndTagToken:
 			name, _ := z.TagName()
 			tag := strings.ToLower(string(name))
 			popEntity(tag)
-		case html.SelfClosingTagToken:
+		case htmlpkg.SelfClosingTagToken:
 			name, hasAttr := z.TagName()
 			tag := strings.ToLower(string(name))
 			attrMap := map[string]string{}
@@ -199,7 +203,7 @@ func Parse(input string) (*ParserResult, error) {
 					}
 				}
 			}
-			offset := int32(buf.Len())
+			offset := pos
 			switch tag {
 			case "emoji":
 				idStr := attrMap["id"]
@@ -215,12 +219,12 @@ func Parse(input string) (*ParserResult, error) {
 				// ignore
 			}
 		default:
-			// ignore other token types
+			// ignore token types we don't care about
 		}
 	}
 
 DONE:
-	// collect non-zero-length finished entities
+	// collect non-zero-length entities
 	var ents []tg.MessageEntityClass
 	for _, e := range finished {
 		switch en := e.(type) {
@@ -256,7 +260,7 @@ DONE:
 			if en.Length > 0 {
 				ents = append(ents, en)
 			}
-		case *tg.MessageEntityTextUrl:
+		case *tg.MessageEntityTextURL:
 			if en.Length > 0 {
 				ents = append(ents, en)
 			}
@@ -265,14 +269,13 @@ DONE:
 				ents = append(ents, en)
 			}
 		default:
-			// ignore
 			_ = en
 		}
 	}
 
 	// sort by offset ascending
 	sort.Slice(ents, func(i, j int) bool {
-		var oi, oj int32
+		var oi, oj int
 		switch v := ents[i].(type) {
 		case *tg.MessageEntityBold:
 			oi = v.Offset
@@ -290,7 +293,7 @@ DONE:
 			oi = v.Offset
 		case *tg.MessageEntitySpoiler:
 			oi = v.Offset
-		case *tg.MessageEntityTextUrl:
+		case *tg.MessageEntityTextURL:
 			oi = v.Offset
 		case *tg.MessageEntityCustomEmoji:
 			oi = v.Offset
@@ -314,7 +317,7 @@ DONE:
 			oj = v.Offset
 		case *tg.MessageEntitySpoiler:
 			oj = v.Offset
-		case *tg.MessageEntityTextUrl:
+		case *tg.MessageEntityTextURL:
 			oj = v.Offset
 		case *tg.MessageEntityCustomEmoji:
 			oj = v.Offset
@@ -324,81 +327,79 @@ DONE:
 		return oi < oj
 	})
 
-	// Build result: message must be converted back to original UTF-8
-	return &ParserResult{
+	res := &ParserResult{
 		Message:  removeSurrogates(buf.String()),
 		Entities: ents,
-	}, nil
+	}
+	return res, nil
 }
 
-// Unparse injects HTML-like tags into the provided text using entities.
-// It accepts normal UTF-8 text and entities with offsets in UTF-16 code units.
-// The function handles nesting and returns the annotated HTML-like string.
+// Unparse inserts HTML-like tags into text using entities. Accepts UTF-8 text and
+// entities whose Offset/Length are in UTF-16 code units.
 func Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
-	// Expand text with surrogates so offsets match rune positions
+	// surrogate expand so offsets correspond to rune positions
 	sur := addSurrogatesForOffsets(text)
 
-	type pair struct {
+	type ins struct {
 		tag string
 		off int
 	}
 
-	// Helper builds start/end tag and returns (startTag, startOff), (endTag, endOff)
-	parseOne := func(e tg.MessageEntityClass) (*pair, *pair) {
+	// helper: build start/end tag pairs
+	parseOne := func(e tg.MessageEntityClass) (*ins, *ins) {
 		switch ent := e.(type) {
 		case *tg.MessageEntityBold:
-			start := int(ent.Offset)
-			end := int(ent.Offset + ent.Length)
-			return &pair{tag: "<b>", off: start}, &pair{tag: "</b>", off: end}
+			s := int(ent.Offset)
+			ei := int(ent.Offset + ent.Length)
+			return &ins{tag: "<b>", off: s}, &ins{tag: "</b>", off: ei}
 		case *tg.MessageEntityItalic:
-			start := int(ent.Offset)
-			end := int(ent.Offset + ent.Length)
-			return &pair{tag: "<i>", off: start}, &pair{tag: "</i>", off: end}
+			s := int(ent.Offset)
+			ei := int(ent.Offset + ent.Length)
+			return &ins{tag: "<i>", off: s}, &ins{tag: "</i>", off: ei}
 		case *tg.MessageEntityUnderline:
-			start := int(ent.Offset)
-			end := int(ent.Offset + ent.Length)
-			return &pair{tag: "<u>", off: start}, &pair{tag: "</u>", off: end}
+			s := int(ent.Offset)
+			ei := int(ent.Offset + ent.Length)
+			return &ins{tag: "<u>", off: s}, &ins{tag: "</u>", off: ei}
 		case *tg.MessageEntityStrike:
-			start := int(ent.Offset)
-			end := int(ent.Offset + ent.Length)
-			return &pair{tag: "<s>", off: start}, &pair{tag: "</s>", off: end}
+			s := int(ent.Offset)
+			ei := int(ent.Offset + ent.Length)
+			return &ins{tag: "<s>", off: s}, &ins{tag: "</s>", off: ei}
 		case *tg.MessageEntityCode:
-			start := int(ent.Offset)
-			end := int(ent.Offset + ent.Length)
-			return &pair{tag: "<code>", off: start}, &pair{tag: "</code>", off: end}
+			s := int(ent.Offset)
+			ei := int(ent.Offset + ent.Length)
+			return &ins{tag: "<code>", off: s}, &ins{tag: "</code>", off: ei}
 		case *tg.MessageEntityPre:
-			start := int(ent.Offset)
-			end := int(ent.Offset + ent.Length)
+			s := int(ent.Offset)
+			ei := int(ent.Offset + ent.Length)
 			lang := ""
 			if ent.Language != nil {
 				lang = *ent.Language
 			}
 			if lang != "" {
-				return &pair{tag: fmt.Sprintf(`<pre language="%s">`, html.EscapeString(lang)), off: start}, &pair{tag: "</pre>", off: end}
+				return &ins{tag: fmt.Sprintf(`<pre language="%s">`, stdhtml.EscapeString(lang)), off: s}, &ins{tag: "</pre>", off: ei}
 			}
-			return &pair{tag: "<pre>", off: start}, &pair{tag: "</pre>", off: end}
+			return &ins{tag: "<pre>", off: s}, &ins{tag: "</pre>", off: ei}
 		case *tg.MessageEntityBlockquote:
-			start := int(ent.Offset)
-			end := int(ent.Offset + ent.Length)
-			// We don't have an 'expandable' flag on entity so use standard blockquote tag.
-			return &pair{tag: "<blockquote>", off: start}, &pair{tag: "</blockquote>", off: end}
+			s := int(ent.Offset)
+			ei := int(ent.Offset + ent.Length)
+			return &ins{tag: "<blockquote>", off: s}, &ins{tag: "</blockquote>", off: ei}
 		case *tg.MessageEntitySpoiler:
-			start := int(ent.Offset)
-			end := int(ent.Offset + ent.Length)
-			return &pair{tag: "<spoiler>", off: start}, &pair{tag: "</spoiler>", off: end}
-		case *tg.MessageEntityTextUrl:
-			start := int(ent.Offset)
-			end := int(ent.Offset + ent.Length)
-			return &pair{tag: fmt.Sprintf(`<a href="%s">`, html.EscapeString(ent.URL)), off: start}, &pair{tag: "</a>", off: end}
+			s := int(ent.Offset)
+			ei := int(ent.Offset + ent.Length)
+			return &ins{tag: "<spoiler>", off: s}, &ins{tag: "</spoiler>", off: ei}
+		case *tg.MessageEntityTextURL:
+			s := int(ent.Offset)
+			ei := int(ent.Offset + ent.Length)
+			return &ins{tag: fmt.Sprintf(`<a href="%s">`, stdhtml.EscapeString(ent.URL)), off: s}, &ins{tag: "</a>", off: ei}
 		case *tg.MessageEntityCustomEmoji:
-			start := int(ent.Offset)
-			end := int(ent.Offset + ent.Length)
-			return &pair{tag: fmt.Sprintf(`<emoji id="%d">`, ent.CustomEmojiID), off: start}, &pair{tag: "</emoji>", off: end}
+			s := int(ent.Offset)
+			ei := int(ent.Offset + ent.Length)
+			return &ins{tag: fmt.Sprintf(`<emoji id="%d">`, ent.CustomEmojiID), off: s}, &ins{tag: "</emoji>", off: ei}
 		case *tg.MessageEntityTextMention:
-			start := int(ent.Offset)
-			end := int(ent.Offset + ent.Length)
+			s := int(ent.Offset)
+			ei := int(ent.Offset + ent.Length)
 			if ent.User != nil {
-				return &pair{tag: fmt.Sprintf(`<a href="tg://user?id=%d">`, ent.User.ID), off: start}, &pair{tag: "</a>", off: end}
+				return &ins{tag: fmt.Sprintf(`<a href="tg://user?id=%d">`, ent.User.ID), off: s}, &ins{tag: "</a>", off: ei}
 			}
 			return nil, nil
 		default:
@@ -406,152 +407,121 @@ func Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
 		}
 	}
 
-	// sort entities by (offset asc, length desc) similar to python code
+	// sort entities by offset asc, length desc
 	sort.SliceStable(entities, func(i, j int) bool {
-		// get offsets and lengths
-		var oi, oj int32
-		var li, lj int32
+		var oi, oj, li, lj int
 		switch e := entities[i].(type) {
 		case *tg.MessageEntityBold:
-			oi = e.Offset
-			li = e.Length
+			oi, li = e.Offset, e.Length
 		case *tg.MessageEntityItalic:
-			oi = e.Offset
-			li = e.Length
+			oi, li = e.Offset, e.Length
 		case *tg.MessageEntityUnderline:
-			oi = e.Offset
-			li = e.Length
+			oi, li = e.Offset, e.Length
 		case *tg.MessageEntityStrike:
-			oi = e.Offset
-			li = e.Length
+			oi, li = e.Offset, e.Length
 		case *tg.MessageEntityBlockquote:
-			oi = e.Offset
-			li = e.Length
+			oi, li = e.Offset, e.Length
 		case *tg.MessageEntityCode:
-			oi = e.Offset
-			li = e.Length
+			oi, li = e.Offset, e.Length
 		case *tg.MessageEntityPre:
-			oi = e.Offset
-			li = e.Length
+			oi, li = e.Offset, e.Length
 		case *tg.MessageEntitySpoiler:
-			oi = e.Offset
-			li = e.Length
-		case *tg.MessageEntityTextUrl:
-			oi = e.Offset
-			li = e.Length
+			oi, li = e.Offset, e.Length
+		case *tg.MessageEntityTextURL:
+			oi, li = e.Offset, e.Length
 		case *tg.MessageEntityCustomEmoji:
-			oi = e.Offset
-			li = e.Length
+			oi, li = e.Offset, e.Length
 		case *tg.MessageEntityTextMention:
-			oi = e.Offset
-			li = e.Length
+			oi, li = e.Offset, e.Length
 		default:
-			oi = 0
-			li = 0
+			oi, li = 0, 0
 		}
 		switch e := entities[j].(type) {
 		case *tg.MessageEntityBold:
-			oj = e.Offset
-			lj = e.Length
+			oj, lj = e.Offset, e.Length
 		case *tg.MessageEntityItalic:
-			oj = e.Offset
-			lj = e.Length
+			oj, lj = e.Offset, e.Length
 		case *tg.MessageEntityUnderline:
-			oj = e.Offset
-			lj = e.Length
+			oj, lj = e.Offset, e.Length
 		case *tg.MessageEntityStrike:
-			oj = e.Offset
-			lj = e.Length
+			oj, lj = e.Offset, e.Length
 		case *tg.MessageEntityBlockquote:
-			oj = e.Offset
-			lj = e.Length
+			oj, lj = e.Offset, e.Length
 		case *tg.MessageEntityCode:
-			oj = e.Offset
-			lj = e.Length
+			oj, lj = e.Offset, e.Length
 		case *tg.MessageEntityPre:
-			oj = e.Offset
-			lj = e.Length
+			oj, lj = e.Offset, e.Length
 		case *tg.MessageEntitySpoiler:
-			oj = e.Offset
-			lj = e.Length
-		case *tg.MessageEntityTextUrl:
-			oj = e.Offset
-			lj = e.Length
+			oj, lj = e.Offset, e.Length
+		case *tg.MessageEntityTextURL:
+			oj, lj = e.Offset, e.Length
 		case *tg.MessageEntityCustomEmoji:
-			oj = e.Offset
-			lj = e.Length
+			oj, lj = e.Offset, e.Length
 		case *tg.MessageEntityTextMention:
-			oj = e.Offset
-			lj = e.Length
+			oj, lj = e.Offset, e.Length
 		default:
-			oj = 0
-			lj = 0
+			oj, lj = 0, 0
 		}
 		if oi == oj {
-			// longer first
 			return li > lj
 		}
 		return oi < oj
 	})
 
-	// Build entity tag insertion list using recursive approach
-	type ins struct {
+	// Build insertion list recursively (like Pyrogram)
+	type insertion struct {
 		tag string
 		off int
 	}
-	var entitiesOffsets []ins
+	var entitiesOffsets []insertion
 
-	var recursive func(i int) int
+	var recursive func(int) int
 	recursive = func(i int) int {
 		if i >= len(entities) {
 			return 1
 		}
-		startEnd := parseOne(entities[i])
-		if startEnd == nil {
+		startPair, endPair := parseOne(entities[i])
+		if startPair == nil || endPair == nil {
 			return 1
 		}
-		startPair, endPair := startEnd[0], startEnd[1]
-		entitiesOffsets = append(entitiesOffsets, ins{tag: startPair.tag, off: startPair.off})
+		entitiesOffsets = append(entitiesOffsets, insertion{tag: startPair.tag, off: startPair.off})
 		internal := i + 1
-		// parse nested entities inside current
+		endOff := endPair.off
 		for internal < len(entities) {
-			// get offset of next entity
-			var offNext int
+			var nextOff int
 			switch e := entities[internal].(type) {
 			case *tg.MessageEntityBold:
-				offNext = int(e.Offset)
+				nextOff = e.Offset
 			case *tg.MessageEntityItalic:
-				offNext = int(e.Offset)
+				nextOff = e.Offset
 			case *tg.MessageEntityUnderline:
-				offNext = int(e.Offset)
+				nextOff = e.Offset
 			case *tg.MessageEntityStrike:
-				offNext = int(e.Offset)
+				nextOff = e.Offset
 			case *tg.MessageEntityBlockquote:
-				offNext = int(e.Offset)
+				nextOff = e.Offset
 			case *tg.MessageEntityCode:
-				offNext = int(e.Offset)
+				nextOff = e.Offset
 			case *tg.MessageEntityPre:
-				offNext = int(e.Offset)
+				nextOff = e.Offset
 			case *tg.MessageEntitySpoiler:
-				offNext = int(e.Offset)
-			case *tg.MessageEntityTextUrl:
-				offNext = int(e.Offset)
+				nextOff = e.Offset
+			case *tg.MessageEntityTextURL:
+				nextOff = e.Offset
 			case *tg.MessageEntityCustomEmoji:
-				offNext = int(e.Offset)
+				nextOff = e.Offset
 			case *tg.MessageEntityTextMention:
-				offNext = int(e.Offset)
+				nextOff = e.Offset
 			default:
-				offNext = 1 << 30
+				nextOff = 1 << 30
 			}
-			// end offset of current
-			end := endPair.off
-			if offNext < end {
+			if nextOff < endOff {
 				internal += recursive(internal)
 			} else {
 				break
 			}
 		}
-		entitiesOffsets = append(entitiesOffsets, ins{tag: endPair.tag, off: endPair.off})
+		entitiesOffsets = append(entitiesOffsets, insertion{tag: endPair.tag, off: endPair.off})
 		return internal - i
 	}
 
@@ -560,18 +530,14 @@ func Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
 		i += recursive(i)
 	}
 
-	// If we have insertions, apply them from the end
 	if len(entitiesOffsets) == 0 {
 		return text, nil
 	}
 
-	// Convert sur string to rune-slice for indexing by code units
-	outRunes := []rune(sur)
-	// We'll produce a working string and apply insertions descending by offset
-	sort.SliceStable(entitiesOffsets, func(i, j int) bool {
-		return entitiesOffsets[i].off > entitiesOffsets[j].off
-	})
+	// apply insertions descending by offset
+	sort.SliceStable(entitiesOffsets, func(i, j int) bool { return entitiesOffsets[i].off > entitiesOffsets[j].off })
 
+	outRunes := []rune(sur)
 	for _, it := range entitiesOffsets {
 		off := it.off
 		if off < 0 {
@@ -580,17 +546,12 @@ func Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
 		if off > len(outRunes) {
 			off = len(outRunes)
 		}
-		// insert tag at rune position 'off'
 		prefix := string(outRunes[:off])
 		suffix := string(outRunes[off:])
 		out := prefix + it.tag + suffix
-		// rebuild outRunes
 		outRunes = []rune(out)
 	}
 
-	// convert back to normal UTF-8
 	final := removeSurrogates(string(outRunes))
-	// Escape the replaced region's inner text for safety? The python version escaped inner text when inserting; however
-	// here tags are inserted directly; callers should ensure produced HTML is safe.
 	return final, nil
 }
