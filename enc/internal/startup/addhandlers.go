@@ -3,7 +3,7 @@ package startup
 import (
 	"github.com/celestix/gotgproto/dispatcher"
 	onevent "github.com/celestix/gotgproto/dispatcher/handlers"
-	//"github.com/celestix/gotgproto/dispatcher/handlers/filters"
+	"github.com/celestix/gotgproto/dispatcher/handlers/filters"
 	//"github.com/gotd/td/tg"
 	
 	"enc/internal/clients/telegram"
