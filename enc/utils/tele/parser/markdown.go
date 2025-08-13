@@ -200,129 +200,74 @@ func escapeAndCreateQuotes(text string, strict bool) string {
 
 // Parse converts markdown-ish text to simple HTML-ish markup and returns it.
 // strict -> escapes text except recognized quote lines.
+// Parse converts markdown-ish text to simple HTML-ish markup and returns it.
+// strict -> escapes text except recognized quote lines.
 func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
+	// 1) Handle blockquotes and initial escaping
 	text := escapeAndCreateQuotes(input, strict)
-	// We'll iterate through matches, but because replacement changes lengths we
-	// do a naive approach: track an offset shift.
-	delims := make(map[string]bool)
-	isFixedWidth := false
 
-	// find all matches first to avoid invalidating positions
-	matches := markdownRe.FindAllStringSubmatchIndex(text, -1)
-	// We'll process matches in the order they appear while applying replacements with shift.
-	out := text
-	shift := 0
-	for _, m := range matches {
-		// m contains pairs of start/end for whole match and groups.
-		if len(m) < 12 {
-			continue
-		}
-		matchStart := m[0]
-		matchEnd := m[1]
-		// group 1 = delim (or empty)
-		group1Start, group1End := m[2], m[3]
-		// group 8 = is_emoji "!" optional: groups positions differ due to regex building; easier to re-scan substring
-		sub := out[matchStart+shift : matchEnd+shift]
-		// Determine if this is delim or link/emoji
-		var delim string
-		if group1Start >= 0 && group1End >= 0 {
-			delim = out[group1Start+shift : group1End+shift]
-		}
-		// If delim is PRE or CODE toggle fixed width state
-		if delim != "" && FIXED_WIDTH_DELIMS[delim] {
-			isFixedWidth = !isFixedWidth
-		}
-		// If inside fixed width and delim isn't a fixed width delim skip
-		if isFixedWidth && !FIXED_WIDTH_DELIMS[delim] && delim != "" {
-			continue
-		}
+	// 2) Convert markdown -> HTML-like. Use sane ordered regex replacements.
+	//    Order: fenced pre (```lang\n...\```), emoji ( ![a](tg://emoji?id=123) ), links, inline code,
+	//    then bold, italic, underline, strike, spoiler.
 
-		// Check if it's a link or emoji pattern like [text](url) possibly prefixed with !
-		linkMatch := markdownRe.FindStringSubmatch(sub)
-		if linkMatch != nil {
-			// linkMatch[2] is "!" optional, [3] text, [4] url in our building pattern
-			isEmoji := linkMatch[2] == "!"
-			textURL := linkMatch[3]
-			url := linkMatch[4]
-			if !isEmoji && textURL != "" {
-				repl := urlMarkup(url, textURL)
-				r, _ := replaceOnceAt(out, sub, repl, matchStart+shift)
-				out = r
-				shift += len(repl) - len(sub)
-				continue
-			}
-			if isEmoji {
-				emoji := textURL
-				emojiID := strings.TrimPrefix(url, "tg://emoji?id=")
-				repl := emojiMarkup(emojiID, emoji)
-				r, _ := replaceOnceAt(out, sub, repl, matchStart+shift)
-				out = r
-				shift += len(repl) - len(sub)
-				continue
-			}
+	// fenced pre with optional language (DOTALL)
+	rePre := regexp.MustCompile(`(?s)```([^\n]*)\n(.*?)````)
+	text = rePre.ReplaceAllStringFunc(text, func(m string) string {
+		parts := rePre.FindStringSubmatch(m)
+		lang := strings.TrimSpace(parts[1])
+		body := parts[2]
+		if lang != "" {
+			return `<pre language="` + html.EscapeString(lang) + `">` + html.EscapeString(body) + `</pre>`
 		}
+		return `<pre>` + html.EscapeString(body) + `</pre>`
+	})
 
-		// If delim present, map to tags
-		if delim != "" {
-			var tag string
-			switch delim {
-			case BOLD_DELIM:
-				tag = "b"
-			case ITALIC_DELIM:
-				tag = "i"
-			case UNDERLINE_DELIM:
-				tag = "u"
-			case STRIKE_DELIM:
-				tag = "s"
-			case CODE_DELIM:
-				tag = "code"
-			case PRE_DELIM:
-				tag = "pre"
-			case SPOILER_DELIM:
-				tag = "spoiler"
-			default:
-				continue
-			}
-			var replacement string
-			if !delims[delim] {
-				delims[delim] = true
-				replacement = opening(tag)
-				// special PRE language handling
-				if delim == PRE_DELIM {
-					// find language line after PRE_DELIM in the remaining text
-					rest := out[matchEnd+shift:]
-					idx := strings.Index(rest, "\n")
-					if idx >= 0 {
-						delLine := rest[:idx]
-						lang := strings.TrimPrefix(delLine, PRE_DELIM)
-						replacement = fmt.Sprintf(`<pre language="%s">`, html.EscapeString(strings.TrimSpace(lang)))
-						// replace the delim+language line with replacement
-						// we must find delim_and_language substring
-						delimAndLang := out[matchStart+shift : matchStart+shift+len(PRE_DELIM)+len(lang)]
-						r, _ := replaceOnceAt(out, delimAndLang, replacement, matchStart+shift)
-						out = r
-						shift += len(replacement) - len(delimAndLang)
-						continue
-					}
-				}
-			} else {
-				delims[delim] = false
-				replacement = closing(tag)
-			}
-			r, _ := replaceOnceAt(out, delim, replacement, matchStart+shift)
-			out = r
-			shift += len(replacement) - len(delim)
-		}
+	// emoji notation: ![emoji_char](tg://emoji?id=123)
+	reEmoji := regexp.MustCompile(`!\[([^\]]+)\]\(tg://emoji\?id=(\d+)\)`)
+	text = reEmoji.ReplaceAllString(text, `<emoji id=$2>$1</emoji>`)
+
+	// links: [text](url) (handles tg://user, https, etc.)
+	reLink := regexp.MustCompile(`\[(.+?)\]\((\S+?)\)`)
+	text = reLink.ReplaceAllStringFunc(text, func(m string) string {
+		parts := reLink.FindStringSubmatch(m)
+		label := html.EscapeString(parts[1])
+		url := html.EscapeString(parts[2])
+		return `<a href="` + url + `">` + label + `</a>`
+	})
+
+	// inline code: `code`
+	reCode := regexp.MustCompile("`([^`\\n]+)`")
+	text = reCode.ReplaceAllString(text, `<code>$1</code>`)
+
+	// bold: **text**
+	reBold := regexp.MustCompile(`\*\*(.+?)\*\*`)
+	text = reBold.ReplaceAllString(text, `<b>$1</b>`)
+
+	// italic: __text__
+	reItalic := regexp.MustCompile(`__(.+?)__`)
+	text = reItalic.ReplaceAllString(text, `<i>$1</i>`)
+
+	// underline: --text--
+	reUnderline := regexp.MustCompile(`--(.+?)--`)
+	text = reUnderline.ReplaceAllString(text, `<u>$1</u>`)
+
+	// strike: ~~text~~
+	reStrike := regexp.MustCompile(`~~(.+?)~~`)
+	text = reStrike.ReplaceAllString(text, `<s>$1</s>`)
+
+	// spoiler: ||text||
+	reSpoiler := regexp.MustCompile(`\|\|(.+?)\|\|`)
+	text = reSpoiler.ReplaceAllString(text, `<spoiler>$1</spoiler>`)
+
+	// 3) Now pass HTML-like result to htmlparser which will produce message + entities.
+	pOut, err := htmlparser.Parse(text)
+	if err != nil {
+		return "", nil, err
 	}
-
-	// finally, hand off to HTML.parse equivalent - this library returns HTML-like string already
-	// The python code then used HTML.parse which does more safe conversions; here we assume our replacements produce safe HTML.
-	pOut, _ := htmlparser.Parse(out)
-	pText := pOut.Message
-	entities := pOut.Entities
-	fmt.Println(pText)
-	return pText, entities, nil
+	// pOut.Message is UTF-8; pOut.Entities is []tg.MessageEntityClass
+	return pOut.Message, pOut.Entities, nil
 }
+
 
 // Unparse converts a text and tg message entities into Markdown-ish plaintext (reconstructing delimiters).
 // Entities must be in the format produced by gotd/td (e.g. *tg.MessageEntityBold, *tg.MessageEntityItalic, ...).
