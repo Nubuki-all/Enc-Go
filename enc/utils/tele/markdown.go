@@ -140,7 +140,7 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 					seg := lines.At(i)
 					line := string(seg.Value(src))
 					line = strings.TrimRight(line, "\n")
-
+					
 					if blockquoteLevel > 0 {
 						out.WriteString(blockquotePrefix)
 					}
@@ -148,7 +148,7 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 						out.WriteString("> ")
 					}
 					out.WriteString(line)
-
+					
 					if i < lines.Len()-1 {
 						out.WriteString("\n")
 					}
@@ -170,21 +170,23 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 
 		// Inline nodes
 		case *ast.Text:
-			if !entering || isInCode(n) {
+			if !entering {
 				return ast.WalkContinue, nil
 			}
-			seg := node.Segment
-			value := seg.Value(src)
-			out.Write(value)
-
-		case *ast.SoftLinebreak:
-			out.WriteString(" ")
-
-		case *ast.Hardbreak:
-			out.WriteString("\n")
-			if blockquoteLevel > 0 {
-				out.WriteString(blockquotePrefix)
+			
+			// Handle line breaks based on Text node properties
+			value := node.Segment.Value(src)
+			if node.HardLineBreak() {
+				// Hard line break
+				out.WriteString("\n")
+				if blockquoteLevel > 0 {
+					out.WriteString(blockquotePrefix)
+				}
+			} else if node.SoftLineBreak() {
+				// Soft line break - convert to space
+				out.WriteString("\n")
 			}
+			out.Write(value)
 
 		case *ast.CodeSpan:
 			if entering {
@@ -252,17 +254,6 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 				}
 			}
 
-		case *ast.Strikethrough:
-			if entering {
-				startMap[n] = curOffset()
-			} else {
-				start := startMap[n]
-				length := curOffset() - start
-				if length > 0 {
-					ents = append(ents, &tg.MessageEntityStrike{Offset: start, Length: length})
-				}
-			}
-
 		case *ast.Image:
 			if entering {
 				alt := string(node.Text(src))
@@ -322,8 +313,6 @@ func getEntityBounds(e tg.MessageEntityClass) (offset, length int) {
 	case *tg.MessageEntityTextURL:
 		return v.Offset, v.Length
 	case *tg.MessageEntityBlockquote:
-		return v.Offset, v.Length
-	case *tg.MessageEntityStrike:
 		return v.Offset, v.Length
 	default:
 		return 0, 0
