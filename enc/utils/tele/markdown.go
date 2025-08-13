@@ -3,7 +3,6 @@ package tele
 import (
 	"bytes"
 	"fmt"
-	"sort"
 	"strings"
 	"unicode/utf16"
 
@@ -30,38 +29,37 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 	var out bytes.Buffer
 	ents := make([]tg.MessageEntityClass, 0)
 
+	utf16Len := func(s string) int {
+		rs := []rune(s)
+		return len(utf16.Encode(rs))
+	}
 	curOffset := func() int { return utf16Len(out.String()) }
 
-	// State tracking
+	// state maps
 	startMap := map[ast.Node]int{}
 	linkURL := map[ast.Node]string{}
 	codeLang := map[ast.Node]string{}
 	listCounter := map[ast.Node]int{}
-	blockquoteLevel := 0
-	blockquotePrefix := ""
 
-	// Update blockquote prefix based on current level
-	updateBlockquotePrefix := func() {
-		if blockquoteLevel > 0 {
-			blockquotePrefix = strings.Repeat("> ", blockquoteLevel)
-		} else {
-			blockquotePrefix = ""
+	// helper: determine if node has a CodeSpan or FencedCodeBlock ancestor
+	isInCode := func(n ast.Node) bool {
+		for p := n.Parent(); p != nil; p = p.Parent() {
+			switch p.(type) {
+			case *ast.CodeSpan, *ast.FencedCodeBlock:
+				return true
+			}
 		}
+		return false
 	}
-
-	// Helper: determine if node has a CodeSpan or FencedCodeBlock ancestor
-	
 
 	// Walk AST
 	err := ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
 		switch node := n.(type) {
+
 		// Block-level nodes
 		case *ast.Paragraph:
 			if !entering {
-				out.WriteString("\n")
-				if blockquoteLevel > 0 {
-					out.WriteString(blockquotePrefix)
-				}
+				out.WriteString("\n\n")
 			}
 
 		case *ast.Heading:
@@ -74,20 +72,13 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 					ents = append(ents, &tg.MessageEntityBold{Offset: start, Length: length})
 				}
 				out.WriteString("\n\n")
-				if blockquoteLevel > 0 {
-					out.WriteString(blockquotePrefix)
-				}
 			}
 
 		case *ast.Blockquote:
 			if entering {
-				blockquoteLevel++
-				updateBlockquotePrefix()
-				// Write prefix at the start of the blockquote
-				out.WriteString(blockquotePrefix)
+				out.WriteString("> ")
 			} else {
-				blockquoteLevel--
-				updateBlockquotePrefix()
+				out.WriteString("\n\n")
 			}
 
 		case *ast.List:
@@ -117,9 +108,6 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 				}
 			} else {
 				out.WriteString("\n")
-				if blockquoteLevel > 0 {
-					out.WriteString(blockquotePrefix)
-				}
 			}
 
 		case *ast.FencedCodeBlock:
@@ -132,15 +120,12 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 					seg := lines.At(i)
 					line := string(seg.Value(src))
 					line = strings.TrimRight(line, "\n")
-					
-					if blockquoteLevel > 0 {
-						out.WriteString(blockquotePrefix)
-					}
 					if preferBlockquote {
 						out.WriteString("> ")
+						out.WriteString(line)
+					} else {
+						out.WriteString(line)
 					}
-					out.WriteString(line)
-					
 					if i < lines.Len()-1 {
 						out.WriteString("\n")
 					}
@@ -155,31 +140,25 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 					}
 				}
 				out.WriteString("\n\n")
-				if blockquoteLevel > 0 {
-					out.WriteString(blockquotePrefix)
-				}
 			}
+
+		case *ast.HTMLBlock:
+			// ignore HTML blocks
 
 		// Inline nodes
 		case *ast.Text:
 			if !entering {
 				return ast.WalkContinue, nil
 			}
-			
-			// Handle line breaks based on Text node properties
-			value := node.Segment.Value(src)
-			if node.HardLineBreak() {
-				// Hard line break
-				out.WriteString("\n")
-				if blockquoteLevel > 0 {
-					out.WriteString(blockquotePrefix)
-				}
-			} else if node.SoftLineBreak() {
-				// Soft line break - convert to space
-				out.WriteString("\n")
-			} else {
-				out.Write(value)
+			// skip text that belongs to code constructs (they're emitted by code handlers)
+			if isInCode(n) {
+				return ast.WalkContinue, nil
 			}
+			out.Write(node.Segment.Value(src))
+			if node.SoftLineBreak() {
+				out.WriteString("\n")
+            }
+
 
 		case *ast.CodeSpan:
 			if entering {
@@ -214,47 +193,19 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 				startMap[n] = curOffset()
 				linkURL[n] = string(node.Destination)
 			} else {
-				// Write URL if no text content
-				if curOffset() == startMap[n] {
-					out.WriteString(linkURL[n])
-				}
 				start := startMap[n]
 				length := curOffset() - start
 				if length > 0 {
-					ents = append(ents, &tg.MessageEntityTextURL{
-						Offset: start,
-						Length: length,
-						URL:    linkURL[n],
-					})
-				}
-			}
-
-		case *ast.AutoLink:
-			if entering {
-				startMap[n] = curOffset()
-				url := string(node.URL(src))
-				linkURL[n] = url
-				out.WriteString(url)
-			} else {
-				start := startMap[n]
-				length := curOffset() - start
-				if length > 0 {
-					ents = append(ents, &tg.MessageEntityTextURL{
-						Offset: start,
-						Length: length,
-						URL:    linkURL[n],
-					})
+					ents = append(ents, &tg.MessageEntityTextUrl{Offset: start, Length: length, Url: linkURL[n]})
 				}
 			}
 
 		case *ast.Image:
-			if entering {
-				alt := string(node.Text(src))
-				if alt == "" {
-					alt = "[image]"
-				}
-				out.WriteString(alt)
+			alt := string(node.Text(src))
+			if alt == "" {
+				alt = "[image]"
 			}
+			out.WriteString(alt)
 
 		default:
 			// unhandled nodes
@@ -268,51 +219,39 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 
 	plain := out.String()
 
-	// Validate and filter entities
+	// validate entities: ensure they fit inside UTF-16 length
 	plainUTF16 := utf16Len(plain)
 	valid := make([]tg.MessageEntityClass, 0, len(ents))
 	for _, e := range ents {
-		offset, length := getEntityBounds(e)
-		if offset < 0 || length <= 0 || offset+length > plainUTF16 {
+		var off, ln int
+		switch v := e.(type) {
+		case *tg.MessageEntityBold:
+			off, ln = v.Offset, v.Length
+		case *tg.MessageEntityItalic:
+			off, ln = v.Offset, v.Length
+		case *tg.MessageEntityCode:
+			off, ln = v.Offset, v.Length
+		case *tg.MessageEntityPre:
+			off, ln = v.Offset, v.Length
+		case *tg.MessageEntityTextUrl:
+			off, ln = v.Offset, v.Length
+		case *tg.MessageEntityBlockquote:
+			off, ln = v.Offset, v.Length
+		default:
+			// include unknown entity types as-is
+			valid = append(valid, e)
+			continue
+		}
+		if off < 0 || ln <= 0 || off+ln > plainUTF16 {
 			continue
 		}
 		valid = append(valid, e)
 	}
 
-	// Sort entities by offset and length (Telegram requirement)
-	sort.Slice(valid, func(i, j int) bool {
-		ioff, ilen := getEntityBounds(valid[i])
-		joff, jlen := getEntityBounds(valid[j])
-		if ioff != joff {
-			return ioff < joff
-		}
-		return ilen < jlen
-	})
-
 	return plain, valid, nil
 }
 
-// Helper to get entity bounds
-func getEntityBounds(e tg.MessageEntityClass) (offset, length int) {
-	switch v := e.(type) {
-	case *tg.MessageEntityBold:
-		return v.Offset, v.Length
-	case *tg.MessageEntityItalic:
-		return v.Offset, v.Length
-	case *tg.MessageEntityCode:
-		return v.Offset, v.Length
-	case *tg.MessageEntityPre:
-		return v.Offset, v.Length
-	case *tg.MessageEntityTextURL:
-		return v.Offset, v.Length
-	case *tg.MessageEntityBlockquote:
-		return v.Offset, v.Length
-	default:
-		return 0, 0
-	}
-}
-
-// Calculate UTF-16 length of a string
+// utf16Len helper
 func utf16Len(s string) int {
 	rs := []rune(s)
 	return len(utf16.Encode(rs))
