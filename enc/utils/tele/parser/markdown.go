@@ -363,7 +363,7 @@ func Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
 			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
 			lang := ""
 			if ent.Language != "" {
-				lang = ent.Language 
+				lang = ent.Language
 			}
 
 			startTag := PRE_DELIM
