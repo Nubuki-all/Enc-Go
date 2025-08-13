@@ -179,8 +179,18 @@ func onStart() {
 		)
 	}
 	// report aria2/qbit status
-	status := fmt.Sprintf("**Aria2:** `%v`\n**Qbit:** `%v`",
-		bot.SAS, bot.SQS)
+	statusMessages := make(map[bool]string)
+	statusMessages[true] = "Online"
+	statusMessages[false] = "Offline/Not_ready"
+	var ariStat, qbitStat string 
+	if message, ok := statusMessages[bot.SAS]; ok {
+		ariStat = message
+	}
+	if message, ok := statusMessages[bot.SQS]; ok {
+		qbitStat = message
+	}
+	status := fmt.Sprintf("**Aria2:** `%s`\n**Qbit:** `%s`",
+		ariStat, qbitStat)
 	var id int64
 	if config.Conf.LogChannel != 0 {
 		id = config.Conf.LogChannel
