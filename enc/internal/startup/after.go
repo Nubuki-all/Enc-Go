@@ -156,13 +156,13 @@ func startQbit() {
 func onStart() {
 	for _, owner := range strings.Fields(config.Conf.Owner) {
 		if id, err := strconv.ParseInt(owner, 10, 64); err == nil {
-			peer, perr := tele.GetPeer(id)
+			peer, _ := tele.GetPeer(id)
 			// fmt.Println(peer, id, perr)
-			text, entities, _ := tele.MarkdownToTelegram(fmt.Sprintf("**I'm %s %s**", random.Enquip(), random.Enmoji()))
+			text, entities, _ := tele.MarkdownToEntitiesGeneric(fmt.Sprintf("**I'm %s %s**", random.Enquip(), random.Enmoji()))
 			_, cerr := telegram.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
 				Message:  text,
 				Peer:     peer,
-				Entities: entities,
+				Entities: tele.ToGotdEntities(entities),
 			},
 			)
 			if cerr != nil {
