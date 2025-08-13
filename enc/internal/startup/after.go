@@ -155,14 +155,13 @@ func startQbit() {
 func onStart() {
 	for _, owner := range strings.Fields(config.Conf.Owner) {
 		if id, err := strconv.ParseInt(owner, 10, 64); err == nil {
-			peer, _ := tele.GetPeer(id)
-			// fmt.Println(peer, id, perr)
-			text, entities, _ := tele.ParseMarkdown(fmt.Sprintf("**I'm %s %s**", random.Enquip(), random.Enmoji()), true)
-			_, cerr := telegram.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
-				Message:  text,
-				Peer:     peer,
-				Entities: entities,
-			},
+			cerr := tele.SendMessage(
+				id,
+				fmt.Sprintf(
+					"**I'm %s %s**",
+					random.Enquip(),
+					random.Enmoji(),
+				),
 			)
 			if cerr != nil {
 				logger.ErrorW(cerr.Error())
@@ -172,11 +171,16 @@ func onStart() {
 		}
 	}
 	if config.Conf.LogChannel != 0 {
-		telegram.Context.SendMessage(
-			config.Conf.LogChannel, &tg.MessagesSendMessageRequest{
-				Message: fmt.Sprintf("**Bot is %s %s**", random.Enquip(), random.Enmoji()),
-			},
+		err := tele.SendMessage(
+			config.Conf.LogChannel,
+			fmt.Sprintf(
+				"**Bot is %s %s**",
+				random.Enquip(),
+				random.Enmoji(),
+			),
 		)
+		if err != nil {
+			logger.ErrorW(err.Error())
 	}
 	// report aria2/qbit status
 	statusMessages := make(map[bool]string)
@@ -195,13 +199,16 @@ func onStart() {
 	if config.Conf.LogChannel != 0 {
 		id = config.Conf.LogChannel
 	} else {
-		id, _ = strconv.ParseInt((strings.Split(config.Conf.Owner, " ")[0]), 10, 64)
+		id, _ = strconv.ParseInt(
+			(strings.Split(config.Conf.Owner, " ")[0]),
+			10,
+			64,
+		)
 	}
-	text, entities, _ := tele.ParseMarkdown(status, true)
-	telegram.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
-		Message:  text,
-		Entities: entities,
-	})
+	err := tele.SendMessage(id, status)
+	if err != nil {
+		logger.ErrorW(err.Error())
+	}
 }
 
 // onRestart handles “restart” or “update” command‐line flags
@@ -256,15 +263,17 @@ func onTermination(ctx context.Context) {
 
 	farewell := fmt.Sprintf("**I'm %s %s**", random.Enquip2(), random.Enmoji2())
 	if config.Conf.LogChannel != 0 {
-		telegram.Context.SendMessage(config.Conf.LogChannel, &tg.MessagesSendMessageRequest{
-			Message: farewell,
-		})
+		err := tele.SendMessage(config.Conf.LogChannel, farewell)
+		if err != nil {
+			logger.ErrorW(err.Error())
+		}
 	} else {
 		for _, owner := range strings.Fields(config.Conf.Owner) {
 			if id, err := strconv.ParseInt(owner, 10, 64); err == nil {
-				telegram.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
-					Message: farewell,
-				})
+				serr := tele.SendMessage(id, farewell)
+				if serr != nil {
+					logger.ErrorW(serr.Error())
+				}
 			}
 		}
 	}
