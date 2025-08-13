@@ -21,10 +21,9 @@ import (
 	"enc/internal/bot"
 	"enc/internal/bot/entimer"
 	"enc/internal/clients/telegram"
-	"enc/internal/clients/telegraph"
 	"enc/internal/db"
 	"enc/internal/logger"
-	"enc/utils"
+	//"enc/utils"
 	"enc/utils/random"
 	"enc/utils/tele"
 	//"enc/internal/rss"
@@ -158,7 +157,7 @@ func onStart() {
 		if id, err := strconv.ParseInt(owner, 10, 64); err == nil {
 			peer, _ := tele.GetPeer(id)
 			// fmt.Println(peer, id, perr)
-			text, entities, _ := tele.MarkdownToEntitiesGeneric(fmt.Sprintf("**I'm %s %s**", random.Enquip(), random.Enmoji()))
+			text, entities, _ := tele.MarkdownToEntities(fmt.Sprintf("**I'm %s %s**", random.Enquip(), random.Enmoji()))
 			_, cerr := telegram.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
 				Message:  text,
 				Peer:     peer,
