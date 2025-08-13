@@ -8,10 +8,8 @@ import (
 	"html"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"unicode/utf16"
-	"unicode/utf8"
 
 	"github.com/gotd/td/tg"
 
@@ -319,7 +317,7 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 
 	// finally, hand off to HTML.parse equivalent - this library returns HTML-like string already
 	// The python code then used HTML.parse which does more safe conversions; here we assume our replacements produce safe HTML.
-	pOut := htmlparser.Parse(out)
+	pOut, _ := htmlparser.Parse(out)
 	pText := pOut.Message
 	entities := pOut.Entities
 	return pText, entities, nil
@@ -364,19 +362,17 @@ func Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
 		case *tg.MessageEntityPre:
 			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
 			lang := ""
-			// tg.MessageEntityPre may have Language field depending on gotd version; try reflection-like access
-			if p, ok := ent.(*tg.MessageEntityPre); ok {
-				if p.Language != nil {
-					lang = *p.Language
-				}
+			if ent.Language != "" {
+				lang = ent.Language 
 			}
+
 			startTag := PRE_DELIM
 			if lang != "" {
 				startTag = PRE_DELIM + lang + "\n"
 			}
 			insertions = append(insertions, ins{end, "\n" + PRE_DELIM})
 			insertions = append(insertions, ins{start, startTag})
-		case *tg.MessageEntityBlockQuote:
+		case *tg.MessageEntityBlockquote:
 			// blockquote: we need to insert blockquote markers per-line
 			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
 			sub := added[start:end]
@@ -393,16 +389,16 @@ func Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
 				cur += len(line) + 1 // approximate
 			}
 			// For simplicity we skip complex per-line offset corrections here.
-		case *tg.MessageEntityTextUrl:
+		case *tg.MessageEntityTextURL:
 			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
 			url := ent.URL
 			startTag := "["
 			endTag := fmt.Sprintf("](%s)", url)
 			insertions = append(insertions, ins{end, endTag})
 			insertions = append(insertions, ins{start, startTag})
-		case *tg.MessageEntityTextMention:
+		case *tg.MessageEntityMention:
 			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
-			if tm, ok := ent.(*tg.MessageEntityTextMention); ok && tm.User != nil {
+			if tm, ok := ent.(*tg.MessageEntityMention); ok && tm.User != nil {
 				startTag := "["
 				endTag := fmt.Sprintf("](tg://user?id=%d)", tm.User.ID)
 				insertions = append(insertions, ins{end, endTag})
@@ -410,7 +406,7 @@ func Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
 			}
 		case *tg.MessageEntityCustomEmoji:
 			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
-			emojiID := ent.CustomEmojiID
+			DocumentID := ent.CustomEmojiID
 			startTag := "!["
 			endTag := fmt.Sprintf("](tg://emoji?id=%d)", emojiID)
 			insertions = append(insertions, ins{end, endTag})
