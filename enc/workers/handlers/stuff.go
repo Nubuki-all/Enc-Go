@@ -8,6 +8,7 @@ import (
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 	
+	"enc/utils"
 	"enc/utils/tele"
 )
 
@@ -56,7 +57,7 @@ func ButtonCallback(ctx *ext.Context, update *ext.Update) error {
 
 // UpHandler implements the ping/pong behaviour in canonical signature form.
 func Up(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
-	if !utils.UserIsAllowed(user.ID) {
+	if !utils.UserIsAllowed(msg.userID) {
 		// You chose earlier to delete incoming message when not allowed — implement in utils if needed
 		return nil
 	}
