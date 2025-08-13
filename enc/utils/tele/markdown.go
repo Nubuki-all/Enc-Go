@@ -27,7 +27,7 @@ type Entity struct {
 // preferBlockquote: if true fenced code blocks are emitted as quoted lines prefixed
 // with "> " and annotated with a "blockquote" entity; otherwise "pre" is emitted.
 func MarkdownToEntities(md string, preferBlockquote bool) (string, []Entity, error) {
-	fmt.println(md)
+	fmt.Println(md)
 	src := []byte(md)
 	parser := goldmark.DefaultParser()
 	doc := parser.Parse(text.NewReader(src))
