@@ -62,6 +62,7 @@ func Finalize(ctx context.Context) {
 
 	// 6) Start the encoding‐pause timer
 	entimer.Timer.Start()
+	AddAllHandlers()
 
 	// 7) Reset the encode job state
 	// workers.ResetEncodeJob(true)
