@@ -320,6 +320,7 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 	pOut, _ := htmlparser.Parse(out)
 	pText := pOut.Message
 	entities := pOut.Entities
+	fmt.Println(pText)
 	return pText, entities, nil
 }
 
@@ -469,4 +470,9 @@ func removeSurrogates(s string) string {
 	}
 	decoded := utf16.Decode(u16)
 	return string(decoded)
+}
+
+func init() {
+	text, _, _ := Parse("**A bold Message**", true)
+	fmt.Println(text)
 }
