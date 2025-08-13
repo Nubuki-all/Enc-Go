@@ -156,9 +156,9 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 			}
 			out.Write(node.Segment.Value(src))
 
-		case *ast.SoftLineBreak:
+		case *ast.Softbreak:
 			out.WriteString("\n")
-		case *ast.HardLineBreak:
+		case *ast.Hardbreak:
 			out.WriteString("\n")
 
 		case *ast.CodeSpan:
