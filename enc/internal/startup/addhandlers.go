@@ -8,6 +8,7 @@ import (
 	//"github.com/gotd/td/tg"
 	
 	"enc/internal/clients/telegram"
+	"enc/internal/logger"
 	"enc/utils/tele"
 	"enc/workers/handlers"
 )
@@ -41,6 +42,10 @@ func BaseEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message) err
 			chat.ID,
 			user.ID,
 		)
-		return handler(ctx, update, msg) 
+		err := handler(ctx, update, msg)
+		if err != nil {
+			logger.ErrorW(err.Error())
+		}
+		return err
 	}
 }
