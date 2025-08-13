@@ -12,24 +12,21 @@ import (
 	"github.com/yuin/goldmark/text"
 )
 
-// Entity is a generic representation of a Telegram message entity.
-// Offsets and Length are in UTF-16 code units (Telegram requirement).
+// Entity is a neutral representation of a Telegram entity.
+// Offset and Length are measured in UTF-16 code units (Telegram's expectation),
+// and use int to match varying library signatures.
 type Entity struct {
-	// Type can be "bold","italic","code","pre","text_link","blockquote", etc.
-	Type     string
-	Offset   int // UTF-16 code units
-	Length   int // UTF-16 code units
-	URL      string
-	Language string // for pre/code blocks
+	Type     string // "bold","italic","code","pre","text_link","blockquote", etc.
+	Offset   int    // UTF-16 code units
+	Length   int    // UTF-16 code units
+	URL      string // for text_link
+	Language string // for pre blocks
 }
 
-// MarkdownToEntitiesGeneric parses the given Markdown and returns a plain-text
-// rendering plus a slice of generic Entities (offsets/lengths are UTF-16).
-//
-// preferBlockquote: if true, fenced code blocks are rendered as >-prefixed quoted
-// lines and an entity of type "blockquote" is emitted covering that region.
-// otherwise code blocks are emitted as "pre" with Language filled.
-func MarkdownToEntitiesGeneric(md string, preferBlockquote bool) (string, []Entity, error) {
+// MarkdownToEntities parses markdown and returns plain text + generic Entities.
+// preferBlockquote: if true fenced code blocks are emitted as quoted lines prefixed
+// with "> " and annotated with a "blockquote" entity; otherwise "pre" is emitted.
+func MarkdownToEntities(md string, preferBlockquote bool) (string, []Entity, error) {
 	src := []byte(md)
 	parser := goldmark.DefaultParser()
 	doc := parser.Parse(text.NewReader(src))
@@ -37,34 +34,31 @@ func MarkdownToEntitiesGeneric(md string, preferBlockquote bool) (string, []Enti
 	var out bytes.Buffer
 	ents := make([]Entity, 0)
 
-	// helper: compute UTF-16 length (Telegram expects UTF-16 code units)
+	// helpers for UTF-16 length (Telegram expects UTF-16 code units)
 	utf16Len := func(s string) int {
 		rs := []rune(s)
 		return len(utf16.Encode(rs))
 	}
 	curOffset := func() int { return utf16Len(out.String()) }
 
-	// maps to store node state while walking
+	// state maps while walking
 	startMap := map[ast.Node]int{}
 	linkURL := map[ast.Node]string{}
 	codeLang := map[ast.Node]string{}
-
-	// maintain list counters for ordered lists: map[listNode]counter
 	listCounter := map[ast.Node]int{}
 
-	// Walk AST
+	// Walk AST with type assertions to avoid depending on Kind constants
 	err := ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
-		switch n.Kind() {
-		// Document / basic blocks
-		case ast.KindDocument:
-			// nothing
+		// block node type switch
+		switch node := n.(type) {
+		// DOCUMENT: nothing specific
 
-		case ast.KindParagraph:
+		case *ast.Paragraph:
 			if !entering {
 				out.WriteString("\n\n")
 			}
 
-		case ast.KindHeading:
+		case *ast.Heading:
 			if entering {
 				startMap[n] = curOffset()
 			} else {
@@ -76,15 +70,14 @@ func MarkdownToEntitiesGeneric(md string, preferBlockquote bool) (string, []Enti
 				out.WriteString("\n\n")
 			}
 
-		case ast.KindBlockquote:
+		case *ast.Blockquote:
 			if entering {
-				// prefix quote marker
 				out.WriteString("> ")
 			} else {
 				out.WriteString("\n\n")
 			}
 
-		case ast.KindList:
+		case *ast.List:
 			if entering {
 				listCounter[n] = 0
 			} else {
@@ -92,15 +85,17 @@ func MarkdownToEntitiesGeneric(md string, preferBlockquote bool) (string, []Enti
 				out.WriteString("\n")
 			}
 
-		case ast.KindListItem:
+		case *ast.ListItem:
 			if entering {
-				// find the parent list to check ordered vs unordered
-				if listNode := n.Parent(); listNode != nil && listNode.Kind() == ast.KindList {
-					counter := listCounter[listNode] + 1
-					listCounter[listNode] = counter
-					// check if parent list is ordered by casting (goldmark uses *ast.List)
-					if ln, ok := listNode.(*ast.List); ok && ln.IsOrdered() {
-						out.WriteString(fmt.Sprintf("%d. ", counter))
+				if parent := n.Parent(); parent != nil {
+					if _, ok := parent.(*ast.List); ok {
+						// increment counter for that list
+						listCounter[parent]++
+						if ln, ok := parent.(*ast.List); ok && ln.IsOrdered() {
+							out.WriteString(fmt.Sprintf("%d. ", listCounter[parent]))
+						} else {
+							out.WriteString("• ")
+						}
 					} else {
 						out.WriteString("• ")
 					}
@@ -111,29 +106,25 @@ func MarkdownToEntitiesGeneric(md string, preferBlockquote bool) (string, []Enti
 				out.WriteString("\n")
 			}
 
-		case ast.KindFencedCodeBlock:
+		case *ast.FencedCodeBlock:
 			if entering {
 				startMap[n] = curOffset()
-				if cb, ok := n.(*ast.FencedCodeBlock); ok {
-					codeLang[n] = string(cb.Language(src))
-				}
+				codeLang[n] = string(node.Language(src))
 			} else {
-				// write block lines
-				if cb, ok := n.(*ast.FencedCodeBlock); ok {
-					lines := cb.Lines()
-					for i := 0; i < lines.Len(); i++ {
-						seg := lines.At(i)
-						line := string(seg.Value(src))
-						line = strings.TrimRight(line, "\n")
-						if preferBlockquote {
-							out.WriteString("> ")
-							out.WriteString(line)
-						} else {
-							out.WriteString(line)
-						}
-						if i < lines.Len()-1 {
-							out.WriteString("\n")
-						}
+				// write lines
+				lines := node.Lines()
+				for i := 0; i < lines.Len(); i++ {
+					seg := lines.At(i)
+					line := string(seg.Value(src))
+					line = strings.TrimRight(line, "\n")
+					if preferBlockquote {
+						out.WriteString("> ")
+						out.WriteString(line)
+					} else {
+						out.WriteString(line)
+					}
+					if i < lines.Len()-1 {
+						out.WriteString("\n")
 					}
 				}
 				start := startMap[n]
@@ -148,61 +139,49 @@ func MarkdownToEntitiesGeneric(md string, preferBlockquote bool) (string, []Enti
 				out.WriteString("\n\n")
 			}
 
-		case ast.KindHTMLBlock:
+		case *ast.HTMLBlock:
 			// ignore
 
 		// Inline nodes
-		case ast.KindText:
-			if t, ok := n.(*ast.Text); ok {
-				out.Write(t.Segment.Value(src))
-				if t.HardLineBreak() {
-					out.WriteString("\n")
-				}
+		case *ast.Text:
+			out.Write(node.Segment.Value(src))
+			if node.HardLineBreak() {
+				out.WriteString("\n")
 			}
 
-		case ast.KindCodeSpan:
+		case *ast.CodeSpan:
 			if entering {
 				startMap[n] = curOffset()
 			} else {
-				if cs, ok := n.(*ast.CodeSpan); ok {
-					codeText := string(cs.Text(src))
-					out.WriteString(codeText)
-					start := startMap[n]
-					length := curOffset() - start
-					if length > 0 {
-						ents = append(ents, Entity{Type: "code", Offset: start, Length: length})
+				codeText := string(node.Text(src))
+				out.WriteString(codeText)
+				start := startMap[n]
+				length := curOffset() - start
+				if length > 0 {
+					ents = append(ents, Entity{Type: "code", Offset: start, Length: length})
+				}
+			}
+
+		case *ast.Emphasis:
+			// goldmark uses Emphasis with Level (1 = italic, 2 = bold)
+			if entering {
+				startMap[n] = curOffset()
+			} else {
+				start := startMap[n]
+				length := curOffset() - start
+				if length > 0 {
+					if node.Level == 2 {
+						ents = append(ents, Entity{Type: "bold", Offset: start, Length: length})
+					} else {
+						ents = append(ents, Entity{Type: "italic", Offset: start, Length: length})
 					}
 				}
 			}
 
-		case ast.KindEmphasis:
+		case *ast.Link:
 			if entering {
 				startMap[n] = curOffset()
-			} else {
-				start := startMap[n]
-				length := curOffset() - start
-				if length > 0 {
-					ents = append(ents, Entity{Type: "italic", Offset: start, Length: length})
-				}
-			}
-
-		case ast.KindStrong:
-			if entering {
-				startMap[n] = curOffset()
-			} else {
-				start := startMap[n]
-				length := curOffset() - start
-				if length > 0 {
-					ents = append(ents, Entity{Type: "bold", Offset: start, Length: length})
-				}
-			}
-
-		case ast.KindLink:
-			if entering {
-				startMap[n] = curOffset()
-				if l, ok := n.(*ast.Link); ok {
-					linkURL[n] = string(l.Destination)
-				}
+				linkURL[n] = string(node.Destination)
 			} else {
 				start := startMap[n]
 				length := curOffset() - start
@@ -211,21 +190,17 @@ func MarkdownToEntitiesGeneric(md string, preferBlockquote bool) (string, []Enti
 				}
 			}
 
-		case ast.KindImage:
-			if img, ok := n.(*ast.Image); ok {
-				alt := string(img.Text(src))
-				if alt == "" {
-					alt = "[image]"
-				}
-				out.WriteString(alt)
+		case *ast.Image:
+			alt := string(node.Text(src))
+			if alt == "" {
+				alt = "[image]"
 			}
+			out.WriteString(alt)
 
-		case ast.KindSoftbreak:
-			out.WriteString("\n")
-		case ast.KindHardbreak:
-			out.WriteString("\n")
+		// ignore inline HTML
+
 		default:
-			// Unhandled nodes are walked into — nothing to do here specifically.
+			// other node kinds currently not specially handled
 		}
 
 		return ast.WalkContinue, nil
@@ -236,12 +211,11 @@ func MarkdownToEntitiesGeneric(md string, preferBlockquote bool) (string, []Enti
 
 	plain := out.String()
 
-	// Validate that entities are within bounds
+	// validate entity bounds
 	plainUTF16 := utf16Len(plain)
 	valid := make([]Entity, 0, len(ents))
 	for _, e := range ents {
 		if e.Offset < 0 || e.Length <= 0 || e.Offset+e.Length > plainUTF16 {
-			// skip bad entity
 			continue
 		}
 		valid = append(valid, e)
@@ -249,26 +223,35 @@ func MarkdownToEntitiesGeneric(md string, preferBlockquote bool) (string, []Enti
 	return plain, valid, nil
 }
 
-func ToGotdEntities(es []Entity) []tg.MessageEntityClass {
-	var out []tg.MessageEntityClass
-	for _, e := range es {
+// ToGotdEntities converts generic Entities to gotd (tg) entities.
+// This adapter assumes tg.MessageEntity structs expect int Offset/Length fields.
+// If your gotd version expects different types, tweak the literal types here.
+func ToGotdEntities(generic []Entity) []tg.MessageEntityClass {
+	out := make([]tg.MessageEntityClass, 0, len(generic))
+	for _, e := range generic {
 		switch e.Type {
 		case "bold":
-			out = append(out, &tg.MessageEntityBold{Offset: int32(e.Offset), Length: int32(e.Length)})
+			out = append(out, &tg.MessageEntityBold{Offset: e.Offset, Length: e.Length})
 		case "italic":
-			out = append(out, &tg.MessageEntityItalic{Offset: int32(e.Offset), Length: int32(e.Length)})
+			out = append(out, &tg.MessageEntityItalic{Offset: e.Offset, Length: e.Length})
 		case "code":
-			out = append(out, &tg.MessageEntityCode{Offset: int32(e.Offset), Length: int32(e.Length)})
+			out = append(out, &tg.MessageEntityCode{Offset: e.Offset, Length: e.Length})
 		case "pre":
-			out = append(out, &tg.MessageEntityPre{Offset: int32(e.Offset), Length: int32(e.Length), Language: e.Language})
+			out = append(out, &tg.MessageEntityPre{Offset: e.Offset, Length: e.Length, Language: e.Language})
 		case "blockquote":
-			// some versions of gotd support MessageEntityBlockquote (check your version)
-			out = append(out, &tg.MessageEntityBlockquote{Offset: int32(e.Offset), Length: int32(e.Length)})
+			// some versions support MessageEntityBlockquote
+			out = append(out, &tg.MessageEntityBlockquote{Offset: e.Offset, Length: e.Length})
 		case "text_link":
-			out = append(out, &tg.MessageEntityTextUrl{Offset: int32(e.Offset), Length: int32(e.Length), Url: e.URL})
+			out = append(out, &tg.MessageEntityTextUrl{Offset: e.Offset, Length: e.Length, Url: e.URL})
 		default:
-			// ignore unknown types or log
+			// unknown: ignore
 		}
 	}
 	return out
+}
+
+// utf16Len helper (exported in file scope as well)
+func utf16Len(s string) int {
+	rs := []rune(s)
+	return len(utf16.Encode(rs))
 }
