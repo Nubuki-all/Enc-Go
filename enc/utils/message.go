@@ -27,6 +27,6 @@ func UserIsDev(userID int64) bool {
     return userID == config.Conf.Dev
 }
 
-func TempPM() {
+func TempPM() bool {
     return !config.Conf.NoTempPM
 }
