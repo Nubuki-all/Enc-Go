@@ -273,3 +273,8 @@ func utf16Len(s string) int {
 	rs := []rune(s)
 	return len(utf16.Encode(rs))
 }
+
+func init() {
+	text, _, _ := MarkdownToEntities("Some text")
+	fmt.Println(text)
+}
