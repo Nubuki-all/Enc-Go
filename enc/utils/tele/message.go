@@ -6,12 +6,14 @@ import (
 	"github.com/gotd/td/tg"
 
 	"enc/internal/clients/telegram"
+	"enc/utils/tele/parser"
 )
 
 
 func SendMessage(id int64, text string) error {
     peer, _ := GetPeer(id)
-    pText, entities, _ := ParseMarkdown(text, true)
+    pText, entities, _ := parser.Parse(text, true)
+    //ParseMarkdown(text, true)
     _, err := telegram.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
 			Message:  pText,
 			Peer:     peer,
