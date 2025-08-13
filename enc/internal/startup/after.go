@@ -187,7 +187,7 @@ func onStart() {
 	statusMessages := make(map[bool]string)
 	statusMessages[true] = "Online"
 	statusMessages[false] = "Offline/Not_ready"
-	var ariStat, qbitStat string 
+	var ariStat, qbitStat string
 	if message, ok := statusMessages[bot.SAS]; ok {
 		ariStat = message
 	}

@@ -14,20 +14,20 @@ import (
 	"unicode/utf8"
 
 	"github.com/gotd/td/tg"
-	
+
 	"enc/utils/tele/parser/htmlparser"
 )
 
 const (
-	BOLD_DELIM                    = "**"
-	ITALIC_DELIM                  = "__"
-	UNDERLINE_DELIM               = "--"
-	STRIKE_DELIM                  = "~~"
-	SPOILER_DELIM                 = "||"
-	CODE_DELIM                    = "`"
-	PRE_DELIM                     = "```"
-	BLOCKQUOTE_DELIM              = ">"
-	BLOCKQUOTE_EXPANDABLE_DELIM   = "**>"
+	BOLD_DELIM                      = "**"
+	ITALIC_DELIM                    = "__"
+	UNDERLINE_DELIM                 = "--"
+	STRIKE_DELIM                    = "~~"
+	SPOILER_DELIM                   = "||"
+	CODE_DELIM                      = "`"
+	PRE_DELIM                       = "```"
+	BLOCKQUOTE_DELIM                = ">"
+	BLOCKQUOTE_EXPANDABLE_DELIM     = "**>"
 	BLOCKQUOTE_EXPANDABLE_END_DELIM = "||"
 )
 
@@ -56,6 +56,7 @@ func closing(tag string) string { return "</" + tag + ">" }
 func urlMarkup(url, text string) string {
 	return fmt.Sprintf(`<a href="%s">%s</a>`, html.EscapeString(url), html.EscapeString(text))
 }
+
 func emojiMarkup(id, char string) string {
 	// keep same shape as Pyrogram: <emoji id=...>char</emoji>
 	return fmt.Sprintf(`<emoji id=%s>%s</emoji>`, html.EscapeString(id), html.EscapeString(char))
@@ -205,7 +206,7 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 	text := escapeAndCreateQuotes(input, strict)
 	// We'll iterate through matches, but because replacement changes lengths we
 	// do a naive approach: track an offset shift.
-	var delims = make(map[string]bool)
+	delims := make(map[string]bool)
 	isFixedWidth := false
 
 	// find all matches first to avoid invalidating positions
@@ -320,7 +321,7 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 	// The python code then used HTML.parse which does more safe conversions; here we assume our replacements produce safe HTML.
 	pOut := htmlparser.Parse(out)
 	pText := pOut.Message
-	entities :=pOut.Entities
+	entities := pOut.Entities
 	return pText, entities, nil
 }
 

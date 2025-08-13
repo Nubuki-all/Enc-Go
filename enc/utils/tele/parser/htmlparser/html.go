@@ -413,55 +413,79 @@ func Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
 		var li, lj int32
 		switch e := entities[i].(type) {
 		case *tg.MessageEntityBold:
-			oi = e.Offset; li = e.Length
+			oi = e.Offset
+			li = e.Length
 		case *tg.MessageEntityItalic:
-			oi = e.Offset; li = e.Length
+			oi = e.Offset
+			li = e.Length
 		case *tg.MessageEntityUnderline:
-			oi = e.Offset; li = e.Length
+			oi = e.Offset
+			li = e.Length
 		case *tg.MessageEntityStrike:
-			oi = e.Offset; li = e.Length
+			oi = e.Offset
+			li = e.Length
 		case *tg.MessageEntityBlockquote:
-			oi = e.Offset; li = e.Length
+			oi = e.Offset
+			li = e.Length
 		case *tg.MessageEntityCode:
-			oi = e.Offset; li = e.Length
+			oi = e.Offset
+			li = e.Length
 		case *tg.MessageEntityPre:
-			oi = e.Offset; li = e.Length
+			oi = e.Offset
+			li = e.Length
 		case *tg.MessageEntitySpoiler:
-			oi = e.Offset; li = e.Length
+			oi = e.Offset
+			li = e.Length
 		case *tg.MessageEntityTextUrl:
-			oi = e.Offset; li = e.Length
+			oi = e.Offset
+			li = e.Length
 		case *tg.MessageEntityCustomEmoji:
-			oi = e.Offset; li = e.Length
+			oi = e.Offset
+			li = e.Length
 		case *tg.MessageEntityTextMention:
-			oi = e.Offset; li = e.Length
+			oi = e.Offset
+			li = e.Length
 		default:
-			oi = 0; li = 0
+			oi = 0
+			li = 0
 		}
 		switch e := entities[j].(type) {
 		case *tg.MessageEntityBold:
-			oj = e.Offset; lj = e.Length
+			oj = e.Offset
+			lj = e.Length
 		case *tg.MessageEntityItalic:
-			oj = e.Offset; lj = e.Length
+			oj = e.Offset
+			lj = e.Length
 		case *tg.MessageEntityUnderline:
-			oj = e.Offset; lj = e.Length
+			oj = e.Offset
+			lj = e.Length
 		case *tg.MessageEntityStrike:
-			oj = e.Offset; lj = e.Length
+			oj = e.Offset
+			lj = e.Length
 		case *tg.MessageEntityBlockquote:
-			oj = e.Offset; lj = e.Length
+			oj = e.Offset
+			lj = e.Length
 		case *tg.MessageEntityCode:
-			oj = e.Offset; lj = e.Length
+			oj = e.Offset
+			lj = e.Length
 		case *tg.MessageEntityPre:
-			oj = e.Offset; lj = e.Length
+			oj = e.Offset
+			lj = e.Length
 		case *tg.MessageEntitySpoiler:
-			oj = e.Offset; lj = e.Length
+			oj = e.Offset
+			lj = e.Length
 		case *tg.MessageEntityTextUrl:
-			oj = e.Offset; lj = e.Length
+			oj = e.Offset
+			lj = e.Length
 		case *tg.MessageEntityCustomEmoji:
-			oj = e.Offset; lj = e.Length
+			oj = e.Offset
+			lj = e.Length
 		case *tg.MessageEntityTextMention:
-			oj = e.Offset; lj = e.Length
+			oj = e.Offset
+			lj = e.Length
 		default:
-			oj = 0; lj = 0
+			oj = 0
+			lj = 0
 		}
 		if oi == oj {
 			// longer first
@@ -517,7 +541,7 @@ func Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
 			case *tg.MessageEntityTextMention:
 				offNext = int(e.Offset)
 			default:
-				offNext = 1<<30
+				offNext = 1 << 30
 			}
 			// end offset of current
 			end := endPair.off
