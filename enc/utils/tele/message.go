@@ -6,16 +6,17 @@ import (
 	"github.com/gotd/td/tg"
 	gp "github.com/celestix/gotgproto/types"
 
-	"enc/internal/bot"
+	//"enc/internal/bot"
 	"enc/internal/clients/telegram"
 	"enc/utils/tele/parser"
 )
 
 
 type Message struct {
-	Raw *gp.Message
-	Ctx *ext.Context
 	ChatID int64
+	Ctx *ext.Context
+	ID int
+	Raw *gp.Message
 	UserID int64
 	Chat *tg.Chat
 	User *tg.User
