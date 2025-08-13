@@ -2,12 +2,75 @@ package tele
 
 import (
 
-	//"github.com/celestix/gotgproto/ext"
+	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
+	gp "github.com/celestix/gotgproto/types"
 
+	"enc/internal/bot"
 	"enc/internal/clients/telegram"
 	"enc/utils/tele/parser"
 )
+
+
+type Message struct {
+	Raw *gp.Message
+	Ctx *ext.Context
+	ChatID int64
+	UserID int64
+	Chat *tg.Chat
+	User *tg.User
+}
+
+// NewFromGotg constructs a wrapper from a concrete *gp.Message.
+func NewMsgFromGotg(m *gp.Message, c *ext.Context, chatID int64, userID int64) *Message {
+	return &Message{
+		Raw: m,
+		Ctx: c,
+		ChatID: chatID,
+		UserID: userID,
+		ID:  m.Message.ID
+	}
+}
+
+
+// RawMessage returns the underlying *gp.Message.
+func (m *Message) RawMessage() *gp.Message {
+	return m.Raw
+}
+func (m *Message) ReplyText(text string) *Message, error {
+	pText, entities, _ := parser.Parse(text, true)
+	inputRep := &tg.InputReplyToMessage{
+		ReplyToMsgID: m.Raw.Message.ID,
+	}
+	msg, err := m.Ctx.SendMessage(m.ChatID, &tg.MessagesSendMessageRequest{
+		Message:  pText,
+		Entities: entities,
+		ReplyTo:  inputRep,
+		
+	},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID), nil
+}
+
+func (m *Message) EditText(text string) *Message, error {
+	pText, entities, _ := parser.Parse(text, true)
+	msg, err := m.Ctx.EditMessage(m.ChatID, &tg.MessagesEditMessageRequest{
+		ID:       m.ID,
+		Message:  pText,
+		Entities: entities,
+		
+	},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.UserID), nil
+}
+
+
 
 func SendMessage(id int64, text string) error {
 	peer, _ := GetPeer(id)
@@ -35,3 +98,4 @@ func EditMessage(id int64, msgID int, text string) error {
 	)
 	return err
 }
+

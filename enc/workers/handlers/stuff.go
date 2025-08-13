@@ -2,10 +2,13 @@ package handlers
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/celestix/gotgproto/dispatcher"
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
+	
+	"enc/utils/tele"
 )
 
 func Start(ctx *ext.Context, update *ext.Update) error {
@@ -47,5 +50,36 @@ func ButtonCallback(ctx *ext.Context, update *ext.Update) error {
 		QueryID: query.QueryID,
 		Message: "This is an example bot!",
 	})
+	return nil
+}
+
+
+// UpHandler implements the ping/pong behaviour in canonical signature form.
+func Up(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
+	if !utils.UserIsAllowed(user.ID) {
+		// You chose earlier to delete incoming message when not allowed — implement in utils if needed
+		return nil
+	}
+
+	// send placeholder
+	start := time.Now()
+	repMsg, err := msg.ReplyText("…")
+	if err != nil {
+		return err
+	}
+	sendLatency := time.Since(start).Milliseconds()
+
+	// edit first timing
+	msgFmt := "**Pong! ——** `%d`__ms__"
+	if _, err := repMsg.EditText(fmt.Sprintf(msgFmt, sendLatency)); err != nil {
+		return err
+	}
+
+	// measure edit latency (difference between now and send start)
+	editLatency := time.Since(start).Milliseconds() - sendLatency
+	final := fmt.Sprintf("1. %s\n2. %s", fmt.Sprintf(msgFmt, sendLatency), fmt.Sprintf(msgFmt, editLatency))
+	if _, err := repMsg.EditText(final); err != nil {
+		return err
+	}
 	return nil
 }

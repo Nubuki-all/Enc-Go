@@ -37,6 +37,8 @@ var (
 	MuxArgs     string
 )
 
+var ID int64
+
 var ReleaseVersion string
 
 var (

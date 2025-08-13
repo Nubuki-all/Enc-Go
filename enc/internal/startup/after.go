@@ -30,6 +30,7 @@ import (
 
 // After wires up background workers, RPC & torrent clients, and hook handlers.
 func Finalize(ctx context.Context) {
+	bot.ID, _ = strconv.ParseInt(Rconf.BotID, 10, 64)
 	// 1) Start your RPC (aria2) process and API client
 	go startRPC()
 

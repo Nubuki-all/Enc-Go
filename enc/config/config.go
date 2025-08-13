@@ -25,7 +25,7 @@ type Config struct {
 	CustomRename          string
 	DatabaseURL           string
 	DBName                string
-	Dev                   int
+	Dev                   int64
 	DLStuff               string
 	DumpChannel           int
 	DumpLeech             bool
@@ -212,7 +212,7 @@ func LoadConfig() error {
 		CustomRename:          viper.GetString("CUSTOM_RENAME"),
 		DatabaseURL:           viper.GetString("DATABASE_URL"),
 		DBName:                viper.GetString("DBNAME"),
-		Dev:                   viper.GetInt("DEV"),
+		Dev:                   viper.GetInt64("DEV"),
 		DLStuff:               viper.GetString("DL_STUFF"),
 		DumpChannel:           viper.GetInt("DUMP_CHANNEL"),
 		DumpLeech:             viper.GetBool("DUMP_LEECH"),
