@@ -211,7 +211,7 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 	//    then bold, italic, underline, strike, spoiler.
 
 	// fenced pre with optional language (DOTALL)
-	rePre := regexp.MustCompile(`(?s)```([^\n]*)\n(.*?)````)
+	rePre := regexp.MustCompile("(?s)```([^\n]*)\n(.*?)```")
 	text = rePre.ReplaceAllStringFunc(text, func(m string) string {
 		parts := rePre.FindStringSubmatch(m)
 		lang := strings.TrimSpace(parts[1])
