@@ -1,6 +1,8 @@
 package startup
 
 import (
+	"fmt"
+	
 	"github.com/celestix/gotgproto/dispatcher"
 	"github.com/celestix/gotgproto/ext"
 	onevent "github.com/celestix/gotgproto/dispatcher/handlers"
@@ -36,6 +38,16 @@ func BaseEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message) err
 	return func(ctx *ext.Context, update *ext.Update) error {
 		user := update.EffectiveUser()
 		chat := update.GetChat()
+		if chat == nil {
+			err := fmt.Errorf("Chat is nil.")
+			logger.ErrorW(err.Error())
+			return err
+		}
+		if user == nil {
+			err := fmt.Errorf("User is nil.")
+			logger.ErrorW(err.Error())
+			return err
+		}
 		msg := tele.NewMsgFromGotg(
 			update.EffectiveMessage,
 			ctx,
