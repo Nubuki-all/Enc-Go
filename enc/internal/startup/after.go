@@ -187,8 +187,10 @@ func onStart() {
 	} else {
 		id, _ = strconv.ParseInt((strings.Split(config.Conf.Owner, " ")[0]), 10, 64)
 	}
+	text, entities, _ := tele.ParseMarkdown(status, true)
 	telegram.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
-		Message: status,
+		Message: text,
+		Entities: entities,
 	})
 }
 
