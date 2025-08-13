@@ -196,7 +196,7 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 				start := startMap[n]
 				length := curOffset() - start
 				if length > 0 {
-					ents = append(ents, &tg.MessageEntityTextUrl{Offset: start, Length: length, Url: linkURL[n]})
+					ents = append(ents, &tg.MessageEntityTextURL{Offset: start, Length: length, URL: linkURL[n]})
 				}
 			}
 
@@ -233,7 +233,7 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 			off, ln = v.Offset, v.Length
 		case *tg.MessageEntityPre:
 			off, ln = v.Offset, v.Length
-		case *tg.MessageEntityTextUrl:
+		case *tg.MessageEntityTextURL:
 			off, ln = v.Offset, v.Length
 		case *tg.MessageEntityBlockquote:
 			off, ln = v.Offset, v.Length
