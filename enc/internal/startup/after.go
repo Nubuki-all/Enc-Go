@@ -236,12 +236,10 @@ func onRestart() error {
 	} else {
 		return nil
 	}
-	_, err := telegram.Context.EditMessage(
+	err := tele.EditMessage(
 		chatID,
-		&tg.MessagesEditMessageRequest{
-			ID:      msgID,
-			Message: msg,
-		},
+		msgID,
+		msg,
 	)
 	return err
 }

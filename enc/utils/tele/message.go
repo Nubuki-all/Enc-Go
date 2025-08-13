@@ -21,3 +21,17 @@ func SendMessage(id int64, text string) error {
 	)
 	return err
 }
+
+func EditMessage(id int64, msgID int, text string) error {
+	peer, _ := GetPeer(id)
+	pText, entities, _ := parser.Parse(text, true)
+	// ParseMarkdown(text, true)
+	_, err := telegram.Context.EditMessage(id, &tg.MessagesEditMessageRequest{
+		ID:      msgID,
+		Message:  pText,
+		Peer:     peer,
+		Entities: entities,
+	},
+	)
+	return err
+}
