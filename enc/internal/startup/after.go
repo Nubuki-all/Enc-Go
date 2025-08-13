@@ -13,14 +13,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gotd/td/tg"
 	"github.com/siku2/arigo"
 	"go.uber.org/zap"
 
 	"enc/config"
 	"enc/internal/bot"
 	"enc/internal/bot/entimer"
-	"enc/internal/clients/telegram"
 	"enc/internal/db"
 	"enc/internal/logger"
 	//"enc/utils"
