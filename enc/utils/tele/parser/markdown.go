@@ -418,6 +418,8 @@ func removeSurrogates(s string) string {
 }
 
 func init() {
-	text, _, _ := Parse("**A bold Message**", true)
+	text, _, _ := Parse("**A bold Message 😂**", true)
 	fmt.Println(text)
+	pOut, err := htmlparser.Parse("**A bold Message ⚠️**")
+	fmt.Println(pOut.Message)
 }
