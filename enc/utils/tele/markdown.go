@@ -50,15 +50,7 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 	}
 
 	// Helper: determine if node has a CodeSpan or FencedCodeBlock ancestor
-	isInCode := func(n ast.Node) bool {
-		for p := n.Parent(); p != nil; p = p.Parent() {
-			switch p.(type) {
-			case *ast.CodeSpan, *ast.FencedCodeBlock:
-				return true
-			}
-		}
-		return false
-	}
+	
 
 	// Walk AST
 	err := ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
