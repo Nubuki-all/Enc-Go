@@ -156,7 +156,10 @@ func MarkdownToEntities(md string, preferBlockquote bool) (string, []Entity, err
 
 		// Inline nodes
 		case *ast.Text:
-			// Skip writing text if it's inside an inline code or a fenced code block; those are handled separately
+			// only write text on entering, and skip text nodes inside code constructs
+			if !entering {
+				return ast.WalkContinue, nil
+			}
 			if isInCode(n) {
 				// do not write here — handled by CodeSpan / FencedCodeBlock logic
 				return ast.WalkContinue, nil
@@ -213,8 +216,6 @@ func MarkdownToEntities(md string, preferBlockquote bool) (string, []Entity, err
 				alt = "[image]"
 			}
 			out.WriteString(alt)
-
-		// ignore inline HTML
 
 		default:
 			// other node kinds currently not specially handled
