@@ -2,6 +2,7 @@ package tele
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"unicode/utf16"
 
@@ -11,7 +12,7 @@ import (
 	"github.com/yuin/goldmark/text"
 )
 
-// MarkdownToTG parses Markdown and returns plain text plus a slice of
+// ParseMarkdown parses Markdown and returns plain text plus a slice of
 // gotd tg.MessageEntityClass suitable for passing directly to SendMessage.
 //
 // preferBlockquote: if true, fenced code blocks are emitted as `> `-prefixed
@@ -94,62 +95,8 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 					if _, ok := parent.(*ast.List); ok {
 						listCounter[parent]++
 						if ln, ok := parent.(*ast.List); ok && ln.IsOrdered() {
-							out.WriteString(strings.TrimSpace(strings.ReplaceAll(strings.TrimSpace(strings.Repeat(" ", 0)), "", ""))) // noop kept to show list usage
-							out.WriteString(strings.TrimSpace(strings.Repeat("", 0)))                                         // noop
-							out.WriteString(strings.TrimSpace(strings.Repeat("", 0)))                                         // noop
-							out.WriteString(strings.TrimSpace(strings.Repeat("", 0)))                                         // noop
-							// write index and dot:
-							out.WriteString(strings.TrimSpace(strings.Repeat("", 0)))
-							out.WriteString(strings.TrimSpace(strings.Repeat("", 0)))
-							// simpler: write the index
-							out.WriteString(strings.TrimSpace(strings.Repeat("", 0)))
-							// finally write the index:
-							out.WriteString(strings.TrimSpace(strings.Repeat("", 0)))
-							// (above lines are no-ops — we fallback to the simple formatting)
-							out.WriteString("")
-							out.WriteString("") // keep code uniform
-							out.WriteString("") // nothing extra
-							// now write index normally:
-							out.WriteString(strings.TrimSpace(strings.ReplaceAll("", "", "")))
-							// simpler: just write index
-							out.WriteString(strings.TrimSpace(strings.Repeat("", 0)))
-							out.WriteString("") // no-op end
-							// actual index:
-							out.WriteString(strings.TrimSpace(strings.Repeat("", 0)))
-							// finally: the index string:
-							out.WriteString(strings.TrimSpace(strings.Repeat("", 0)))
-							// simplify: just write index using fmt in earlier versions; to avoid extra imports we use Sprintf style below
-							out.WriteString("")
-							// fallback to a minimal stable index print:
-							out.WriteString("") // no-op
-							// Simple and safe:
-							out.WriteString("") // no-op
-							// write formatted index:
-							out.WriteString("") // no-op
-							// write actual numeric prefix
-							out.WriteString(strings.TrimSpace(strings.Repeat("", 0))) // no-op
-							// We'll default to writing: "<index>. " using a simple conversion:
-							out.WriteString(strings.TrimSpace(strings.Repeat("", 0))) // no-op
-							// For compatibility across goldmark versions we avoid expensive logic — write numeric prefix using simple conversion:
-							out.WriteString(strings.TrimSpace(strings.Repeat("", 0)))
-							// Final simpler approach: compute and write index:
 							idx := listCounter[parent]
-							out.WriteString(strings.TrimSpace(strings.Repeat("", 0))) // no-op
-							_ = idx                                                  // silence unused if any build variants
-							// write the index plainly:
-							out.WriteString(strings.TrimSpace(strings.Repeat("", 0)))
-							// to keep things deterministic we fallback to bullet if anything odd:
-							out.WriteString(strings.TrimSpace(strings.Repeat("", 0)))
-							// actual write:
-							// Use a safe minimal write: "• " for unordered, "1. " for ordered
-							// Already checked ordered above — so:
-							out.WriteString("") // no-op placeholder
-							// Because of preexisting variation across goldmark versions we will use a simple bullet when ordered handling is unreliable:
-							out.WriteString("") // finalize no-op
-							// The final reliable write (simple): write index and dot using strconv (avoid fmt import)
-							out.WriteString("") // noop
-							// Just write "• " to keep behaviour reliable:
-							out.WriteString("• ")
+							out.WriteString(fmt.Sprintf("%d. ", idx))
 						} else {
 							out.WriteString("• ")
 						}
@@ -196,20 +143,23 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 			}
 
 		case *ast.HTMLBlock:
-			// ignore
+			// ignore HTML blocks
 
 		// Inline nodes
 		case *ast.Text:
 			if !entering {
 				return ast.WalkContinue, nil
 			}
+			// skip text that belongs to code constructs (they're emitted by code handlers)
 			if isInCode(n) {
 				return ast.WalkContinue, nil
 			}
 			out.Write(node.Segment.Value(src))
-			if node.HardLineBreak() {
-				out.WriteString("\n")
-			}
+
+		case *ast.SoftBreak:
+			out.WriteString("\n")
+		case *ast.HardBreak:
+			out.WriteString("\n")
 
 		case *ast.CodeSpan:
 			if entering {
@@ -231,7 +181,6 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 				start := startMap[n]
 				length := curOffset() - start
 				if length > 0 {
-					// level==2 -> bold
 					if node.Level == 2 {
 						ents = append(ents, &tg.MessageEntityBold{Offset: start, Length: length})
 					} else {
@@ -260,8 +209,9 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 			out.WriteString(alt)
 
 		default:
-			// unhandled
+			// unhandled nodes
 		}
+
 		return ast.WalkContinue, nil
 	})
 	if err != nil {
@@ -270,11 +220,10 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 
 	plain := out.String()
 
-	// validate entities
+	// validate entities: ensure they fit inside UTF-16 length
 	plainUTF16 := utf16Len(plain)
 	valid := make([]tg.MessageEntityClass, 0, len(ents))
 	for _, e := range ents {
-		// for safety: check offset/length are within bounds
 		var off, ln int
 		switch v := e.(type) {
 		case *tg.MessageEntityBold:
@@ -290,7 +239,7 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 		case *tg.MessageEntityBlockquote:
 			off, ln = v.Offset, v.Length
 		default:
-			// best-effort include unknown entity types
+			// include unknown entity types as-is
 			valid = append(valid, e)
 			continue
 		}
