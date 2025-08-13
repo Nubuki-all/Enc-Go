@@ -37,7 +37,7 @@ func AddCBHandlers(dispatch dispatcher.Dispatcher) {
 func BaseEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message) error) func(*ext.Context, *ext.Update) error {
 	return func(ctx *ext.Context, update *ext.Update) error {
 		user := update.EffectiveUser()
-		chat := update.GetChat()
+		chat := update.EffectiveChat()
 		if chat == nil {
 			err := fmt.Errorf("Chat is nil.")
 			logger.ErrorW(err.Error())
@@ -51,7 +51,7 @@ func BaseEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message) err
 		msg := tele.NewMsgFromGotg(
 			update.EffectiveMessage,
 			ctx,
-			chat.ID,
+			chat.GetID(),
 			user.ID,
 		)
 		err := handler(ctx, update, msg)
