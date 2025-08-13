@@ -250,25 +250,25 @@ func MarkdownToEntitiesGeneric(md string, preferBlockquote bool) (string, []Enti
 }
 
 func ToGotdEntities(es []Entity) []tg.MessageEntityClass {
-    var out []tg.MessageEntityClass
-    for _, e := range es {
-        switch e.Type {
-        case "bold":
-            out = append(out, &tg.MessageEntityBold{Offset: int32(e.Offset), Length: int32(e.Length)})
-        case "italic":
-            out = append(out, &tg.MessageEntityItalic{Offset: int32(e.Offset), Length: int32(e.Length)})
-        case "code":
-            out = append(out, &tg.MessageEntityCode{Offset: int32(e.Offset), Length: int32(e.Length)})
-        case "pre":
-            out = append(out, &tg.MessageEntityPre{Offset: int32(e.Offset), Length: int32(e.Length), Language: e.Language})
-        case "blockquote":
-            // some versions of gotd support MessageEntityBlockquote (check your version)
-            out = append(out, &tg.MessageEntityBlockquote{Offset: int32(e.Offset), Length: int32(e.Length)})
-        case "text_link":
-            out = append(out, &tg.MessageEntityTextUrl{Offset: int32(e.Offset), Length: int32(e.Length), Url: e.URL})
-        default:
-            // ignore unknown types or log
-        }
-    }
-    return out
+	var out []tg.MessageEntityClass
+	for _, e := range es {
+		switch e.Type {
+		case "bold":
+			out = append(out, &tg.MessageEntityBold{Offset: int32(e.Offset), Length: int32(e.Length)})
+		case "italic":
+			out = append(out, &tg.MessageEntityItalic{Offset: int32(e.Offset), Length: int32(e.Length)})
+		case "code":
+			out = append(out, &tg.MessageEntityCode{Offset: int32(e.Offset), Length: int32(e.Length)})
+		case "pre":
+			out = append(out, &tg.MessageEntityPre{Offset: int32(e.Offset), Length: int32(e.Length), Language: e.Language})
+		case "blockquote":
+			// some versions of gotd support MessageEntityBlockquote (check your version)
+			out = append(out, &tg.MessageEntityBlockquote{Offset: int32(e.Offset), Length: int32(e.Length)})
+		case "text_link":
+			out = append(out, &tg.MessageEntityTextUrl{Offset: int32(e.Offset), Length: int32(e.Length), Url: e.URL})
+		default:
+			// ignore unknown types or log
+		}
+	}
+	return out
 }
