@@ -57,7 +57,7 @@ func ButtonCallback(ctx *ext.Context, update *ext.Update) error {
 
 // UpHandler implements the ping/pong behaviour in canonical signature form.
 func Up(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
-	if !utils.UserIsAllowed(msg.userID) {
+	if !utils.UserIsAllowed(msg.UserID) {
 		// You chose earlier to delete incoming message when not allowed — implement in utils if needed
 		return nil
 	}
