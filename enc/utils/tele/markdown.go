@@ -13,7 +13,7 @@ import (
 )
 
 // Entity is a neutral representation of a Telegram entity.
-// Offset and Length are measured in UTF-16 code units (Telegram's expectation),
+// Offset and Length are measured in UTF-16 code units (Telegram expectation),
 // and use int to match varying library signatures.
 type Entity struct {
 	Type     string // "bold","italic","code","pre","text_link","blockquote", etc.
@@ -47,6 +47,17 @@ func MarkdownToEntities(md string, preferBlockquote bool) (string, []Entity, err
 	linkURL := map[ast.Node]string{}
 	codeLang := map[ast.Node]string{}
 	listCounter := map[ast.Node]int{}
+
+	// helper: detect if node is inside a CodeSpan or FencedCodeBlock ancestor
+	isInCode := func(n ast.Node) bool {
+		for p := n.Parent(); p != nil; p = p.Parent() {
+			switch p.(type) {
+			case *ast.CodeSpan, *ast.FencedCodeBlock:
+				return true
+			}
+		}
+		return false
+	}
 
 	// Walk AST with type assertions to avoid depending on Kind constants
 	err := ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
@@ -145,6 +156,11 @@ func MarkdownToEntities(md string, preferBlockquote bool) (string, []Entity, err
 
 		// Inline nodes
 		case *ast.Text:
+			// Skip writing text if it's inside an inline code or a fenced code block; those are handled separately
+			if isInCode(n) {
+				// do not write here — handled by CodeSpan / FencedCodeBlock logic
+				return ast.WalkContinue, nil
+			}
 			out.Write(node.Segment.Value(src))
 			if node.HardLineBreak() {
 				out.WriteString("\n")
@@ -226,8 +242,8 @@ func MarkdownToEntities(md string, preferBlockquote bool) (string, []Entity, err
 }
 
 // ToGotdEntities converts generic Entities to gotd (tg) entities.
-// This adapter assumes tg.MessageEntity structs expect int Offset/Length fields.
-// If your gotd version expects different types, tweak the literal types here.
+// This adapter assumes tg.MessageEntity structs accept int Offset/Length fields.
+// If your gotd version expects different types, tweak the literals accordingly.
 func ToGotdEntities(generic []Entity) []tg.MessageEntityClass {
 	out := make([]tg.MessageEntityClass, 0, len(generic))
 	for _, e := range generic {
@@ -241,7 +257,7 @@ func ToGotdEntities(generic []Entity) []tg.MessageEntityClass {
 		case "pre":
 			out = append(out, &tg.MessageEntityPre{Offset: e.Offset, Length: e.Length, Language: e.Language})
 		case "blockquote":
-			// some versions support MessageEntityBlockquote
+			// MessageEntityBlockquote may or may not exist in your gotd version; if it does, this compiles.
 			out = append(out, &tg.MessageEntityBlockquote{Offset: e.Offset, Length: e.Length})
 		case "text_link":
 			out = append(out, &tg.MessageEntityTextURL{Offset: e.Offset, Length: e.Length, URL: e.URL})
@@ -252,7 +268,7 @@ func ToGotdEntities(generic []Entity) []tg.MessageEntityClass {
 	return out
 }
 
-// utf16Len helper (exported in file scope as well)
+// utf16Len helper
 func utf16Len(s string) int {
 	rs := []rune(s)
 	return len(utf16.Encode(rs))
