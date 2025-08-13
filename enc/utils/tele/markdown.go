@@ -242,7 +242,7 @@ func ToGotdEntities(generic []Entity) []tg.MessageEntityClass {
 			// some versions support MessageEntityBlockquote
 			out = append(out, &tg.MessageEntityBlockquote{Offset: e.Offset, Length: e.Length})
 		case "text_link":
-			out = append(out, &tg.MessageEntityTextUrl{Offset: e.Offset, Length: e.Length, Url: e.URL})
+			out = append(out, &tg.MessageEntityTextURL{Offset: e.Offset, Length: e.Length, Url: e.URL})
 		default:
 			// unknown: ignore
 		}

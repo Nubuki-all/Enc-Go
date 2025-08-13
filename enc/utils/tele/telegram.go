@@ -5,8 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/celestix/gotgproto/ext"
-	"github.com/celestix/gotgproto/parsemode"
+	//"github.com/celestix/gotgproto/ext"
 	"github.com/celestix/gotgproto/storage"
 	"github.com/gotd/td/tg"
 
