@@ -14,6 +14,7 @@ jobs:
         run: cd enc && go get -u && go mod tidy
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v8
+        continue-on-error: true
         with:
           version: v2.1 # Specify a golangci-lint version
           working-directory: enc

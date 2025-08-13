@@ -227,7 +227,8 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 	text = reEmoji.ReplaceAllString(text, `<emoji id=$2>$1</emoji>`)
 
 	// links: [text](url) (handles tg://user, https, etc.)
-	reLink := regexp.MustCompile(`\[(.+?)\]\((\S+?)\)`)
+	// keep label non-greedy; labels spanning newlines are unusual but allowed by DOTALL
+	reLink := regexp.MustCompile(`(?s)\[(.+?)\]\((\S+?)\)`)
 	text = reLink.ReplaceAllStringFunc(text, func(m string) string {
 		parts := reLink.FindStringSubmatch(m)
 		label := html.EscapeString(parts[1])
@@ -235,28 +236,28 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 		return `<a href="` + url + `">` + label + `</a>`
 	})
 
-	// inline code: `code`
+	// inline code: `code`  (explicitly disallow newlines inside inline code)
 	reCode := regexp.MustCompile("`([^`\\n]+)`")
 	text = reCode.ReplaceAllString(text, `<code>$1</code>`)
 
-	// bold: **text**
-	reBold := regexp.MustCompile(`\*\*(.+?)\*\*`)
+	// bold: **text**  — allow newlines inside bold (DOTALL)
+	reBold := regexp.MustCompile(`(?s)\*\*(.+?)\*\*`)
 	text = reBold.ReplaceAllString(text, `<b>$1</b>`)
 
-	// italic: __text__
-	reItalic := regexp.MustCompile(`__(.+?)__`)
+	// italic: __text__  — allow newlines
+	reItalic := regexp.MustCompile(`(?s)__(.+?)__`)
 	text = reItalic.ReplaceAllString(text, `<i>$1</i>`)
 
-	// underline: --text--
-	reUnderline := regexp.MustCompile(`--(.+?)--`)
+	// underline: --text--  — allow newlines
+	reUnderline := regexp.MustCompile(`(?s)--(.+?)--`)
 	text = reUnderline.ReplaceAllString(text, `<u>$1</u>`)
 
-	// strike: ~~text~~
-	reStrike := regexp.MustCompile(`~~(.+?)~~`)
+	// strike: ~~text~~  — allow newlines
+	reStrike := regexp.MustCompile(`(?s)~~(.+?)~~`)
 	text = reStrike.ReplaceAllString(text, `<s>$1</s>`)
 
-	// spoiler: ||text||
-	reSpoiler := regexp.MustCompile(`\|\|(.+?)\|\|`)
+	// spoiler: ||text||  — allow newlines
+	reSpoiler := regexp.MustCompile(`(?s)\|\|(.+?)\|\|`)
 	text = reSpoiler.ReplaceAllString(text, `<spoiler>$1</spoiler>`)
 
 	// 3) Now pass HTML-like result to htmlparser which will produce message + entities.
@@ -267,6 +268,7 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 	// pOut.Message is UTF-8; pOut.Entities is []tg.MessageEntityClass
 	return pOut.Message, pOut.Entities, nil
 }
+
 
 // Unparse converts a text and tg message entities into Markdown-ish plaintext (reconstructing delimiters).
 // Entities must be in the format produced by gotd/td (e.g. *tg.MessageEntityBold, *tg.MessageEntityItalic, ...).
