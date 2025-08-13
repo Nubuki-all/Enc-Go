@@ -5,6 +5,7 @@ import (
 	"fmt"
 	stdhtml "html"
 	"io"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -20,9 +21,9 @@ type ParserResult struct {
 	Entities []tg.MessageEntityClass
 }
 
-// addSurrogatesForOffsets converts UTF-8 string into a surrogate-expanded
+// addSurrogatesForOffsets converts a UTF-8 string into a surrogate-expanded
 // representation where each UTF-16 code unit corresponds to one rune.
-// This simplifies offset/length arithmetic.
+// This simplifies offset/length arithmetic because Telegram uses UTF-16 code units.
 func addSurrogatesForOffsets(s string) string {
 	var u16 []uint16
 	for _, r := range []rune(s) {
@@ -40,7 +41,7 @@ func addSurrogatesForOffsets(s string) string {
 	return string(outRunes)
 }
 
-// removeSurrogates decodes surrogate-expanded string back to original UTF-8.
+// removeSurrogates decodes surrogate-expanded string back to the original UTF-8.
 func removeSurrogates(s string) string {
 	r := []rune(s)
 	u16 := make([]uint16, len(r))
@@ -53,6 +54,7 @@ func removeSurrogates(s string) string {
 
 // Parse converts HTML-like input into plain UTF-8 message and gotd/td entities.
 // Accepts normal UTF-8 input; surrogate expansion is handled internally.
+// Returned Entities have Offsets/Lengths expressed in UTF-16 code units (as ints).
 func Parse(input string) (*ParserResult, error) {
 	// Expand to surrogate-friendly form so entity offsets are computed in UTF-16 code units.
 	surr := addSurrogatesForOffsets(input)
@@ -62,7 +64,7 @@ func Parse(input string) (*ParserResult, error) {
 	var buf bytes.Buffer
 	// map tag name -> stack of currently open entities
 	tagEntities := map[string][]tg.MessageEntityClass{}
-	// finished entities (in order they were closed)
+	// finished entities (in the order they were closed)
 	var finished []tg.MessageEntityClass
 
 	// current rune position within surrogate-expanded text (equals UTF-16 code units)
@@ -162,9 +164,8 @@ func Parse(input string) (*ParserResult, error) {
 				if v, ok := attrMap["language"]; ok {
 					lang = v
 				}
-				// MessageEntityPre in gotd uses Offset/Length ints and a Language string field (may vary by version)
-				// Using pointer to string if supported by your gotd version; if not, adjust accordingly.
-				pushEntity(tag, &tg.MessageEntityPre{Offset: offset, Length: 0, Language: &lang})
+				// many gotd versions define Language as string
+				pushEntity(tag, &tg.MessageEntityPre{Offset: offset, Length: 0, Language: lang})
 			case "spoiler":
 				pushEntity(tag, &tg.MessageEntitySpoiler{Offset: offset, Length: 0})
 			case "a":
@@ -182,7 +183,8 @@ func Parse(input string) (*ParserResult, error) {
 				if err != nil {
 					continue
 				}
-				pushEntity(tag, &tg.MessageEntityCustomEmoji{Offset: offset, Length: 0, CustomEmojiID: idNum})
+				// gotd uses DocumentID for custom emoji doc references
+				pushEntity(tag, &tg.MessageEntityCustomEmoji{Offset: offset, Length: 0, DocumentID: idNum})
 			default:
 				// ignore unknown
 			}
@@ -214,7 +216,7 @@ func Parse(input string) (*ParserResult, error) {
 				if err != nil {
 					continue
 				}
-				finished = append(finished, &tg.MessageEntityCustomEmoji{Offset: offset, Length: 0, CustomEmojiID: idNum})
+				finished = append(finished, &tg.MessageEntityCustomEmoji{Offset: offset, Length: 0, DocumentID: idNum})
 			default:
 				// ignore
 			}
@@ -345,7 +347,7 @@ func Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
 		off int
 	}
 
-	// helper: build start/end tag pairs
+	// helper: build start/end tag pairs, robust across gotd versions
 	parseOne := func(e tg.MessageEntityClass) (*ins, *ins) {
 		switch ent := e.(type) {
 		case *tg.MessageEntityBold:
@@ -371,10 +373,7 @@ func Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
 		case *tg.MessageEntityPre:
 			s := int(ent.Offset)
 			ei := int(ent.Offset + ent.Length)
-			lang := ""
-			if ent.Language != nil {
-				lang = *ent.Language
-			}
+			lang := ent.Language
 			if lang != "" {
 				return &ins{tag: fmt.Sprintf(`<pre language="%s">`, stdhtml.EscapeString(lang)), off: s}, &ins{tag: "</pre>", off: ei}
 			}
@@ -394,71 +393,90 @@ func Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
 		case *tg.MessageEntityCustomEmoji:
 			s := int(ent.Offset)
 			ei := int(ent.Offset + ent.Length)
-			return &ins{tag: fmt.Sprintf(`<emoji id="%d">`, ent.CustomEmojiID), off: s}, &ins{tag: "</emoji>", off: ei}
-		case *tg.MessageEntityTextMention:
+			// DocumentID is used by this gotd version
+			docID := int64(0)
+			// use reflection fallback to find DocumentID field if necessary
+			rv := reflect.ValueOf(ent).Elem()
+			if f := rv.FieldByName("DocumentID"); f.IsValid() && f.Kind() == reflect.Int64 {
+				docID = f.Int()
+			} else if f := rv.FieldByName("DocumentId"); f.IsValid() && f.Kind() == reflect.Int64 {
+				docID = f.Int()
+			}
+			if docID != 0 {
+				return &ins{tag: fmt.Sprintf(`<emoji id="%d">`, docID), off: s}, &ins{tag: "</emoji>", off: ei}
+			}
+			return nil, nil
+		case *tg.MessageEntityMention:
+			// Try to extract a User.ID if available (some gotd versions store User inside)
 			s := int(ent.Offset)
 			ei := int(ent.Offset + ent.Length)
-			if ent.User != nil {
-				return &ins{tag: fmt.Sprintf(`<a href="tg://user?id=%d">`, ent.User.ID), off: s}, &ins{tag: "</a>", off: ei}
+			rv := reflect.ValueOf(ent).Elem()
+			if f := rv.FieldByName("User"); f.IsValid() && f.Kind() == reflect.Ptr && !f.IsNil() {
+				userVal := f.Elem()
+				if idf := userVal.FieldByName("ID"); idf.IsValid() && idf.Kind() == reflect.Int64 {
+					uid := idf.Int()
+					return &ins{tag: fmt.Sprintf(`<a href="tg://user?id=%d">`, uid), off: s}, &ins{tag: "</a>", off: ei}
+				}
 			}
+			// fallback: cannot build mention tag
 			return nil, nil
 		default:
 			return nil, nil
 		}
 	}
 
-	// sort entities by offset asc, length desc
+	// sort entities by offset asc, length desc to mimic Python behavior
 	sort.SliceStable(entities, func(i, j int) bool {
 		var oi, oj, li, lj int
 		switch e := entities[i].(type) {
 		case *tg.MessageEntityBold:
-			oi, li = e.Offset, e.Length
+			oi, li = int(e.Offset), int(e.Length)
 		case *tg.MessageEntityItalic:
-			oi, li = e.Offset, e.Length
+			oi, li = int(e.Offset), int(e.Length)
 		case *tg.MessageEntityUnderline:
-			oi, li = e.Offset, e.Length
+			oi, li = int(e.Offset), int(e.Length)
 		case *tg.MessageEntityStrike:
-			oi, li = e.Offset, e.Length
+			oi, li = int(e.Offset), int(e.Length)
 		case *tg.MessageEntityBlockquote:
-			oi, li = e.Offset, e.Length
+			oi, li = int(e.Offset), int(e.Length)
 		case *tg.MessageEntityCode:
-			oi, li = e.Offset, e.Length
+			oi, li = int(e.Offset), int(e.Length)
 		case *tg.MessageEntityPre:
-			oi, li = e.Offset, e.Length
+			oi, li = int(e.Offset), int(e.Length)
 		case *tg.MessageEntitySpoiler:
-			oi, li = e.Offset, e.Length
+			oi, li = int(e.Offset), int(e.Length)
 		case *tg.MessageEntityTextURL:
-			oi, li = e.Offset, e.Length
+			oi, li = int(e.Offset), int(e.Length)
 		case *tg.MessageEntityCustomEmoji:
-			oi, li = e.Offset, e.Length
-		case *tg.MessageEntityTextMention:
-			oi, li = e.Offset, e.Length
+			oi, li = int(e.Offset), int(e.Length)
+		case *tg.MessageEntityMention:
+			oi, li = int(e.Offset), int(e.Length)
 		default:
 			oi, li = 0, 0
 		}
 		switch e := entities[j].(type) {
 		case *tg.MessageEntityBold:
-			oj, lj = e.Offset, e.Length
+			oj, lj = int(e.Offset), int(e.Length)
 		case *tg.MessageEntityItalic:
-			oj, lj = e.Offset, e.Length
+			oj, lj = int(e.Offset), int(e.Length)
 		case *tg.MessageEntityUnderline:
-			oj, lj = e.Offset, e.Length
+			oj, lj = int(e.Offset), int(e.Length)
 		case *tg.MessageEntityStrike:
-			oj, lj = e.Offset, e.Length
+			oj, lj = int(e.Offset), int(e.Length)
 		case *tg.MessageEntityBlockquote:
-			oj, lj = e.Offset, e.Length
+			oj, lj = int(e.Offset), int(e.Length)
 		case *tg.MessageEntityCode:
-			oj, lj = e.Offset, e.Length
+			oj, lj = int(e.Offset), int(e.Length)
 		case *tg.MessageEntityPre:
-			oj, lj = e.Offset, e.Length
+			oj, lj = int(e.Offset), int(e.Length)
 		case *tg.MessageEntitySpoiler:
-			oj, lj = e.Offset, e.Length
+			oj, lj = int(e.Offset), int(e.Length)
 		case *tg.MessageEntityTextURL:
-			oj, lj = e.Offset, e.Length
+			oj, lj = int(e.Offset), int(e.Length)
 		case *tg.MessageEntityCustomEmoji:
-			oj, lj = e.Offset, e.Length
-		case *tg.MessageEntityTextMention:
-			oj, lj = e.Offset, e.Length
+			oj, lj = int(e.Offset), int(e.Length)
+		case *tg.MessageEntityMention:
+			oj, lj = int(e.Offset), int(e.Length)
 		default:
 			oj, lj = 0, 0
 		}
@@ -491,27 +509,27 @@ func Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
 			var nextOff int
 			switch e := entities[internal].(type) {
 			case *tg.MessageEntityBold:
-				nextOff = e.Offset
+				nextOff = int(e.Offset)
 			case *tg.MessageEntityItalic:
-				nextOff = e.Offset
+				nextOff = int(e.Offset)
 			case *tg.MessageEntityUnderline:
-				nextOff = e.Offset
+				nextOff = int(e.Offset)
 			case *tg.MessageEntityStrike:
-				nextOff = e.Offset
+				nextOff = int(e.Offset)
 			case *tg.MessageEntityBlockquote:
-				nextOff = e.Offset
+				nextOff = int(e.Offset)
 			case *tg.MessageEntityCode:
-				nextOff = e.Offset
+				nextOff = int(e.Offset)
 			case *tg.MessageEntityPre:
-				nextOff = e.Offset
+				nextOff = int(e.Offset)
 			case *tg.MessageEntitySpoiler:
-				nextOff = e.Offset
+				nextOff = int(e.Offset)
 			case *tg.MessageEntityTextURL:
-				nextOff = e.Offset
+				nextOff = int(e.Offset)
 			case *tg.MessageEntityCustomEmoji:
-				nextOff = e.Offset
-			case *tg.MessageEntityTextMention:
-				nextOff = e.Offset
+				nextOff = int(e.Offset)
+			case *tg.MessageEntityMention:
+				nextOff = int(e.Offset)
 			default:
 				nextOff = 1 << 30
 			}
