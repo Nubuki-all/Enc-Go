@@ -269,7 +269,6 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 	return pOut.Message, pOut.Entities, nil
 }
 
-
 // Unparse converts a text and tg message entities into Markdown-ish plaintext (reconstructing delimiters).
 // Entities must be in the format produced by gotd/td (e.g. *tg.MessageEntityBold, *tg.MessageEntityItalic, ...).
 func Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
