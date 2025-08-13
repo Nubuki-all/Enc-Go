@@ -140,7 +140,7 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 					seg := lines.At(i)
 					line := string(seg.Value(src))
 					line = strings.TrimRight(line, "\n")
-					
+
 					if blockquoteLevel > 0 {
 						out.WriteString(blockquotePrefix)
 					}
@@ -148,7 +148,7 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 						out.WriteString("> ")
 					}
 					out.WriteString(line)
-					
+
 					if i < lines.Len()-1 {
 						out.WriteString("\n")
 					}
