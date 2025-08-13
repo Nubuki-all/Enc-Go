@@ -177,8 +177,9 @@ func ParseMarkdown(md string, preferBlockquote bool) (string, []tg.MessageEntity
 			} else if node.SoftLineBreak() {
 				// Soft line break - convert to space
 				out.WriteString("\n")
+			} else {
+				out.Write(value)
 			}
-			out.Write(value)
 
 		case *ast.CodeSpan:
 			if entering {
