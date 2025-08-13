@@ -181,6 +181,7 @@ func onStart() {
 		)
 		if err != nil {
 			logger.ErrorW(err.Error())
+		}
 	}
 	// report aria2/qbit status
 	statusMessages := make(map[bool]string)
