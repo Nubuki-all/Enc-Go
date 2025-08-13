@@ -37,7 +37,7 @@ func NewMsgFromGotg(m *gp.Message, c *ext.Context, chatID int64, userID int64) *
 func (m *Message) RawMessage() *gp.Message {
 	return m.Raw
 }
-func (m *Message) ReplyText(text string) *Message, error {
+func (m *Message) ReplyText(text string) (*Message, error) {
 	pText, entities, _ := parser.Parse(text, true)
 	inputRep := &tg.InputReplyToMessage{
 		ReplyToMsgID: m.Raw.Message.ID,
@@ -55,7 +55,7 @@ func (m *Message) ReplyText(text string) *Message, error {
 	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID), nil
 }
 
-func (m *Message) EditText(text string) *Message, error {
+func (m *Message) EditText(text string) (*Message, error) {
 	pText, entities, _ := parser.Parse(text, true)
 	msg, err := m.Ctx.EditMessage(m.ChatID, &tg.MessagesEditMessageRequest{
 		ID:       m.ID,
