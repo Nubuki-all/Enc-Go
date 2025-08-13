@@ -211,6 +211,7 @@ func MarkdownToEntities(md string, preferBlockquote bool) (string, []Entity, err
 	}
 
 	plain := out.String()
+	fmt.Println(plain)
 
 	// validate entity bounds
 	plainUTF16 := utf16Len(plain)
