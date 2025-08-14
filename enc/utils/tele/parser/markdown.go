@@ -259,10 +259,11 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 	// spoiler: ||text||  — allow newlines
 	reSpoiler := regexp.MustCompile(`(?s)\|\|(.+?)\|\|`)
 	text = reSpoiler.ReplaceAllString(text, `<spoiler>$1</spoiler>`)
-
+	fmt.Println(text)
 	text = strings.ReplaceAll(text, "\n\n", "<br><br>")
 
 	// 3) Now pass HTML-like result to htmlparser which will produce message + entities.
+	fmt.Println(text)
 	pOut, err := htmlparser.Parse(text)
 	if err != nil {
 		return "", nil, err
