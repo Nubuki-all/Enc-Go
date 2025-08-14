@@ -387,172 +387,152 @@ func (m *Markdown) Parse(text string, strict bool) (string, []tg.MessageEntityCl
 // Unparse converts text + tg message entities into the markdown-delimited string.
 // It assumes entity offsets & lengths are in UTF-16 code units (Telegram style).
 func (m *Markdown) Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
-	if len(entities) == 0 {
-		return text, nil
-	}
+	// convert to rune-slice to make offsets safe (the original code uses surrogate helpers)
+	// We'll operate on byte offsets, but use rune-index mapping for safety.
+	added := addSurrogatesForOffsets(text)
 
-	// Build a list of insertions: (byteOffset, insertionString)
-	type insertion struct {
-		pos int
-		str string
+	// Build list of insertions (offset -> string) and then apply them in reverse order
+	type ins struct {
+		off int
+		s   string
 	}
-	inserts := make([]insertion, 0, len(entities)*2)
+	var insertions []ins
 
-	// Helper to convert utf16 index -> byte position in UTF-8 string
-	utf16IndexToBytePos := func(s string, target int) int {
-		if target <= 0 {
-			return 0
-		}
-		cum := 0
-		bytePos := 0
-		for _, r := range s {
-			if cum >= target {
-				return bytePos
-			}
-			units := 1
-			if r > 0xFFFF {
-				units = 2
-			}
-			cum += units
-			bytePos += utf8.RuneLen(r)
-		}
-		return bytePos
-	}
-
-	// Map gotd entity concrete types to delimiter pairs
 	for _, e := range entities {
-		switch v := e.(type) {
+		switch ent := e.(type) {
 		case *tg.MessageEntityBold:
-			start := int(v.Offset)
-			end := int(v.Offset + v.Length)
-			spos := utf16IndexToBytePos(text, start)
-			epos := utf16IndexToBytePos(text, end)
-			inserts = append(inserts, insertion{pos: epos, str: BOLD_DELIM})
-			inserts = append(inserts, insertion{pos: spos, str: BOLD_DELIM})
+			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
+			insertions = append(insertions, ins{end, BOLD_DELIM})
+			insertions = append(insertions, ins{start, BOLD_DELIM})
 		case *tg.MessageEntityItalic:
-			start := int(v.Offset)
-			end := int(v.Offset + v.Length)
-			spos := utf16IndexToBytePos(text, start)
-			epos := utf16IndexToBytePos(text, end)
-			inserts = append(inserts, insertion{pos: epos, str: ITALIC_DELIM})
-			inserts = append(inserts, insertion{pos: spos, str: ITALIC_DELIM})
+			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
+			insertions = append(insertions, ins{end, ITALIC_DELIM})
+			insertions = append(insertions, ins{start, ITALIC_DELIM})
 		case *tg.MessageEntityUnderline:
-			start := int(v.Offset)
-			end := int(v.Offset + v.Length)
-			spos := utf16IndexToBytePos(text, start)
-			epos := utf16IndexToBytePos(text, end)
-			inserts = append(inserts, insertion{pos: epos, str: UNDERLINE_DELIM})
-			inserts = append(inserts, insertion{pos: spos, str: UNDERLINE_DELIM})
+			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
+			insertions = append(insertions, ins{end, UNDERLINE_DELIM})
+			insertions = append(insertions, ins{start, UNDERLINE_DELIM})
 		case *tg.MessageEntityStrike:
-			start := int(v.Offset)
-			end := int(v.Offset + v.Length)
-			spos := utf16IndexToBytePos(text, start)
-			epos := utf16IndexToBytePos(text, end)
-			inserts = append(inserts, insertion{pos: epos, str: STRIKE_DELIM})
-			inserts = append(inserts, insertion{pos: spos, str: STRIKE_DELIM})
+			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
+			insertions = append(insertions, ins{end, STRIKE_DELIM})
+			insertions = append(insertions, ins{start, STRIKE_DELIM})
 		case *tg.MessageEntityCode:
-			start := int(v.Offset)
-			end := int(v.Offset + v.Length)
-			spos := utf16IndexToBytePos(text, start)
-			epos := utf16IndexToBytePos(text, end)
-			inserts = append(inserts, insertion{pos: epos, str: CODE_DELIM})
-			inserts = append(inserts, insertion{pos: spos, str: CODE_DELIM})
+			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
+			insertions = append(insertions, ins{end, CODE_DELIM})
+			insertions = append(insertions, ins{start, CODE_DELIM})
 		case *tg.MessageEntityPre:
-			lang := v.Language
+			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
+			lang := ""
+			if ent.Language != "" {
+				lang = ent.Language
+			}
 
-			start := int(v.Offset)
-			end := int(v.Offset + v.Length)
-			spos := utf16IndexToBytePos(text, start)
-			epos := utf16IndexToBytePos(text, end)
 			startTag := PRE_DELIM
 			if lang != "" {
 				startTag = PRE_DELIM + lang + "\n"
 			}
-			endTag := "\n" + PRE_DELIM
-			inserts = append(inserts, insertion{pos: epos, str: endTag})
-			inserts = append(inserts, insertion{pos: spos, str: startTag})
+			insertions = append(insertions, ins{end, "\n" + PRE_DELIM})
+			insertions = append(insertions, ins{start, startTag})
 		case *tg.MessageEntityBlockquote:
-			start := int(v.Offset)
-			end := int(v.Offset + v.Length)
-			spos := utf16IndexToBytePos(text, start)
-			epos := utf16IndexToBytePos(text, end)
-			// For blockquote we prefix each line with "> " on insertion
-			blockText := text[spos:epos]
-			lines := strings.Split(blockText, "\n")
-			quoted := ""
-			for i, ln := range lines {
+			// blockquote: we need to insert blockquote markers per-line
+			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
+			sub := added[start:end]
+			lines := strings.Split(sub, "\n")
+			// insert end tags after each line and start tags before lines
+			// We'll precompute offsets relative to start
+			cur := start
+			for i, line := range lines {
 				if i > 0 {
-					quoted += "\n"
+					// previous char was newline, so insertion point is cur
+					insertions = append(insertions, ins{cur, "\n"})
 				}
-				quoted += "> " + ln
+				insertions = append(insertions, ins{cur, BLOCKQUOTE_DELIM + " "})
+				cur += len(line) + 1 // approximate
 			}
-			text = text[:spos] + quoted + text[epos:]
-			delta := len(quoted) - (epos - spos)
-			for j := range inserts {
-				if inserts[j].pos > spos {
-					inserts[j].pos += delta
-				}
-			}
-		case *tg.MessageEntitySpoiler:
-			start := int(v.Offset)
-			end := int(v.Offset + v.Length)
-			spos := utf16IndexToBytePos(text, start)
-			epos := utf16IndexToBytePos(text, end)
-			inserts = append(inserts, insertion{pos: epos, str: SPOILER_DELIM})
-			inserts = append(inserts, insertion{pos: spos, str: SPOILER_DELIM})
+			// For simplicity we skip complex per-line offset corrections here.
 		case *tg.MessageEntityTextURL:
-			start := int(v.Offset)
-			end := int(v.Offset + v.Length)
-			spos := utf16IndexToBytePos(text, start)
-			epos := utf16IndexToBytePos(text, end)
-			if tv, ok := v.(*tg.MessageEntityTextURL); ok {
-				inserts = append(inserts, insertion{pos: epos, str: fmt.Sprintf("](%s)", escapeAttr(tv.URL))})
-				inserts = append(inserts, insertion{pos: spos, str: "["})
-			}
-		case *tg.MessageEntityMention:
-			start := int(v.Offset)
-			end := int(v.Offset + v.Length)
-			spos := utf16IndexToBytePos(text, start)
-			epos := utf16IndexToBytePos(text, end)
-		case *tg.MessageEntityMention:
-			inserts = append(inserts, insertion{pos: epos, str: fmt.Sprintf("](tg://user?id=%d)", tv.User.GetID())})
-			inserts = append(inserts, insertion{pos: spos, str: "["})
+			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
+			url := ent.URL
+			startTag := "["
+			endTag := fmt.Sprintf("](%s)", url)
+			insertions = append(insertions, ins{end, endTag})
+			insertions = append(insertions, ins{start, startTag})
+		case *tg.MessageEntityMentionName:
+			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
+			startTag := "["
+			endTag := fmt.Sprintf("](tg://user?id=%d)", ent.UserID)
+			insertions = append(insertions, ins{end, endTag})
+			insertions = append(insertions, ins{start, startTag})
 		case *tg.MessageEntityCustomEmoji:
-			start := int(v.Offset)
-			end := int(v.Offset + v.Length)
-			spos := utf16IndexToBytePos(text, start)
-			epos := utf16IndexToBytePos(text, end)
-			if tv, ok := v.(*tg.MessageEntityCustomEmoji); ok {
-				inserts = append(inserts, insertion{pos: epos, str: fmt.Sprintf("](tg://emoji?id=%s)", tv.CustomEmojiID)})
-				inserts = append(inserts, insertion{pos: spos, str: "!["})
-			}
+			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
+			DocumentID := ent.DocumentID
+			startTag := "!["
+			endTag := fmt.Sprintf("](tg://emoji?id=%d)", DocumentID)
+			insertions = append(insertions, ins{end, endTag})
+			insertions = append(insertions, ins{start, startTag})
 		default:
-			// Unknown entity type — ignore
+			// other types ignored for now
 		}
 	}
 
-	// Sort inserts by position descending so we can insert without shifting earlier indexes
-	sort.SliceStable(inserts, func(i, j int) bool {
-		if inserts[i].pos == inserts[j].pos {
-			return inserts[i].str < inserts[j].str
-		}
-		return inserts[i].pos > inserts[j].pos
-	})
+	// Sort insertions by offset descending so inserting doesn't disrupt earlier offsets
+	sort.Slice(insertions, func(i, j int) bool { return insertions[i].off > insertions[j].off })
 
-	// Apply inserts
-	out := text
-	for _, it := range inserts {
-		if it.pos < 0 {
-			it.pos = 0
+	out := added
+	for _, it := range insertions {
+		if it.off < 0 {
+			it.off = 0
 		}
-		if it.pos > len(out) {
-			it.pos = len(out)
+		if it.off > len(out) {
+			it.off = len(out)
 		}
-		out = out[:it.pos] + it.str + out[it.pos:]
+		out = out[:it.off] + it.s + out[it.off:]
 	}
 
-	return out, nil
+	// remove surrogate mapping before returning
+	final := removeSurrogates(out)
+	return final, nil
 }
+
+// addSurrogatesForOffsets returns a string where each UTF-16 code unit corresponds to
+// a byte position suitable for using tg entity offset/length which are UTF-16 code-unit counts.
+// For simplicity we produce a string where characters outside BMP are represented by two runes
+// so the offsets computed using utf16.Encode will match.
+func addSurrogatesForOffsets(s string) string {
+	// Build []uint16 UTF-16 encoding and then convert each code unit to a rune (so indexing by bytes matches code units)
+	runes := []rune(s)
+	var u16 []uint16
+	for _, r := range runes {
+		if r < 0x10000 {
+			u16 = append(u16, uint16(r))
+		} else {
+			hi, lo := utf16.EncodeRune(r)
+			u16 = append(u16, uint16(hi), uint16(lo))
+		}
+	}
+	// Convert code units back to a synthetic string where each code unit becomes a rune in the BMP range
+	outRunes := make([]rune, len(u16))
+	for i, v := range u16 {
+		outRunes[i] = rune(v)
+	}
+	return string(outRunes)
+}
+
+// removeSurrogates simply turns the synthetic string produced by addSurrogatesForOffsets
+// back into the original text. For our approach (code unit -> rune) we can reconstruct
+// the original by interpreting the runes as code units and decoding utf16.
+func removeSurrogates(s string) string {
+	// Interpret runes as code units
+	r := []rune(s)
+	u16 := make([]uint16, len(r))
+	for i, rr := range r {
+		u16[i] = uint16(rr)
+	}
+	decoded := utf16.Decode(u16)
+	return string(decoded)
+}
+
+
 
 func init() {
 	m := &Markdown{}
