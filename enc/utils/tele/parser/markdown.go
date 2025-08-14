@@ -546,12 +546,12 @@ func (m *Markdown) Unparse(text string, entities []tg.MessageEntityClass) (strin
 	}
 
 	// Sort inserts by position descending so we can insert without shifting earlier indexes
-	sort.SliceStable(inserts, func(i, j int) bool {
+	sort.SliceStable(inserts, func(i, j int)) bool {
 		if inserts[i].pos == inserts[j].pos {
 			return inserts[i].str < inserts[j].str
 		}
 		return inserts[i].pos > inserts[j].pos
-	})
+	}
 
 	// Apply inserts
 	out := text
