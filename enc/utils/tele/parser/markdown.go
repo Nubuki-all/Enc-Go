@@ -9,8 +9,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	//"unicode/utf16"
-	"unicode/utf8"
+	"unicode/utf16"
+	//"unicode/utf8"
 
 	"github.com/gotd/td/tg"
 	// Replace this with your actual HTML->(message,entities) parser package.
@@ -26,6 +26,7 @@ const (
 	SPOILER_DELIM   = "||"
 	CODE_DELIM      = "`"
 	PRE_DELIM       = "```"
+	BLOCKQUOTE_DELIM                = ">"
 )
 
 // Markup templates
@@ -531,6 +532,8 @@ func removeSurrogates(s string) string {
 	decoded := utf16.Decode(u16)
 	return string(decoded)
 }
+
+
 
 func init() {
 	m := &Markdown{}
