@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"enc/config"
+	"enc/internal/bot"
 	"enc/internal/clients/telegram"
 	"enc/internal/clients/telegraph"
 	"enc/internal/logger"
@@ -21,6 +22,7 @@ func main() {
 	if config.Rconf.Error != nil {
 		logger.Criticalf("Failed to load config: %v", config.Rconf.Error)
 	}
+	bot.Version = Version
 	startup.Initialize()
 	telegraph.Init()
 	telegram.InitClient()

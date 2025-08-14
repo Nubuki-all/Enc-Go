@@ -55,3 +55,4 @@ var (
 )
 
 var BotStartTime = time.Now()
+var Version string

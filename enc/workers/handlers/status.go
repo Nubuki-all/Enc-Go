@@ -11,9 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"enc"
 	"enc/internal/bot"
-	"enc/utils" // <-- replace with your actual utils import path
+	"enc/utils"
 	"github.com/celestix/gotgproto/ext"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
@@ -32,7 +31,7 @@ func Status(ctx context.Context, update *ext.Update, msg *tele.Message) error {
 		return nil
 	}
 
-	version := enc.Version
+	version := bot.Version
 
 	// Bot uptime from utils (assumes utils.BotStartTime() exists)
 	uptime := time.Since(bot.BotStartTime).Round(time.Second).String()
