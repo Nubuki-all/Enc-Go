@@ -557,7 +557,6 @@ func (m *Markdown) Unparse(text string, entities []tg.MessageEntityClass) (strin
 	return out, nil
 }
 
-
 func init() {
 	m := &Markdown{}
 	text, _, _ := m.Parse("**A bold\n\n Message 😂**", true)
