@@ -54,5 +54,7 @@ var (
 	RenameFilters     = []*types.RenameFilterData{}
 )
 
-var BotStartTime = time.Now()
-var Version string
+var (
+	BotStartTime = time.Now()
+	Version      string
+)
