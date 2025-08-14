@@ -53,7 +53,7 @@ type Config struct {
 	MICap                 bool
 	MuxArgs               string
 	NoBanner              bool
-	NoTempPM              bool
+	NoPM                  bool
 	Ovr                   string
 	Owner                 string
 	PauseOnDLInfo         bool
@@ -240,7 +240,7 @@ func LoadConfig() error {
 		MICap:                 viper.GetBool("MI_IN_CAPTION"),
 		MuxArgs:               viper.GetString("MUX_ARGS"),
 		NoBanner:              viper.GetBool("NO_BANNER"),
-		NoTempPM:              viper.GetBool("NO_TEMP_PM"),
+		NoPM:                  viper.GetBool("NO_TEMP_PM"),
 		Ovr:                   viper.GetString("OVR"),
 		Owner:                 viper.GetString("OWNER"),
 		PauseOnDLInfo:         viper.GetBool("PODI"),

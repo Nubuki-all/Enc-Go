@@ -24,7 +24,7 @@ import (
 // as a formatted message. It assumes utils.UserIsAllowed and messaging helpers exist.
 func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	// permission check
-	if !utils.UserIsAllowed(msg.UserID) {
+	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}
 

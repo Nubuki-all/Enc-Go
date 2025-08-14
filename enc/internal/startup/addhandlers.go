@@ -22,7 +22,9 @@ func AddAllHandlers() {
 }
 
 func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
-	dispatch.AddHandler(onevent.NewCommand("start", handlers.Start))
+	dispatch.AddHandler(onevent.NewCommand("start1", handlers.StartEx))
+	dispatch.AddHandler(onevent.NewCommand("start", BaseEventHandler(handlers.Start)))
+	dispatch.AddHandler(onevent.NewCommand("help", BaseEventHandler(handlers.Start)))
 	dispatch.AddHandler(onevent.NewCommand("ping", BaseEventHandler(handlers.Up)))
 	dispatch.AddHandler(onevent.NewCommand("status", BaseEventHandler(handlers.Status)))
 }
