@@ -236,7 +236,7 @@ func StartBack(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	} else {
 		outMsg = msg2
 	}
-	
+
 	replyMarkup := markup.InlineKeyboard(
 		markup.Row(
 			markup.Callback(
@@ -266,5 +266,4 @@ func StartBack(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 		return err
 	}
 	return nil
-
 }
