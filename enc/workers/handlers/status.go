@@ -31,7 +31,7 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	version := bot.Version
 
 	// Bot uptime from utils (assumes utils.BotStartTime() exists)
-	uptime := time.Since(bot.BotStartTime).Round(time.Second).String()
+	uptime := time.Since(bot.BotStartTime).Round(time.Second).Seconds()
 
 	// Host info
 	hostInfo, _ := host.Info()
@@ -51,7 +51,7 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	logicalCores, _ := cpu.Counts(true)
 	physicalCores, _ := cpu.Counts(false)
 	cpuPerc := float64(0)
-	if p, err := cpu.Percent(time.Second*4, false); err == nil && len(p) > 0 {
+	if p, err := cpu.Percent(time.Second*1, false); err == nil && len(p) > 0 {
 		cpuPerc = p[0]
 	}
 
@@ -104,7 +104,10 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 		fmt.Sprintf("**Version:** `%s`\n", version),
 	)
 	b.WriteString(
-		fmt.Sprintf("**Bot Uptime:** `%s`\n", uptime),
+		fmt.Sprintf(
+			"**Bot Uptime:** `%s`\n",
+			utils.TimeFormatter(uptime),
+		),
 	)
 	b.WriteString("\n")
 	if hostname != "" {
