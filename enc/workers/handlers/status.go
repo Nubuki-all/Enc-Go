@@ -189,7 +189,7 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	)
 	b.WriteString("\n")
 	b.WriteString(
-		fmt.Sprintf("**Runtime:**\n**Version:** `%s`\n**Arch:** `%s`\n",
+		fmt.Sprintf("> **Runtime:**\n**Version:** `%s`\n**Arch:** `%s`\n",
 			runtime.Version(),
 			runtime.GOARCH,
 		),
