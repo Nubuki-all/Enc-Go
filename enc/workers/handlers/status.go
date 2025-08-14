@@ -125,6 +125,6 @@ func Status(ctx context.Context, update *ext.Update, msg *tele.Message) error {
 	b.WriteString(fmt.Sprintf("**Runtime:** Go `%s` • Arch `%s`\n", runtime.Version(), runtime.GOARCH))
 
 	// Send reply
-	_, err := msg.ReplyText(client.String())
+	_, err := msg.ReplyText(b.String())
 	return err
 }
