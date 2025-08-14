@@ -171,5 +171,3 @@ func Start(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	return nil
 }
 
-func Help(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
-}
