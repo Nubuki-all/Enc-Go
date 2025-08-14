@@ -50,7 +50,7 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	logicalCores, _ := cpu.Counts(true)
 	physicalCores, _ := cpu.Counts(false)
 	cpuPerc := float64(0)
-	if p, err := cpu.Percent(time.Second, false); err == nil && len(p) > 0 {
+	if p, err := cpu.Percent(time.Second *4, false); err == nil && len(p) > 0 {
 		cpuPerc = p[0]
 	}
 
@@ -111,13 +111,13 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	}
 	b.WriteString("\n")
 
-	b.WriteString(fmt.Sprintf("**CPU:** `%0.2f%%` (phys: %d, logical: %d)\n", cpuPerc, physicalCores, logicalCores))
-	b.WriteString(fmt.Sprintf("**Memory:** `%s` total • `%s` used • `%s` available • `%d%%`\n", hMemTotal, hMemUsed, hMemAvail, vm.UsedPercent))
-	b.WriteString(fmt.Sprintf("**Swap:** `%s` • `%d%%`\n", hSwapTotal, swapS.UsedPercent))
-	b.WriteString(fmt.Sprintf("**Disk (/):** `%s` total • `%s` used • `%s` free • `%0.2f%%`\n", hTotal, hUsed, hFree, du.UsedPercent))
+	b.WriteString(fmt.Sprintf("**CPU:** `%.2f%%` (phys: %d, logical: %d)\n", cpuPerc, physicalCores, logicalCores))
+	b.WriteString(fmt.Sprintf("**Memory:** `%s` total • `%s` used • `%s` available • `%.2f%%`\n", hMemTotal, hMemUsed, hMemAvail, vm.UsedPercent))
+	b.WriteString(fmt.Sprintf("**Swap:** `%s` • `%.2f%%`\n", hSwapTotal, swapS.UsedPercent))
+	b.WriteString(fmt.Sprintf("**Disk (/):** `%s` total • `%s` used • `%s` free • `%.2f%%`\n", hTotal, hUsed, hFree, du.UsedPercent))
 	b.WriteString(fmt.Sprintf("**Network:** `↑ %s` • `↓ %s`\n", hSent, hRecv))
 	b.WriteString("\n")
-	b.WriteString(fmt.Sprintf("**Process (self):** CPU `%0.2f%%` • RSS `%s`\n", procCPU, utils.GetReadableFileSize(int64(procMem))))
+	b.WriteString(fmt.Sprintf("**Process (self):** CPU `%.2f%%` • RSS `%s`\n", procCPU, utils.GetReadableFileSize(int64(procMem))))
 	b.WriteString(fmt.Sprintf("**Runtime:** Go `%s` • Arch `%s`\n", runtime.Version(), runtime.GOARCH))
 
 	// Send reply
