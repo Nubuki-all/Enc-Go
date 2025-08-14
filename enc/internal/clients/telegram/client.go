@@ -45,6 +45,7 @@ func InitClient() {
 		gotgproto.ClientTypeBot(config.Conf.BotToken),
 		// Optional parameters of client
 		&gotgproto.ClientOpts{
+			Logger:      logger.Logger
 			Session:     sessionMaker.SqlSession(sqlite.Open(".encbot.session")),
 			Middlewares: []telegram.Middleware{waiter, ratelimiter},
 			RunMiddleware: func(origRun func(ctx context.Context, f func(ctx context.Context) error) (err error), ctx context.Context, f func(ctx context.Context) (err error)) (err error) {
