@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"runtime"
@@ -23,7 +22,7 @@ import (
 
 // StatusHandler gathers system + bot statistics using gopsutil and sends them
 // as a formatted message. It assumes utils.UserIsAllowed and messaging helpers exist.
-func Status(ctx context.Context, update *ext.Update, msg *tele.Message) error {
+func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	// permission check
 	if !utils.UserIsAllowed(msg.UserID) {
 		return nil
