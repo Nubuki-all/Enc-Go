@@ -51,6 +51,7 @@ func StartEx(ctx *ext.Context, update *ext.Update) error {
 
 func ButtonCallback(ctx *ext.Context, update *ext.Update) error {
 	query := update.CallbackQuery
+	fmt.println(update.EffectiveMessage)
 	_, _ = ctx.AnswerCallback(&tg.MessagesSetBotCallbackAnswerRequest{
 		Alert:   true,
 		QueryID: query.QueryID,
@@ -169,3 +170,7 @@ func Start(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	}
 	return nil
 }
+
+func Help(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
+	
+} 
