@@ -1,4 +1,4 @@
-// package markdown provides a lightweight Markdown <-> HTML-ish converter
+// package parser provides a lightweight Markdown <-> HTML-ish converter
 // adapted from the Pyrogram snippet you posted. It is tuned to work with
 // github.com/gotd/td (tg.MessageEntity classes).
 package parser
@@ -310,8 +310,7 @@ func (m *Markdown) Parse(text string, strict bool) (string, []tg.MessageEntityCl
 								segments = append(segments, "<pre>")
 							}
 							// push placeholder to represent PRE open
-							ph := pushPlaceholder(PRE_DELIM)
-							_ = ph
+							_ = pushPlaceholder(PRE_DELIM)
 							last = fullEnd + nl + 1
 							continue
 						}
@@ -378,7 +377,6 @@ func (m *Markdown) Parse(text string, strict bool) (string, []tg.MessageEntityCl
 	}
 
 	// Delegate final HTML-like string to HTML parser that converts to plain message + entities.
-	// Replace htmlparser.Parse call with your project's HTML parser.
 	parsed, err := htmlparser.Parse(full)
 	if err != nil {
 		return "", nil, err
@@ -483,7 +481,6 @@ func (m *Markdown) Unparse(text string, entities []tg.MessageEntityClass) (strin
 			// For blockquote we prefix each line with "> " on insertion
 			blockText := text[spos:epos]
 			lines := strings.Split(blockText, "\n")
-			// We'll replace the block with quoted lines; easiest approach: compute replacement string and plan to replace.
 			quoted := ""
 			for i, ln := range lines {
 				if i > 0 {
@@ -491,12 +488,7 @@ func (m *Markdown) Unparse(text string, entities []tg.MessageEntityClass) (strin
 				}
 				quoted += "> " + ln
 			}
-			// We'll schedule a replacement by doing: remove original and insert quoted.
-			// Implement by inserting markers: end replacement marker and start replacement marker with special token.
-			// Simpler: perform replacement now on text (not via inserts). But to keep algorithm consistent, we just record a replacement insertion instruction
-			// For simplicity in this unparse, do a direct replace now:
 			text = text[:spos] + quoted + text[epos:]
-			// Adjust all future inserts positions by delta
 			delta := len(quoted) - (epos - spos)
 			for j := range inserts {
 				if inserts[j].pos > spos {
@@ -511,18 +503,15 @@ func (m *Markdown) Unparse(text string, entities []tg.MessageEntityClass) (strin
 			inserts = append(inserts, insertion{pos: epos, str: SPOILER_DELIM})
 			inserts = append(inserts, insertion{pos: spos, str: SPOILER_DELIM})
 		case *tg.MessageEntityTextUrl:
-			// text link: insert [ at start and ](url) at end
 			start := int(v.Offset)
 			end := int(v.Offset + v.Length)
 			spos := utf16IndexToBytePos(text, start)
 			epos := utf16IndexToBytePos(text, end)
-			// gotd's MessageEntityTextUrl has URL field; use type assertion
 			if tv, ok := v.(*tg.MessageEntityTextUrl); ok {
 				inserts = append(inserts, insertion{pos: epos, str: fmt.Sprintf("](%s)", escapeAttr(tv.URL))})
 				inserts = append(inserts, insertion{pos: spos, str: "["})
 			}
 		case *tg.MessageEntityTextMention:
-			// mention: [text](tg://user?id=123)
 			start := int(v.Offset)
 			end := int(v.Offset + v.Length)
 			spos := utf16IndexToBytePos(text, start)
@@ -538,7 +527,7 @@ func (m *Markdown) Unparse(text string, entities []tg.MessageEntityClass) (strin
 			epos := utf16IndexToBytePos(text, end)
 			if tv, ok := v.(*tg.MessageEntityCustomEmoji); ok {
 				inserts = append(inserts, insertion{pos: epos, str: fmt.Sprintf("](tg://emoji?id=%s)", tv.CustomEmojiID)})
-				inserts = append(inserts, insertion{pos: spos, str: "!["])
+				inserts = append(inserts, insertion{pos: spos, str: "!["})
 			}
 		default:
 			// Unknown entity type — ignore
