@@ -2,12 +2,16 @@ package handlers
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/celestix/gotgproto/dispatcher"
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 
+	"enc/config"
+	"enc/internal/bot"
 	"enc/internal/logger"
 	"enc/utils"
 	"enc/utils/tele"
@@ -85,13 +89,14 @@ func Up(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	return nil
 }
 
+
 func Start(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	user := update.EffectiveUser()
 	chat := update.EffectiveChat()
 	currentTime := utils.TimeFormatter(time.Since(bot.BotStartTime).Round(time.Second).Seconds()) // TF matches your tf helper
 
 	// base messages
-	msg1 := fmt.Sprintf("Hi `%s`\n", firstName)
+	msg1 := fmt.Sprintf("Hi `%s`\n", user.FirstName)
 	msg2 := fmt.Sprintf("%sI've been alive for `%s` and i'm ready to encode videos 😗", msg1, currentTime)
 	msg3 := fmt.Sprintf("%s\nand by the way you're a temporary user", msg2)
 
@@ -105,9 +110,9 @@ func Start(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	}
 
 	// Choose message depending on temporary/allowed/user status
-	if utils.UserIsTemp(msg.senderID) {
+	if utils.UserIsTemp(msg.SenderID) {
 		outMsg = msg3
-	} else if !utils.UserIsAllowed(msg.senderID) {
+	} else if !utils.UserIsAllowed(msg.SenderID) {
 		// build not-allowed message with a link to owner
 		ownerIDStr := strings.Split(config.Conf.Owner, " ")[0]
 		ownerID, _ := strconv.ParseInt(
