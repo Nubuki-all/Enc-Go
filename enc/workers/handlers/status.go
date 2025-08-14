@@ -118,7 +118,7 @@ func Status(ctx context.Context, update *ext.Update, msg *tele.Message) error {
 	b.WriteString(fmt.Sprintf("**Disk (/):** `%s` total • `%s` used • `%s` free • `%0.2f%%`\n", hTotal, hUsed, hFree, du.UsedPercent))
 	b.WriteString(fmt.Sprintf("**Network:** `↑ %s` • `↓ %s`\n", hSent, hRecv))
 	b.WriteString("\n")
-	b.WriteString(fmt.Sprintf("**Process (self):** CPU `%0.2f%%` • RSS `%s`\n", procCPU, utils.GetReadableFileSize(procMem)))
+	b.WriteString(fmt.Sprintf("**Process (self):** CPU `%0.2f%%` • RSS `%s`\n", procCPU, utils.GetReadableFileSize(int64(procMem))))
 	b.WriteString(fmt.Sprintf("**Runtime:** Go `%s` • Arch `%s`\n", runtime.Version(), runtime.GOARCH))
 
 	// Send reply
