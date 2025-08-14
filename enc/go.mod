@@ -11,7 +11,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1
 	github.com/gotd/contrib v0.21.0
 	github.com/gotd/td v0.130.0
-	github.com/mattn/go-sqlite3 v1.14.31
+	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/siku2/arigo v0.2.0
 	github.com/spf13/viper v1.20.1

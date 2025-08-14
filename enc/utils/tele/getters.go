@@ -6,14 +6,14 @@ import (
 	//"strings"
 
 	//"github.com/celestix/gotgproto/ext"
-	"github.com/celestix/gotgproto/storage"
 	mtp_errors "github.com/celestix/gotgproto/errors"
+	"github.com/celestix/gotgproto/storage"
 	"github.com/gotd/td/tg"
 
 	"enc/internal/clients/telegram"
 )
 
-func GetUser (userId int64) (*tg.User, error) {
+func GetUser(userId int64) (*tg.User, error) {
 	ctx := telegram.Context
 	peer := ctx.PeerStorage.GetPeerById(userId)
 	if peer.ID == 0 {

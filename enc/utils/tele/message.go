@@ -11,27 +11,28 @@ import (
 )
 
 type Message struct {
-	ChatID int64
-	Ctx    *ext.Context
-	ID     int
-	Raw    *gp.Message
+	ChatID   int64
+	Ctx      *ext.Context
+	ID       int
+	Raw      *gp.Message
 	SenderID int64
-	Chat   *tg.Chat
-	User   *tg.User
+	Chat     *tg.Chat
+	User     *tg.User
 }
 
 type ReplyOptions struct {
 	ReplyMarkup tg.ReplyMarkupClass
-	// will add as required 
+	// will add as required
 }
+
 // NewFromGotg constructs a wrapper from a concrete *gp.Message.
 func NewMsgFromGotg(m *gp.Message, c *ext.Context, chatID int64, senderID int64) *Message {
 	return &Message{
-		Raw:    m,
-		Ctx:    c,
-		ChatID: chatID,
+		Raw:      m,
+		Ctx:      c,
+		ChatID:   chatID,
 		SenderID: senderID,
-		ID:     m.Message.ID,
+		ID:       m.Message.ID,
 	}
 }
 
@@ -63,9 +64,9 @@ func (m *Message) Reply(text string, replyOptions *ReplyOptions) (*Message, erro
 		ReplyToMsgID: m.Raw.Message.ID,
 	}
 	msg, err := m.Ctx.SendMessage(m.ChatID, &tg.MessagesSendMessageRequest{
-		Message:  pText,
-		Entities: entities,
-		ReplyTo:  inputRep,
+		Message:     pText,
+		Entities:    entities,
+		ReplyTo:     inputRep,
 		ReplyMarkup: replyOptions.ReplyMarkup,
 	},
 	)
