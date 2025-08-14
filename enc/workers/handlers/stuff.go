@@ -175,8 +175,7 @@ func Help(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	text := "**⛩️ An Encode bot**\n\n+" +
 		"This bot encodes videos With your custom ffmpeg or handbrake-cli settings." +
 		"\n+Easy to Use (Depends)\n" +
-		"-Due to your custom Settings & hosting server bot may or may not take a long time to encode" +
-		".\n\nJust Forward a Video…/videos" +
+		"-Due to your custom Settings & hosting server bot may or may not take a long time to encode." +
 		"\n\nFor available commands click the Commands button below."
 	replyMarkup := markup.InlineKeyboard(
 		markup.Row(
@@ -203,4 +202,69 @@ func Help(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 		return err
 	}
 	return nil
+}
+
+func StartBack(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
+	user := update.EffectiveUser()
+	chat := update.EffectiveChat()
+	currentTime := utils.TimeFormatter(time.Since(bot.BotStartTime).Round(time.Second).Seconds())
+	msg1 := fmt.Sprintf("Hi `%s`\n", user.FirstName)
+	msg2 := fmt.Sprintf("%sI've been alive for `%s` and i'm ready to encode videos 😗", msg1, currentTime)
+	msg3 := fmt.Sprintf("%s\nand by the way you're a temporary user", msg2)
+
+	var outMsg string
+	if !utils.UserIsOwner(msg.SenderID) && chat.IsAUser() {
+		if !utils.AllowPM() {
+			return nil
+		}
+	}
+	if utils.UserIsTemp(msg.SenderID) {
+		outMsg = msg3
+	} else if !utils.UserIsAllowed(msg.SenderID) {
+		ownerIDStr := strings.Split(config.Conf.Owner, " ")[0]
+		ownerID, _ := strconv.ParseInt(
+			ownerIDStr,
+			10,
+			64,
+		)
+		user, err := tele.GetUser(ownerID)
+		ownerName := ownerIDStr
+		if err == nil && user != nil {
+			ownerName = user.FirstName
+		}
+		outMsg = fmt.Sprintf("%sYou're not allowed access to this bot\nAsk [%s](tg://user?id=%s) (nicely) to grant you access.", msg1, ownerName, ownerIDStr)
+	} else {
+		outMsg = msg2
+	}
+	
+	replyMarkup := markup.InlineKeyboard(
+		markup.Row(
+			markup.Callback(
+				"Help",
+				[]byte("ihelp"),
+			),
+		),
+		markup.Row(
+			markup.URL(
+				"Source Code",
+				"https://github.com/Nubuki-all/Enc-Go",
+			),
+			markup.URL(
+				"Developer",
+				"https://t.me/Col_serra",
+			),
+		),
+	)
+	_, err := msg.Edit(
+		outMsg,
+		&tele.EditOptions{
+			ReplyMarkup: replyMarkup,
+		},
+	)
+	if err != nil {
+		logger.ErrorW(err.Error())
+		return err
+	}
+	return nil
+
 }

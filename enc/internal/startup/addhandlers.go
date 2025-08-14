@@ -32,6 +32,7 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 func AddCBHandlers(dispatch dispatcher.Dispatcher) {
 	dispatch.AddHandler(onevent.NewCallbackQuery(filters.CallbackQuery.Prefix("cb_"), handlers.ButtonCallback))
 	dispatch.AddHandler(onevent.NewCallbackQuery(filters.CallbackQuery.Prefix("ihelp"), CallbackEventHandler(handlers.Help)))
+	dispatch.AddHandler(onevent.NewCallbackQuery(filters.CallbackQuery.Prefix("back_cb"), CallbackEventHandler(handlers.StartBack)))
 }
 
 func BaseEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message) error) func(*ext.Context, *ext.Update) error {
