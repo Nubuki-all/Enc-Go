@@ -538,7 +538,7 @@ func (m *Markdown) Unparse(text string, entities []tg.MessageEntityClass) (strin
 			epos := utf16IndexToBytePos(text, end)
 			if tv, ok := v.(*tg.MessageEntityCustomEmoji); ok {
 				inserts = append(inserts, insertion{pos: epos, str: fmt.Sprintf("](tg://emoji?id=%s)", tv.CustomEmojiID)})
-				inserts = append(inserts, insertion{pos: spos, str: "!["})
+				inserts = append(inserts, insertion{pos: spos, str: "!["])
 			}
 		default:
 			// Unknown entity type — ignore
@@ -546,12 +546,12 @@ func (m *Markdown) Unparse(text string, entities []tg.MessageEntityClass) (strin
 	}
 
 	// Sort inserts by position descending so we can insert without shifting earlier indexes
-	sort.SliceStable(inserts, func(i, j int)) bool {
+	sort.SliceStable(inserts, func(i, j int) bool {
 		if inserts[i].pos == inserts[j].pos {
 			return inserts[i].str < inserts[j].str
 		}
 		return inserts[i].pos > inserts[j].pos
-	}
+	})
 
 	// Apply inserts
 	out := text
@@ -564,6 +564,10 @@ func (m *Markdown) Unparse(text string, entities []tg.MessageEntityClass) (strin
 		}
 		out = out[:it.pos] + it.str + out[it.pos:]
 	}
+
+	return out, nil
+}
+
 
 func init() {
 	m := &Markdown{}
