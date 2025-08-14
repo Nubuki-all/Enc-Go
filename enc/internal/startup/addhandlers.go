@@ -52,16 +52,15 @@ func BaseEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message) err
 	}
 }
 
-
 func CallbackEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message) error) func(*ext.Context, *ext.Update) error {
 	return func(ctx *ext.Context, update *ext.Update) error {
 		user := update.EffectiveUser()
 		chat := update.EffectiveChat()
 		msg := &tele.Message{
-			Ctx: ctx,
-			ChatID: chat.GetID(),
+			Ctx:      ctx,
+			ChatID:   chat.GetID(),
 			SenderID: user.ID,
-			ID: update.CallbackQuery.MsgID,
+			ID:       update.CallbackQuery.MsgID,
 		}
 		err := handler(ctx, update, msg)
 		if err != nil {

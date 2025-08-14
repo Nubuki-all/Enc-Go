@@ -20,7 +20,6 @@ type Message struct {
 	User     *tg.User
 }
 
-
 type EditOptions struct {
 	ReplyMarkup tg.ReplyMarkupClass
 	// will add more fields as required
@@ -102,9 +101,9 @@ func (m *Message) EditText(text string) (*Message, error) {
 func (m *Message) Edit(text string, editOptions *EditOptions) (*Message, error) {
 	pText, entities, _ := parser.Parse(text, true)
 	msg, err := m.Ctx.EditMessage(m.ChatID, &tg.MessagesEditMessageRequest{
-		ID:       m.ID,
-		Message:  pText,
-		Entities: entities,
+		ID:          m.ID,
+		Message:     pText,
+		Entities:    entities,
 		ReplyMarkup: editOptions.ReplyMarkup,
 	},
 	)
@@ -116,7 +115,6 @@ func (m *Message) Edit(text string, editOptions *EditOptions) (*Message, error) 
 	}
 	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.SenderID), nil
 }
-
 
 func SendMessage(id int64, text string) error {
 	peer, _ := GetPeer(id)
