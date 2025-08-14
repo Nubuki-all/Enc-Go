@@ -1,7 +1,7 @@
 package startup
 
 import (
-	"fmt"
+	//"fmt"
 
 	"github.com/celestix/gotgproto/dispatcher"
 	onevent "github.com/celestix/gotgproto/dispatcher/handlers"
