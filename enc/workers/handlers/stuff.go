@@ -89,7 +89,6 @@ func Up(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	return nil
 }
 
-
 func Start(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	user := update.EffectiveUser()
 	chat := update.EffectiveChat()
