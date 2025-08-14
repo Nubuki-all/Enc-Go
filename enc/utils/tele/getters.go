@@ -20,9 +20,11 @@ func GetUser (userId int64) (*tg.User, error) {
 		return nil, mtp_errors.ErrPeerNotFound
 	}
 	if peer.Type == storage.TypeUser.GetInt() {
-		users, err := ctx.Raw.UsersGetUsers(ctx, &tg.InputUser{
-			UserID:     peer.ID,
-			AccessHash: peer.AccessHash,
+		users, err := ctx.Raw.UsersGetUsers(ctx, []tg.InputUserClass{
+			&tg.InputUser{
+				UserID:     peer.ID,
+				AccessHash: peer.AccessHash,
+			},
 		})
 		if err != nil {
 			return nil, err
@@ -31,7 +33,7 @@ func GetUser (userId int64) (*tg.User, error) {
 		if !ok {
 			return nil, fmt.Errorf("users response count: %v", users)
 		}
-		return &user, nil
+		return user, nil
 	} else {
 		return nil, mtp_errors.ErrNotUser
 	}

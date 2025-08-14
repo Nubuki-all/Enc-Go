@@ -21,7 +21,7 @@ type Message struct {
 }
 
 type ReplyOptions struct {
-	ReplyMarkup *tg.ReplyMarkupClass
+	ReplyMarkup tg.ReplyMarkupClass
 	// will add as required 
 }
 // NewFromGotg constructs a wrapper from a concrete *gp.Message.
