@@ -157,7 +157,7 @@ func Start(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	_, err := msg.Reply(
 		outMsg,
 		&tele.ReplyOptions{
-			ReplyMarkup: markup
+			ReplyMarkup: markup,
 		},
 	)
 	if err != nil {
