@@ -73,7 +73,7 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	selfPID := os.Getpid()
 	var procCPU float64
 	var procMem uint64
-	var procCWD string 
+	var procCWD string
 	if p, err := process.NewProcess(int32(selfPID)); err == nil {
 		if c, err := p.CPUPercent(); err == nil {
 			procCPU = c
@@ -111,9 +111,9 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	if hostInfo != nil && hostInfo.Platform != "" {
 		b.WriteString(
 			fmt.Sprintf("**OS:** `%s %s %s`\n",
-			hostInfo.Platform,
-			hostInfo.PlatformVersion,
-			runtime.GOARCH,
+				hostInfo.Platform,
+				hostInfo.PlatformVersion,
+				runtime.GOARCH,
 			),
 		)
 	} else {
@@ -152,7 +152,6 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 			hSwapTotal,
 			swapS.UsedPercent,
 		),
-
 	)
 	b.WriteString(
 		fmt.Sprintf(
@@ -182,8 +181,8 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	b.WriteString("\n")
 	b.WriteString(
 		fmt.Sprintf("**Runtime:**\n**Version:** `%s`\n**Arch:** `%s`\n",
-		runtime.Version(),
-		runtime.GOARCH,
+			runtime.Version(),
+			runtime.GOARCH,
 		),
 	)
 
