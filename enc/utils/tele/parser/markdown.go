@@ -541,4 +541,5 @@ func init() {
 	fmt.Println(pOut.Message)
 }
 
-var Parse = &Markdown{}.Parse
+var MD = &Markdown{}
+var Parse = MD.Parse
