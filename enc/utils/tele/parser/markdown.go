@@ -177,7 +177,7 @@ func escapeAndCreateQuotes(text string, strict bool) string {
 		}
 	}
 	// final flush
-		// Final flush
+	// Final flush
 	createBlockquote(false)
 
 	if strict {
@@ -192,7 +192,6 @@ func escapeAndCreateQuotes(text string, strict bool) string {
 	// Previously we removed empty strings here which collapsed double newlines.
 	return strings.Join(lines, "\n")
 }
-
 
 // Parse converts markdown-ish text to simple HTML-ish markup and returns it.
 // strict -> escapes text except recognized quote lines.
