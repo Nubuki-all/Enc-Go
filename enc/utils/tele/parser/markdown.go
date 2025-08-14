@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	g.MessageEntityMention"unicode/utf16"
+	//"unicode/utf16"
 	"unicode/utf8"
 
 	"github.com/gotd/td/tg"
