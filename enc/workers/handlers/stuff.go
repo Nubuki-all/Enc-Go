@@ -9,6 +9,7 @@ import (
 	"github.com/celestix/gotgproto/dispatcher"
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
+	"github.com/gotd/td/telegram/message/markup"
 
 	"enc/config"
 	"enc/internal/bot"
@@ -51,7 +52,6 @@ func StartEx(ctx *ext.Context, update *ext.Update) error {
 
 func ButtonCallback(ctx *ext.Context, update *ext.Update) error {
 	query := update.CallbackQuery
-	fmt.Println(update.EffectiveMessage)
 	_, _ = ctx.AnswerCallback(&tg.MessagesSetBotCallbackAnswerRequest{
 		Alert:   true,
 		QueryID: query.QueryID,
@@ -129,7 +129,7 @@ func Start(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	} else {
 		outMsg = msg2
 	}
-	markup := &tg.ReplyInlineMarkup{
+	replyMarkup := &tg.ReplyInlineMarkup{
 		Rows: []tg.KeyboardButtonRow{
 			{
 				Buttons: []tg.KeyboardButtonClass{
@@ -161,7 +161,7 @@ func Start(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	_, err := msg.Reply(
 		outMsg,
 		&tele.ReplyOptions{
-			ReplyMarkup: markup,
+			ReplyMarkup: replyMarkup,
 		},
 	)
 	if err != nil {
@@ -169,4 +169,39 @@ func Start(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 		return err
 	}
 	return nil
+}
+
+func Help(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
+	text := "**⛩️ An Encode bot**\n\n+" +
+    "This bot encodes videos With your custom ffmpeg or handbrake-cli settings." +
+    "\n+Easy to Use (Depends)\n" +
+    "-Due to your custom Settings & hosting server bot may or may not take a long time to encode" +
+    ".\n\nJust Forward a Video…/videos" +
+    "\n\nFor available commands click the Commands button below.", 
+    replyMarkup := markup.InlineKeyboard(
+    	markup.Row(
+    		markup.Callback(
+    			"Commands",
+    			[]byte("icommands"),
+    		),
+    	),
+    	markup.Row(
+    		markup.Callback(
+    			"🔙 Back",
+    			[]byte("back_cb"),
+    		),
+    	),
+    )
+    _, err := msg.Edit(
+		text,
+		&tele.EditOptions{
+			ReplyMarkup: replyMarkup,
+		},
+	)
+	if err != nil {
+		logger.ErrorW(err.Error())
+		return err
+	}
+	return nil
+    
 }

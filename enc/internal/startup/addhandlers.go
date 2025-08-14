@@ -31,6 +31,7 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 
 func AddCBHandlers(dispatch dispatcher.Dispatcher) {
 	dispatch.AddHandler(onevent.NewCallbackQuery(filters.CallbackQuery.Prefix("cb_"), handlers.ButtonCallback))
+	dispatch.AddHandler(onevent.NewCallbackQuery(filters.CallbackQuery.Prefix("ihelp"), CallbackEventHandler(handlers.Help)))
 }
 
 func BaseEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message) error) func(*ext.Context, *ext.Update) error {
@@ -43,6 +44,25 @@ func BaseEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message) err
 			chat.GetID(),
 			user.ID,
 		)
+		err := handler(ctx, update, msg)
+		if err != nil {
+			logger.ErrorW(err.Error())
+		}
+		return err
+	}
+}
+
+
+func CallbackEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message) error) func(*ext.Context, *ext.Update) error {
+	return func(ctx *ext.Context, update *ext.Update) error {
+		user := update.EffectiveUser()
+		chat := update.EffectiveChat()
+		msg := &tele.Message{
+			Ctx: ctx,
+			ChatID: chat.GetID(),
+			SenderID: user.ID,
+			ID: update.CallbackQuery.MsgID
+		}
 		err := handler(ctx, update, msg)
 		if err != nil {
 			logger.ErrorW(err.Error())

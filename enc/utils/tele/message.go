@@ -20,9 +20,15 @@ type Message struct {
 	User     *tg.User
 }
 
+
+type EditOptions struct {
+	ReplyMarkup tg.ReplyMarkupClass
+	// will add more fields as required
+}
+
 type ReplyOptions struct {
 	ReplyMarkup tg.ReplyMarkupClass
-	// will add as required
+	// will add more fields as required
 }
 
 // NewFromGotg constructs a wrapper from a concrete *gp.Message.
@@ -44,7 +50,7 @@ func (m *Message) RawMessage() *gp.Message {
 func (m *Message) ReplyText(text string) (*Message, error) {
 	pText, entities, _ := parser.Parse(text, true)
 	inputRep := &tg.InputReplyToMessage{
-		ReplyToMsgID: m.Raw.Message.ID,
+		ReplyToMsgID: m.ID,
 	}
 	msg, err := m.Ctx.SendMessage(m.ChatID, &tg.MessagesSendMessageRequest{
 		Message:  pText,
@@ -61,7 +67,7 @@ func (m *Message) ReplyText(text string) (*Message, error) {
 func (m *Message) Reply(text string, replyOptions *ReplyOptions) (*Message, error) {
 	pText, entities, _ := parser.Parse(text, true)
 	inputRep := &tg.InputReplyToMessage{
-		ReplyToMsgID: m.Raw.Message.ID,
+		ReplyToMsgID: m.ID,
 	}
 	msg, err := m.Ctx.SendMessage(m.ChatID, &tg.MessagesSendMessageRequest{
 		Message:     pText,
@@ -87,8 +93,30 @@ func (m *Message) EditText(text string) (*Message, error) {
 	if err != nil {
 		return nil, err
 	}
+	if m.Raw == nil {
+		return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID), nil
+	}
 	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.SenderID), nil
 }
+
+func (m *Message) Edit(text string, editOptions *EditOptions) (*Message, error) {
+	pText, entities, _ := parser.Parse(text, true)
+	msg, err := m.Ctx.EditMessage(m.ChatID, &tg.MessagesEditMessageRequest{
+		ID:       m.ID,
+		Message:  pText,
+		Entities: entities,
+		ReplyMarkup: editOptions.ReplyMarkup,
+	},
+	)
+	if err != nil {
+		return nil, err
+	}
+	if m.Raw == nil {
+		return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID), nil
+	}
+	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.SenderID), nil
+}
+
 
 func SendMessage(id int64, text string) error {
 	peer, _ := GetPeer(id)
