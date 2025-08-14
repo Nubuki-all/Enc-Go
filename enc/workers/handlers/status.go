@@ -39,6 +39,7 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	if hostInfo != nil {
 		hostname = hostInfo.Hostname
 	}
+	hostUptime, _ := host.Uptime()
 
 	// Load averages (1m,5m,15m)
 	loadAvg := ""
@@ -102,6 +103,9 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	b.WriteString(
 		fmt.Sprintf("**Version:** `%s`\n", version),
 	)
+	b.WriteString(
+		fmt.Sprintf("**Bot Uptime:** `%s`\n", uptime),
+	)
 	b.WriteString("\n")
 	if hostname != "" {
 		b.WriteString(
@@ -122,7 +126,10 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 		)
 	}
 	b.WriteString(
-		fmt.Sprintf("**Bot Uptime:** `%s`\n", uptime),
+		fmt.Sprintf(
+			"**Host Uptime:** `%s`\n",
+			utils.TimeFormatter(float64(hostUptime)),
+		),
 	)
 	if loadAvg != "" {
 		b.WriteString(fmt.Sprintf("**Load (1,5,15):** `%s`\n", loadAvg))
@@ -152,6 +159,7 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 			hSwapTotal,
 			swapS.UsedPercent,
 		),
+
 	)
 	b.WriteString(
 		fmt.Sprintf(
@@ -163,8 +171,7 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 		),
 	)
 	b.WriteString(
-		fmt.Sprintf(
-			"**Network:**\n`↑ %s`\n`↓ %s`\n",
+		fmt.Sprintf("**Network:**\n`↑ %s`\n`↓ %s`\n",
 			hSent,
 			hRecv,
 		),
