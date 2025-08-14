@@ -11,17 +11,17 @@ import (
 	"strings"
 	"time"
 
+	"enc"
+	"enc/internal/bot"
+	"enc/utils" // <-- replace with your actual utils import path
 	"github.com/celestix/gotgproto/ext"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
 	"github.com/shirou/gopsutil/v3/host"
+	"github.com/shirou/gopsutil/v3/load"
 	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/shirou/gopsutil/v3/net"
 	"github.com/shirou/gopsutil/v3/process"
-	"github.com/shirou/gopsutil/v3/load"
-	"enc"
-	"enc/internal/bot"
-	"enc/utils" // <-- replace with your actual utils import path
 )
 
 // StatusHandler gathers system + bot statistics using gopsutil and sends them
