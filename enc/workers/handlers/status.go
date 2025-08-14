@@ -100,19 +100,21 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 
 	// Build message
 	var b strings.Builder
+	b.WriteString("> **Bot**\n")
 	b.WriteString(
 		fmt.Sprintf("**Version:** `%s`\n", version),
 	)
 	b.WriteString(
 		fmt.Sprintf(
-			"**Bot Uptime:** `%s`\n",
+			"**Uptime:** `%s`\n",
 			utils.TimeFormatter(uptime),
 		),
 	)
 	b.WriteString("\n")
+	b.WriteString("> **Host**\n")
 	if hostname != "" {
 		b.WriteString(
-			fmt.Sprintf("**Host:** `%s`\n", hostname),
+			fmt.Sprintf("**Name:** `%s`\n", hostname),
 		)
 	}
 	if hostInfo != nil && hostInfo.Platform != "" {
@@ -130,7 +132,7 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	}
 	b.WriteString(
 		fmt.Sprintf(
-			"**Host Uptime:** `%s`\n",
+			"**Uptime:** `%s`\n",
 			utils.TimeFormatter(float64(hostUptime)),
 		),
 	)
@@ -141,7 +143,7 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 
 	b.WriteString(
 		fmt.Sprintf(
-			"**CPU:** `%.2f%%`\n**Physical:** `%d`\n**Logical:** `%d`\n\n",
+			"> **CPU**\n**Usage:** `%.2f%%`\n**Physical:** `%d`\n**Logical:** `%d`\n\n",
 			cpuPerc,
 			physicalCores,
 			logicalCores,
@@ -149,10 +151,10 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	)
 	b.WriteString(
 		fmt.Sprintf(
-			"**Memory:** `%.2f%%`\n**Total:** `%s`\n**Used:** `%s`\n**Available:**`%s`\n\n",
-			vm.UsedPercent,
+			"> **Memory**\n**Total:** `%s`\n**Used:** `%s` (`%.2f%%`)\n**Available:**`%s`\n\n",
 			hMemTotal,
 			hMemUsed,
+			vm.UsedPercent,
 			hMemAvail,
 		),
 	)
@@ -165,15 +167,15 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	)
 	b.WriteString(
 		fmt.Sprintf(
-			"**Disk (/):** `%.2f%%`\n**Total:** `%s`\n**Used:** `%s`\n**Free:** `%s`\n\n",
-			du.UsedPercent,
+			"> **Disk Usage (/)**\n**Total:** `%s`\n**Used:** `%s` (`%.2f%%`)\n**Free:** `%s`\n\n",
 			hTotal,
 			hUsed,
+			du.UsedPercent,
 			hFree,
 		),
 	)
 	b.WriteString(
-		fmt.Sprintf("**Network:**\n`↑ %s`\n`↓ %s`\n",
+		fmt.Sprintf("> **Network**\n`↑ %s`\n`↓ %s`\n",
 			hSent,
 			hRecv,
 		),
@@ -181,7 +183,7 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	b.WriteString("\n")
 	b.WriteString(
 		fmt.Sprintf(
-			"**Process (self):**\n**CPU:** `%.2f%%`\n**RSS:** `%s`\n**CWD:** `%s`\n",
+			"> **Process (self)**\n**CPU:** `%.2f%%`\n**RSS:** `%s`\n**CWD:** `%s`\n",
 			procCPU,
 			utils.GetReadableFileSize(int64(procMem)),
 			procCWD,
@@ -189,7 +191,7 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	)
 	b.WriteString("\n")
 	b.WriteString(
-		fmt.Sprintf("> **Runtime:**\n**Version:** `%s`\n**Arch:** `%s`\n",
+		fmt.Sprintf("> **Runtime**\n**Version:** `%s`\n**Arch:** `%s`\n",
 			runtime.Version(),
 			runtime.GOARCH,
 		),
