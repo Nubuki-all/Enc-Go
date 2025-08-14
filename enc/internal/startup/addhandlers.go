@@ -61,7 +61,7 @@ func CallbackEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message)
 			Ctx: ctx,
 			ChatID: chat.GetID(),
 			SenderID: user.ID,
-			ID: update.CallbackQuery.MsgID
+			ID: update.CallbackQuery.MsgID,
 		}
 		err := handler(ctx, update, msg)
 		if err != nil {
