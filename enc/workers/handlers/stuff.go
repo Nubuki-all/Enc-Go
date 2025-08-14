@@ -177,7 +177,7 @@ func Help(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
     "\n+Easy to Use (Depends)\n" +
     "-Due to your custom Settings & hosting server bot may or may not take a long time to encode" +
     ".\n\nJust Forward a Video…/videos" +
-    "\n\nFor available commands click the Commands button below.", 
+    "\n\nFor available commands click the Commands button below."
     replyMarkup := markup.InlineKeyboard(
     	markup.Row(
     		markup.Callback(
