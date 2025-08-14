@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	//"unicode/utf16"
+	g.MessageEntityMention"unicode/utf16"
 	"unicode/utf8"
 
 	"github.com/gotd/td/tg"
@@ -514,10 +514,9 @@ func (m *Markdown) Unparse(text string, entities []tg.MessageEntityClass) (strin
 			end := int(v.Offset + v.Length)
 			spos := utf16IndexToBytePos(text, start)
 			epos := utf16IndexToBytePos(text, end)
-		case *tg.MessageEntityTextMention:
+		case *tg.MessageEntityMention:
 				inserts = append(inserts, insertion{pos: epos, str: fmt.Sprintf("](tg://user?id=%d)", tv.User.GetID())})
 				inserts = append(inserts, insertion{pos: spos, str: "["})
-			}
 		case *tg.MessageEntityCustomEmoji:
 			start := int(v.Offset)
 			end := int(v.Offset + v.Length)
