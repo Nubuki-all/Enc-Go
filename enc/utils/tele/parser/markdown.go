@@ -1,4 +1,4 @@
-// package parser provides a lightweight Markdown <-> HTML-ish converter
+// package markdown provides a lightweight Markdown <-> HTML-ish converter
 // adapted from the Pyrogram snippet you posted. It is tuned to work with
 // github.com/gotd/td (tg.MessageEntity classes).
 package parser
@@ -10,384 +10,264 @@ import (
 	"sort"
 	"strings"
 	"unicode/utf16"
-	//"unicode/utf8"
 
 	"github.com/gotd/td/tg"
-	// Replace this with your actual HTML->(message,entities) parser package.
+
 	"enc/utils/tele/parser/htmlparser"
 )
 
-// Markdown delimiter constants (Pyrogram-like)
 const (
-	BOLD_DELIM       = "**"
-	ITALIC_DELIM     = "__"
-	UNDERLINE_DELIM  = "--"
-	STRIKE_DELIM     = "~~"
-	SPOILER_DELIM    = "||"
-	CODE_DELIM       = "`"
-	PRE_DELIM        = "```"
-	BLOCKQUOTE_DELIM = ">"
+	BOLD_DELIM                      = "**"
+	ITALIC_DELIM                    = "__"
+	UNDERLINE_DELIM                 = "--"
+	STRIKE_DELIM                    = "~~"
+	SPOILER_DELIM                   = "||"
+	CODE_DELIM                      = "`"
+	PRE_DELIM                       = "```"
+	BLOCKQUOTE_DELIM                = ">"
+	BLOCKQUOTE_EXPANDABLE_DELIM     = "**>"
+	BLOCKQUOTE_EXPANDABLE_END_DELIM = "||"
 )
 
-// Markup templates
-const (
-	OPENING_TAG  = "<%s>"
-	CLOSING_TAG  = "</%s>"
-	URL_MARKUP   = `<a href="%s">%s</a>`
-	EMOJI_MARKUP = `<emoji id=%s>%s</emoji>`
-)
-
-// Fixed width tokens that disable other parsing while opened
 var FIXED_WIDTH_DELIMS = map[string]bool{
 	CODE_DELIM: true,
 	PRE_DELIM:  true,
 }
 
-// Map delimiters to HTML tag names
-var delimToTag = map[string]string{
-	BOLD_DELIM:      "b",
-	ITALIC_DELIM:    "i",
-	UNDERLINE_DELIM: "u",
-	STRIKE_DELIM:    "s",
-	CODE_DELIM:      "code",
-	PRE_DELIM:       "pre",
-	SPOILER_DELIM:   "spoiler",
+// MARKDOWN_RE roughly matches the Python one: any of the delimiters OR an optional
+// emoji/link syntax: (![text](url) or [text](url) with optional ! for emoji).
+var markdownRe = regexp.MustCompile(
+	fmt.Sprintf(`(%s|%s|%s|%s|%s|%s|%s)|(!?)\[(.+?)\]\((.+?)\)`,
+		regexp.QuoteMeta(PRE_DELIM),
+		regexp.QuoteMeta(CODE_DELIM),
+		regexp.QuoteMeta(STRIKE_DELIM),
+		regexp.QuoteMeta(UNDERLINE_DELIM),
+		regexp.QuoteMeta(ITALIC_DELIM),
+		regexp.QuoteMeta(BOLD_DELIM),
+		regexp.QuoteMeta(SPOILER_DELIM),
+	),
+)
+
+// HTML templates
+func opening(tag string) string { return "<" + tag + ">" }
+func closing(tag string) string { return "</" + tag + ">" }
+func urlMarkup(url, text string) string {
+	return fmt.Sprintf(`<a href="%s">%s</a>`, html.EscapeString(url), html.EscapeString(text))
 }
 
-// Markdown is a lightweight parser state holder (kept for symmetry with Pyrogram)
-type Markdown struct{}
-
-// NewMarkdown returns a new Markdown parser object
-func NewMarkdown() *Markdown {
-	return &Markdown{}
+func emojiMarkup(id, char string) string {
+	// keep same shape as Pyrogram: <emoji id=...>char</emoji>
+	return fmt.Sprintf(`<emoji id=%s>%s</emoji>`, html.EscapeString(id), html.EscapeString(char))
 }
 
-// EscapeAndCreateQuotes port of Pyrogram's escape_and_create_quotes
-// strict==true means HTML-escape non-quote lines.
-func (m *Markdown) EscapeAndCreateQuotes(text string, strict bool) string {
-	lines := strings.Split(text, "\n")
-
-	htmlEscapedIdx := map[int]bool{}
-	type pair struct {
-		idx int
-		txt string
+// Helper: replace only once at given index (like utils.replace_once)
+func replaceOnceAt(s, old, repl string, at int) (string, error) {
+	// confirm old occurs at 'at'
+	if at < 0 || at+len(old) > len(s) {
+		// fallback to strings.Replace once
+		return strings.Replace(s, old, repl, 1), nil
 	}
-	toQuote := make([]pair, 0)
+	if s[at:at+len(old)] != old {
+		// fallback
+		return strings.Replace(s, old, repl, 1), nil
+	}
+	return s[:at] + repl + s[at+len(old):], nil
+}
+
+// escapeAndCreateQuotes implements the blockquote handling and optional HTML escaping
+func escapeAndCreateQuotes(text string, strict bool) string {
+	lines := strings.Split(text, "\n")
+	htmlEscapedIdx := map[int]bool{}
+	var toQuoteList [][2]interface{} // [ {index, parsed_line} ]
 
 	createBlockquote := func(expandable bool) {
-		if len(toQuote) == 0 {
+		if len(toQuoteList) == 0 {
 			return
 		}
-		parts := make([]string, 0, len(toQuote))
-		for _, p := range toQuote {
-			parts = append(parts, p.txt)
+		parts := make([]string, len(toQuoteList))
+		firstIdx := toQuoteList[0][0].(int)
+		for i, p := range toQuoteList {
+			parts[i] = p[1].(string)
 		}
 		joined := strings.Join(parts, "\n")
 		tag := "<blockquote>"
 		if expandable {
 			tag = `<blockquote expandable>`
 		}
-		firstIdx := toQuote[0].idx
 		lines[firstIdx] = tag + joined + "</blockquote>"
-		for _, p := range toQuote[1:] {
-			lines[p.idx] = ""
+		for _, p := range toQuoteList[1:] {
+			lines[p[0].(int)] = "" // placeholder
 		}
-		toQuote = toQuote[:0]
+		toQuoteList = toQuoteList[:0]
 	}
 
-	// Expandable blockquote handling
-	insideExpandable := false
-	for i, ln := range lines {
-		if strings.HasPrefix(ln, "**>") && !insideExpandable {
-			trimmed := ln[len("**>"):]
-			if strings.HasPrefix(trimmed, " ") {
-				trimmed = trimmed[1:]
+	insideBlockquote := false
+	for idx, line := range lines {
+		// Expandable begin
+		if strings.HasPrefix(line, BLOCKQUOTE_EXPANDABLE_DELIM) && !insideBlockquote {
+			// strip leading delim and optional space
+			strip := strings.TrimPrefix(line, BLOCKQUOTE_EXPANDABLE_DELIM)
+			if strings.HasPrefix(strip, " ") {
+				strip = strings.TrimPrefix(strip, " ")
 			}
+			parsed := strip
 			if strict {
-				trimmed = html.EscapeString(trimmed)
+				parsed = html.EscapeString(parsed)
 			}
-			toQuote = append(toQuote, pair{i, trimmed})
-			htmlEscapedIdx[i] = true
-			insideExpandable = true
+			toQuoteList = append(toQuoteList, [2]interface{}{idx, parsed})
+			htmlEscapedIdx[idx] = true
+			insideBlockquote = true
 			continue
-		} else if insideExpandable && strings.HasSuffix(ln, "||") {
-			ln2 := ln
-			if strings.HasPrefix(ln2, ">") {
-				ln2 = ln2[len(">"):]
-				if strings.HasPrefix(ln2, " ") {
-					ln2 = ln2[1:]
+		}
+
+		// Expandable end
+		if strings.HasSuffix(line, BLOCKQUOTE_EXPANDABLE_END_DELIM) && insideBlockquote {
+			// remove leading ">" if present for last line
+			if strings.HasPrefix(line, BLOCKQUOTE_DELIM) {
+				line = strings.TrimPrefix(line, BLOCKQUOTE_DELIM)
+				if strings.HasPrefix(line, " ") {
+					line = strings.TrimPrefix(line, " ")
 				}
 			}
-			ln2 = ln2[:len(ln2)-2]
+			strip := line[:len(line)-len(BLOCKQUOTE_EXPANDABLE_END_DELIM)]
+			parsed := strip
 			if strict {
-				ln2 = html.EscapeString(ln2)
+				parsed = html.EscapeString(parsed)
 			}
-			toQuote = append(toQuote, pair{i, ln2})
-			htmlEscapedIdx[i] = true
-			insideExpandable = false
+			toQuoteList = append(toQuoteList, [2]interface{}{idx, parsed})
+			htmlEscapedIdx[idx] = true
+			insideBlockquote = false
 			createBlockquote(true)
 			continue
 		}
-		if insideExpandable {
-			ln2 := ln
-			if strings.HasPrefix(ln2, ">") {
-				ln2 = ln2[len(">"):]
-				if strings.HasPrefix(ln2, " ") {
-					ln2 = ln2[1:]
-				}
+
+		if insideBlockquote {
+			// strip leading ">" and optional space
+			strip := strings.TrimPrefix(line, BLOCKQUOTE_DELIM)
+			if strings.HasPrefix(strip, " ") {
+				strip = strings.TrimPrefix(strip, " ")
 			}
+			parsed := strip
 			if strict {
-				ln2 = html.EscapeString(ln2)
+				parsed = html.EscapeString(parsed)
 			}
-			toQuote = append(toQuote, pair{i, ln2})
-			htmlEscapedIdx[i] = true
+			toQuoteList = append(toQuoteList, [2]interface{}{idx, parsed})
+			htmlEscapedIdx[idx] = true
 		}
 	}
 
-	// Single-line / continued quotes
-	for i, ln := range lines {
-		if ln == "" {
+	// Single/continued quotes
+	for idx, line := range lines {
+		if line == "" {
 			continue
 		}
-		if strings.HasPrefix(ln, ">") {
-			trimmed := ln[len(">"):]
-			if strings.HasPrefix(trimmed, " ") {
-				trimmed = trimmed[1:]
+		if strings.HasPrefix(line, BLOCKQUOTE_DELIM) {
+			strip := strings.TrimPrefix(line, BLOCKQUOTE_DELIM)
+			if strings.HasPrefix(strip, " ") {
+				strip = strings.TrimPrefix(strip, " ")
 			}
+			parsed := strip
 			if strict {
-				trimmed = html.EscapeString(trimmed)
+				parsed = html.EscapeString(parsed)
 			}
-			toQuote = append(toQuote, pair{i, trimmed})
-			htmlEscapedIdx[i] = true
-		} else if len(toQuote) > 0 {
+			toQuoteList = append(toQuoteList, [2]interface{}{idx, parsed})
+			htmlEscapedIdx[idx] = true
+		} else if len(toQuoteList) > 0 {
 			createBlockquote(false)
 		}
 	}
-	// Final flush
+	// final flush
+		// Final flush
 	createBlockquote(false)
 
-	// Escape non-quoted lines if strict
 	if strict {
-		for i, ln := range lines {
-			if _, ok := htmlEscapedIdx[i]; ok {
-				continue
+		for i, line := range lines {
+			if _, ok := htmlEscapedIdx[i]; !ok {
+				lines[i] = html.EscapeString(line)
 			}
-			lines[i] = html.EscapeString(ln)
 		}
 	}
 
-	// Return joined lines preserving blank lines (empty strings remain)
+	// Return joined lines preserving blank lines (do NOT drop empty placeholders).
+	// Previously we removed empty strings here which collapsed double newlines.
 	return strings.Join(lines, "\n")
 }
 
-// helper to escape HTML attribute value
-func escapeAttr(s string) string {
-	return strings.ReplaceAll(html.EscapeString(s), `"`, "&quot;")
-}
 
-// Parse tokenizes and converts markdown -> HTML-like -> (message, entities via htmlparser)
-func (m *Markdown) Parse(text string, strict bool) (string, []tg.MessageEntityClass, error) {
-	// Step 1: escape & create quotes (Pyrogram-like)
-	text = m.EscapeAndCreateQuotes(text, strict)
+// Parse converts markdown-ish text to simple HTML-ish markup and returns it.
+// strict -> escapes text except recognized quote lines.
+// Parse converts markdown-ish text to simple HTML-ish markup and returns it.
+// strict -> escapes text except recognized quote lines.
+func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
+	// 1) Handle blockquotes and initial escaping
+	text := escapeAndCreateQuotes(input, strict)
 
-	// Build alternation pattern for delimiters in the same order as Pyrogram
-	delims := []string{PRE_DELIM, CODE_DELIM, STRIKE_DELIM, UNDERLINE_DELIM, ITALIC_DELIM, BOLD_DELIM, SPOILER_DELIM}
-	escaped := make([]string, 0, len(delims))
-	for _, d := range delims {
-		escaped = append(escaped, regexp.QuoteMeta(d))
-	}
-	dPattern := strings.Join(escaped, "|")
-	// pattern groups: (delim)|(!?)\[([^\]]+?)\]\(([^)]+?)\)
-	pattern := fmt.Sprintf("(%s)|(!?)\\[([^\\]]+?)\\]\\(([^)]+?)\\)", dPattern)
-	re := regexp.MustCompile(pattern)
+	// 2) Convert markdown -> HTML-like. Use sane ordered regex replacements.
+	//    Order: fenced pre (```lang\n...\```), emoji ( ![a](tg://emoji?id=123) ), links, inline code,
+	//    then bold, italic, underline, strike, spoiler.
 
-	matches := re.FindAllStringSubmatchIndex(text, -1)
-
-	// segments will collect slices of the eventual HTML-like text (we'll join later)
-	segments := make([]string, 0, len(matches)*2+4)
-	last := 0
-
-	// placeholders bookkeeping for unmatched-open handling
-	nextPlaceholderID := 1
-	placeholderDelim := map[string]string{} // placeholder -> delim
-	placeholderMatched := map[string]bool{} // placeholder -> matched?
-	openStacks := map[string][]string{}     // delim -> stack of placeholders
-
-	pushPlaceholder := func(delim string) string {
-		ph := fmt.Sprintf("<<MD-OPEN-%d>>", nextPlaceholderID)
-		nextPlaceholderID++
-		placeholderDelim[ph] = delim
-		placeholderMatched[ph] = false
-		openStacks[delim] = append(openStacks[delim], ph)
-		return ph
-	}
-	popPlaceholder := func(delim string) (string, bool) {
-		stack := openStacks[delim]
-		if len(stack) == 0 {
-			return "", false
+	// fenced pre with optional language (DOTALL)
+	rePre := regexp.MustCompile("(?s)```([^\n]*)\n(.*?)```")
+	text = rePre.ReplaceAllStringFunc(text, func(m string) string {
+		parts := rePre.FindStringSubmatch(m)
+		lang := strings.TrimSpace(parts[1])
+		body := parts[2]
+		if lang != "" {
+			return `<pre language="` + html.EscapeString(lang) + `">` + html.EscapeString(body) + `</pre>`
 		}
-		lastIdx := len(stack) - 1
-		ph := stack[lastIdx]
-		openStacks[delim] = stack[:lastIdx]
-		return ph, true
-	}
+		return `<pre>` + html.EscapeString(body) + `</pre>`
+	})
 
-	for _, idxs := range matches {
-		fullStart, fullEnd := idxs[0], idxs[1]
-		// append raw slice between last and this match
-		if fullStart > last {
-			segments = append(segments, text[last:fullStart])
-		}
+	// emoji notation: ![emoji_char](tg://emoji?id=123)
+	reEmoji := regexp.MustCompile(`!\[([^\]]+)\]\(tg://emoji\?id=(\d+)\)`)
+	text = reEmoji.ReplaceAllString(text, `<emoji id=$2>$1</emoji>`)
 
-		// capture groups indices:
-		// [fullStart, fullEnd, g1s,g1e, g2s,g2e, g3s,g3e, g4s,g4e]
-		g1s, g1e := idxs[2], idxs[3] // delim
-		g2s, g2e := idxs[4], idxs[5] // optional '!'
-		g3s, g3e := idxs[6], idxs[7] // label/text
-		g4s, g4e := idxs[8], idxs[9] // url
+	// links: [text](url) (handles tg://user, https, etc.)
+	// keep label non-greedy; labels spanning newlines are unusual but allowed by DOTALL
+	reLink := regexp.MustCompile(`(?s)\[(.+?)\]\((\S+?)\)`)
+	text = reLink.ReplaceAllStringFunc(text, func(m string) string {
+		parts := reLink.FindStringSubmatch(m)
+		label := html.EscapeString(parts[1])
+		url := html.EscapeString(parts[2])
+		return `<a href="` + url + `">` + label + `</a>`
+	})
 
-		// link / emoji
-		if g3s != -1 && g4s != -1 {
-			isEmoji := false
-			if g2s != -1 && g2e-g2s == 1 && text[g2s:g2e] == "!" {
-				isEmoji = true
-			}
-			label := text[g3s:g3e]
-			url := text[g4s:g4e]
-			if isEmoji && strings.HasPrefix(url, "tg://emoji") {
-				id := strings.TrimPrefix(url, "tg://emoji?id=")
-				segments = append(segments, fmt.Sprintf(EMOJI_MARKUP, escapeAttr(id), html.EscapeString(label)))
-			} else {
-				segments = append(segments, fmt.Sprintf(URL_MARKUP, escapeAttr(url), html.EscapeString(label)))
-			}
-			last = fullEnd
-			continue
-		}
+	// inline code: `code`  (explicitly disallow newlines inside inline code)
+	reCode := regexp.MustCompile("`([^`\\n]+)`")
+	text = reCode.ReplaceAllString(text, `<code>$1</code>`)
 
-		// delim handling
-		delim := ""
-		if g1s != -1 {
-			delim = text[g1s:g1e]
-		}
-		if delim == "" {
-			segments = append(segments, text[fullStart:fullEnd])
-			last = fullEnd
-			continue
-		}
+	// bold: **text**  — allow newlines inside bold (DOTALL)
+	reBold := regexp.MustCompile(`(?s)\*\*(.+?)\*\*`)
+	text = reBold.ReplaceAllString(text, `<b>$1</b>`)
 
-		// Fixed-width tokens handling (inline/backtick and fenced pre)
-		if FIXED_WIDTH_DELIMS[delim] {
-			// handle inline code (`)
-			if delim == CODE_DELIM {
-				searchFrom := fullEnd
-				nextIdx := strings.Index(text[searchFrom:], CODE_DELIM)
-				if nextIdx == -1 {
-					// no closing backtick; emit literal delim
-					segments = append(segments, delim)
-					last = fullEnd
-					continue
-				}
-				start := searchFrom
-				end := searchFrom + nextIdx
-				body := text[start:end]
-				segments = append(segments, fmt.Sprintf("<code>%s</code>", html.EscapeString(body)))
-				last = end + len(CODE_DELIM)
-				continue
-			}
+	// italic: __text__  — allow newlines
+	reItalic := regexp.MustCompile(`(?s)__(.+?)__`)
+	text = reItalic.ReplaceAllString(text, `<i>$1</i>`)
 
-			// fenced pre (```)
-			if delim == PRE_DELIM {
-				// If stack for PRE is empty -> this is opening; else closing.
-				if len(openStacks[PRE_DELIM]) == 0 {
-					after := fullEnd
-					lang := ""
-					if after < len(text) {
-						nl := strings.IndexByte(text[after:], '\n')
-						if nl >= 0 {
-							lang = strings.TrimSpace(text[after : after+nl])
-							if lang != "" {
-								segments = append(segments, fmt.Sprintf(`<pre language="%s">`, escapeAttr(lang)))
-							} else {
-								segments = append(segments, "<pre>")
-							}
-							// push placeholder to represent PRE open
-							_ = pushPlaceholder(PRE_DELIM)
-							last = fullEnd + nl + 1
-							continue
-						}
-					}
-					// fallback: no newline/lang -> treat as literal
-					segments = append(segments, delim)
-					last = fullEnd
-					continue
-				} else {
-					// closing PRE: pop and emit closing tag
-					ph, ok := popPlaceholder(PRE_DELIM)
-					if !ok {
-						segments = append(segments, delim)
-						last = fullEnd
-						continue
-					}
-					placeholderMatched[ph] = true
-					segments = append(segments, "</pre>")
-					last = fullEnd
-					continue
-				}
-			}
-		}
+	// underline: --text--  — allow newlines
+	reUnderline := regexp.MustCompile(`(?s)--(.+?)--`)
+	text = reUnderline.ReplaceAllString(text, `<u>$1</u>`)
 
-		// Non-fixed variable delimiter (bold/italic/underline/strike/spoiler)
-		if ph, ok := popPlaceholder(delim); ok {
-			// Found matching opener -> emit closing tag and mark opener matched
-			placeholderMatched[ph] = true
-			tag, _ := delimToTag[delim]
-			segments = append(segments, fmt.Sprintf(CLOSING_TAG, tag))
-			last = fullEnd
-			continue
-		}
+	// strike: ~~text~~  — allow newlines
+	reStrike := regexp.MustCompile(`(?s)~~(.+?)~~`)
+	text = reStrike.ReplaceAllString(text, `<s>$1</s>`)
 
-		// Otherwise, this is an opener: insert placeholder for later replacement
-		ph := pushPlaceholder(delim)
-		segments = append(segments, ph)
-		last = fullEnd
-	}
+	// spoiler: ||text||  — allow newlines
+	reSpoiler := regexp.MustCompile(`(?s)\|\|(.+?)\|\|`)
+	text = reSpoiler.ReplaceAllString(text, `<spoiler>$1</spoiler>`)
 
-	// append trailing text
-	if last < len(text) {
-		segments = append(segments, text[last:])
-	}
-
-	// Join segments to form HTML-like string (with placeholders)
-	full := strings.Join(segments, "")
-
-	// Final pass: replace placeholders
-	// Replace placeholders that were matched with opening tags; unmatched placeholders revert to raw delimiter text.
-	for ph, delim := range placeholderDelim {
-		tag, ok := delimToTag[delim]
-		if !ok {
-			// unknown delim -> restore raw delim
-			full = strings.ReplaceAll(full, ph, delim)
-			continue
-		}
-		if placeholderMatched[ph] {
-			openTag := fmt.Sprintf(OPENING_TAG, tag)
-			full = strings.ReplaceAll(full, ph, openTag)
-		} else {
-			full = strings.ReplaceAll(full, ph, delim)
-		}
-	}
-
-	// Delegate final HTML-like string to HTML parser that converts to plain message + entities.
-	parsed, err := htmlparser.Parse(full)
+	// 3) Now pass HTML-like result to htmlparser which will produce message + entities.
+	pOut, err := htmlparser.Parse(text)
 	if err != nil {
 		return "", nil, err
 	}
-	return parsed.Message, parsed.Entities, nil
+	// pOut.Message is UTF-8; pOut.Entities is []tg.MessageEntityClass
+	return pOut.Message, pOut.Entities, nil
 }
 
-// Unparse converts text + tg message entities into the markdown-delimited string.
-// It assumes entity offsets & lengths are in UTF-16 code units (Telegram style).
-func (m *Markdown) Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
+// Unparse converts a text and tg message entities into Markdown-ish plaintext (reconstructing delimiters).
+// Entities must be in the format produced by gotd/td (e.g. *tg.MessageEntityBold, *tg.MessageEntityItalic, ...).
+func Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
 	// convert to rune-slice to make offsets safe (the original code uses surrogate helpers)
 	// We'll operate on byte offsets, but use rune-index mapping for safety.
 	added := addSurrogatesForOffsets(text)
@@ -534,14 +414,8 @@ func removeSurrogates(s string) string {
 }
 
 func init() {
-	m := &Markdown{}
-	text, _, _ := m.Parse("**A bold\n\n Message 😂**", true)
+	text, _, _ := Parse("**A bold\n\n Message 😂**", true)
 	fmt.Println(text)
 	pOut, _ := htmlparser.Parse("**A bold\n\n Message ⚠️**")
 	fmt.Println(pOut.Message)
 }
-
-var (
-	MD    = &Markdown{}
-	Parse = MD.Parse
-)
