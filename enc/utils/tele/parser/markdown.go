@@ -533,6 +533,8 @@ func removeSurrogates(s string) string {
 	return string(decoded)
 }
 
+
+
 func init() {
 	m := &Markdown{}
 	text, _, _ := m.Parse("**A bold\n\n Message 😂**", true)
@@ -540,3 +542,5 @@ func init() {
 	pOut, _ := htmlparser.Parse("**A bold\n\n Message ⚠️**")
 	fmt.Println(pOut.Message)
 }
+
+var Parse = &Markdown{}.Parse
