@@ -515,8 +515,8 @@ func (m *Markdown) Unparse(text string, entities []tg.MessageEntityClass) (strin
 			spos := utf16IndexToBytePos(text, start)
 			epos := utf16IndexToBytePos(text, end)
 		case *tg.MessageEntityMention:
-				inserts = append(inserts, insertion{pos: epos, str: fmt.Sprintf("](tg://user?id=%d)", tv.User.GetID())})
-				inserts = append(inserts, insertion{pos: spos, str: "["})
+			inserts = append(inserts, insertion{pos: epos, str: fmt.Sprintf("](tg://user?id=%d)", tv.User.GetID())})
+			inserts = append(inserts, insertion{pos: spos, str: "["})
 		case *tg.MessageEntityCustomEmoji:
 			start := int(v.Offset)
 			end := int(v.Offset + v.Length)
@@ -553,7 +553,6 @@ func (m *Markdown) Unparse(text string, entities []tg.MessageEntityClass) (strin
 
 	return out, nil
 }
-
 
 func init() {
 	m := &Markdown{}
