@@ -1,6 +1,8 @@
 package bot
 
 import (
+	"time"
+
 	"enc/internal/bot/state"
 	"enc/internal/bot/types"
 	"github.com/siku2/arigo"
@@ -51,3 +53,6 @@ var (
 	ReleaseFilters    = []*types.MatchedFilterData{}
 	RenameFilters     = []*types.RenameFilterData{}
 )
+
+
+var BotStartTime  = time.Now()
