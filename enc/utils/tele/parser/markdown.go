@@ -540,6 +540,7 @@ func (m *Markdown) Unparse(text string, entities []tg.MessageEntityClass) (strin
 				inserts = append(inserts, insertion{pos: epos, str: fmt.Sprintf("](tg://emoji?id=%s)", tv.CustomEmojiID)})
 				inserts = append(inserts, insertion{pos: spos, str: "!["])
 			}
+			}
 		default:
 			// Unknown entity type — ignore
 		}
