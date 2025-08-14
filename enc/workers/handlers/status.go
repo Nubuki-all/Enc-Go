@@ -159,7 +159,6 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 			hSwapTotal,
 			swapS.UsedPercent,
 		),
-
 	)
 	b.WriteString(
 		fmt.Sprintf(
