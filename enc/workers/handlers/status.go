@@ -50,7 +50,7 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	logicalCores, _ := cpu.Counts(true)
 	physicalCores, _ := cpu.Counts(false)
 	cpuPerc := float64(0)
-	if p, err := cpu.Percent(time.Second *4, false); err == nil && len(p) > 0 {
+	if p, err := cpu.Percent(time.Second*4, false); err == nil && len(p) > 0 {
 		cpuPerc = p[0]
 	}
 
