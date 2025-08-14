@@ -110,9 +110,8 @@ func DownloadLinks() {
 }
 
 func SetupFlags() {
-	if config.Conf.NoTempPM {
-		bot.TempOnlyInGroup = true
-		logger.InfoW("Only allow PM in groups")
+	if config.Conf.NoPM {
+		logger.InfoW("Will Only work for Non-owners in groups")
 	}
 	if config.Conf.ReportFailed {
 		bot.ReportFailedDl = true
