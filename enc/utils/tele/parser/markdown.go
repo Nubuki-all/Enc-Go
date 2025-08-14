@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	"unicode/utf16"
+	//"unicode/utf16"
 	"unicode/utf8"
 
 	"github.com/gotd/td/tg"
@@ -443,7 +443,7 @@ func (m *Markdown) Unparse(text string, entities []tg.MessageEntityClass) (strin
 			epos := utf16IndexToBytePos(text, end)
 			inserts = append(inserts, insertion{pos: epos, str: UNDERLINE_DELIM})
 			inserts = append(inserts, insertion{pos: spos, str: UNDERLINE_DELIM})
-		case *tg.MessageEntityStrikethrough:
+		case *tg.MessageEntityStrike:
 			start := int(v.Offset)
 			end := int(v.Offset + v.Length)
 			spos := utf16IndexToBytePos(text, start)
@@ -458,10 +458,8 @@ func (m *Markdown) Unparse(text string, entities []tg.MessageEntityClass) (strin
 			inserts = append(inserts, insertion{pos: epos, str: CODE_DELIM})
 			inserts = append(inserts, insertion{pos: spos, str: CODE_DELIM})
 		case *tg.MessageEntityPre:
-			lang := ""
-			if pv, ok := v.(*tg.MessageEntityPre); ok {
-				lang = pv.Language
-			}
+			lang := v.Language
+
 			start := int(v.Offset)
 			end := int(v.Offset + v.Length)
 			spos := utf16IndexToBytePos(text, start)
@@ -502,21 +500,21 @@ func (m *Markdown) Unparse(text string, entities []tg.MessageEntityClass) (strin
 			epos := utf16IndexToBytePos(text, end)
 			inserts = append(inserts, insertion{pos: epos, str: SPOILER_DELIM})
 			inserts = append(inserts, insertion{pos: spos, str: SPOILER_DELIM})
-		case *tg.MessageEntityTextUrl:
+		case *tg.MessageEntityTextURL:
 			start := int(v.Offset)
 			end := int(v.Offset + v.Length)
 			spos := utf16IndexToBytePos(text, start)
 			epos := utf16IndexToBytePos(text, end)
-			if tv, ok := v.(*tg.MessageEntityTextUrl); ok {
+			if tv, ok := v.(*tg.MessageEntityTextURL); ok {
 				inserts = append(inserts, insertion{pos: epos, str: fmt.Sprintf("](%s)", escapeAttr(tv.URL))})
 				inserts = append(inserts, insertion{pos: spos, str: "["})
 			}
-		case *tg.MessageEntityTextMention:
+		case *tg.MessageEntityMention:
 			start := int(v.Offset)
 			end := int(v.Offset + v.Length)
 			spos := utf16IndexToBytePos(text, start)
 			epos := utf16IndexToBytePos(text, end)
-			if tv, ok := v.(*tg.MessageEntityTextMention); ok {
+		case *tg.MessageEntityTextMention:
 				inserts = append(inserts, insertion{pos: epos, str: fmt.Sprintf("](tg://user?id=%d)", tv.User.GetID())})
 				inserts = append(inserts, insertion{pos: spos, str: "["})
 			}
@@ -556,6 +554,7 @@ func (m *Markdown) Unparse(text string, entities []tg.MessageEntityClass) (strin
 
 	return out, nil
 }
+
 
 func init() {
 	m := &Markdown{}
