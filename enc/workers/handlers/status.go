@@ -73,12 +73,16 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	selfPID := os.Getpid()
 	var procCPU float64
 	var procMem uint64
+	var procCWD string 
 	if p, err := process.NewProcess(int32(selfPID)); err == nil {
 		if c, err := p.CPUPercent(); err == nil {
 			procCPU = c
 		}
 		if m, err := p.MemoryInfo(); err == nil {
 			procMem = m.RSS
+		}
+		if cd, err := p.Cwd(); err == nil {
+			procCWD = cd
 		}
 	}
 
@@ -95,30 +99,93 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 
 	// Build message
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("**Version:** `%s`\n", version))
+	b.WriteString(
+		fmt.Sprintf("**Version:** `%s`\n", version),
+	)
 	b.WriteString("\n")
 	if hostname != "" {
-		b.WriteString(fmt.Sprintf("**Host:** `%s`\n", hostname))
+		b.WriteString(
+			fmt.Sprintf("**Host:** `%s`\n", hostname),
+		)
 	}
 	if hostInfo != nil && hostInfo.Platform != "" {
-		b.WriteString(fmt.Sprintf("**OS:** `%s %s %s`\n", hostInfo.Platform, hostInfo.PlatformVersion, runtime.GOARCH))
+		b.WriteString(
+			fmt.Sprintf("**OS:** `%s %s %s`\n",
+			hostInfo.Platform,
+			hostInfo.PlatformVersion,
+			runtime.GOARCH,
+			),
+		)
 	} else {
-		b.WriteString(fmt.Sprintf("**Platform:** `%s`\n", runtime.GOOS))
+		b.WriteString(
+			fmt.Sprintf("**Platform:** `%s`\n", runtime.GOOS),
+		)
 	}
-	b.WriteString(fmt.Sprintf("**Bot Uptime:** `%s`\n", uptime))
+	b.WriteString(
+		fmt.Sprintf("**Bot Uptime:** `%s`\n", uptime),
+	)
 	if loadAvg != "" {
 		b.WriteString(fmt.Sprintf("**Load (1,5,15):** `%s`\n", loadAvg))
 	}
 	b.WriteString("\n")
 
-	b.WriteString(fmt.Sprintf("**CPU:** `%.2f%%` (phys: %d, logical: %d)\n", cpuPerc, physicalCores, logicalCores))
-	b.WriteString(fmt.Sprintf("**Memory:** `%s` total • `%s` used • `%s` available • `%.2f%%`\n", hMemTotal, hMemUsed, hMemAvail, vm.UsedPercent))
-	b.WriteString(fmt.Sprintf("**Swap:** `%s` • `%.2f%%`\n", hSwapTotal, swapS.UsedPercent))
-	b.WriteString(fmt.Sprintf("**Disk (/):** `%s` total • `%s` used • `%s` free • `%.2f%%`\n", hTotal, hUsed, hFree, du.UsedPercent))
-	b.WriteString(fmt.Sprintf("**Network:** `↑ %s` • `↓ %s`\n", hSent, hRecv))
+	b.WriteString(
+		fmt.Sprintf(
+			"**CPU:** `%.2f%%`\n**Physical:** `%d`\n**Logical:** `%d`\n\n",
+			cpuPerc,
+			physicalCores,
+			logicalCores,
+		),
+	)
+	b.WriteString(
+		fmt.Sprintf(
+			"**Memory:** `%.2f%%`\n**Total:** `%s`\n**Used:** `%s`\n**Available:**`%s`\n\n",
+			vm.UsedPercent,
+			hMemTotal,
+			hMemUsed,
+			hMemAvail,
+		),
+	)
+	b.WriteString(
+		fmt.Sprintf(
+			"**Swap:** `%s` | **Used:**  `%.2f%%`\n\n",
+			hSwapTotal,
+			swapS.UsedPercent,
+		),
+
+	)
+	b.WriteString(
+		fmt.Sprintf(
+			"**Disk (/):** `%.2f%%`\n**Total:** `%s`\n**Used:** `%s`\n**Free:** `%s`\n\n",
+			du.UsedPercent,
+			hTotal,
+			hUsed,
+			hFree,
+		),
+	)
+	b.WriteString(
+		fmt.Sprintf(
+			"**Network:**\n`↑ %s`\n`↓ %s`\n",
+			hSent,
+			hRecv,
+		),
+	)
 	b.WriteString("\n")
-	b.WriteString(fmt.Sprintf("**Process (self):** CPU `%.2f%%` • RSS `%s`\n", procCPU, utils.GetReadableFileSize(int64(procMem))))
-	b.WriteString(fmt.Sprintf("**Runtime:** Go `%s` • Arch `%s`\n", runtime.Version(), runtime.GOARCH))
+	b.WriteString(
+		fmt.Sprintf(
+			"**Process (self):**\n**CPU:** `%.2f%%`\n**RSS:** `%s`\n**CWD:** `%s`\n",
+			procCPU,
+			utils.GetReadableFileSize(int64(procMem)),
+			procCWD,
+		),
+	)
+	b.WriteString("\n")
+	b.WriteString(
+		fmt.Sprintf("**Runtime:**\n**Version:** `%s`\n**Arch:** `%s`\n",
+		runtime.Version(),
+		runtime.GOARCH,
+		),
+	)
 
 	// Send reply
 	_, err := msg.ReplyText(b.String())
