@@ -19,14 +19,14 @@ import (
 
 // Markdown delimiter constants (Pyrogram-like)
 const (
-	BOLD_DELIM      = "**"
-	ITALIC_DELIM    = "__"
-	UNDERLINE_DELIM = "--"
-	STRIKE_DELIM    = "~~"
-	SPOILER_DELIM   = "||"
-	CODE_DELIM      = "`"
-	PRE_DELIM       = "```"
-	BLOCKQUOTE_DELIM                = ">"
+	BOLD_DELIM       = "**"
+	ITALIC_DELIM     = "__"
+	UNDERLINE_DELIM  = "--"
+	STRIKE_DELIM     = "~~"
+	SPOILER_DELIM    = "||"
+	CODE_DELIM       = "`"
+	PRE_DELIM        = "```"
+	BLOCKQUOTE_DELIM = ">"
 )
 
 // Markup templates
@@ -532,8 +532,6 @@ func removeSurrogates(s string) string {
 	decoded := utf16.Decode(u16)
 	return string(decoded)
 }
-
-
 
 func init() {
 	m := &Markdown{}
