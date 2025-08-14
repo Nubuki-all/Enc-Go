@@ -13,6 +13,7 @@ import (
 
 	"enc/internal/bot"
 	"enc/utils"
+	"enc/utils/tele"
 	"github.com/celestix/gotgproto/ext"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
@@ -86,15 +87,15 @@ func Status(ctx context.Context, update *ext.Update, msg *tele.Message) error {
 	}
 
 	// Format human-readable sizes (uses your helper)
-	hTotal := utils.GetReadableFileSize(du.Total)
-	hUsed := utils.GetReadableFileSize(du.Used)
-	hFree := utils.GetReadableFileSize(du.Free)
-	hSent := utils.GetReadableFileSize(netSent)
-	hRecv := utils.GetReadableFileSize(netRecv)
-	hMemTotal := utils.GetReadableFileSize(vm.Total)
-	hMemUsed := utils.GetReadableFileSize(vm.Used)
-	hMemAvail := utils.GetReadableFileSize(vm.Available)
-	hSwapTotal := utils.GetReadableFileSize(swapS.Total)
+	hTotal := utils.GetReadableFileSize(int64(du.Total))
+	hUsed := utils.GetReadableFileSize(int64(du.Used))
+	hFree := utils.GetReadableFileSize(int64(du.Free))
+	hSent := utils.GetReadableFileSize(int64(netSent))
+	hRecv := utils.GetReadableFileSize(int64(netRecv))
+	hMemTotal := utils.GetReadableFileSize(int64(vm.Total))
+	hMemUsed := utils.GetReadableFileSize(int64(vm.Used))
+	hMemAvail := utils.GetReadableFileSize(int64(vm.Available))
+	hSwapTotal := utils.GetReadableFileSize(int64(swapS.Total))
 
 	// Build message
 	var b strings.Builder
