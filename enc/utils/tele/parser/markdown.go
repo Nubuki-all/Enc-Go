@@ -10,418 +10,564 @@ import (
 	"sort"
 	"strings"
 	"unicode/utf16"
+	"unicode/utf8"
 
 	"github.com/gotd/td/tg"
-
+	// Replace this with your actual HTML->(message,entities) parser package.
 	"enc/utils/tele/parser/htmlparser"
 )
 
+// Markdown delimiter constants (Pyrogram-like)
 const (
-	BOLD_DELIM                      = "**"
-	ITALIC_DELIM                    = "__"
-	UNDERLINE_DELIM                 = "--"
-	STRIKE_DELIM                    = "~~"
-	SPOILER_DELIM                   = "||"
-	CODE_DELIM                      = "`"
-	PRE_DELIM                       = "```"
-	BLOCKQUOTE_DELIM                = ">"
-	BLOCKQUOTE_EXPANDABLE_DELIM     = "**>"
-	BLOCKQUOTE_EXPANDABLE_END_DELIM = "||"
+	BOLD_DELIM      = "**"
+	ITALIC_DELIM    = "__"
+	UNDERLINE_DELIM = "--"
+	STRIKE_DELIM    = "~~"
+	SPOILER_DELIM   = "||"
+	CODE_DELIM      = "`"
+	PRE_DELIM       = "```"
 )
 
+// Markup templates
+const (
+	OPENING_TAG  = "<%s>"
+	CLOSING_TAG  = "</%s>"
+	URL_MARKUP   = `<a href="%s">%s</a>`
+	EMOJI_MARKUP = `<emoji id=%s>%s</emoji>`
+)
+
+// Fixed width tokens that disable other parsing while opened
 var FIXED_WIDTH_DELIMS = map[string]bool{
 	CODE_DELIM: true,
 	PRE_DELIM:  true,
 }
 
-// MARKDOWN_RE roughly matches the Python one: any of the delimiters OR an optional
-// emoji/link syntax: (![text](url) or [text](url) with optional ! for emoji).
-var markdownRe = regexp.MustCompile(
-	fmt.Sprintf(`(%s|%s|%s|%s|%s|%s|%s)|(!?)\[(.+?)\]\((.+?)\)`,
-		regexp.QuoteMeta(PRE_DELIM),
-		regexp.QuoteMeta(CODE_DELIM),
-		regexp.QuoteMeta(STRIKE_DELIM),
-		regexp.QuoteMeta(UNDERLINE_DELIM),
-		regexp.QuoteMeta(ITALIC_DELIM),
-		regexp.QuoteMeta(BOLD_DELIM),
-		regexp.QuoteMeta(SPOILER_DELIM),
-	),
-)
-
-// HTML templates
-func opening(tag string) string { return "<" + tag + ">" }
-func closing(tag string) string { return "</" + tag + ">" }
-func urlMarkup(url, text string) string {
-	return fmt.Sprintf(`<a href="%s">%s</a>`, html.EscapeString(url), html.EscapeString(text))
+// Map delimiters to HTML tag names
+var delimToTag = map[string]string{
+	BOLD_DELIM:      "b",
+	ITALIC_DELIM:    "i",
+	UNDERLINE_DELIM: "u",
+	STRIKE_DELIM:    "s",
+	CODE_DELIM:      "code",
+	PRE_DELIM:       "pre",
+	SPOILER_DELIM:   "spoiler",
 }
 
-func emojiMarkup(id, char string) string {
-	// keep same shape as Pyrogram: <emoji id=...>char</emoji>
-	return fmt.Sprintf(`<emoji id=%s>%s</emoji>`, html.EscapeString(id), html.EscapeString(char))
+// Markdown is a lightweight parser state holder (kept for symmetry with Pyrogram)
+type Markdown struct{}
+
+// NewMarkdown returns a new Markdown parser object
+func NewMarkdown() *Markdown {
+	return &Markdown{}
 }
 
-// Helper: replace only once at given index (like utils.replace_once)
-func replaceOnceAt(s, old, repl string, at int) (string, error) {
-	// confirm old occurs at 'at'
-	if at < 0 || at+len(old) > len(s) {
-		// fallback to strings.Replace once
-		return strings.Replace(s, old, repl, 1), nil
-	}
-	if s[at:at+len(old)] != old {
-		// fallback
-		return strings.Replace(s, old, repl, 1), nil
-	}
-	return s[:at] + repl + s[at+len(old):], nil
-}
-
-// escapeAndCreateQuotes implements the blockquote handling and optional HTML escaping
-func escapeAndCreateQuotes(text string, strict bool) string {
+// EscapeAndCreateQuotes port of Pyrogram's escape_and_create_quotes
+// strict==true means HTML-escape non-quote lines.
+func (m *Markdown) EscapeAndCreateQuotes(text string, strict bool) string {
 	lines := strings.Split(text, "\n")
+
 	htmlEscapedIdx := map[int]bool{}
-	var toQuoteList [][2]interface{} // [ {index, parsed_line} ]
+	type pair struct {
+		idx int
+		txt string
+	}
+	toQuote := make([]pair, 0)
 
 	createBlockquote := func(expandable bool) {
-		if len(toQuoteList) == 0 {
+		if len(toQuote) == 0 {
 			return
 		}
-		parts := make([]string, len(toQuoteList))
-		firstIdx := toQuoteList[0][0].(int)
-		for i, p := range toQuoteList {
-			parts[i] = p[1].(string)
+		parts := make([]string, 0, len(toQuote))
+		for _, p := range toQuote {
+			parts = append(parts, p.txt)
 		}
 		joined := strings.Join(parts, "\n")
 		tag := "<blockquote>"
 		if expandable {
 			tag = `<blockquote expandable>`
 		}
+		firstIdx := toQuote[0].idx
 		lines[firstIdx] = tag + joined + "</blockquote>"
-		for _, p := range toQuoteList[1:] {
-			lines[p[0].(int)] = "" // placeholder
+		for _, p := range toQuote[1:] {
+			lines[p.idx] = ""
 		}
-		toQuoteList = toQuoteList[:0]
+		toQuote = toQuote[:0]
 	}
 
-	insideBlockquote := false
-	for idx, line := range lines {
-		// Expandable begin
-		if strings.HasPrefix(line, BLOCKQUOTE_EXPANDABLE_DELIM) && !insideBlockquote {
-			// strip leading delim and optional space
-			strip := strings.TrimPrefix(line, BLOCKQUOTE_EXPANDABLE_DELIM)
-			if strings.HasPrefix(strip, " ") {
-				strip = strings.TrimPrefix(strip, " ")
+	// Expandable blockquote handling
+	insideExpandable := false
+	for i, ln := range lines {
+		if strings.HasPrefix(ln, "**>") && !insideExpandable {
+			trimmed := ln[len("**>"):]
+			if strings.HasPrefix(trimmed, " ") {
+				trimmed = trimmed[1:]
 			}
-			parsed := strip
 			if strict {
-				parsed = html.EscapeString(parsed)
+				trimmed = html.EscapeString(trimmed)
 			}
-			toQuoteList = append(toQuoteList, [2]interface{}{idx, parsed})
-			htmlEscapedIdx[idx] = true
-			insideBlockquote = true
+			toQuote = append(toQuote, pair{i, trimmed})
+			htmlEscapedIdx[i] = true
+			insideExpandable = true
 			continue
-		}
-
-		// Expandable end
-		if strings.HasSuffix(line, BLOCKQUOTE_EXPANDABLE_END_DELIM) && insideBlockquote {
-			// remove leading ">" if present for last line
-			if strings.HasPrefix(line, BLOCKQUOTE_DELIM) {
-				line = strings.TrimPrefix(line, BLOCKQUOTE_DELIM)
-				if strings.HasPrefix(line, " ") {
-					line = strings.TrimPrefix(line, " ")
+		} else if insideExpandable && strings.HasSuffix(ln, "||") {
+			ln2 := ln
+			if strings.HasPrefix(ln2, ">") {
+				ln2 = ln2[len(">"):]
+				if strings.HasPrefix(ln2, " ") {
+					ln2 = ln2[1:]
 				}
 			}
-			strip := line[:len(line)-len(BLOCKQUOTE_EXPANDABLE_END_DELIM)]
-			parsed := strip
+			ln2 = ln2[:len(ln2)-2]
 			if strict {
-				parsed = html.EscapeString(parsed)
+				ln2 = html.EscapeString(ln2)
 			}
-			toQuoteList = append(toQuoteList, [2]interface{}{idx, parsed})
-			htmlEscapedIdx[idx] = true
-			insideBlockquote = false
+			toQuote = append(toQuote, pair{i, ln2})
+			htmlEscapedIdx[i] = true
+			insideExpandable = false
 			createBlockquote(true)
 			continue
 		}
-
-		if insideBlockquote {
-			// strip leading ">" and optional space
-			strip := strings.TrimPrefix(line, BLOCKQUOTE_DELIM)
-			if strings.HasPrefix(strip, " ") {
-				strip = strings.TrimPrefix(strip, " ")
+		if insideExpandable {
+			ln2 := ln
+			if strings.HasPrefix(ln2, ">") {
+				ln2 = ln2[len(">"):]
+				if strings.HasPrefix(ln2, " ") {
+					ln2 = ln2[1:]
+				}
 			}
-			parsed := strip
 			if strict {
-				parsed = html.EscapeString(parsed)
+				ln2 = html.EscapeString(ln2)
 			}
-			toQuoteList = append(toQuoteList, [2]interface{}{idx, parsed})
-			htmlEscapedIdx[idx] = true
+			toQuote = append(toQuote, pair{i, ln2})
+			htmlEscapedIdx[i] = true
 		}
 	}
 
-	// Single/continued quotes
-	for idx, line := range lines {
-		if line == "" {
+	// Single-line / continued quotes
+	for i, ln := range lines {
+		if ln == "" {
 			continue
 		}
-		if strings.HasPrefix(line, BLOCKQUOTE_DELIM) {
-			strip := strings.TrimPrefix(line, BLOCKQUOTE_DELIM)
-			if strings.HasPrefix(strip, " ") {
-				strip = strings.TrimPrefix(strip, " ")
+		if strings.HasPrefix(ln, ">") {
+			trimmed := ln[len(">"):]
+			if strings.HasPrefix(trimmed, " ") {
+				trimmed = trimmed[1:]
 			}
-			parsed := strip
 			if strict {
-				parsed = html.EscapeString(parsed)
+				trimmed = html.EscapeString(trimmed)
 			}
-			toQuoteList = append(toQuoteList, [2]interface{}{idx, parsed})
-			htmlEscapedIdx[idx] = true
-		} else if len(toQuoteList) > 0 {
+			toQuote = append(toQuote, pair{i, trimmed})
+			htmlEscapedIdx[i] = true
+		} else if len(toQuote) > 0 {
 			createBlockquote(false)
 		}
 	}
-	// final flush
+	// Final flush
 	createBlockquote(false)
 
+	// Escape non-quoted lines if strict
 	if strict {
-		for i, line := range lines {
-			if _, ok := htmlEscapedIdx[i]; !ok {
-				lines[i] = html.EscapeString(line)
+		for i, ln := range lines {
+			if _, ok := htmlEscapedIdx[i]; ok {
+				continue
 			}
+			lines[i] = html.EscapeString(ln)
 		}
 	}
 
-	// filter out empty placeholders
-	out := make([]string, 0, len(lines))
-	for _, l := range lines {
-		if l == "" {
-			continue
-		}
-		out = append(out, l)
-	}
-	return strings.Join(out, "\n")
+	// Return joined lines preserving blank lines (empty strings remain)
+	return strings.Join(lines, "\n")
 }
 
-// Parse converts markdown-ish text to simple HTML-ish markup and returns it.
-// strict -> escapes text except recognized quote lines.
-// Parse converts markdown-ish text to simple HTML-ish markup and returns it.
-// strict -> escapes text except recognized quote lines.
-func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
-	// 1) Handle blockquotes and initial escaping
-	text := escapeAndCreateQuotes(input, strict)
+// helper to escape HTML attribute value
+func escapeAttr(s string) string {
+	return strings.ReplaceAll(html.EscapeString(s), `"`, "&quot;")
+}
 
-	// 2) Convert markdown -> HTML-like. Use sane ordered regex replacements.
-	//    Order: fenced pre (```lang\n...\```), emoji ( ![a](tg://emoji?id=123) ), links, inline code,
-	//    then bold, italic, underline, strike, spoiler.
+// Parse tokenizes and converts markdown -> HTML-like -> (message, entities via htmlparser)
+func (m *Markdown) Parse(text string, strict bool) (string, []tg.MessageEntityClass, error) {
+	// Step 1: escape & create quotes (Pyrogram-like)
+	text = m.EscapeAndCreateQuotes(text, strict)
 
-	// fenced pre with optional language (DOTALL)
-	rePre := regexp.MustCompile("(?s)```([^\n]*)\n(.*?)```")
-	text = rePre.ReplaceAllStringFunc(text, func(m string) string {
-		parts := rePre.FindStringSubmatch(m)
-		lang := strings.TrimSpace(parts[1])
-		body := parts[2]
-		if lang != "" {
-			return `<pre language="` + html.EscapeString(lang) + `">` + html.EscapeString(body) + `</pre>`
+	// Build alternation pattern for delimiters in the same order as Pyrogram
+	delims := []string{PRE_DELIM, CODE_DELIM, STRIKE_DELIM, UNDERLINE_DELIM, ITALIC_DELIM, BOLD_DELIM, SPOILER_DELIM}
+	escaped := make([]string, 0, len(delims))
+	for _, d := range delims {
+		escaped = append(escaped, regexp.QuoteMeta(d))
+	}
+	dPattern := strings.Join(escaped, "|")
+	// pattern groups: (delim)|(!?)\[([^\]]+?)\]\(([^)]+?)\)
+	pattern := fmt.Sprintf("(%s)|(!?)\\[([^\\]]+?)\\]\\(([^)]+?)\\)", dPattern)
+	re := regexp.MustCompile(pattern)
+
+	matches := re.FindAllStringSubmatchIndex(text, -1)
+
+	// segments will collect slices of the eventual HTML-like text (we'll join later)
+	segments := make([]string, 0, len(matches)*2+4)
+	last := 0
+
+	// placeholders bookkeeping for unmatched-open handling
+	nextPlaceholderID := 1
+	placeholderDelim := map[string]string{} // placeholder -> delim
+	placeholderMatched := map[string]bool{} // placeholder -> matched?
+	openStacks := map[string][]string{}     // delim -> stack of placeholders
+
+	pushPlaceholder := func(delim string) string {
+		ph := fmt.Sprintf("<<MD-OPEN-%d>>", nextPlaceholderID)
+		nextPlaceholderID++
+		placeholderDelim[ph] = delim
+		placeholderMatched[ph] = false
+		openStacks[delim] = append(openStacks[delim], ph)
+		return ph
+	}
+	popPlaceholder := func(delim string) (string, bool) {
+		stack := openStacks[delim]
+		if len(stack) == 0 {
+			return "", false
 		}
-		return `<pre>` + html.EscapeString(body) + `</pre>`
-	})
+		lastIdx := len(stack) - 1
+		ph := stack[lastIdx]
+		openStacks[delim] = stack[:lastIdx]
+		return ph, true
+	}
 
-	// emoji notation: ![emoji_char](tg://emoji?id=123)
-	reEmoji := regexp.MustCompile(`!\[([^\]]+)\]\(tg://emoji\?id=(\d+)\)`)
-	text = reEmoji.ReplaceAllString(text, `<emoji id=$2>$1</emoji>`)
+	for _, idxs := range matches {
+		fullStart, fullEnd := idxs[0], idxs[1]
+		// append raw slice between last and this match
+		if fullStart > last {
+			segments = append(segments, text[last:fullStart])
+		}
 
-	// links: [text](url) (handles tg://user, https, etc.)
-	// keep label non-greedy; labels spanning newlines are unusual but allowed by DOTALL
-	reLink := regexp.MustCompile(`(?s)\[(.+?)\]\((\S+?)\)`)
-	text = reLink.ReplaceAllStringFunc(text, func(m string) string {
-		parts := reLink.FindStringSubmatch(m)
-		label := html.EscapeString(parts[1])
-		url := html.EscapeString(parts[2])
-		return `<a href="` + url + `">` + label + `</a>`
-	})
+		// capture groups indices:
+		// [fullStart, fullEnd, g1s,g1e, g2s,g2e, g3s,g3e, g4s,g4e]
+		g1s, g1e := idxs[2], idxs[3] // delim
+		g2s, g2e := idxs[4], idxs[5] // optional '!'
+		g3s, g3e := idxs[6], idxs[7] // label/text
+		g4s, g4e := idxs[8], idxs[9] // url
 
-	// inline code: `code`  (explicitly disallow newlines inside inline code)
-	reCode := regexp.MustCompile("`([^`\\n]+)`")
-	text = reCode.ReplaceAllString(text, `<code>$1</code>`)
+		// link / emoji
+		if g3s != -1 && g4s != -1 {
+			isEmoji := false
+			if g2s != -1 && g2e-g2s == 1 && text[g2s:g2e] == "!" {
+				isEmoji = true
+			}
+			label := text[g3s:g3e]
+			url := text[g4s:g4e]
+			if isEmoji && strings.HasPrefix(url, "tg://emoji") {
+				id := strings.TrimPrefix(url, "tg://emoji?id=")
+				segments = append(segments, fmt.Sprintf(EMOJI_MARKUP, escapeAttr(id), html.EscapeString(label)))
+			} else {
+				segments = append(segments, fmt.Sprintf(URL_MARKUP, escapeAttr(url), html.EscapeString(label)))
+			}
+			last = fullEnd
+			continue
+		}
 
-	// bold: **text**  — allow newlines inside bold (DOTALL)
-	reBold := regexp.MustCompile(`(?s)\*\*(.+?)\*\*`)
-	text = reBold.ReplaceAllString(text, `<b>$1</b>`)
+		// delim handling
+		delim := ""
+		if g1s != -1 {
+			delim = text[g1s:g1e]
+		}
+		if delim == "" {
+			segments = append(segments, text[fullStart:fullEnd])
+			last = fullEnd
+			continue
+		}
 
-	// italic: __text__  — allow newlines
-	reItalic := regexp.MustCompile(`(?s)__(.+?)__`)
-	text = reItalic.ReplaceAllString(text, `<i>$1</i>`)
+		// Fixed-width tokens handling (inline/backtick and fenced pre)
+		if FIXED_WIDTH_DELIMS[delim] {
+			// handle inline code (`)
+			if delim == CODE_DELIM {
+				searchFrom := fullEnd
+				nextIdx := strings.Index(text[searchFrom:], CODE_DELIM)
+				if nextIdx == -1 {
+					// no closing backtick; emit literal delim
+					segments = append(segments, delim)
+					last = fullEnd
+					continue
+				}
+				start := searchFrom
+				end := searchFrom + nextIdx
+				body := text[start:end]
+				segments = append(segments, fmt.Sprintf("<code>%s</code>", html.EscapeString(body)))
+				last = end + len(CODE_DELIM)
+				continue
+			}
 
-	// underline: --text--  — allow newlines
-	reUnderline := regexp.MustCompile(`(?s)--(.+?)--`)
-	text = reUnderline.ReplaceAllString(text, `<u>$1</u>`)
+			// fenced pre (```)
+			if delim == PRE_DELIM {
+				// If stack for PRE is empty -> this is opening; else closing.
+				if len(openStacks[PRE_DELIM]) == 0 {
+					after := fullEnd
+					lang := ""
+					if after < len(text) {
+						nl := strings.IndexByte(text[after:], '\n')
+						if nl >= 0 {
+							lang = strings.TrimSpace(text[after : after+nl])
+							if lang != "" {
+								segments = append(segments, fmt.Sprintf(`<pre language="%s">`, escapeAttr(lang)))
+							} else {
+								segments = append(segments, "<pre>")
+							}
+							// push placeholder to represent PRE open
+							ph := pushPlaceholder(PRE_DELIM)
+							_ = ph
+							last = fullEnd + nl + 1
+							continue
+						}
+					}
+					// fallback: no newline/lang -> treat as literal
+					segments = append(segments, delim)
+					last = fullEnd
+					continue
+				} else {
+					// closing PRE: pop and emit closing tag
+					ph, ok := popPlaceholder(PRE_DELIM)
+					if !ok {
+						segments = append(segments, delim)
+						last = fullEnd
+						continue
+					}
+					placeholderMatched[ph] = true
+					segments = append(segments, "</pre>")
+					last = fullEnd
+					continue
+				}
+			}
+		}
 
-	// strike: ~~text~~  — allow newlines
-	reStrike := regexp.MustCompile(`(?s)~~(.+?)~~`)
-	text = reStrike.ReplaceAllString(text, `<s>$1</s>`)
+		// Non-fixed variable delimiter (bold/italic/underline/strike/spoiler)
+		if ph, ok := popPlaceholder(delim); ok {
+			// Found matching opener -> emit closing tag and mark opener matched
+			placeholderMatched[ph] = true
+			tag, _ := delimToTag[delim]
+			segments = append(segments, fmt.Sprintf(CLOSING_TAG, tag))
+			last = fullEnd
+			continue
+		}
 
-	// spoiler: ||text||  — allow newlines
-	reSpoiler := regexp.MustCompile(`(?s)\|\|(.+?)\|\|`)
-	text = reSpoiler.ReplaceAllString(text, `<spoiler>$1</spoiler>`)
-	fmt.Println(text)
-	text = strings.ReplaceAll(text, "\n\n", "<br><br>")
+		// Otherwise, this is an opener: insert placeholder for later replacement
+		ph := pushPlaceholder(delim)
+		segments = append(segments, ph)
+		last = fullEnd
+	}
 
-	// 3) Now pass HTML-like result to htmlparser which will produce message + entities.
-	fmt.Println(text)
-	pOut, err := htmlparser.Parse(text)
+	// append trailing text
+	if last < len(text) {
+		segments = append(segments, text[last:])
+	}
+
+	// Join segments to form HTML-like string (with placeholders)
+	full := strings.Join(segments, "")
+
+	// Final pass: replace placeholders
+	// Replace placeholders that were matched with opening tags; unmatched placeholders revert to raw delimiter text.
+	for ph, delim := range placeholderDelim {
+		tag, ok := delimToTag[delim]
+		if !ok {
+			// unknown delim -> restore raw delim
+			full = strings.ReplaceAll(full, ph, delim)
+			continue
+		}
+		if placeholderMatched[ph] {
+			openTag := fmt.Sprintf(OPENING_TAG, tag)
+			full = strings.ReplaceAll(full, ph, openTag)
+		} else {
+			full = strings.ReplaceAll(full, ph, delim)
+		}
+	}
+
+	// Delegate final HTML-like string to HTML parser that converts to plain message + entities.
+	// Replace htmlparser.Parse call with your project's HTML parser.
+	parsed, err := htmlparser.Parse(full)
 	if err != nil {
 		return "", nil, err
 	}
-	// pOut.Message is UTF-8; pOut.Entities is []tg.MessageEntityClass
-	return pOut.Message, pOut.Entities, nil
+	return parsed.Message, parsed.Entities, nil
 }
 
-// Unparse converts a text and tg message entities into Markdown-ish plaintext (reconstructing delimiters).
-// Entities must be in the format produced by gotd/td (e.g. *tg.MessageEntityBold, *tg.MessageEntityItalic, ...).
-func Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
-	// convert to rune-slice to make offsets safe (the original code uses surrogate helpers)
-	// We'll operate on byte offsets, but use rune-index mapping for safety.
-	added := addSurrogatesForOffsets(text)
-
-	// Build list of insertions (offset -> string) and then apply them in reverse order
-	type ins struct {
-		off int
-		s   string
+// Unparse converts text + tg message entities into the markdown-delimited string.
+// It assumes entity offsets & lengths are in UTF-16 code units (Telegram style).
+func (m *Markdown) Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
+	if len(entities) == 0 {
+		return text, nil
 	}
-	var insertions []ins
 
-	for _, e := range entities {
-		switch ent := e.(type) {
-		case *tg.MessageEntityBold:
-			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
-			insertions = append(insertions, ins{end, BOLD_DELIM})
-			insertions = append(insertions, ins{start, BOLD_DELIM})
-		case *tg.MessageEntityItalic:
-			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
-			insertions = append(insertions, ins{end, ITALIC_DELIM})
-			insertions = append(insertions, ins{start, ITALIC_DELIM})
-		case *tg.MessageEntityUnderline:
-			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
-			insertions = append(insertions, ins{end, UNDERLINE_DELIM})
-			insertions = append(insertions, ins{start, UNDERLINE_DELIM})
-		case *tg.MessageEntityStrike:
-			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
-			insertions = append(insertions, ins{end, STRIKE_DELIM})
-			insertions = append(insertions, ins{start, STRIKE_DELIM})
-		case *tg.MessageEntityCode:
-			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
-			insertions = append(insertions, ins{end, CODE_DELIM})
-			insertions = append(insertions, ins{start, CODE_DELIM})
-		case *tg.MessageEntityPre:
-			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
-			lang := ""
-			if ent.Language != "" {
-				lang = ent.Language
+	// Build a list of insertions: (byteOffset, insertionString)
+	type insertion struct {
+		pos int
+		str string
+	}
+	inserts := make([]insertion, 0, len(entities)*2)
+
+	// Helper to convert utf16 index -> byte position in UTF-8 string
+	utf16IndexToBytePos := func(s string, target int) int {
+		if target <= 0 {
+			return 0
+		}
+		cum := 0
+		bytePos := 0
+		for _, r := range s {
+			if cum >= target {
+				return bytePos
 			}
+			units := 1
+			if r > 0xFFFF {
+				units = 2
+			}
+			cum += units
+			bytePos += utf8.RuneLen(r)
+		}
+		return bytePos
+	}
 
+	// Map gotd entity concrete types to delimiter pairs
+	for _, e := range entities {
+		switch v := e.(type) {
+		case *tg.MessageEntityBold:
+			start := int(v.Offset)
+			end := int(v.Offset + v.Length)
+			spos := utf16IndexToBytePos(text, start)
+			epos := utf16IndexToBytePos(text, end)
+			inserts = append(inserts, insertion{pos: epos, str: BOLD_DELIM})
+			inserts = append(inserts, insertion{pos: spos, str: BOLD_DELIM})
+		case *tg.MessageEntityItalic:
+			start := int(v.Offset)
+			end := int(v.Offset + v.Length)
+			spos := utf16IndexToBytePos(text, start)
+			epos := utf16IndexToBytePos(text, end)
+			inserts = append(inserts, insertion{pos: epos, str: ITALIC_DELIM})
+			inserts = append(inserts, insertion{pos: spos, str: ITALIC_DELIM})
+		case *tg.MessageEntityUnderline:
+			start := int(v.Offset)
+			end := int(v.Offset + v.Length)
+			spos := utf16IndexToBytePos(text, start)
+			epos := utf16IndexToBytePos(text, end)
+			inserts = append(inserts, insertion{pos: epos, str: UNDERLINE_DELIM})
+			inserts = append(inserts, insertion{pos: spos, str: UNDERLINE_DELIM})
+		case *tg.MessageEntityStrikethrough:
+			start := int(v.Offset)
+			end := int(v.Offset + v.Length)
+			spos := utf16IndexToBytePos(text, start)
+			epos := utf16IndexToBytePos(text, end)
+			inserts = append(inserts, insertion{pos: epos, str: STRIKE_DELIM})
+			inserts = append(inserts, insertion{pos: spos, str: STRIKE_DELIM})
+		case *tg.MessageEntityCode:
+			start := int(v.Offset)
+			end := int(v.Offset + v.Length)
+			spos := utf16IndexToBytePos(text, start)
+			epos := utf16IndexToBytePos(text, end)
+			inserts = append(inserts, insertion{pos: epos, str: CODE_DELIM})
+			inserts = append(inserts, insertion{pos: spos, str: CODE_DELIM})
+		case *tg.MessageEntityPre:
+			lang := ""
+			if pv, ok := v.(*tg.MessageEntityPre); ok {
+				lang = pv.Language
+			}
+			start := int(v.Offset)
+			end := int(v.Offset + v.Length)
+			spos := utf16IndexToBytePos(text, start)
+			epos := utf16IndexToBytePos(text, end)
 			startTag := PRE_DELIM
 			if lang != "" {
 				startTag = PRE_DELIM + lang + "\n"
 			}
-			insertions = append(insertions, ins{end, "\n" + PRE_DELIM})
-			insertions = append(insertions, ins{start, startTag})
+			endTag := "\n" + PRE_DELIM
+			inserts = append(inserts, insertion{pos: epos, str: endTag})
+			inserts = append(inserts, insertion{pos: spos, str: startTag})
 		case *tg.MessageEntityBlockquote:
-			// blockquote: we need to insert blockquote markers per-line
-			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
-			sub := added[start:end]
-			lines := strings.Split(sub, "\n")
-			// insert end tags after each line and start tags before lines
-			// We'll precompute offsets relative to start
-			cur := start
-			for i, line := range lines {
+			start := int(v.Offset)
+			end := int(v.Offset + v.Length)
+			spos := utf16IndexToBytePos(text, start)
+			epos := utf16IndexToBytePos(text, end)
+			// For blockquote we prefix each line with "> " on insertion
+			blockText := text[spos:epos]
+			lines := strings.Split(blockText, "\n")
+			// We'll replace the block with quoted lines; easiest approach: compute replacement string and plan to replace.
+			quoted := ""
+			for i, ln := range lines {
 				if i > 0 {
-					// previous char was newline, so insertion point is cur
-					insertions = append(insertions, ins{cur, "\n"})
+					quoted += "\n"
 				}
-				insertions = append(insertions, ins{cur, BLOCKQUOTE_DELIM + " "})
-				cur += len(line) + 1 // approximate
+				quoted += "> " + ln
 			}
-			// For simplicity we skip complex per-line offset corrections here.
-		case *tg.MessageEntityTextURL:
-			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
-			url := ent.URL
-			startTag := "["
-			endTag := fmt.Sprintf("](%s)", url)
-			insertions = append(insertions, ins{end, endTag})
-			insertions = append(insertions, ins{start, startTag})
-		case *tg.MessageEntityMentionName:
-			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
-			startTag := "["
-			endTag := fmt.Sprintf("](tg://user?id=%d)", ent.UserID)
-			insertions = append(insertions, ins{end, endTag})
-			insertions = append(insertions, ins{start, startTag})
+			// We'll schedule a replacement by doing: remove original and insert quoted.
+			// Implement by inserting markers: end replacement marker and start replacement marker with special token.
+			// Simpler: perform replacement now on text (not via inserts). But to keep algorithm consistent, we just record a replacement insertion instruction
+			// For simplicity in this unparse, do a direct replace now:
+			text = text[:spos] + quoted + text[epos:]
+			// Adjust all future inserts positions by delta
+			delta := len(quoted) - (epos - spos)
+			for j := range inserts {
+				if inserts[j].pos > spos {
+					inserts[j].pos += delta
+				}
+			}
+		case *tg.MessageEntitySpoiler:
+			start := int(v.Offset)
+			end := int(v.Offset + v.Length)
+			spos := utf16IndexToBytePos(text, start)
+			epos := utf16IndexToBytePos(text, end)
+			inserts = append(inserts, insertion{pos: epos, str: SPOILER_DELIM})
+			inserts = append(inserts, insertion{pos: spos, str: SPOILER_DELIM})
+		case *tg.MessageEntityTextUrl:
+			// text link: insert [ at start and ](url) at end
+			start := int(v.Offset)
+			end := int(v.Offset + v.Length)
+			spos := utf16IndexToBytePos(text, start)
+			epos := utf16IndexToBytePos(text, end)
+			// gotd's MessageEntityTextUrl has URL field; use type assertion
+			if tv, ok := v.(*tg.MessageEntityTextUrl); ok {
+				inserts = append(inserts, insertion{pos: epos, str: fmt.Sprintf("](%s)", escapeAttr(tv.URL))})
+				inserts = append(inserts, insertion{pos: spos, str: "["})
+			}
+		case *tg.MessageEntityTextMention:
+			// mention: [text](tg://user?id=123)
+			start := int(v.Offset)
+			end := int(v.Offset + v.Length)
+			spos := utf16IndexToBytePos(text, start)
+			epos := utf16IndexToBytePos(text, end)
+			if tv, ok := v.(*tg.MessageEntityTextMention); ok {
+				inserts = append(inserts, insertion{pos: epos, str: fmt.Sprintf("](tg://user?id=%d)", tv.User.GetID())})
+				inserts = append(inserts, insertion{pos: spos, str: "["})
+			}
 		case *tg.MessageEntityCustomEmoji:
-			start, end := int(ent.Offset), int(ent.Offset+ent.Length)
-			DocumentID := ent.DocumentID
-			startTag := "!["
-			endTag := fmt.Sprintf("](tg://emoji?id=%d)", DocumentID)
-			insertions = append(insertions, ins{end, endTag})
-			insertions = append(insertions, ins{start, startTag})
+			start := int(v.Offset)
+			end := int(v.Offset + v.Length)
+			spos := utf16IndexToBytePos(text, start)
+			epos := utf16IndexToBytePos(text, end)
+			if tv, ok := v.(*tg.MessageEntityCustomEmoji); ok {
+				inserts = append(inserts, insertion{pos: epos, str: fmt.Sprintf("](tg://emoji?id=%s)", tv.CustomEmojiID)})
+				inserts = append(inserts, insertion{pos: spos, str: "!["])
+			}
 		default:
-			// other types ignored for now
+			// Unknown entity type — ignore
 		}
 	}
 
-	// Sort insertions by offset descending so inserting doesn't disrupt earlier offsets
-	sort.Slice(insertions, func(i, j int) bool { return insertions[i].off > insertions[j].off })
-
-	out := added
-	for _, it := range insertions {
-		if it.off < 0 {
-			it.off = 0
+	// Sort inserts by position descending so we can insert without shifting earlier indexes
+	sort.SliceStable(inserts, func(i, j int) bool {
+		if inserts[i].pos == inserts[j].pos {
+			return inserts[i].str < inserts[j].str
 		}
-		if it.off > len(out) {
-			it.off = len(out)
+		return inserts[i].pos > inserts[j].pos
+	})
+
+	// Apply inserts
+	out := text
+	for _, it := range inserts {
+		if it.pos < 0 {
+			it.pos = 0
 		}
-		out = out[:it.off] + it.s + out[it.off:]
-	}
-
-	// remove surrogate mapping before returning
-	final := removeSurrogates(out)
-	return final, nil
-}
-
-// addSurrogatesForOffsets returns a string where each UTF-16 code unit corresponds to
-// a byte position suitable for using tg entity offset/length which are UTF-16 code-unit counts.
-// For simplicity we produce a string where characters outside BMP are represented by two runes
-// so the offsets computed using utf16.Encode will match.
-func addSurrogatesForOffsets(s string) string {
-	// Build []uint16 UTF-16 encoding and then convert each code unit to a rune (so indexing by bytes matches code units)
-	runes := []rune(s)
-	var u16 []uint16
-	for _, r := range runes {
-		if r < 0x10000 {
-			u16 = append(u16, uint16(r))
-		} else {
-			hi, lo := utf16.EncodeRune(r)
-			u16 = append(u16, uint16(hi), uint16(lo))
+		if it.pos > len(out) {
+			it.pos = len(out)
 		}
+		out = out[:it.pos] + it.str + out[it.pos:]
 	}
-	// Convert code units back to a synthetic string where each code unit becomes a rune in the BMP range
-	outRunes := make([]rune, len(u16))
-	for i, v := range u16 {
-		outRunes[i] = rune(v)
-	}
-	return string(outRunes)
-}
-
-// removeSurrogates simply turns the synthetic string produced by addSurrogatesForOffsets
-// back into the original text. For our approach (code unit -> rune) we can reconstruct
-// the original by interpreting the runes as code units and decoding utf16.
-func removeSurrogates(s string) string {
-	// Interpret runes as code units
-	r := []rune(s)
-	u16 := make([]uint16, len(r))
-	for i, rr := range r {
-		u16[i] = uint16(rr)
-	}
-	decoded := utf16.Decode(u16)
-	return string(decoded)
-}
 
 func init() {
-	text, _, _ := Parse("**A bold\n\n Message 😂**", true)
+	m := &Markdown{}
+	text, _, _ := m.Parse("**A bold\n\n Message 😂**", true)
 	fmt.Println(text)
 	pOut, _ := htmlparser.Parse("**A bold\n\n Message ⚠️**")
 	fmt.Println(pOut.Message)
