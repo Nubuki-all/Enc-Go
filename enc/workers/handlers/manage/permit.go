@@ -9,7 +9,6 @@ import (
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 
-	"enc/internal/bot"
 	"enc/internal/db"
 	"enc/utils"
 	"enc/utils/random"
