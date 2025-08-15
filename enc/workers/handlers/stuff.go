@@ -172,6 +172,18 @@ func Start(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 }
 
 func Help(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
+	chat := update.EffectiveChat()
+	if !utils.UserIsOwner(msg.SenderID) && chat.IsAUser() {
+		if !utils.AllowPM() {
+			query := update.CallbackQuery
+			_, _ = ctx.AnswerCallback(&tg.MessagesSetBotCallbackAnswerRequest{
+				Alert:   false,
+				QueryID: query.QueryID,
+				Message: "Nope!",
+			})
+			return nil
+		}
+	}
 	text := "**⛩️ An Encode bot**\n\n+" +
 		"This bot encodes videos With your custom ffmpeg or handbrake-cli settings." +
 		"\n+Easy to Use (Depends)\n" +
@@ -257,6 +269,45 @@ func StartBack(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	)
 	_, err := msg.Edit(
 		outMsg,
+		&tele.EditOptions{
+			ReplyMarkup: replyMarkup,
+		},
+	)
+	if err != nil {
+		logger.ErrorW(err.Error())
+		return err
+	}
+	return nil
+
+}
+
+
+func Commands(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
+	chat := update.EffectiveChat()
+	if !utils.UserIsOwner(msg.SenderID) && chat.IsAUser() {
+		if !utils.AllowPM() {
+			query := update.CallbackQuery
+			_, _ = ctx.AnswerCallback(&tg.MessagesSetBotCallbackAnswerRequest{
+				Alert:   false,
+				QueryID: query.QueryID,
+				Message: "Nope!",
+			})
+			return nil
+		}
+	}
+	text := "```" + bot.Commands + "```\n\nAll above commands accept '-h' / '--help' arguments to get more detailed help about each command."
+
+	replyMarkup := markup.InlineKeyboard(
+		markup.Row(
+			markup.Callback(
+				"🔙 Back",
+				[]byte("ihelp"),
+			),
+		),
+	)
+	
+	_, err := msg.Edit(
+		text,
 		&tele.EditOptions{
 			ReplyMarkup: replyMarkup,
 		},
