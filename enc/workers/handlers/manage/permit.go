@@ -12,6 +12,7 @@ import (
 	"enc/internal/bot"
 	"enc/internal/db"
 	"enc/utils"
+	"enc/utils/random"
 	"enc/utils/tele"
 )
 
@@ -52,7 +53,7 @@ func TempUnauth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		arg := strings.TrimSpace(parts[1])
 		// allow negative IDs with leading '-' for channels/chats
 		if _, err := strconv.Atoi(arg); err != nil {
-			_ = msg.ReplyText(fmt.Sprintf("What do you mean by `%s` ?\nNeed help? send /unpermit", arg))
+			_, _ = msg.ReplyText(fmt.Sprintf("What do you mean by `%s` ?\nNeed help? send /unpermit", arg))
 			return nil
 		}
 		newID, err = strconv.ParseInt(arg, 10, 64)
@@ -70,7 +71,7 @@ func TempUnauth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 
 	// can't unpermit an owner / privileged user
 	if utils.UserIsOwner(newID) {
-		_ = msg.ReplyText(fmt.Sprintf("%s because user is already a privileged user", errPrefix))
+		_, _ = msg.ReplyText(fmt.Sprintf("%s because user is already a privileged user", errPrefix))
 		return nil
 	}
 
@@ -81,7 +82,7 @@ func TempUnauth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	}
 
 	var displayName string
-	if user, e := tele.GetUser(newID); e == nil && name != "" {
+	if user, e := tele.GetUser(newID); e == nil && user != nil {
 		displayName = user.FirstName
 	} else {
 		displayName = fmt.Sprintf("%d", newID)
