@@ -48,6 +48,7 @@ func AddCBHandlers(dispatch dispatcher.Dispatcher) {
 func addSuffixcmd(cmd string) string {
 	return cmd + config.Conf.CmdSuffix
 }
+
 func BaseEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message) error) func(*ext.Context, *ext.Update) error {
 	return func(ctx *ext.Context, update *ext.Update) error {
 		user := update.EffectiveUser()
