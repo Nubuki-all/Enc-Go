@@ -22,6 +22,6 @@ func AddAllCommands() {
 	if resp {
 		logger.InfoW("Available Commands Set successfully")
 	} else if err != nil {
-		logger.ErroW(err.Error())
+		logger.ErrorW(err.Error())
 	}
 }
