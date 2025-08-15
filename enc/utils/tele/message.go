@@ -11,13 +11,13 @@ import (
 )
 
 type Message struct {
-	ChatID   int64
-	Ctx      *ext.Context
-	ID       int
-	Raw      *gp.Message
-	SenderID int64
-	Chat     *tg.Chat
-	User     *tg.User
+	ChatID    int64
+	Ctx       *ext.Context
+	ID        int
+	Raw       *gp.Message
+	SenderID  int64
+	Chat      *tg.Chat
+	User      *tg.User
 	ReplyToID int
 }
 
@@ -38,11 +38,11 @@ func NewMsgFromGotg(m *gp.Message, c *ext.Context, chatID int64, senderID int64)
 		replyTo = replyMessage.ReplyToMsgID
 	}
 	return &Message{
-		Raw:      m,
-		Ctx:      c,
-		ChatID:   chatID,
-		SenderID: senderID,
-		ID:       m.Message.ID,
+		Raw:       m,
+		Ctx:       c,
+		ChatID:    chatID,
+		SenderID:  senderID,
+		ID:        m.Message.ID,
 		ReplyToID: replyTo,
 	}
 }
