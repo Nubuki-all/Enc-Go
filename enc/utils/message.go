@@ -46,11 +46,11 @@ func SendHelp(args string) bool {
 }
 
 func remove(s []string, r string) []string {
-    out := s[:0]
-    for _, v := range s {
-        if v != r {
-            out = append(out, v)
-        }
-    }
-    return out
+	out := s[:0]
+	for _, v := range s {
+		if v != r {
+			out = append(out, v)
+		}
+	}
+	return out
 }

@@ -28,10 +28,10 @@ func AddAllHandlers() {
 
 func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 	cmdHandlers := map[string]func(*ext.Context, *ext.Update) error{
-		"start":  BaseEventHandler(handlers.Start),
-		"help":   BaseEventHandler(handlers.Start),
-		"ping":   BaseEventHandler(handlers.Up),
-		"status": BaseEventHandler(handlers.Status),
+		"start":    BaseEventHandler(handlers.Start),
+		"help":     BaseEventHandler(handlers.Start),
+		"ping":     BaseEventHandler(handlers.Up),
+		"status":   BaseEventHandler(handlers.Status),
 		"unpermit": EventHandlerWithArgs(manage.TempUnauth),
 	}
 
@@ -88,7 +88,6 @@ func CallbackEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message)
 		return err
 	}
 }
-
 
 func EventHandlerWithArgs(handler func(*ext.Context, *ext.Update, *tele.Message, string) error) func(*ext.Context, *ext.Update) error {
 	return func(ctx *ext.Context, update *ext.Update) error {
