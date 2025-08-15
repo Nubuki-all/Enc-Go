@@ -31,12 +31,12 @@ func AllowPM() bool {
 	return !config.Conf.NoPM
 }
 
-func AddTempUser(userID int64) []string {
+func AddTempUser(userID int64) {
 	str := strconv.FormatInt(userID, 10)
 	bot.TempUsers = append(bot.TempUsers, str)
 }
 
-func RmTempUser(userID int64) []string {
+func RmTempUser(userID int64) {
 	str := strconv.FormatInt(userID, 10)
 	bot.TempUsers = remove(bot.TempUsers, str)
 }
