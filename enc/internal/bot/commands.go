@@ -3,9 +3,9 @@ package bot
 import (
 	"fmt"
 	"strings"
-	
+
 	"github.com/gotd/td/tg"
-	
+
 	"enc/config"
 )
 
@@ -67,9 +67,9 @@ func GetBotCommands() string {
 
 	Commands = strings.Join(lines, "\n")
 	return Commands
-	
 }
-func ParseCommands(cmds string ) []tg.BotCommand {
+
+func ParseCommands(cmds string) []tg.BotCommand {
 	lines := strings.Split(cmds, "\n")
 	commands := make([]tg.BotCommand, 0, len(lines))
 

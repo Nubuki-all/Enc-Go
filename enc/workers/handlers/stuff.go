@@ -278,9 +278,7 @@ func StartBack(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 		return err
 	}
 	return nil
-
 }
-
 
 func Commands(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	chat := update.EffectiveChat()
@@ -305,7 +303,7 @@ func Commands(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 			),
 		),
 	)
-	
+
 	_, err := msg.Edit(
 		text,
 		&tele.EditOptions{
