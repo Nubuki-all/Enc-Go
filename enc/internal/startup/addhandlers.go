@@ -93,7 +93,7 @@ func EventHandlerWithArgs(handler func(*ext.Context, *ext.Update, *tele.Message,
 	return func(ctx *ext.Context, update *ext.Update) error {
 		user := update.EffectiveUser()
 		chat := update.EffectiveChat()
-		args := strings.Cut(update.EffectiveMessage.Text, " ")
+		_, args, _ := strings.Cut(update.EffectiveMessage.Text, " ")
 		args = strings.Trim(args, " ")
 		msg := tele.NewMsgFromGotg(
 			update.EffectiveMessage,
