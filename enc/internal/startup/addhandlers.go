@@ -9,6 +9,7 @@ import (
 	"github.com/celestix/gotgproto/ext"
 	//"github.com/gotd/td/tg"
 
+	"enc/config"
 	"enc/internal/clients/telegram"
 	"enc/internal/logger"
 	"enc/utils/tele"
@@ -22,11 +23,19 @@ func AddAllHandlers() {
 }
 
 func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
-	dispatch.AddHandler(onevent.NewCommand("start1", handlers.StartEx))
-	dispatch.AddHandler(onevent.NewCommand("start", BaseEventHandler(handlers.Start)))
-	dispatch.AddHandler(onevent.NewCommand("help", BaseEventHandler(handlers.Start)))
-	dispatch.AddHandler(onevent.NewCommand("ping", BaseEventHandler(handlers.Up)))
-	dispatch.AddHandler(onevent.NewCommand("status", BaseEventHandler(handlers.Status)))
+	noArgHandlers := map[string]BaseEventHandler{
+		"start":  BaseEventHandler(handlers.Start),
+		"help":   BaseEventHandler(handlers.Start),
+		"ping":   BaseEventHandler(handlers.Up),
+		"status": BaseEventHandler(handlers.Status),
+	}
+
+	for cmd, handler := range noArgHandlers {
+		dispatch.AddHandler(onevent.NewCommand(
+			addSuffixcmd(cmd),
+			handler,
+		))
+	}
 }
 
 func AddCBHandlers(dispatch dispatcher.Dispatcher) {
@@ -36,6 +45,9 @@ func AddCBHandlers(dispatch dispatcher.Dispatcher) {
 	dispatch.AddHandler(onevent.NewCallbackQuery(filters.CallbackQuery.Prefix("icommands"), CallbackEventHandler(handlers.Commands)))
 }
 
+func addSuffixcmd string) string {
+	return cmd + config.Conf.CmdSuffix
+}
 func BaseEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message) error) func(*ext.Context, *ext.Update) error {
 	return func(ctx *ext.Context, update *ext.Update) error {
 		user := update.EffectiveUser()
