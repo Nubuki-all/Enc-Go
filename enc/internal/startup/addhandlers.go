@@ -20,7 +20,7 @@ func AddAllHandlers() {
 	dispatcher := telegram.Client.Dispatcher
 	AddCmdHandlers(dispatcher)
 	AddCBHandlers(dispatcher)
-	
+
 	dispatcher.AddHandlerToGroup(onevent.NewMessage(filters.Message.Text, handlers.Print), 1)
 }
 
