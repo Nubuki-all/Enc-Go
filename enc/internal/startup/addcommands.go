@@ -19,5 +19,9 @@ func AddAllCommands() {
 		Commands: commands,
 	}
 	resp, err := rawClient.BotsSetBotCommands(context.Background(), request)
-	logger.Info("BotsSetBotCommands Returned:", resp, err)
+	if resp {
+		logger.InfoW("Available Commands Set successfully")
+	} else if err != nil {
+		logger.ErroW(err.Error())
+	}
 }

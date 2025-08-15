@@ -293,7 +293,7 @@ func Commands(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 			return nil
 		}
 	}
-	text := "```" + bot.Commands + "```\n\nAll above commands accept '-h' / '--help' arguments to get more detailed help about each command."
+	text := "```Commands:\n" + bot.Commands + "```\n\nAll above commands accept '-h' / '--help' arguments to get more detailed help about each command."
 
 	replyMarkup := markup.InlineKeyboard(
 		markup.Row(
