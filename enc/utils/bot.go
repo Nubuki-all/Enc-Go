@@ -10,11 +10,6 @@ import (
 	"enc/internal/bot/types"
 )
 
-// AddTempUser appends an ID to bot.TempUsers
-func AddTempUser(id string) {
-	bot.TempUsers = append(bot.TempUsers, id)
-}
-
 // BotIsPaused returns true if any pause flag is set
 func BotIsPaused() bool {
 	return bot.Paused.Any()
