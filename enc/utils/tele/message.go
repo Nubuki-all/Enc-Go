@@ -18,6 +18,7 @@ type Message struct {
 	SenderID int64
 	Chat     *tg.Chat
 	User     *tg.User
+	ReplyToID int
 }
 
 type EditOptions struct {
@@ -32,12 +33,17 @@ type ReplyOptions struct {
 
 // NewFromGotg constructs a wrapper from a concrete *gp.Message.
 func NewMsgFromGotg(m *gp.Message, c *ext.Context, chatID int64, senderID int64) *Message {
+	replyTo := 0
+	replyMessage, ok := m.ReplyTo.(*tg.MessageReplyHeader); ok {
+		replyTo = replyMessage.ReplyToMsgID
+	}
 	return &Message{
 		Raw:      m,
 		Ctx:      c,
 		ChatID:   chatID,
 		SenderID: senderID,
 		ID:       m.Message.ID,
+		ReplyToID: replyTo,
 	}
 }
 

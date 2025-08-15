@@ -38,6 +38,9 @@ func TempUnauth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	message := update.EffectiveMessage
 
 	// If the command is a reply, extract ID from replied-to message
+	if msg.ReplyToID {
+		message.SetRepliedToMessage(context.Background(), ctx.Raw, ctx.PeerStorage)
+	}
 	if repMsg := message.ReplyToMessage; repMsg != nil {
 		peer := repMsg.Message.FromID
 		if peerUser, ok := peer.(*tg.PeerUser); ok {
