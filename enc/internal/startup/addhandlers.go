@@ -2,6 +2,7 @@ package startup
 
 import (
 	//"fmt"
+	"strings"
 
 	"github.com/celestix/gotgproto/dispatcher"
 	onevent "github.com/celestix/gotgproto/dispatcher/handlers"
@@ -14,6 +15,7 @@ import (
 	"enc/internal/logger"
 	"enc/utils/tele"
 	"enc/workers/handlers"
+	"enc/workers/handlers/manage"
 )
 
 func AddAllHandlers() {
@@ -30,7 +32,7 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		"help":   BaseEventHandler(handlers.Start),
 		"ping":   BaseEventHandler(handlers.Up),
 		"status": BaseEventHandler(handlers.Status),
-		"unpermit": EventHandlerWithArgs(handlers.TempUnauth),
+		"unpermit": EventHandlerWithArgs(manage.TempUnauth),
 	}
 
 	for cmd, handler := range cmdHandlers {
