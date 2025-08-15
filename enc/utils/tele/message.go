@@ -34,7 +34,7 @@ type ReplyOptions struct {
 // NewFromGotg constructs a wrapper from a concrete *gp.Message.
 func NewMsgFromGotg(m *gp.Message, c *ext.Context, chatID int64, senderID int64) *Message {
 	replyTo := 0
-	replyMessage, ok := m.ReplyTo.(*tg.MessageReplyHeader); ok {
+	if replyMessage, ok := m.ReplyTo.(*tg.MessageReplyHeader); ok {
 		replyTo = replyMessage.ReplyToMsgID
 	}
 	return &Message{
