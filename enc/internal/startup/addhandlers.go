@@ -45,7 +45,7 @@ func AddCBHandlers(dispatch dispatcher.Dispatcher) {
 	dispatch.AddHandler(onevent.NewCallbackQuery(filters.CallbackQuery.Prefix("icommands"), CallbackEventHandler(handlers.Commands)))
 }
 
-func addSuffixcmd string) string {
+func addSuffixcmd(cmd string) string {
 	return cmd + config.Conf.CmdSuffix
 }
 func BaseEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message) error) func(*ext.Context, *ext.Update) error {
