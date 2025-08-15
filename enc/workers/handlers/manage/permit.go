@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"strings"
 
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
