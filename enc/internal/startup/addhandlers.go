@@ -23,7 +23,7 @@ func AddAllHandlers() {
 }
 
 func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
-	noArgHandlers := map[string]BaseEventHandler{
+	noArgHandlers := map[string]func(*ext.Context, *ext.Update) error{
 		"start":  BaseEventHandler(handlers.Start),
 		"help":   BaseEventHandler(handlers.Start),
 		"ping":   BaseEventHandler(handlers.Up),
