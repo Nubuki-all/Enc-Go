@@ -30,3 +30,27 @@ func UserIsDev(userID int64) bool {
 func AllowPM() bool {
 	return !config.Conf.NoPM
 }
+
+func AddTempUser(userID int64) []str {
+	str := strconv.FormatInt(userID, 10)
+	return append(bot.TempUsers, str)
+}
+
+func RmTempUser(userID int64) []str {
+	str := strconv.FormatInt(userID, 10)
+	return remove(bot.TempUsers, str)
+}
+
+func SendHelp(args string) bool {
+	return strings.EqualFold(args, "-h") || strings.EqualFold(args, "--help")
+}
+
+func remove(s []string, r string) []string {
+    out := s[:0]
+    for _, v := range s {
+        if v != r {
+            out = append(out, v)
+        }
+    }
+    return out
+}

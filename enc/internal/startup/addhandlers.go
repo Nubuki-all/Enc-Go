@@ -30,6 +30,7 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		"help":   BaseEventHandler(handlers.Start),
 		"ping":   BaseEventHandler(handlers.Up),
 		"status": BaseEventHandler(handlers.Status),
+		"unpermit": EventHandlerWithArgs(handlers.TempUnauth),
 	}
 
 	for cmd, handler := range cmdHandlers {
@@ -79,6 +80,27 @@ func CallbackEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message)
 			ID:       update.CallbackQuery.MsgID,
 		}
 		err := handler(ctx, update, msg)
+		if err != nil {
+			logger.ErrorW(err.Error())
+		}
+		return err
+	}
+}
+
+
+func EventHandlerWithArgs(handler func(*ext.Context, *ext.Update, *tele.Message, string) error) func(*ext.Context, *ext.Update) error {
+	return func(ctx *ext.Context, update *ext.Update) error {
+		user := update.EffectiveUser()
+		chat := update.EffectiveChat()
+		args := strings.Cut(update.EffectiveMessage.Text, " ")
+		args = strings.Trim(args, " ")
+		msg := tele.NewMsgFromGotg(
+			update.EffectiveMessage,
+			ctx,
+			chat.GetID(),
+			user.ID,
+		)
+		err := handler(ctx, update, msg, args)
 		if err != nil {
 			logger.ErrorW(err.Error())
 		}

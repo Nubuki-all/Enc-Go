@@ -253,9 +253,7 @@ func Commands(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 		return err
 	}
 	return nil
-}
-
-func Print(ctx *ext.Context, update *ext.Update) error {
+}func Print(ctx *ext.Context, update *ext.Update) error {
 	fmt.Println(update.EffectiveMessage.Text)
 	return nil
 }

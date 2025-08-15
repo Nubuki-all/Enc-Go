@@ -46,7 +46,6 @@ func GetPeer(id int64) (tg.InputPeerClass, error) {
 					ChannelID:  ch.ID,
 					AccessHash: ch.AccessHash,
 				}
-				// Store with correct AddPeer signature
 				ctx.PeerStorage.AddPeer(id, ch.AccessHash, storage.TypeChannel, ch.Username)
 				return peer, nil
 			}
