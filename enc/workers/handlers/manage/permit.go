@@ -20,8 +20,8 @@ import (
 func TempUnauth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	senderID := msg.SenderID
 	errPrefix := "Failed!,\nCan't remove from temporarily allowed users"
-	help := ```Un-authorise a user or chat
-    Requires either reply to message or user_id as args```
+	help := `Un-authorise a user or chat
+    Requires either reply to message or user_id as args`
     if args == "" || utils.SendHelp(args) {
     	_, _ = msg.ReplyText("```" + help + "```")
     	return nil
