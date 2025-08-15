@@ -49,15 +49,13 @@ func TempUnauth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 			_, _ = msg.ReplyText("Either reply to a user's message or provide a user id.\nExample:\n`/unpermit 123456`")
 			return nil
 		}
-		arg := strings.TrimSpace(parts[1])
-		// allow negative IDs with leading '-' for channels/chats
-		if _, err := strconv.Atoi(arg); err != nil {
-			_, _ = msg.ReplyText(fmt.Sprintf("What do you mean by `%s` ?\nNeed help? send /unpermit", arg))
+		if _, err := strconv.Atoi(args); err != nil {
+			_, _ = msg.ReplyText(fmt.Sprintf("What do you mean by `%s` ?\nNeed help? send /unpermit", args))
 			return nil
 		}
-		newID, err = strconv.ParseInt(arg, 10, 64)
+		newID, err = strconv.ParseInt(args, 10, 64)
 		if err != nil {
-			_, _ = msg.ReplyText(fmt.Sprintf("Failed to parse id `%s`: %v", arg, err))
+			_, _ = msg.ReplyText(fmt.Sprintf("Failed to parse id `%s`: %v", args, err))
 			return nil
 		}
 	}
