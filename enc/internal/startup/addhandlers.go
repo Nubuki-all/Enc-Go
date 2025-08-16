@@ -33,7 +33,7 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		"ping":     BaseEventHandler(handlers.Up),
 		"status":   BaseEventHandler(handlers.Status),
 		"unpermit": EventHandlerWithArgs(manage.TempUnauth),
-		"permit": EventHandlerWithArgs(manage.TempAuth),
+		"permit":   EventHandlerWithArgs(manage.TempAuth),
 	}
 
 	for cmd, handler := range cmdHandlers {

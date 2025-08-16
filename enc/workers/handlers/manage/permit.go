@@ -92,7 +92,6 @@ func TempUnauth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	return nil
 }
 
-
 func TempAuth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	senderID := msg.SenderID
 	errPrefix := "Failed!,\nCan't add to temporarily allowed users"
