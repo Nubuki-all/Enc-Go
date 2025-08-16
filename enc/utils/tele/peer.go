@@ -44,12 +44,12 @@ func GetPeer(id int64) (tg.InputPeerClass, error) {
 		chat, ok := chatsClass.MapChats().FirstAsNotEmpty()
 		if ok {
 			if ch, ok := chat.(*tg.Channel); ok {
-				peer := &tg.InputPeerChannel{
+				/*peer := &tg.InputPeerChannel{
 					ChannelID:  ch.ID,
 					AccessHash: ch.AccessHash,
-				}
+				}*/
 				ctx.PeerStorage.AddPeer(id, ch.AccessHash, storage.TypeChannel, ch.Username)
-				return peer, nil
+				return chat.AsInputPeer(), nil
 			}
 		}
 	} else {
