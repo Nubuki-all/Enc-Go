@@ -49,7 +49,7 @@ func GetPeer(id int64) (tg.InputPeerClass, error) {
 					AccessHash: ch.AccessHash,
 				}*/
 				ctx.PeerStorage.AddPeer(id, ch.AccessHash, storage.TypeChannel, ch.Username)
-				return chat.AsInputPeer(), nil
+				return ch.AsInputPeer(), nil
 			}
 		}
 	} else {
