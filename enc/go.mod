@@ -27,6 +27,8 @@ require (
 	moul.io/zapgorm2 v1.3.0
 )
 
+replace github.com/celestix/gotgproto => github.com/Nubuki-all/gotgproto peer-test
+
 require (
 	github.com/AnimeKaizoku/cacher v1.0.3 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
