@@ -87,7 +87,7 @@ func TempUnauth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		displayName = fmt.Sprintf("%d", newID)
 	}
 	utils.RmTempUser(newID)
-	db.SaveTempUsers(ctx.Background())
+	db.SaveTempUsers(ctx)
 	_, _ = msg.ReplyText(fmt.Sprintf("Removed `%s` from temporarily allowed users %s", displayName, random.Enmoji()))
 	return nil
 }
