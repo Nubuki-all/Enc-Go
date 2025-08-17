@@ -60,7 +60,7 @@ func GetPeer(id int64) (tg.InputPeerClass, error) {
 		user, ok := tg.UserClassArray(users).FirstAsNotEmpty()
 		//if len(users) > 0 {
 		if ok {
-			if u, ok := user[0].(*tg.User); ok {
+			if u, ok := user.(*tg.User); ok {
 				ctx.PeerStorage.AddPeer(id, u.AccessHash, storage.TypeUser, u.Username)
 				return u.AsInputPeer(), nil
 			}
