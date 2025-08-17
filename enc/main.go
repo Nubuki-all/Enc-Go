@@ -26,7 +26,7 @@ func main() {
 	startup.Initialize()
 	telegraph.Init()
 	telegram.InitClient()
-	startup.Finalize(context.Background())
+	startup.Finalize(telegram.Context)
 	telegram.Client.Idle()
 
 	// … rest of your app …

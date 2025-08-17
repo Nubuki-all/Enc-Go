@@ -1,7 +1,7 @@
 package manage
 
 import (
-	"context"
+	//"context"
 	"fmt"
 	"strconv"
 
@@ -39,7 +39,7 @@ func TempUnauth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 
 	// If the command is a reply, extract ID from replied-to message
 	if msg.ReplyToID != 0 {
-		message.SetRepliedToMessage(context.Background(), ctx.Raw, ctx.PeerStorage)
+		message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
 	}
 	if repMsg := message.ReplyToMessage; repMsg != nil {
 		peer := repMsg.Message.FromID
@@ -87,7 +87,7 @@ func TempUnauth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		displayName = fmt.Sprintf("%d", newID)
 	}
 	utils.RmTempUser(newID)
-	db.SaveTempUsers(context.Background())
+	db.SaveTempUsers(ctx.Background())
 	_, _ = msg.ReplyText(fmt.Sprintf("Removed `%s` from temporarily allowed users %s", displayName, random.Enmoji()))
 	return nil
 }
@@ -113,7 +113,7 @@ func TempAuth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 
 	// If the command is a reply, extract SenderID from replied message
 	if msg.ReplyToID != 0 {
-		message.SetRepliedToMessage(context.Background(), ctx.Raw, ctx.PeerStorage)
+		message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
 	}
 	if repMsg := message.ReplyToMessage; repMsg != nil {
 		peer := repMsg.Message.FromID
@@ -161,7 +161,7 @@ func TempAuth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		displayName = fmt.Sprintf("%d", newID)
 	}
 	utils.AddTempUser(newID)
-	db.SaveTempUsers(context.Background())
+	db.SaveTempUsers(ctx)
 	_, _ = msg.ReplyText(fmt.Sprintf("Added `%s` to temporarily allowed users %s", displayName, random.Enmoji()))
 	return nil
 }
