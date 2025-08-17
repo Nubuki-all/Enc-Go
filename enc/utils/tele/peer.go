@@ -38,14 +38,11 @@ func GetPeer(id int64) (tg.InputPeerClass, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch channel: %w", err)
 		}
-
-		/*chats := chatsClass.GetChats()
-		if len(chats) > 0 {*/
 		chat, ok := chatsClass.MapChats().First()
 		if ok {
 			if ch, ok := chat.(*tg.Channel); ok {
 				ctx.PeerStorage.AddPeer(id, ch.AccessHash, storage.TypeChannel, ch.Username)
-				return ch, nil
+				return ch.AsInputPeer(), nil
 			}
 		}
 	} else {
@@ -60,15 +57,12 @@ func GetPeer(id int64) (tg.InputPeerClass, error) {
 			return nil, fmt.Errorf("failed to fetch user: %w", err)
 		}
 
-		if len(users) > 0 {
+		user, ok := tg.UserClassArray(users).FirstAsNotEmpty()
+		//if len(users) > 0 {
+		if ok {
 			if u, ok := users[0].(*tg.User); ok {
-				peer := &tg.InputPeerUser{
-					UserID:     u.ID,
-					AccessHash: u.AccessHash,
-				}
-				// Store with correct AddPeer signature
 				ctx.PeerStorage.AddPeer(id, u.AccessHash, storage.TypeUser, u.Username)
-				return peer, nil
+				return u.AsInputPeer(), nil
 			}
 		}
 	}
