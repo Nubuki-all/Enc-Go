@@ -38,6 +38,7 @@ func GetPeer(id int64) (tg.InputPeerClass, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch channel: %w", err)
 		}
+		_, _ := InputChannelClassArray(chatsClass)
 		chat, ok := chatsClass.MapChats().First()
 		if ok {
 			if ch, ok := chat.(*tg.Channel); ok {
@@ -60,10 +61,8 @@ func GetPeer(id int64) (tg.InputPeerClass, error) {
 		user, ok := tg.UserClassArray(users).FirstAsNotEmpty()
 		// if len(users) > 0 {
 		if ok {
-			if u, ok := user.(*tg.User); ok {
-				ctx.PeerStorage.AddPeer(id, u.AccessHash, storage.TypeUser, u.Username)
-				return u.AsInputPeer(), nil
-			}
+			ctx.PeerStorage.AddPeer(id, user.AccessHash, storage.TypeUser, user.Username)
+			return user.AsInputPeer(), nil
 		}
 	}
 
