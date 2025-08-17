@@ -123,12 +123,12 @@ func (m *Message) Edit(text string, editOptions *EditOptions) (*Message, error) 
 }
 
 func SendMessage(id int64, text string) error {
-	//peer, _ := GetPeer(id)
+	// peer, _ := GetPeer(id)
 	pText, entities, _ := parser.Parse(text, true)
 	// ParseMarkdown(text, true)
 	_, err := telegram.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
-		Message:  pText,
-		//Peer:     peer,
+		Message: pText,
+		// Peer:     peer,
 		Entities: entities,
 	},
 	)
@@ -136,13 +136,13 @@ func SendMessage(id int64, text string) error {
 }
 
 func EditMessage(id int64, msgID int, text string) error {
-	//peer, _ := GetPeer(id)
+	// peer, _ := GetPeer(id)
 	pText, entities, _ := parser.Parse(text, true)
 	// ParseMarkdown(text, true)
 	_, err := telegram.Context.EditMessage(id, &tg.MessagesEditMessageRequest{
-		ID:       msgID,
-		Message:  pText,
-		//Peer:     peer,
+		ID:      msgID,
+		Message: pText,
+		// Peer:     peer,
 		Entities: entities,
 	},
 	)
