@@ -38,7 +38,6 @@ func GetPeer(id int64) (tg.InputPeerClass, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch channel: %w", err)
 		}
-		_, _ = tg.InputChannelClassArray(chatsClass)
 		chat, ok := chatsClass.MapChats().First()
 		if ok {
 			if ch, ok := chat.(*tg.Channel); ok {
