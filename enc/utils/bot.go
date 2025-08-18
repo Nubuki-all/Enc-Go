@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode"
 
 	"enc/internal/bot"
 	"enc/internal/bot/state"
@@ -127,4 +128,121 @@ func GetVar(name string) interface{} {
 // GetVersion returns the global release version
 func GetVersion() string {
 	return bot.ReleaseVersion
+}
+
+
+// SplitQuotedFields splits s into whitespace-separated tokens while
+// preserving quoted substrings (single ' or double "). Quotes are
+// removed. Backslash escaping is supported inside quotes.
+// Unclosed quotes are accepted (token continues to end).
+func SplitQuotedFields(s string) []string {
+	var out []string
+	var b strings.Builder
+	inQuote := false
+	var quoteChar rune
+	esc := false
+
+	for _, r := range s {
+		if esc {
+			b.WriteRune(r)
+			esc = false
+			continue
+		}
+
+		if inQuote {
+			switch r {
+			case '\\':
+				esc = true
+			default:
+				if r == quoteChar {
+					// end quote, don't write the quote char
+					inQuote = false
+					quoteChar = 0
+				} else {
+					b.WriteRune(r)
+				}
+			}
+			continue
+		}
+
+		// not in quote
+		if r == '"' || r == '\'' {
+			inQuote = true
+			quoteChar = r
+			continue
+		}
+
+		if unicode.IsSpace(r) {
+			if b.Len() > 0 {
+				out = append(out, b.String())
+				b.Reset()
+			}
+			continue
+		}
+
+		b.WriteRune(r)
+	}
+
+	if b.Len() > 0 {
+		out = append(out, b.String())
+	}
+	return out
+}
+
+// SplitQuotedFieldsErr is like SplitQuotedFields but returns an error
+// if a quoted section was not closed.
+func SplitQuotedFieldsErr(s string) ([]string, error) {
+	var out []string
+	var b strings.Builder
+	inQuote := false
+	var quoteChar rune
+	esc := false
+
+	for _, r := range s {
+		if esc {
+			b.WriteRune(r)
+			esc = false
+			continue
+		}
+
+		if inQuote {
+			switch r {
+			case '\\':
+				esc = true
+			default:
+				if r == quoteChar {
+					inQuote = false
+					quoteChar = 0
+				} else {
+					b.WriteRune(r)
+				}
+			}
+			continue
+		}
+
+		// not in quote
+		if r == '"' || r == '\'' {
+			inQuote = true
+			quoteChar = r
+			continue
+		}
+
+		if unicode.IsSpace(r) {
+			if b.Len() > 0 {
+				out = append(out, b.String())
+				b.Reset()
+			}
+			continue
+		}
+
+		b.WriteRune(r)
+	}
+
+	if inQuote {
+		return nil, fmt.Errorf("Unclosed quote")
+	}
+	if b.Len() > 0 {
+		out = append(out, b.String())
+	}
+	return out, nil
 }

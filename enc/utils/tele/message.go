@@ -6,6 +6,7 @@ import (
 	"github.com/gotd/td/tg"
 
 	//"enc/internal/bot"
+	"enc/internal/logger"
 	"enc/internal/clients/telegram"
 	"enc/utils/tele/parser"
 )
@@ -64,6 +65,7 @@ func (m *Message) ReplyText(text string) (*Message, error) {
 	},
 	)
 	if err != nil {
+		logger.ErrorW(err.Error())
 		return nil, err
 	}
 	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID), nil
@@ -82,6 +84,7 @@ func (m *Message) Reply(text string, replyOptions *ReplyOptions) (*Message, erro
 	},
 	)
 	if err != nil {
+		logger.ErrorW(err.Error())
 		return nil, err
 	}
 	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID), nil
@@ -96,6 +99,7 @@ func (m *Message) EditText(text string) (*Message, error) {
 	},
 	)
 	if err != nil {
+		logger.ErrorW(err.Error())
 		return nil, err
 	}
 	if m.Raw == nil {
@@ -114,6 +118,7 @@ func (m *Message) Edit(text string, editOptions *EditOptions) (*Message, error) 
 	},
 	)
 	if err != nil {
+		logger.ErrorW(err.Error())
 		return nil, err
 	}
 	if m.Raw == nil {
