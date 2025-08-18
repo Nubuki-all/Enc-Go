@@ -294,7 +294,7 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 	msg, ents := NormalizeEntities(pOut.Message, pOut.Entities)
 	// if you want verbose debug:
 	fmt.Printf("msg u16len=%d, ents after normalize=%d\n", utf16Len(msg), len(ents))
-	return msg, ents
+	return msg, ents, nil
 	// return pOut.Message, pOut.Entities, nil
 }
 

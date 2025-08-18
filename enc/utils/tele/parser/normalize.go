@@ -13,7 +13,7 @@ import (
 // so we don't send ENTITY_BOUNDS_INVALID to Telegram.
 func NormalizeEntities(msg string, ents []tg.MessageEntityClass) (string, []tg.MessageEntityClass) {
 	if len(ents) == 0 {
-		return ents
+		return msg, ents
 	}
 
 	u16len := utf16Len(msg)
