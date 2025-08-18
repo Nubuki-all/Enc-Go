@@ -185,8 +185,7 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 			"Args;\n" +
 			"--rename & --match" +
 			"\nare Required. Do `" +
-			cmd +
-			"--help` for help."
+			cmd + "--help` for help.",
 		)
 	}
 	caption := pargs["caption"].(string)
