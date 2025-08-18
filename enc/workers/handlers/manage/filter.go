@@ -27,7 +27,7 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		"    {codec} codec of video (Already enclosed in [])\n" +
 		"    {audio} Audio(s) in video\n" +
 		"    *Extension is added automatically\n" +
-		"Or send one of the following params:\n"
+		"Or send one of the following params:"
 	if args == "" {
 		args += "--help"
 	}
