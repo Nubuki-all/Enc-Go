@@ -160,12 +160,12 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		),
 		argparser.CreateDBoolFlag(
 			"disable-anilist",
-			"da",
+			"d",
 			"Disable parsing with Anilist.",
 		),
 		argparser.CreateDBoolFlag(
 			"case-sensitive",
-			"ca",
+			"s",
 			"Enable case sensitive parsing.",
 		),
 	)
