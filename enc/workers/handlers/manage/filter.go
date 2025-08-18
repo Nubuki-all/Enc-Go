@@ -59,6 +59,7 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		)
 		if out := arg.Output; out != "" {
 			_, _ = msg.ReplyText(utils.CodeBlock(out))
+			_, _ = msg.ReplyText(out)
 			fmt.Println(out)
 			return nil
 		} else if err := arg.Err; err != nil {
