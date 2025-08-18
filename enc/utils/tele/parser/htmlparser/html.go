@@ -352,6 +352,7 @@ DONE:
 		}
 		return oi < oj
 	})
+	fmt.Println(buf.String(), ents)
 
 	res := &ParserResult{
 		Message:  buf.String(),
