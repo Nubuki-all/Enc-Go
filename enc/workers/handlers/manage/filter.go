@@ -31,6 +31,10 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	if args == "" {
 		args += "--help"
 	}
+	notSet := func() error {
+		_, err = msg.ReplyText("`Custom rename format not set!`")
+		return err
+	}
 	if strings.HasPrefix(args, "-") {
 		argList, err := utils.SplitQuotedFieldsErr(args)
 		if err != nil {
@@ -56,11 +60,14 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 				"d",
 				"Delete/unsets Custom rename format.",
 			),
+			argparser.CreateDBoolFlag(
+				"check",
+				"c",
+				"Check Custom rename format.",
+			),
 		)
 		if out := arg.Output; out != "" {
 			_, _ = msg.ReplyText(utils.CodeBlock(out))
-			_, _ = msg.ReplyText(out)
-			fmt.Println(out)
 			return nil
 		} else if err := arg.Err; err != nil {
 			_, _ = msg.ReplyText(err.Error())
@@ -68,21 +75,27 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		}
 		pargs := arg.Values
 		if pargs["status"].(bool) {
-			status := "Custom Rename format is"
-			if bot.CustomRename != "" {
-				status += "set."
-			} else {
-				status += "not set."
-			}
+			status := "`Custom Rename format is "
+			if bot.CustomRename == "" {
+				status += "not "
+			status += "set.`"
 			_, _ = msg.ReplyText(status)
 		} else if pargs["reset"].(bool) {
 			bot.CustomRename = config.Conf.CustomRename
 			db.SaveFilterSettings(ctx)
 			_, _ = msg.ReplyText("`Reseted custom rename format successfully!`")
 		} else if pargs["delete"].(bool) {
+			if bot.CustomRename == "" {
+				return notSet()
+			}
 			bot.CustomRename = ""
 			db.SaveFilterSettings(ctx)
 			_, _ = msg.ReplyText("`Deleted custom rename format successfully!`")
+		} else if pargs["check"].(bool) {
+			if bot.CustomRename == "" {
+				return notSet()
+			}
+			_, _ = msg.ReplyText(utils.CodeBlock(bot.CustomRename))
 		} else {
 			_, _ = msg.ReplyText("Kindly send " + cmd + " --help")
 		}
