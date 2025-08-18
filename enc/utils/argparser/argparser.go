@@ -48,7 +48,7 @@ func ParseFlags(cmdName, helpMsg string, tokens []string, defs ...[]string) Pars
 		buf.WriteString(helpMsg)
 		//if len(helpMsg) == 0 || helpMsg[len(helpMsg)-1] != '\n' {
 			//buf.WriteByte('\n')
-		}
+		//}
 	}
 
 	// Keep registration order so we can fetch typed values later
