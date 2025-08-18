@@ -256,6 +256,7 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 	text = reSpoiler.ReplaceAllString(text, `<spoiler>$1</spoiler>`)
 
 	// 3) Now pass HTML-like result to htmlparser which will produce message + entities.
+	fmt.Println(text)
 	pOut, err := htmlparser.Parse(text)
 	if err != nil {
 		return "", nil, err
