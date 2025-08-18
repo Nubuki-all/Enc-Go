@@ -15,7 +15,7 @@ import (
 	"enc/utils/tele"
 )
 
-func CustomRename ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	cmd := update.Args()[0]
 	helpMsg := `Set a custom rename format if args are passed without parameters
     Available variables:
