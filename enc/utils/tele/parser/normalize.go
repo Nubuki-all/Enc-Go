@@ -37,7 +37,7 @@ func NormalizeEntities(msg string, ents []tg.MessageEntityClass) []tg.MessageEnt
 			newEnd := bytePosToUTF16Units(msg, int(off+ln))
 			newLen := newEnd - newOff
 			if newOff >= 0 && newLen > 0 && newOff+newLen <= u16len {
-				if ne := cloneWithNewOffLen(e, int32(newOff), int32(newLen)); ne != nil {
+				if ne := cloneWithNewOffLen(e, newOff, newLen); ne != nil {
 					out = append(out, ne)
 					continue
 				}
@@ -50,7 +50,7 @@ func NormalizeEntities(msg string, ents []tg.MessageEntityClass) []tg.MessageEnt
 			newEnd := runeIndexToUTF16Units(msg, int(off+ln))
 			newLen := newEnd - newOff
 			if newOff >= 0 && newLen > 0 && newOff+newLen <= u16len {
-				if ne := cloneWithNewOffLen(e, int32(newOff), int32(newLen)); ne != nil {
+				if ne := cloneWithNewOffLen(e, newOff, newLen); ne != nil {
 					out = append(out, ne)
 					continue
 				}
@@ -61,7 +61,7 @@ func NormalizeEntities(msg string, ents []tg.MessageEntityClass) []tg.MessageEnt
 		if off < u16len {
 			newLen := u16len - off
 			if newLen > 0 {
-				if ne := cloneWithNewOffLen(e, int32(off), int32(newLen)); ne != nil {
+				if ne := cloneWithNewOffLen(e, off, newLen); ne != nil {
 					out = append(out, ne)
 					continue
 				}
@@ -72,7 +72,7 @@ func NormalizeEntities(msg string, ents []tg.MessageEntityClass) []tg.MessageEnt
 		fmt.Printf("[NormalizeEntities] dropping entity #%d (type=%T) off=%d len=%d msgU16=%d\n", i, e, off, ln, u16len)
 	}
 
-	return out
+	return msg, out
 }
 
 // ==== Helpers ====
@@ -106,7 +106,7 @@ func getOffLen(e tg.MessageEntityClass) (int, int) {
 	}
 }
 
-func cloneWithNewOffLen(e tg.MessageEntityClass, off, ln int32) tg.MessageEntityClass {
+func cloneWithNewOffLen(e tg.MessageEntityClass, off, ln int) tg.MessageEntityClass {
 	switch v := e.(type) {
 	case *tg.MessageEntityBold:
 		return &tg.MessageEntityBold{Offset: off, Length: ln}
