@@ -119,7 +119,7 @@ func cloneWithNewOffLen(e tg.MessageEntityClass, off, ln int) tg.MessageEntityCl
 	case *tg.MessageEntityCode:
 		return &tg.MessageEntityCode{Offset: off, Length: ln}
 	case *tg.MessageEntityPre:
-		lang = v.Language
+		lang := v.Language
 		return &tg.MessageEntityPre{Offset: off, Length: ln, Language: lang}
 	case *tg.MessageEntityTextURL:
 		if v.URL != "" {
