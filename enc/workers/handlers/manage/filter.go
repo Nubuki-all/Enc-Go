@@ -3,6 +3,7 @@ package manage
 import (
 	//"fmt"
 	//"strconv"
+	"strings"
 
 	"github.com/celestix/gotgproto/ext"
 	//"github.com/gotd/td/tg"
@@ -59,11 +60,11 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 			_, _ = msg.ReplyText(utils.CodeBlock(out))
 			return nil
 		} else if err := arg.Err; err != nil {
-			_, _ = msg.ReplyText(err)
+			_, _ = msg.ReplyText(err.Error())
 			return nil
 		}
 		pargs := arg.Values
-		if pargs["status"] {
+		if pargs["status"].(bool) {
 			status := "Custom Rename format is"
 			if bot.CustomRename != "" {
 				status += "set."
@@ -71,11 +72,11 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 				status += "not set."
 			}
 			_, _ = msg.ReplyText(status)
-		} else if pargs["reset"] {
+		} else if pargs["reset"].(bool) {
 			bot.CustomRename = config.Conf.CustomRename
 			db.SaveFilterSettings(ctx)
 			_, _ = msg.ReplyText("`Reseted custom rename format successfully!`")
-		} else if pargs["delete"] {
+		} else if pargs["delete"].(bool) {
 			bot.CustomRename = ""
 			db.SaveFilterSettings(ctx)
 			_, _ = msg.ReplyText("`Deleted custom rename format successfully!`")
@@ -85,7 +86,7 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		return nil
 
 	}
-	bot.CustomRename = strings.Trim(arg, `"`)
+	bot.CustomRename = strings.Trim(args, `"`)
 	db.SaveFilterSettings(ctx)
 	_, _ = msg.ReplyText("**Custom rename format has been changed.**")
 	return nil
