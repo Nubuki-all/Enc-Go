@@ -295,7 +295,7 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 	// if you want verbose debug:
 	fmt.Printf("msg u16len=%d, ents after normalize=%d\n", utf16Len(msg), len(ents))
 	return msg, ents
-	//return pOut.Message, pOut.Entities, nil
+	// return pOut.Message, pOut.Entities, nil
 }
 
 // Unparse converts a text and tg message entities into Markdown-ish plaintext (reconstructing delimiters).
