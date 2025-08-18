@@ -32,7 +32,7 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		args += "--help"
 	}
 	notSet := func() error {
-		_, err = msg.ReplyText("`Custom rename format not set!`")
+		_, err := msg.ReplyText("`Custom rename format not set!`")
 		return err
 	}
 	if strings.HasPrefix(args, "-") {
