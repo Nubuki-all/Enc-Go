@@ -56,5 +56,5 @@ func remove(s []string, r string) []string {
 }
 
 func CodeBlock(s string) string {
-	return "```\n" + s + "```"
+	return "```" + s + "```"
 }
