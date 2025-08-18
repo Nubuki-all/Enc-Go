@@ -78,6 +78,7 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 			status := "`Custom Rename format is "
 			if bot.CustomRename == "" {
 				status += "not "
+			}
 			status += "set.`"
 			_, _ = msg.ReplyText(status)
 		} else if pargs["reset"].(bool) {
