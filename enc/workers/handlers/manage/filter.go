@@ -112,7 +112,6 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	return nil
 }
 
-
 func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)
