@@ -291,7 +291,11 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 		return "", nil, err
 	}
 	// pOut.Message is UTF-8; pOut.Entities is []tg.MessageEntityClass
-	return pOut.Message, pOut.Entities, nil
+	msg, ents := NormalizeEntities(pOut.Message, pOut.Entities)
+	// if you want verbose debug:
+	fmt.Printf("msg u16len=%d, ents after normalize=%d\n", utf16Len(msg), len(ents))
+	return msg, ents
+	//return pOut.Message, pOut.Entities, nil
 }
 
 // Unparse converts a text and tg message entities into Markdown-ish plaintext (reconstructing delimiters).
