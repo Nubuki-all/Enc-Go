@@ -61,7 +61,7 @@ func CodeBlock(s string) string {
 
 func StringFormat(s ...string) string {
 	var sb strings.Builder
-	for x := range s {
+	for _, x := range s {
 		sb.WriteString(x)
 		if !strings.HasSuffix(x, " ") {
 			sb.WriteString("\n")
