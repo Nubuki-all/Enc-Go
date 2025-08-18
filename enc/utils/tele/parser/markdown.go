@@ -74,6 +74,10 @@ func replaceOnceAt(s, old, repl string, at int) (string, error) {
 	return s[:at] + repl + s[at+len(old):], nil
 }
 
+func escapeAttr(s string) string {
+    return strings.ReplaceAll(html.EscapeString(s), `"`, "&quot;")
+}
+
 // escapeAndCreateQuotes implements the blockquote handling and optional HTML escaping
 func escapeAndCreateQuotes(text string, strict bool) string {
 	lines := strings.Split(text, "\n")
@@ -206,16 +210,42 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 	//    then bold, italic, underline, strike, spoiler.
 
 	// fenced pre with optional language (DOTALL)
-	rePre := regexp.MustCompile("(?s)```([^\n]*)\n(.*?)```")
-	text = rePre.ReplaceAllStringFunc(text, func(m string) string {
-		parts := rePre.FindStringSubmatch(m)
-		lang := strings.TrimSpace(parts[1])
-		body := parts[2]
-		if lang != "" {
-			return `<pre language="` + html.EscapeString(lang) + `">` + html.EscapeString(body) + `</pre>`
-		}
-		return `<pre>` + html.EscapeString(body) + `</pre>`
-	})
+	// helper: validate language token (only allow simple tokens, no spaces)
+		var langValidRe = regexp.MustCompile(`^[A-Za-z0-9_\-\+]{1,25}$`)
+		
+		// fenced pre with optional language (DOTALL) - same regex, but we'll validate the captured lang
+		rePre := regexp.MustCompile("(?s)```([^\n]*)\n(.*?)```")
+		text = rePre.ReplaceAllStringFunc(text, func(m string) string {
+		    parts := rePre.FindStringSubmatch(m)
+		    lang := strings.TrimSpace(parts[1])
+		    body := parts[2]
+		
+		    // If the captured "lang" looks suspicious (contains spaces or too long), treat it as part of the body.
+		    if !langValidRe.MatchString(lang) {
+		        // Put it back into the body (we need original newline between lang and body)
+		        if lang != "" {
+		            body = lang + "\n" + body
+		        }
+		        lang = ""
+		    }
+		
+		    // Avoid double-escaping: when strict==true the input has already been escaped by
+		    // escapeAndCreateQuotes. Only escape now if strict==false.
+		    if !strict {
+		        body = html.EscapeString(body)
+		    } else {
+		        // If strict is true, we assume the body has already been escaped by prior step.
+		        // However as a safety measure, if body contains raw '<' or '&' sequences that look unescaped,
+		        // you could optionally call html.EscapeString here. (Not done to avoid double-escape.)
+		    }
+		
+		    if lang != "" {
+		        // Escape attribute value safely (quotes etc.)
+		        return `<pre language="` + escapeAttr(lang) + `">` + body + `</pre>`
+		    }
+		    return `<pre>` + body + `</pre>`
+		})
+
 
 	// emoji notation: ![emoji_char](tg://emoji?id=123)
 	reEmoji := regexp.MustCompile(`!\[([^\]]+)\]\(tg://emoji\?id=(\d+)\)`)
