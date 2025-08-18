@@ -112,14 +112,13 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	return nil
 }
 
-
 func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)
-		if err != nil {
-			_, _ = msg.ReplyText(err.Error())
-			return nil
-		}
+	if err != nil {
+		_, _ = msg.ReplyText(err.Error())
+		return nil
+	}
 	helpMsg := utils.StringFormat(
 		"A command to enable Auto renaming for matched files.",
 		"Note: It matches Title not file name, so you might need ",
@@ -144,15 +143,15 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		argparser.CreateDStringFlag(
 			"caption",
 			"c",
-			"New Title for caption, if 0 is passed, " +
-			"Filter is disabled for caption, if 1 or nothing is passed " +
-			"New title is taken from rename argument",
+			"New Title for caption, if 0 is passed, "+
+				"Filter is disabled for caption, if 1 or nothing is passed "+
+				"New title is taken from rename argument",
 		),
 		argparser.CreateDStringFlag(
 			"banner",
 			"b",
-			"New Title for banners. If anilist is not disabled, the given " +
-			"title is parsed by anilist. Pass 1 or 0 to re-use the caption or rename arguments respectively.",
+			"New Title for banners. If anilist is not disabled, the given "+
+				"title is parsed by anilist. Pass 1 or 0 to re-use the caption or rename arguments respectively.",
 		),
 		argparser.CreateDStringFlag(
 			"match",
@@ -183,9 +182,9 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	if !(match != "" && newName != "") {
 		_, _ = msg.ReplyText(
 			"Args;\n" +
-			"--rename & --match" +
-			"\nare Required. Do `" +
-			cmd + "--help` for help.",
+				"--rename & --match" +
+				"\nare Required. Do `" +
+				cmd + "--help` for help.",
 		)
 	}
 	caption := pargs["caption"].(string)
@@ -199,11 +198,11 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		return nil
 	}
 	arFilter := &types.RenameFilterData{
-		Match: match,
-		ReplaceName: newName,
+		Match:          match,
+		ReplaceName:    newName,
 		ReplaceCaption: caption,
-		ReplaceBanner: banner,
-		CaseSensitive: cSensitive,
+		ReplaceBanner:  banner,
+		CaseSensitive:  cSensitive,
 		DisableAnilist: dAni,
 	}
 	bot.RenameFilters = append(bot.RenameFilters, arFilter)
