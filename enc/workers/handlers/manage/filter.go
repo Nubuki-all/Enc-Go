@@ -112,6 +112,7 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	return nil
 }
 
+
 func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)
@@ -190,7 +191,7 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	caption := pargs["caption"].(string)
 	banner := pargs["banner"].(string)
 	dAni := pargs["disable-anilist"].(bool)
-	cSensitive = pargs["case-sensitive"].(bool)
+	cSensitive := pargs["case-sensitive"].(bool)
 	if RenameFilterExists(match, cSensitive) {
 		_, _ = msg.ReplyText("Rename Filter with given matched name already" +
 			" exists. Note: You can not mix case-sensitive and non case-sensitive filters.",
@@ -212,7 +213,7 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 }
 
 func RenameFilterExists(name string, caseSensitive bool) bool {
-	for filter := range bot.RenameFilters {
+	for _, filter := range bot.RenameFilters {
 		if strings.EqualFold(filter.Match, name) {
 			if !(caseSensitive || filter.CaseSensitive) {
 				return true
