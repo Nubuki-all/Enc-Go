@@ -18,16 +18,16 @@ import (
 
 func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	cmd := update.Args()[0]
-	helpMsg := "Set a custom rename format if args are passed without parameters\n"+
-    "Available variables:\n" +
-    "    {season} Season number ('S' not added)\n" +
-    "    {episode} Episode number\n" +
-    "    {title} Title of video\n" +
-    "    {quality} Quality of anime (Already enclosed in [])\n" +
-    "    {codec} codec of video (Already enclosed in [])\n" +
-    "    {audio} Audio(s) in video\n" +
-    "    *Extension is added automatically\n" +
-    "Or send one of the following params:\n"
+	helpMsg := "Set a custom rename format if args are passed without parameters\n" +
+		"Available variables:\n" +
+		"    {season} Season number ('S' not added)\n" +
+		"    {episode} Episode number\n" +
+		"    {title} Title of video\n" +
+		"    {quality} Quality of anime (Already enclosed in [])\n" +
+		"    {codec} codec of video (Already enclosed in [])\n" +
+		"    {audio} Audio(s) in video\n" +
+		"    *Extension is added automatically\n" +
+		"Or send one of the following params:\n"
 	if args == "" {
 		args += "--help"
 	}
