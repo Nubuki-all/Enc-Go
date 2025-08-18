@@ -46,8 +46,8 @@ func ParseFlags(cmdName, helpMsg string, tokens []string, defs ...[]string) Pars
 	// Custom usage to output provided helpMsg
 	fs.Usage = func() {
 		buf.WriteString(helpMsg)
-		if len(helpMsg) == 0 || helpMsg[len(helpMsg)-1] != '\n' {
-			buf.WriteByte('\n')
+		//if len(helpMsg) == 0 || helpMsg[len(helpMsg)-1] != '\n' {
+			//buf.WriteByte('\n')
 		}
 	}
 
