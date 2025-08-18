@@ -220,10 +220,11 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 		lang := strings.TrimSpace(parts[1])
 		body := parts[2]
 
-		// If the captured "lang" looks suspicious (contains spaces or too long), treat it as part of the body.
+		// Prevent out of bounds errors
 		if strings.HasSuffix(body, "\n") {
 			body = strings.TrimRight(body, "\n")
 		}
+		// If the captured "lang" looks suspicious (contains spaces or too long), treat it as part of the body.
 		if !langValidRe.MatchString(lang) {
 			// Put it back into the body (we need original newline between lang and body)
 			if lang != "" {
@@ -294,11 +295,7 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 		return "", nil, err
 	}
 	// pOut.Message is UTF-8; pOut.Entities is []tg.MessageEntityClass
-	msg, ents := NormalizeEntities(pOut.Message, pOut.Entities)
-	// if you want verbose debug:
-	fmt.Printf("msg u16len=%d, ents after normalize=%d\n", utf16Len(msg), len(ents))
-	return msg, ents, nil
-	// return pOut.Message, pOut.Entities, nil
+	return pOut.Message, pOut.Entities, nil
 }
 
 // Unparse converts a text and tg message entities into Markdown-ish plaintext (reconstructing delimiters).
