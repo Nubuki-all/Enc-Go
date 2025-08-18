@@ -26,9 +26,9 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
         {codec} codec of video (Already enclosed in [])
         {audio} Audio(s) in video
         *Extension is added automatically`
-    if args == "" {
-    	args += "--help"
-    }
+	if args == "" {
+		args += "--help"
+	}
 	if strings.HasPrefix(args, "-") {
 		argList, err := utils.SplitQuotedFieldsErr(args)
 		if err != nil {
@@ -83,7 +83,7 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 			_, _ = msg.ReplyText("Kindly send " + cmd + " --help")
 		}
 		return nil
-		
+
 	}
 	bot.CustomRename = strings.Trim(arg, `"`)
 	db.SaveFilterSettings(ctx)

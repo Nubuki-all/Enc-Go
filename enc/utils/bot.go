@@ -130,7 +130,6 @@ func GetVersion() string {
 	return bot.ReleaseVersion
 }
 
-
 // SplitQuotedFields splits s into whitespace-separated tokens while
 // preserving quoted substrings (single ' or double "). Quotes are
 // removed. Backslash escaping is supported inside quotes.

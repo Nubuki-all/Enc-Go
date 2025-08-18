@@ -22,18 +22,20 @@ type ParseResult struct {
 // - defs: list of flag definitions each as []string.
 //
 // Definition slice format (indices optional after 0):
-//   [0] long name (required) e.g. "name"
-//   [1] short (optional) e.g. "n" (single char without dash)
-//   [2] type (optional) "string"|"bool"|"int"  (default "string")
-//   [3] default value (optional) as string
-//   [4] usage (optional) description
+//
+//	[0] long name (required) e.g. "name"
+//	[1] short (optional) e.g. "n" (single char without dash)
+//	[2] type (optional) "string"|"bool"|"int"  (default "string")
+//	[3] default value (optional) as string
+//	[4] usage (optional) description
 //
 // Example:
-//   ParseFlags("mycmd", "mycmd usage...", tokens,
-//     []string{"name", "n", "string", "unknown", "user name"},
-//     []string{"force", "f", "bool", "false", "force action"},
-//     []string{"count", "c", "int", "1", "how many"},
-//   )
+//
+//	ParseFlags("mycmd", "mycmd usage...", tokens,
+//	  []string{"name", "n", "string", "unknown", "user name"},
+//	  []string{"force", "f", "bool", "false", "force action"},
+//	  []string{"count", "c", "int", "1", "how many"},
+//	)
 func ParseFlags(cmdName, helpMsg string, tokens []string, defs ...[]string) ParseResult {
 	fs := pflag.NewFlagSet(cmdName, pflag.ContinueOnError)
 
@@ -146,7 +148,6 @@ func ParseFlags(cmdName, helpMsg string, tokens []string, defs ...[]string) Pars
 	}
 }
 
-
 func CreateDBoolFlag(name, sName, helpMsg string) []string {
-	 return []string{name, sName, "bool", "false", helpMsg}
+	return []string{name, sName, "bool", "false", helpMsg}
 }

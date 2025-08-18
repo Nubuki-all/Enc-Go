@@ -6,8 +6,8 @@ import (
 	"github.com/gotd/td/tg"
 
 	//"enc/internal/bot"
-	"enc/internal/logger"
 	"enc/internal/clients/telegram"
+	"enc/internal/logger"
 	"enc/utils/tele/parser"
 )
 

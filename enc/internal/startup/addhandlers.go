@@ -28,21 +28,20 @@ func AddAllHandlers() {
 
 func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 	cmdHandlers := map[string]func(*ext.Context, *ext.Update) error{
-
 		// Welcome Handlers
-		"start":    BaseEventHandler(handlers.Start),
-		"help":     BaseEventHandler(handlers.Start),
+		"start": BaseEventHandler(handlers.Start),
+		"help":  BaseEventHandler(handlers.Start),
 
 		// Status Handlers
-		"ping":     BaseEventHandler(handlers.Up),
-		"status":   BaseEventHandler(handlers.Status),
-		
+		"ping":   BaseEventHandler(handlers.Up),
+		"status": BaseEventHandler(handlers.Status),
+
 		// Permit Handlers
 		"unpermit": EventHandlerWithArgs(manage.TempUnauth),
 		"permit":   EventHandlerWithArgs(manage.TempAuth),
 
 		// Filter-related Handlers
-		"rename":   EventHandlerWithArgs(manage.CustomRename),
+		"rename": EventHandlerWithArgs(manage.CustomRename),
 	}
 
 	for cmd, handler := range cmdHandlers {
