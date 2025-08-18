@@ -1,7 +1,7 @@
 package manage
 
 import (
-	//"fmt"
+	"fmt"
 	//"strconv"
 	"strings"
 
@@ -58,6 +58,7 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		)
 		if out := arg.Output; out != "" {
 			_, _ = msg.ReplyText(utils.CodeBlock(out))
+			fmt.Println(out)
 			return nil
 		} else if err := arg.Err; err != nil {
 			_, _ = msg.ReplyText(err.Error())

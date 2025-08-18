@@ -41,7 +41,7 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		"permit":   EventHandlerWithArgs(manage.TempAuth),
 
 		// Filter-related Handlers
-		"rename": EventHandlerWithArgs(manage.CustomRename),
+		"setrename": EventHandlerWithArgs(manage.CustomRename),
 	}
 
 	for cmd, handler := range cmdHandlers {
