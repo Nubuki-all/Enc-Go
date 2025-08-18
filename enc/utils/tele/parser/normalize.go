@@ -11,7 +11,7 @@ import (
 // NormalizeEntities validates and repairs entity offsets/lengths to UTF-16 code units.
 // It will try heuristics (bytes -> utf16, runes -> utf16) and finally clamp lengths
 // so we don't send ENTITY_BOUNDS_INVALID to Telegram.
-func NormalizeEntities(msg string, ents []tg.MessageEntityClass) []tg.MessageEntityClass {
+func NormalizeEntities(msg string, ents []tg.MessageEntityClass) (string, []tg.MessageEntityClass) {
 	if len(ents) == 0 {
 		return ents
 	}
@@ -119,14 +119,11 @@ func cloneWithNewOffLen(e tg.MessageEntityClass, off, ln int) tg.MessageEntityCl
 	case *tg.MessageEntityCode:
 		return &tg.MessageEntityCode{Offset: off, Length: ln}
 	case *tg.MessageEntityPre:
-		lang := ""
-		if pv, ok := v.(*tg.MessageEntityPre); ok {
-			lang = pv.Language
-		}
+		lang = v.Language
 		return &tg.MessageEntityPre{Offset: off, Length: ln, Language: lang}
 	case *tg.MessageEntityTextURL:
-		if tv, ok := v.(*tg.MessageEntityTextURL); ok {
-			return &tg.MessageEntityTextURL{Offset: off, Length: ln, URL: tv.URL}
+		if v.URL != "" {
+			return &tg.MessageEntityTextURL{Offset: off, Length: ln, URL: v.URL}
 		}
 		return &tg.MessageEntityTextURL{Offset: off, Length: ln}
 	case *tg.MessageEntityMentionName:
@@ -136,8 +133,8 @@ func cloneWithNewOffLen(e tg.MessageEntityClass, off, ln int) tg.MessageEntityCl
 	case *tg.MessageEntitySpoiler:
 		return &tg.MessageEntitySpoiler{Offset: off, Length: ln}
 	case *tg.MessageEntityCustomEmoji:
-		if tv, ok := v.(*tg.MessageEntityCustomEmoji); ok {
-			return &tg.MessageEntityCustomEmoji{Offset: off, Length: ln, DocumentID: tv.DocumentID}
+		if v.DocumentID != 0 {
+			return &tg.MessageEntityCustomEmoji{Offset: off, Length: ln, DocumentID: v.DocumentID}
 		}
 		return &tg.MessageEntityCustomEmoji{Offset: off, Length: ln}
 	default:
