@@ -58,3 +58,14 @@ func remove(s []string, r string) []string {
 func CodeBlock(s string) string {
 	return "```" + s + "```"
 }
+
+func StringFormat(s ...string) string {
+	var sb strings.Builder
+	for x := range s {
+		sb.WriteString(x)
+		if !strings.HasSuffix(x, " ") {
+			sb.WriteString("\n")
+		}
+	}
+	return sb.String()
+}

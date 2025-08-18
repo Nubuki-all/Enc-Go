@@ -428,8 +428,8 @@ func GetCodec(str string) string {
 func AutoRename(parsedName, originalName string, caption, banner bool) (bool, string) {
 	var filter *types.RenameFilterData
 	for _, rf := range bot.RenameFilters {
-		if rf.CaseSensitive == true {
-			if strings.ToLower(rf.Match) != strings.ToLower(originalName) {
+		if !rf.CaseSensitive {
+			if !strings.EqualFold(rf.Match, originalName) {
 				continue
 			}
 		} else if rf.Match != originalName {

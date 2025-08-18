@@ -152,3 +152,7 @@ func ParseFlags(cmdName, helpMsg string, tokens []string, defs ...[]string) Pars
 func CreateDBoolFlag(name, sName, helpMsg string) []string {
 	return []string{name, sName, "bool", "false", helpMsg}
 }
+
+func CreateDStringFlag(name, sName, helpMsg string) []string {
+	return []string{name, sName, "string", "", helpMsg}
+}
