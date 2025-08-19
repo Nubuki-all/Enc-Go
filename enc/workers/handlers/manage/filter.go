@@ -127,6 +127,7 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		"to avoid malformed filters",
 		"Each replace argument (All string arguments except match) accepts;",
 		"    00 - Disable all sort of parsing and use the original title instead. ",
+		"Flags:",
 	)
 	if args == "" {
 		args += "--help"
@@ -184,8 +185,9 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 			"Args;\n" +
 				"--rename & --match" +
 				"\nare Required. Do `" +
-				cmd + "--help` for help.",
+				cmd + " --help` for help.",
 		)
+		return nil
 	}
 	caption := pargs["caption"].(string)
 	banner := pargs["banner"].(string)
@@ -223,4 +225,67 @@ func RenameFilterExists(name string, caseSensitive bool) bool {
 		}
 	}
 	return false
+}
+
+func VAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+	//cmd := update.Args()[0]
+	helpMsg := "A command to view Rename Filter Settings.\nFlags:" +
+	"\n    --list/-l : List all Rename filters" +
+	"\n    Name/id of rename filter gotten from listing to view filter parameters."
+	if args == "" || strings.EqualFold(args, "-h") || strings.EqualFold(args, "--help") {
+		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
+		return nil
+	}
+	if strings.EqualFold(args, "-l") || strings.EqualFold(args, "--list") {
+		var sb strings.Builder
+		for i, filter := range bot.RenameFilters {
+			sb.WriteString(fmt.Sprintf("%v. `%s`\n", i, filter.Match))
+		}
+		_, _ = msg.ReplyText(sb.String())
+		return nil
+	}
+	var rFilter  *types.RenameFilterData
+	var id int
+	if i, err := strconv.Atoi(args); err == nil {
+		id = i
+	}
+	for i, filter := range bot.RenameFilters {
+		if id == i || args == filter.Match {
+			rFilter = filter
+			break
+		}
+	}
+	if rFilter == nil {
+		_, _ = msg.ReplyText("**Rename Filter not found.**")
+		return nil
+	}
+	var sb strings.Builder
+	sb.WriteString(
+		fmt.Sprintf("**Match:**\n`%s`\n\n", rFilter.Match),
+	)
+	sb.WriteString(
+		fmt.Sprintf("**Rename to:**\n`%s`\n\n", rFilter.ReplaceName),
+	)
+	sb.WriteString(
+		fmt.Sprintf("**Rename caption to:**\n`%s`\n\n", rFilter.ReplaceCaption),
+	)
+	sb.WriteString(
+		fmt.Sprintf("**Rename Banner to:**\n`%s`\n\n", rFilter.ReplaceBanner),
+	)
+	yStr := "No."
+	if rFilter.CaseSensitive {
+		yStr = "Yes."
+	}
+	sb.WriteString(
+		fmt.Sprintf("**Case Sensitive:**  `%s`\n\n", yStr),
+	)
+	if rFilter.DisableAnilist {
+		yStr = "Yes."
+	} else {
+		yStr = "No."
+	}
+	sb.WriteString(
+		fmt.Sprintf("**Disable Anilist:**  `%s`\n\n", yStr),
+	)
+	_, _ = msg.ReplyText(sb.String())
 }

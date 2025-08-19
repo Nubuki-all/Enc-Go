@@ -43,6 +43,7 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		// Filter-related Handlers
 		"setrename": EventHandlerWithArgs(manage.CustomRename),
 		"name":      EventHandlerWithArgs(manage.AutoRename),
+		"vname":     EventHandlerWithArgs(manage.VAutoRename),
 	}
 
 	for cmd, handler := range cmdHandlers {
