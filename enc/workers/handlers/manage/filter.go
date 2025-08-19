@@ -368,7 +368,7 @@ func DelAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 			)
 			return nil
 		}
-		if iD > (len(bot.RenameFilters) -1) {
+		if iD > (len(bot.RenameFilters) - 1) {
 			_, _ = msg.ReplyText(
 				fmt.Sprintf("Supplied number: `%s` is not a valid id.", id),
 			)

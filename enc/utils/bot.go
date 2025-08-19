@@ -246,9 +246,8 @@ func SplitQuotedFieldsErr(s string) ([]string, error) {
 	return out, nil
 }
 
-
 func RemoveRFilterByIndex(s []*types.RenameFilterData, index int) []*types.RenameFilterData {
-    ret := make([]*types.RenameFilterData, 0, len(s)-1)
-    ret = append(ret, s[:index]...)
-    return append(ret, s[index+1:]...)
+	ret := make([]*types.RenameFilterData, 0, len(s)-1)
+	ret = append(ret, s[:index]...)
+	return append(ret, s[index+1:]...)
 }
