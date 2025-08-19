@@ -228,10 +228,10 @@ func RenameFilterExists(name string, caseSensitive bool) bool {
 }
 
 func VAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
-	//cmd := update.Args()[0]
+	// cmd := update.Args()[0]
 	helpMsg := "A command to view Rename Filter Settings.\nFlags:" +
-	"\n    --list/-l : List all Rename filters" +
-	"\n    Name/id of rename filter gotten from listing to view filter parameters."
+		"\n    --list/-l : List all Rename filters" +
+		"\n    Name/id of rename filter gotten from listing to view filter parameters."
 	if args == "" || strings.EqualFold(args, "-h") || strings.EqualFold(args, "--help") {
 		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
 		return nil
@@ -244,7 +244,7 @@ func VAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 		_, _ = msg.ReplyText(sb.String())
 		return nil
 	}
-	var rFilter  *types.RenameFilterData
+	var rFilter *types.RenameFilterData
 	var id int
 	if i, err := strconv.Atoi(args); err == nil {
 		id = i
