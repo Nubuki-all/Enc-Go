@@ -362,19 +362,20 @@ func DelAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 			return nil
 		}
 	} else {
-		iD, err := strconv.Atoi(id)
+		ID, err := strconv.Atoi(id)
 		if err != nil {
 			_, _ = msg.ReplyText(
 				fmt.Sprintf("Invalid number: `%s`", id),
 			)
 			return nil
 		}
-		if iD > (len(bot.RenameFilters) - 1) {
+		if ID > (len(bot.RenameFilters) - 1) {
 			_, _ = msg.ReplyText(
 				fmt.Sprintf("Supplied number: `%s` is not a valid id.", id),
 			)
 			return nil
 		}
+		iD = ID
 	}
 	bot.RenameFilters = slices.Delete(bot.RenameFilters, iD, iD+1)
 	db.SaveRenameFilters(ctx)
