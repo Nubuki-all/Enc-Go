@@ -273,7 +273,7 @@ func VAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 	sb.WriteString(
 		fmt.Sprintf("**Rename caption to:**\n`%s`\n\n", caption),
 	)
-	if rFilter.ReplaceBanner {
+	if rFilter.ReplaceBanner != "" {
 		sb.WriteString(
 			fmt.Sprintf("**Rename Banner to:**\n`%s`\n\n", rFilter.ReplaceBanner),
 		)
@@ -294,5 +294,89 @@ func VAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 		fmt.Sprintf("**Disable Anilist:**  `%s`\n\n", yStr),
 	)
 	_, _ = msg.ReplyText(sb.String())
+	return nil
+}
+
+func DelAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+	cmd := update.Args()[0]
+	argList, err := utils.SplitQuotedFieldsErr(args)
+	if err != nil {
+		_, _ = msg.ReplyText(err.Error())
+		return nil
+	}
+	helpMsg := utils.StringFormat(
+		"Deletes previously saved rename filters!",
+		"Requires the match name (case sensitive) or id, ",
+		"to get both list the saved rename filters.",
+		"Please use double qoutes while passing arguments ",
+		"with spaces to avoid unknown arguments.",
+		"Flags:",
+	)
+	if args == "" {
+		args += "--help"
+	}
+	arg := argparser.ParseFlags(
+		cmd,
+		helpMsg,
+		argList,
+		argparser.CreateDStringFlag(
+			"name",
+			"n",
+			"Match name of rename filter.",
+		),
+		argparser.CreateDStringFlag(
+			"id",
+			"i",
+			"Id of rename filter",
+		),
+	)
+	if out := arg.Output; out != "" {
+		_, _ = msg.ReplyText(utils.CodeBlock(out))
+		return nil
+	} else if err := arg.Err; err != nil {
+		_, _ = msg.ReplyText(err.Error())
+		return nil
+	}
+	pargs := arg.Values
+	match := pargs["name"].(string)
+	id := pargs["id"].(string)
+	if match == "" && id == "" {
+		_, _ = msg.ReplyText(
+			fmt.Sprintf("Missing required argument.\nNeed help? Send: `%s --help`", cmd),
+		)
+		return nil
+	}
+	iD := -1
+	if match != "" {
+		for i, filter := range bot.RenameFilters {
+			if match == filter.Match {
+				iD = i
+				break
+			}
+		}
+		if iD == -1 {
+			_, _ = msg.ReplyText(
+				fmt.Sprintf("Could not find `%s` in rename filters", match),
+			)
+			return nil
+		}
+	} else {
+		iD, err := strconv.Atoi(id)
+		if err {
+			_, _ = msg.ReplyText(
+				fmt.Sprintf("Invalid number: `%s`", id),
+			)
+			return nil
+		}
+		if iD > (len(bot.RenameFilters) -1) {
+			_, _ = msg.ReplyText(
+				fmt.Sprintf("Supplied number: `%s` is not a valid id.", id),
+			)
+			return nil
+		}
+	}
+	bot.RenameFilters = RemoveRFilterByIndex(bot.RenameFilters, iD)
+	db.SaveRenameFilters(ctx)
+	_, _ = msg.ReplyText("**Removed filter from Rename Filters Successfully**")
 	return nil
 }

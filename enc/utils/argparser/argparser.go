@@ -156,3 +156,7 @@ func CreateDBoolFlag(name, sName, helpMsg string) []string {
 func CreateDStringFlag(name, sName, helpMsg string) []string {
 	return []string{name, sName, "string", "", helpMsg}
 }
+
+func CreateDIntFlag(name, sName, helpMsg string) []string {
+	return []string{name, sName, "int", "", helpMsg}
+}

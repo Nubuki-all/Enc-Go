@@ -44,6 +44,8 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		"setrename": EventHandlerWithArgs(manage.CustomRename),
 		"name":      EventHandlerWithArgs(manage.AutoRename),
 		"vname":     EventHandlerWithArgs(manage.VAutoRename),
+		"delname":   EventHandlerWithArgs(manage.DelAutoRename),
+
 	}
 
 	for cmd, handler := range cmdHandlers {
