@@ -2,8 +2,8 @@ package manage
 
 import (
 	"fmt"
-	"strconv"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/celestix/gotgproto/ext"
@@ -376,7 +376,7 @@ func DelAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 			return nil
 		}
 	}
-	bot.RenameFilters = slices.Delete(bot.RenameFilters, iD, iD + 1)
+	bot.RenameFilters = slices.Delete(bot.RenameFilters, iD, iD+1)
 	db.SaveRenameFilters(ctx)
 	_, _ = msg.ReplyText("**Removed filter from Rename Filters Successfully**")
 	return nil
