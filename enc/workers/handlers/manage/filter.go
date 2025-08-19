@@ -1,8 +1,8 @@
 package manage
 
 import (
-	//"fmt"
-	//"strconv"
+	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/celestix/gotgproto/ext"
@@ -288,4 +288,5 @@ func VAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 		fmt.Sprintf("**Disable Anilist:**  `%s`\n\n", yStr),
 	)
 	_, _ = msg.ReplyText(sb.String())
+	return nil
 }
