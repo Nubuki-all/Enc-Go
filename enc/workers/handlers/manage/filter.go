@@ -266,12 +266,18 @@ func VAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 	sb.WriteString(
 		fmt.Sprintf("**Rename to:**\n`%s`\n\n", rFilter.ReplaceName),
 	)
+	caption := rFilter.ReplaceCaption
+	if caption == "" {
+		caption = rFilter.ReplaceName
+	}
 	sb.WriteString(
-		fmt.Sprintf("**Rename caption to:**\n`%s`\n\n", rFilter.ReplaceCaption),
+		fmt.Sprintf("**Rename caption to:**\n`%s`\n\n", caption),
 	)
-	sb.WriteString(
-		fmt.Sprintf("**Rename Banner to:**\n`%s`\n\n", rFilter.ReplaceBanner),
-	)
+	if rFilter.ReplaceBanner {
+		sb.WriteString(
+			fmt.Sprintf("**Rename Banner to:**\n`%s`\n\n", rFilter.ReplaceBanner),
+		)
+	}
 	yStr := "No."
 	if rFilter.CaseSensitive {
 		yStr = "Yes."
