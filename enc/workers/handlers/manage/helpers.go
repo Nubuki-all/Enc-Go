@@ -3,10 +3,9 @@ package manage
 import (
 	"strings"
 
-    "enc/internal/bot"
+	"enc/internal/bot"
 	"enc/internal/bot/types"
 )
-
 
 func RenameFilterExists(name string, caseSensitive bool) bool {
 	for _, filter := range bot.RenameFilters {
@@ -62,7 +61,7 @@ func convertStrToMtchFiltr(datas []string) []*types.MatchedFilterData {
 			continue
 		}
 		fil := &types.MatchedFilterData{
-			Match: values[0],
+			Match:      values[0],
 			CaptionTag: values[1],
 		}
 		if valueLen > 2 {
@@ -72,7 +71,7 @@ func convertStrToMtchFiltr(datas []string) []*types.MatchedFilterData {
 			fil.MatchOnce = values[3]
 		}
 		out = append(out, fil)
-		
+
 	}
 	return out
 }

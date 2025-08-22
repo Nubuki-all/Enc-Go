@@ -468,9 +468,9 @@ func VFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		return nil
 	}
 	filter := bot.Filters
-	filterStr := fmt.Sprintf("Bot Will Automatically:\n\n" +
-		"**Remove:-** `%s`\n" +
-		"**Tag Files as:-** `%s`\n" +
+	filterStr := fmt.Sprintf("Bot Will Automatically:\n\n"+
+		"**Remove:-** `%s`\n"+
+		"**Tag Files as:-** `%s`\n"+
 		"**Tag caption as:-** `%s`",
 		filter.Fil1,
 		filter.Fil2,
@@ -590,11 +590,11 @@ func MatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 		return nil
 	}
 	filter := &types.MatchedFilterData{
-		Match:          match,
-		FileTag:        tagFile,
-		CaptionTag:     tagCaption,
-		CaseSensitive:  cSensitive,
-		MatchOnce:      mOnce,
+		Match:         match,
+		FileTag:       tagFile,
+		CaptionTag:    tagCaption,
+		CaseSensitive: cSensitive,
+		MatchOnce:     mOnce,
 	}
 	filters = append(filters, filter)
 	updateMatchFilter(filters, release)
@@ -602,7 +602,6 @@ func MatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 	_, _ = msg.ReplyText("**Added new Name filter Successfully**")
 	return nil
 }
-
 
 func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
@@ -669,15 +668,15 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 		if len(filters) == 0 {
 			_, _ = msg.ReplyText("`No name/release filters yet!`")
 			return nil
-		listHeader := "**List of all "
-		listHeader += typeName
-		listHeader += " filters**\n"
-		var sb strings.Builder
-		for i, filter := range filters {
-			sb.WriteString(fmt.Sprintf("%v. `%s`\n", i, filter.Match))
-		}
-		_, _ = msg.ReplyText(listHeader + sb.String())
-		return nil
+			listHeader := "**List of all "
+			listHeader += typeName
+			listHeader += " filters**\n"
+			var sb strings.Builder
+			for i, filter := range filters {
+				sb.WriteString(fmt.Sprintf("%v. `%s`\n", i, filter.Match))
+			}
+			_, _ = msg.ReplyText(listHeader + sb.String())
+			return nil
 		}
 	}
 	name := pargs["name"].(string)
@@ -707,8 +706,8 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 	if Filter == nil {
 		_, _ = msg.ReplyText(
 			"**" +
-			typeName +
-			" Filter not found.**",
+				typeName +
+				" Filter not found.**",
 		)
 		return nil
 	}
@@ -718,8 +717,8 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 		db.SaveMatchedFilters(ctx)
 		_, _ = msg.ReplyText(
 			"**Deleted " +
-			typeName +
-			" filter Successfully**",
+				typeName +
+				" filter Successfully**",
 		)
 		return nil
 	}
@@ -727,7 +726,7 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 	sb.WriteString(
 		fmt.Sprintf("**Match:**\n`%s`\n\n", Filter.Match),
 	)
-	if fTag:= Filter.FileTag; fTag != "" {
+	if fTag := Filter.FileTag; fTag != "" {
 		sb.WriteString(
 			fmt.Sprintf("**Tag files as:**\n`%s`\n\n", fTag),
 		)
@@ -737,7 +736,7 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 			fmt.Sprintf("**Tag caption to:**\n`%s`\n\n", fCap),
 		)
 	}
-	
+
 	yStr := "No."
 	if Filter.CaseSensitive {
 		yStr = "Yes."
@@ -751,7 +750,7 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 		} else {
 			yStr = "No."
 		}
-		
+
 		sb.WriteString(
 			fmt.Sprintf("**Match Once:**  `%s`\n\n", yStr),
 		)
@@ -785,17 +784,17 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		cmd,
 		helpMsg,
 		argList,
-		 argparser.CreateDStringFlag(
-		 	"release-group",
-		 	"r",
-		 	"Release group name to match.",
+		argparser.CreateDStringFlag(
+			"release-group",
+			"r",
+			"Release group name to match.",
 		),
 		argparser.CreateDStringSliceFlag(
-		 	"filter",
-		 	"f",
-		 	"Format: 'item to match in file name||caption tag||case-sensitive?||match once? (bool)', flag can be used multiple times to match different tags in file name.",
+			"filter",
+			"f",
+			"Format: 'item to match in file name||caption tag||case-sensitive?||match once? (bool)', flag can be used multiple times to match different tags in file name.",
 		),
-		
+
 		argparser.CreateDBoolFlag(
 			"case-sensitive",
 			"c",
@@ -838,9 +837,9 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		return nil
 	}
 	filter := &types.RGExtendedFilterData{
-		Match:          release,
-		Data:           datas,
-		CaseSensitive:  cSensitive,
+		Match:         release,
+		Data:          datas,
+		CaseSensitive: cSensitive,
 	}
 	bot.RGExtendedFilters = append(bot.RGExtendedFilters, filter)
 	db.SaveRGExtendedFilters(ctx)
@@ -898,13 +897,13 @@ func ManageExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message,
 		if len(bot.RGExtendedFilters) == 0 {
 			_, _ = msg.ReplyText("`No extended release filters yet!`")
 			return nil
-		listHeader := "**List of all extended release filters**\n"
-		var sb strings.Builder
-		for i, filter := range bot.RGExtendedFilters {
-			sb.WriteString(fmt.Sprintf("%v. `%s`\n", i, filter.Match))
-		}
-		_, _ = msg.ReplyText(listHeader + sb.String())
-		return nil
+			listHeader := "**List of all extended release filters**\n"
+			var sb strings.Builder
+			for i, filter := range bot.RGExtendedFilters {
+				sb.WriteString(fmt.Sprintf("%v. `%s`\n", i, filter.Match))
+			}
+			_, _ = msg.ReplyText(listHeader + sb.String())
+			return nil
 		}
 	}
 	name := pargs["name"].(string)

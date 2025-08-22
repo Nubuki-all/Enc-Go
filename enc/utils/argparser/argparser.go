@@ -2,8 +2,8 @@ package argparser
 
 import (
 	"bytes"
-	"strings"
 	"strconv"
+	"strings"
 
 	"github.com/spf13/pflag"
 )
