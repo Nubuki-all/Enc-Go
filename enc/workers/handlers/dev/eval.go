@@ -24,7 +24,7 @@ func EvalGoSnippet(code string, msg *tele.Message) (string, error) {
 	}
 
 	if err := i.Use(map[string]map[string]reflect.Value{
-		"msg": {
+		"msg/msg": {
 			"Msg": reflect.ValueOf(msg),
 		},
 	}); err != nil {
