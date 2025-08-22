@@ -15,6 +15,7 @@ import (
 	"enc/internal/logger"
 	"enc/utils/tele"
 	"enc/workers/handlers"
+	"enc/workers/handlers/dev"
 	"enc/workers/handlers/manage"
 )
 
@@ -52,6 +53,9 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		"etag":      EventHandlerWithArgs(manage.ManageMatchFilter),
 		"xtag":      EventHandlerWithArgs(manage.ExtCapFilter),
 		"extag":     EventHandlerWithArgs(manage.ManageExtCapFilter),
+		
+		// Dev Handlers
+		"eval":     EventHandlerWithArgs(dev.Eval),
 	}
 
 	for cmd, handler := range cmdHandlers {
