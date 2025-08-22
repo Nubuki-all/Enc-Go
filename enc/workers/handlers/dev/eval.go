@@ -47,6 +47,7 @@ func EvalGoSnippet(code string) (string, error) {
 	return outBuf.String(), err
 }
 
+
 func Eval(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		if !utils.UserIsDev(msg.SenderID) {
@@ -64,9 +65,9 @@ func Eval(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) 
 		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
 		return nil
 	}
-	err, out := EvalGoSnippet(args)
+	out, err := EvalGoSnippet(args)
 	var eval string
-	if err {
+	if err != nil {
 		eval = err.Error()
 	} else if out != "" {
 		eval = out
