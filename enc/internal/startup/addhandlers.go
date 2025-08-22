@@ -53,9 +53,9 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		"etag":      EventHandlerWithArgs(manage.ManageMatchFilter),
 		"xtag":      EventHandlerWithArgs(manage.ExtCapFilter),
 		"extag":     EventHandlerWithArgs(manage.ManageExtCapFilter),
-		
+
 		// Dev Handlers
-		"eval":     EventHandlerWithArgs(dev.Eval),
+		"eval": EventHandlerWithArgs(dev.Eval),
 	}
 
 	for cmd, handler := range cmdHandlers {

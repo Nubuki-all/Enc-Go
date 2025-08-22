@@ -6,9 +6,9 @@ import (
 	"io"
 	"os"
 
+	"github.com/celestix/gotgproto/ext"
 	"github.com/traefik/yaegi/interp"
 	"github.com/traefik/yaegi/stdlib"
-	"github.com/celestix/gotgproto/ext"
 
 	"enc/utils"
 	"enc/utils/tele"
@@ -46,7 +46,6 @@ func EvalGoSnippet(code string) (string, error) {
 
 	return outBuf.String(), err
 }
-
 
 func Eval(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
