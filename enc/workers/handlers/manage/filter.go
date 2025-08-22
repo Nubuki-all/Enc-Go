@@ -412,17 +412,17 @@ func Filter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		argList,
 		argparser.CreateDStringFlag(
 			"remove",
-			"rm",
+			"r",
 			"List of strings to remove, delimited by '|'",
 		),
 		argparser.CreateDStringFlag(
 			"tag-file",
-			"tf",
+			"f",
 			"Tag all files as [args]",
 		),
 		argparser.CreateDStringFlag(
 			"tag-caption",
-			"tc",
+			"c",
 			"Tag all captions as … "+
 				"to add to the generated tags instead of replacing, pass \"{auto} my_tags\" as argument",
 		),
@@ -525,12 +525,12 @@ func MatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 		argList,
 		argparser.CreateDStringFlag(
 			"tag-file",
-			"tf",
+			"f",
 			"Tag for file without brackets",
 		),
 		argparser.CreateDStringFlag(
 			"tag-caption",
-			"tc",
+			"c",
 			"Tag for caption, also shares the same behavior as the global filter.",
 		),
 		argparser.CreateDStringFlag(
@@ -625,7 +625,7 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 		),
 		argparser.CreateDStringFlag(
 			"name",
-			"-n",
+			"n",
 			"Name of filter to view.",
 		),
 		argparser.CreateDBoolFlag(
@@ -869,7 +869,7 @@ func ManageExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message,
 		),
 		argparser.CreateDStringFlag(
 			"name",
-			"-n",
+			"n",
 			"Name of filter to view.",
 		),
 		argparser.CreateDBoolFlag(
