@@ -98,7 +98,7 @@ func Eval(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) 
 		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
 		return nil
 	}
-	out, err := EvalGoSnippet(args)
+	out, err := EvalGoSnippet(args, msg)
 	var eval string
 	if err != nil {
 		eval = err.Error()
