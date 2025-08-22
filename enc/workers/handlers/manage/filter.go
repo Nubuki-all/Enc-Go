@@ -681,7 +681,7 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 	}
 	name := pargs["name"].(string)
 	iD := pargs["id"].(string)
-	if name == "" && id == "" {
+	if name == "" && iD == "" {
 		_, _ = msg.ReplyText("`At least one argument excluding --release & --delete is required.`")
 		return nil
 	}
@@ -731,9 +731,9 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 			fmt.Sprintf("**Tag files as:**\n`%s`\n\n", fTag),
 		)
 	}
-	if fCap := Filter.ReplaceCaption; fCap != "" {
+	if cTag := Filter.CaptionTag; cTag != "" {
 		sb.WriteString(
-			fmt.Sprintf("**Tag caption to:**\n`%s`\n\n", fCap),
+			fmt.Sprintf("**Tag caption to:**\n`%s`\n\n", cTag),
 		)
 	}
 
@@ -744,7 +744,7 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 	sb.WriteString(
 		fmt.Sprintf("**Case Sensitive:**  `%s`\n\n", yStr),
 	)
-	if !replace {
+	if !release {
 		if Filter.MatchOnce {
 			yStr = "Yes."
 		} else {
@@ -821,7 +821,7 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		return nil
 	}
 	cSensitive := pargs["case-sensitive"].(bool)
-	if ReleaseExtFilterExists(release, cSensitive) || (release && ReleaseFilterExists(match, cSensitive)) {
+	if ReleaseExtFilterExists(release, cSensitive) {
 		_, _ = msg.ReplyText("Release Ext Filter with given matched name already" +
 			" exists. Note: You cannot mix case-sensitive and non case-sensitive filters.",
 		)
@@ -908,7 +908,7 @@ func ManageExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message,
 	}
 	name := pargs["name"].(string)
 	iD := pargs["id"].(string)
-	if name == "" && id == "" {
+	if name == "" && iD == "" {
 		_, _ = msg.ReplyText("`At least one additional argument is required if --list is not specified.`")
 		return nil
 	}

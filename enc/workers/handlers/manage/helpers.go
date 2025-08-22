@@ -2,6 +2,7 @@ package manage
 
 import (
 	"strings"
+	"strconv"
 
 	"enc/internal/bot"
 	"enc/internal/bot/types"
@@ -65,10 +66,14 @@ func convertStrToMtchFiltr(datas []string) []*types.MatchedFilterData {
 			CaptionTag: values[1],
 		}
 		if valueLen > 2 {
-			fil.CaseSensitive = values[2]
+			if v, err := strconv.ParseBool(values[2]); err == nil {
+				fil.CaseSensitive = v
+			}
 		}
 		if valueLen > 3 {
-			fil.MatchOnce = values[3]
+			if v, err := strconv.ParseBool(values[3]); err == nil {
+				fil.MatchOnce = v
+			}
 		}
 		out = append(out, fil)
 
