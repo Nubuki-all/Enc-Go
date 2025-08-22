@@ -192,7 +192,7 @@ func ParseName(
 	if releaseInfo == "[END]" || (te != "" && te == epi && season == "") {
 		primary.WriteString(" [END]")
 	}
-	if aTag != "" {
+	if aTag != "" && aTag != "disable" {
 		primary.WriteString(" [")
 		primary.WriteString(aTag)
 		primary.WriteString("]")

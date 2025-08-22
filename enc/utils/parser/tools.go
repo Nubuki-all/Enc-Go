@@ -62,6 +62,9 @@ func GetCusTag(name, releaseGroup string, caption bool) string {
 					return filter.FileTag
 				}
 			}
+			if outStr.Len() != 0 {
+				outStr.WriteString(" ")
+			}
 			if caption {
 				outStr.WriteString(filter.CaptionTag)
 			} else {
@@ -92,6 +95,9 @@ func GetCusTag(name, releaseGroup string, caption bool) string {
 				} else {
 					return filter.FileTag
 				}
+			}
+			if outStr.Len() != 0 {
+				outStr.WriteString(" ")
 			}
 			if caption {
 				outStr.WriteString(filter.CaptionTag)

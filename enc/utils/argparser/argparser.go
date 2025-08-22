@@ -108,6 +108,16 @@ func ParseFlags(cmdName, helpMsg string, tokens []string, defs ...[]string) Pars
 			} else {
 				fs.Int(name, defInt, usage)
 			}
+		case "string_slice":
+			defSlice := []string{}
+			if defVal != "" {
+				defSlice = strings.Split(v, " ")
+			}
+			if short != "" {
+				fs.StringArrayP(name, short, defSlice, usage)
+			} else {
+				fs.StringArray(name, defSlice, usage)
+			}
 		default: // string
 			if short != "" {
 				fs.StringP(name, short, defVal, usage)
@@ -131,6 +141,9 @@ func ParseFlags(cmdName, helpMsg string, tokens []string, defs ...[]string) Pars
 			values[r.name] = v
 		case "int":
 			v, _ := fs.GetInt(r.name)
+			values[r.name] = v
+		case "string_slice":
+			v, _ := fs.GetStringArray(r.name)
 			values[r.name] = v
 		default:
 			v, _ := fs.GetString(r.name)
@@ -159,4 +172,8 @@ func CreateDStringFlag(name, sName, helpMsg string) []string {
 
 func CreateDIntFlag(name, sName, helpMsg string) []string {
 	return []string{name, sName, "int", "", helpMsg}
+}
+
+func CreateDStringSliceFlag(name, sName, helpMsg string) []string {
+	return []string{name, sName, "string_slice", "", helpMsg}
 }
