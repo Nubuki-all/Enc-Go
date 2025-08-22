@@ -16,36 +16,70 @@ import (
 
 // EvalGoSnippet runs a Go snippet and returns its stdout and the returned error (if any).
 // The snippet should be full Go statements (e.g. `import "fmt"; fmt.Println("hello")` or `package main; func main(){...}`).
-func EvalGoSnippet(code string) (string, error) {
+func EvalGoSnippet(code string, msg *tele.Message) (string, error) {
 	i := interp.New(interp.Options{})
 	if err := i.Use(stdlib.Symbols); err != nil {
 		return "", err
 	}
 
-	// Capture stdout
+	if err := i.Use(map[string]map[string]reflect.Value{
+		"msg": {
+			"Msg": reflect.ValueOf(msg),
+		},
+	}); err != nil {
+		return "", err
+	}
+
+	// Capture stdout produced by evaluated code (fmt.Println etc.)
 	oldStdout := os.Stdout
 	r, w, err := os.Pipe()
 	if err != nil {
 		return "", err
 	}
 	os.Stdout = w
+	// Ensure stdout is restored even on panic/return
+	defer func() { os.Stdout = oldStdout }()
 
 	var outBuf bytes.Buffer
-	done := make(chan error)
+	done := make(chan error, 1)
 	go func() {
-		_, err := io.Copy(&outBuf, r)
-		done <- err
+		_, copyErr := io.Copy(&outBuf, r)
+		done <- copyErr
 	}()
 
-	_, err = i.Eval(code)
+	// Evaluate the snippet
+	val, evalErr := i.Eval(code)
 
-	// restore
-	w.Close()
-	os.Stdout = oldStdout
-	<-done
+	// Close writer so the reader goroutine can finish and we can collect output
+	_ = w.Close()
+	copyErr := <-done
 
-	return outBuf.String(), err
+	output := outBuf.String()
+	if evalErr == nil && val.IsValid() && val.CanInterface() {
+		// Only append if Eval returned something non-nil/non-empty-ish
+		v := val.Interface()
+		if v != nil {
+			s := fmt.Sprint(v)
+			if s != "<nil>" && s != "" {
+				if output != "" {
+					output += "\n"
+				}
+				output += s
+			}
+		}
+	}
+
+	// Prefer returning the evaluation error (so caller sees stack/yaegi error). If no evalErr,
+	// but the io.Copy produced an error, return that.
+	if evalErr != nil {
+		return output, evalErr
+	}
+	if copyErr != nil {
+		return output, copyErr
+	}
+	return output, nil
 }
+
 
 func Eval(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
