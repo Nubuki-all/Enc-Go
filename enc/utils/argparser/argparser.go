@@ -2,6 +2,7 @@ package argparser
 
 import (
 	"bytes"
+	"strings"
 	"strconv"
 
 	"github.com/spf13/pflag"
@@ -111,7 +112,7 @@ func ParseFlags(cmdName, helpMsg string, tokens []string, defs ...[]string) Pars
 		case "string_slice":
 			defSlice := []string{}
 			if defVal != "" {
-				defSlice = strings.Split(v, " ")
+				defSlice = strings.Split(defVal, " ")
 			}
 			if short != "" {
 				fs.StringArrayP(name, short, defSlice, usage)

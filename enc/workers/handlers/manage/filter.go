@@ -812,7 +812,7 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	pargs := arg.Values
 	release := pargs["release-group"].(string)
 	data := pargs["filter"].([]string)
-	if release == "" or len(data) == 0 {
+	if release == "" || len(data) == 0 {
 		_, _ = msg.ReplyText(
 			"Arguments;\n" +
 				"--release-group & --filter" +
@@ -962,7 +962,7 @@ func ManageExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message,
 			fmt.Sprintf("**Match:** `%s`\n", data.Match),
 		)
 		sb.WriteString(
-			fmt.Sprintf("**Tag as:** `%s`\n", data.CaptionTag)
+			fmt.Sprintf("**Tag as:** `%s`\n", data.CaptionTag),
 		)
 		if data.CaseSensitive {
 			sb.WriteString(
