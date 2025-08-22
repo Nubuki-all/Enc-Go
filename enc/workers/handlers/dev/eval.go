@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"reflect"
 
 	"github.com/celestix/gotgproto/ext"
 	"github.com/traefik/yaegi/interp"
