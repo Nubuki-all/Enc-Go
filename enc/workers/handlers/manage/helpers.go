@@ -1,8 +1,8 @@
 package manage
 
 import (
-	"strings"
 	"strconv"
+	"strings"
 
 	"enc/internal/bot"
 	"enc/internal/bot/types"
