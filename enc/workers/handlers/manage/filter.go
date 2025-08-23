@@ -125,6 +125,9 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
+	if args == "" {
+		args += "--help"
+	}
 	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
@@ -141,9 +144,6 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		"    00 - Disable all sort of parsing and use the original title instead.",
 		"Flags:",
 	)
-	if args == "" {
-		args += "--help"
-	}
 	arg := argparser.ParseFlags(
 		cmd,
 		helpMsg,
@@ -306,6 +306,9 @@ func DelAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
+	if args == "" {
+		args += "--help"
+	}
 	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
@@ -320,9 +323,6 @@ func DelAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 		"with spaces to avoid unknown arguments.",
 		"Flags:",
 	)
-	if args == "" {
-		args += "--help"
-	}
 	arg := argparser.ParseFlags(
 		cmd,
 		helpMsg,
@@ -395,6 +395,9 @@ func Filter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
+	if args == "" {
+		args += "--help"
+	}
 	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
@@ -410,9 +413,6 @@ func Filter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		"to avoid malformed filters",
 		"Requires the following arguments:",
 	)
-	if args == "" {
-		args += "--help"
-	}
 	arg := argparser.ParseFlags(
 		cmd,
 		helpMsg,
@@ -511,6 +511,9 @@ func MatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
+	if args == "" {
+		args += "--help"
+	}
 	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
@@ -524,9 +527,6 @@ func MatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 		"to avoid malformed filters",
 		"Flags:",
 	)
-	if args == "" {
-		args += "--help"
-	}
 	arg := argparser.ParseFlags(
 		cmd,
 		helpMsg,
@@ -616,6 +616,9 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
+	if args == "" {
+		args += "--help"
+	}
 	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
@@ -623,9 +626,6 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 		return nil
 	}
 	helpMsg := "A command to view or delete Filename/Release Filter Settings.\nFlags:"
-	if args == "" {
-		args += "--help"
-	}
 	arg := argparser.ParseFlags(
 		cmd,
 		helpMsg,
@@ -779,6 +779,9 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
+	if args == "" {
+		args += "--help"
+	}
 	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
@@ -792,9 +795,6 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		"to avoid malformed filters",
 		"Flags:",
 	)
-	if args == "" {
-		args += "--help"
-	}
 	arg := argparser.ParseFlags(
 		cmd,
 		helpMsg,
@@ -868,6 +868,9 @@ func ManageExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message,
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
+	if args == "" {
+		args += "--help"
+	}
 	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
@@ -875,9 +878,6 @@ func ManageExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message,
 		return nil
 	}
 	helpMsg := "A command to view or delete extended release filter settings.\nFlags:"
-	if args == "" {
-		args += "--help"
-	}
 	arg := argparser.ParseFlags(
 		cmd,
 		helpMsg,
