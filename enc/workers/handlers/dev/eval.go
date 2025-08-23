@@ -47,7 +47,7 @@ func EvalGoSnippet(code string, msg *tele.Message) (string, error) {
 	}()
 
 	// Evaluate the snippet
-	val, evalErr := i.Eval(code)
+	_, evalErr := i.Eval(code)
 
 	// Close the writer and restore stdout
 	w.Close()
