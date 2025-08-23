@@ -13,6 +13,7 @@ import (
 	"enc/config"
 	"enc/internal/clients/telegram"
 	"enc/internal/logger"
+	"enc/utils/tele/parser"
 	"enc/utils/tele"
 	"enc/workers/handlers"
 	"enc/workers/handlers/dev"
@@ -55,7 +56,7 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		"extag":     EventHandlerWithArgs(manage.ManageExtCapFilter),
 
 		// Dev Handlers
-		"eval": EventHandlerWithArgs(dev.Eval),
+		"eval": EventHandlerWithRawArgs(dev.Eval),
 	}
 
 	for cmd, handler := range cmdHandlers {
@@ -125,6 +126,36 @@ func EventHandlerWithArgs(handler func(*ext.Context, *ext.Update, *tele.Message,
 			user.ID,
 		)
 		err := handler(ctx, update, msg, args)
+		if err != nil {
+			logger.ErrorW(err.Error())
+		}
+		return err
+	}
+}
+
+
+func EventHandlerWithRawArgs(handler func(*ext.Context, *ext.Update, *tele.Message, string) error) func(*ext.Context, *ext.Update) error {
+	return func(ctx *ext.Context, update *ext.Update) error {
+		user := update.EffectiveUser()
+		chat := update.EffectiveChat()
+		text := update.EffectiveMessage.Text
+		rawText, err := parser.Unparse(
+			text,
+			update.EffectiveMessage.Entities,
+		)
+		if err != nil {
+			rawText = text
+			logger.Warn(err)
+		}
+		_, args, _ := strings.Cut(rawText, " ")
+		args = strings.Trim(args, " ")
+		msg := tele.NewMsgFromGotg(
+			update.EffectiveMessage,
+			ctx,
+			chat.GetID(),
+			user.ID,
+		)
+		err = handler(ctx, update, msg, args)
 		if err != nil {
 			logger.ErrorW(err.Error())
 		}

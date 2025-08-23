@@ -19,7 +19,7 @@ import (
 
 // EvalGoSnippet runs a Go snippet and returns its stdout and the returned error (if any).
 // The snippet should be full Go statements (e.g. `import "fmt"; fmt.Println("hello")` or `package main; func main(){...}`).
-func EvalGoSnippet(code string, msg *tele.Message) (string, error) {
+func EvalGoSnippet(code string, ctx *ext.Context, update *ext.Update, msg *tele.Message) (string, error) {
 	r, w, err := os.Pipe()
 	if err != nil {
 		return "", err
@@ -37,6 +37,8 @@ func EvalGoSnippet(code string, msg *tele.Message) (string, error) {
 	if err := i.Use(map[string]map[string]reflect.Value{
 		"msg/msg": {
 			"Msg": reflect.ValueOf(msg),
+			"Ctx": reflect.ValueOf(ctx),
+			"Update": reflect.ValueOf(update),
 		},
 	}); err != nil {
 		return "", err
@@ -81,15 +83,7 @@ func Eval(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) 
 		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
 		return nil
 	}
-	rawArgs, err := msg.RawText()
-	if err == nil {
-		logger.Info(rawArgs)
-		_, args, _ = strings.Cut(rawArgs, " ")
-		args = strings.Trim(args, " ")
-	} else {
-		logger.Warn(err)
-	}
-	out, err := EvalGoSnippet(args, msg)
+	out, err := EvalGoSnippet(args, ctx, update, msg)
 	var eval string
 	if err != nil {
 		eval = err.Error()
