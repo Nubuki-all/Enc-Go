@@ -42,7 +42,6 @@ func EvalGoSnippet(code string, msg *tele.Message) (string, error) {
 		return "", err
 	}
 
-
 	// Evaluate the snippet
 	_, evalErr := i.Eval(code)
 
