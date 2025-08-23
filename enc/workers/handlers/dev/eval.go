@@ -7,11 +7,11 @@ import (
 	"os"
 	"reflect"
 
+	"enc/utils"
+	"enc/utils/tele"
 	"github.com/celestix/gotgproto/ext"
 	"github.com/traefik/yaegi/interp"
 	"github.com/traefik/yaegi/stdlib"
-	"enc/utils"
-	"enc/utils/tele"
 )
 
 // EvalGoSnippet runs a Go snippet and returns its stdout and the returned error (if any).
@@ -33,8 +33,8 @@ func EvalGoSnippet(code string, ctx *ext.Context, update *ext.Update, msg *tele.
 
 	if err := i.Use(map[string]map[string]reflect.Value{
 		"msg/msg": {
-			"Msg": reflect.ValueOf(msg),
-			"Ctx": reflect.ValueOf(ctx),
+			"Msg":    reflect.ValueOf(msg),
+			"Ctx":    reflect.ValueOf(ctx),
 			"Update": reflect.ValueOf(update),
 		},
 	}); err != nil {

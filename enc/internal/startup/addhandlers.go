@@ -13,8 +13,8 @@ import (
 	"enc/config"
 	"enc/internal/clients/telegram"
 	"enc/internal/logger"
-	"enc/utils/tele/parser"
 	"enc/utils/tele"
+	"enc/utils/tele/parser"
 	"enc/workers/handlers"
 	"enc/workers/handlers/dev"
 	"enc/workers/handlers/manage"
@@ -132,7 +132,6 @@ func EventHandlerWithArgs(handler func(*ext.Context, *ext.Update, *tele.Message,
 		return err
 	}
 }
-
 
 func EventHandlerWithRawArgs(handler func(*ext.Context, *ext.Update, *tele.Message, string) error) func(*ext.Context, *ext.Update) error {
 	return func(ctx *ext.Context, update *ext.Update) error {
