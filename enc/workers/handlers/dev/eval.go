@@ -24,7 +24,7 @@ func EvalGoSnippet(code string, msg *tele.Message) (string, error) {
 	}
 
 	if err := i.Use(map[string]map[string]reflect.Value{
-		"msg/msg": {
+		"msg/event": {
 			"Msg": reflect.ValueOf(msg),
 		},
 	}); err != nil {
@@ -38,22 +38,21 @@ func EvalGoSnippet(code string, msg *tele.Message) (string, error) {
 		return "", err
 	}
 	os.Stdout = w
-	// Ensure stdout is restored even on panic/return
+	// Ensure stdout is restored even on panic
 	defer func() { os.Stdout = oldStdout }()
 
 	var outBuf bytes.Buffer
-	done := make(chan error, 1)
-	go func() {
-		_, copyErr := io.Copy(&outBuf, r)
-		done <- copyErr
-	}()
 
 	// Evaluate the snippet
 	val, evalErr := i.Eval(code)
 
-	// Close writer so the reader goroutine can finish and we can collect output
-	_ = w.Close()
-	copyErr := <-done
+	// Close the writer and restore stdout
+    w.Close()
+    os.Stdout = oldStdout
+
+    // Read the captured output
+    var buf bytes.Buffer
+    io.Copy(&outBuf, r)
 
 	output := outBuf.String()
 	if evalErr == nil && val.IsValid() && val.CanInterface() {
