@@ -83,6 +83,7 @@ func Eval(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) 
 	}
 	rawArgs, err := msg.RawText()
 	if err == nil {
+		logger.Info(rawArgs)
 		_, args, _ = strings.Cut(rawArgs, " ")
 		args = strings.Trim(args, " ")
 	} else {
