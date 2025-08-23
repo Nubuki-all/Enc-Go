@@ -52,7 +52,7 @@ func EvalGoSnippet(code string, msg *tele.Message) (string, error) {
 
 	// Read the captured output
 	var buf bytes.Buffer
-	io.Copy(&outBuf, r)
+	_, copyErr := io.Copy(&outBuf, r)
 
 	output := outBuf.String()
 	if evalErr == nil && val.IsValid() && val.CanInterface() {
