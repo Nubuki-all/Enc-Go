@@ -41,7 +41,7 @@ func EvalGoSnippet(code string, msg *tele.Message) (string, error) {
 	os.Stdout = w
 	os.Stderr = w
 	// Ensure stdout is restored even on panic
-	defer func() { 
+	defer func() {
 		os.Stdout = oldStdout
 		os.Stderr = oldStderr
 	}()
