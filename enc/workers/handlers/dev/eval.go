@@ -47,12 +47,12 @@ func EvalGoSnippet(code string, msg *tele.Message) (string, error) {
 	val, evalErr := i.Eval(code)
 
 	// Close the writer and restore stdout
-    w.Close()
-    os.Stdout = oldStdout
+	w.Close()
+	os.Stdout = oldStdout
 
-    // Read the captured output
-    var buf bytes.Buffer
-    io.Copy(&outBuf, r)
+	// Read the captured output
+	var buf bytes.Buffer
+	io.Copy(&outBuf, r)
 
 	output := outBuf.String()
 	if evalErr == nil && val.IsValid() && val.CanInterface() {
