@@ -23,9 +23,9 @@ func EvalGoSnippet(code string, msg *tele.Message) (string, error) {
 		return "", err
 	}
 	i := interp.New(interp.Options{
-		Stdin: r,
-		Stdout: w,
-		Stderr: w,
+		Stdin:        r,
+		Stdout:       w,
+		Stderr:       w,
 		Unrestricted: true,
 	})
 	if err := i.Use(stdlib.Symbols); err != nil {
@@ -39,7 +39,6 @@ func EvalGoSnippet(code string, msg *tele.Message) (string, error) {
 	}); err != nil {
 		return "", err
 	}
-
 
 	// Evaluate the snippet
 	_, evalErr := i.Eval(code)
