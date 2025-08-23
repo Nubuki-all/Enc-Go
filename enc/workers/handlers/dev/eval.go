@@ -6,11 +6,13 @@ import (
 	"io"
 	"os"
 	"reflect"
+	"strings"
 
 	"github.com/celestix/gotgproto/ext"
 	"github.com/traefik/yaegi/interp"
 	"github.com/traefik/yaegi/stdlib"
 
+	"enc/internal/logger"
 	"enc/utils"
 	"enc/utils/tele"
 )
@@ -39,6 +41,7 @@ func EvalGoSnippet(code string, msg *tele.Message) (string, error) {
 	}); err != nil {
 		return "", err
 	}
+
 
 	// Evaluate the snippet
 	_, evalErr := i.Eval(code)
@@ -73,12 +76,18 @@ func Eval(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) 
 		"Evaluate and execute code within bot.",
 		"Command requires code to execute as arguments.",
 		"For example:",
-		`import "fmt"`,
-		`fmt.Println("Hello World")`,
+		`println("Hello-World")`,
 	)
 	if args == "" {
 		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
 		return nil
+	}
+	rawArgs, err := msg.RawText()
+	if err == nil {
+		_, args, _ = strings.Cut(rawArgs, " ")
+		args = strings.Trim(args, " ")
+	} else {
+		logger.Warn(err)
 	}
 	out, err := EvalGoSnippet(args, msg)
 	var eval string

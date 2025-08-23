@@ -127,6 +127,13 @@ func (m *Message) Edit(text string, editOptions *EditOptions) (*Message, error) 
 	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.SenderID), nil
 }
 
+func (m *Message) RawText() string, error {
+	if m.Raw == nil {
+		return "", nil
+	}
+	return parser.Unparse(m.Raw.Text, m.Raw.Entities)
+}
+
 func SendMessage(id int64, text string) error {
 	// peer, _ := GetPeer(id)
 	pText, entities, _ := parser.Parse(text, true)
