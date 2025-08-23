@@ -11,8 +11,6 @@ import (
 	"github.com/celestix/gotgproto/ext"
 	"github.com/traefik/yaegi/interp"
 	"github.com/traefik/yaegi/stdlib"
-
-	"enc/internal/logger"
 	"enc/utils"
 	"enc/utils/tele"
 )
