@@ -18,7 +18,16 @@ import (
 // EvalGoSnippet runs a Go snippet and returns its stdout and the returned error (if any).
 // The snippet should be full Go statements (e.g. `import "fmt"; fmt.Println("hello")` or `package main; func main(){...}`).
 func EvalGoSnippet(code string, msg *tele.Message) (string, error) {
-	i := interp.New(interp.Options{})
+	r, w, err := os.Pipe()
+	if err != nil {
+		return "", err
+	}
+	i := interp.New(interp.Options{
+		Stdin: r,
+		Stdout: w,
+		Stderr: w,
+		Unrestricted: true,
+	})
 	if err := i.Use(stdlib.Symbols); err != nil {
 		return "", err
 	}
@@ -31,28 +40,12 @@ func EvalGoSnippet(code string, msg *tele.Message) (string, error) {
 		return "", err
 	}
 
-	// Capture stdout produced by evaluated code (fmt.Println etc.)
-	oldStdout := os.Stdout
-	oldStderr := os.Stderr
-	r, w, err := os.Pipe()
-	if err != nil {
-		return "", err
-	}
-	os.Stdout = w
-	os.Stderr = w
-	// Ensure stdout is restored even on panic
-	defer func() {
-		os.Stdout = oldStdout
-		os.Stderr = oldStderr
-	}()
 
 	// Evaluate the snippet
 	_, evalErr := i.Eval(code)
 
-	// Close the writer and restore stdout
+	// Close the writer
 	w.Close()
-	os.Stdout = oldStdout
-	os.Stderr = oldStderr
 
 	// Read the captured output
 	var outBuf bytes.Buffer
