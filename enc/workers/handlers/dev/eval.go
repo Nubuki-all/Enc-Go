@@ -33,13 +33,18 @@ func EvalGoSnippet(code string, msg *tele.Message) (string, error) {
 
 	// Capture stdout produced by evaluated code (fmt.Println etc.)
 	oldStdout := os.Stdout
+	oldStderr := os.Stderr
 	r, w, err := os.Pipe()
 	if err != nil {
 		return "", err
 	}
 	os.Stdout = w
+	os.Stderr = w
 	// Ensure stdout is restored even on panic
-	defer func() { os.Stdout = oldStdout }()
+	defer func() { 
+		os.Stdout = oldStdout
+		os.Stderr = oldStderr
+	}()
 
 	// Evaluate the snippet
 	val, evalErr := i.Eval(code)
@@ -47,25 +52,13 @@ func EvalGoSnippet(code string, msg *tele.Message) (string, error) {
 	// Close the writer and restore stdout
 	w.Close()
 	os.Stdout = oldStdout
+	os.Stderr = oldStderr
 
 	// Read the captured output
 	var outBuf bytes.Buffer
 	_, copyErr := io.Copy(&outBuf, r)
 
 	output := outBuf.String()
-	if evalErr == nil && val.IsValid() && val.CanInterface() {
-		// Only append if Eval returned something non-nil/non-empty-ish
-		v := val.Interface()
-		if v != nil {
-			s := fmt.Sprint(v)
-			if s != "<nil>" && s != "" {
-				if output != "" {
-					output += "\n"
-				}
-				output += s
-			}
-		}
-	}
 
 	// Prefer returning the evaluation error (so caller sees stack/yaegi error). If no evalErr,
 	// but the io.Copy produced an error, return that.
