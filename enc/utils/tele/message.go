@@ -29,8 +29,8 @@ type EditOptions struct {
 }
 
 type ReplyOptions struct {
-	HtmlParseMode   bool
-	ReplyMarkup tg.ReplyMarkupClass
+	HtmlParseMode bool
+	ReplyMarkup   tg.ReplyMarkupClass
 	// will add more fields as required
 }
 

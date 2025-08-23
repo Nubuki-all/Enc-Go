@@ -106,11 +106,11 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 			)
 		} else {
 			_, _ = msg.Reply(
-				"Kindly send " +
-				cmd +
-				" --help",
+				"Kindly send "+
+					cmd+
+					" --help",
 				tele.ReplyOptions{HtmlParseMode: true},
-				)
+			)
 		}
 		return nil
 
@@ -194,11 +194,11 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	newName := pargs["rename"].(string)
 	if !(match != "" && newName != "") {
 		_, _ = msg.Reply(
-			"Args;\n" +
-				"--rename & --match" +
-				"\nare Required. Do <code>" +
-				cmd + " --help</code> for help.",
-				tele.ReplyOptions{HtmlParseMode: true},
+			"Args;\n"+
+				"--rename & --match"+
+				"\nare Required. Do <code>"+
+				cmd+" --help</code> for help.",
+			tele.ReplyOptions{HtmlParseMode: true},
 		)
 		return nil
 	}
@@ -573,11 +573,11 @@ func MatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 	match := pargs["match"].(string)
 	if match == "" {
 		_, _ = msg.Reply(
-			"Argument;\n" +
-				"--match" +
-				"\nis required. Do <code>" +
-				cmd + " --help</code> for help.",
-				tele.ReplyOptions{HtmlParseMode: true},
+			"Argument;\n"+
+				"--match"+
+				"\nis required. Do <code>"+
+				cmd+" --help</code> for help.",
+			tele.ReplyOptions{HtmlParseMode: true},
 		)
 		return nil
 	}
@@ -828,11 +828,11 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	data := pargs["filter"].([]string)
 	if release == "" || len(data) == 0 {
 		_, _ = msg.Reply(
-			"Arguments;\n" +
-				"--release-group & --filter" +
-				"\nare required. Do <code>" +
-				cmd + " --help</code> for help.",
-				tele.ReplyOptions{HtmlParseMode: true},
+			"Arguments;\n"+
+				"--release-group & --filter"+
+				"\nare required. Do <code>"+
+				cmd+" --help</code> for help.",
+			tele.ReplyOptions{HtmlParseMode: true},
 		)
 		return nil
 	}
@@ -845,9 +845,9 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	}
 	datas := convertStrToMtchFiltr(data)
 	if len(datas) == 0 {
-		_, _ = msg.Reply("Valid filter data could not be constructed from arguments." +
-			"\nNeed help? Send <code>" +
-			cmd +
+		_, _ = msg.Reply("Valid filter data could not be constructed from arguments."+
+			"\nNeed help? Send <code>"+
+			cmd+
 			" --help</code>.",
 			tele.ReplyOptions{HtmlParseMode: true},
 		)
