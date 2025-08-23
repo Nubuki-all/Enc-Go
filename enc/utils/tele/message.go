@@ -127,7 +127,7 @@ func (m *Message) Edit(text string, editOptions *EditOptions) (*Message, error) 
 	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.SenderID), nil
 }
 
-func (m *Message) RawText() string, error {
+func (m *Message) RawText() (string, error) {
 	if m.Raw == nil {
 		return "", nil
 	}
