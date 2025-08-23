@@ -86,7 +86,7 @@ func runeIndexFromUTF16Offset(s string, offset int) int {
 // Parse converts HTML-like input into plain UTF-8 message and gotd/td entities.
 // Accepts normal UTF-8 input; surrogate expansion is handled internally.
 // Returned Entities have Offsets/Lengths expressed in UTF-16 code units (as ints).
-func Parse(input string) (*ParserResult, error) {
+func Parse(input string) (string, []tg.MessageEntityClass, error) {
 	// Use UTF-8 input for tokenizer (do NOT expand surrogates here)
 	z := htmlpkg.NewTokenizer(strings.NewReader(input))
 
@@ -120,7 +120,7 @@ func Parse(input string) (*ParserResult, error) {
 			if z.Err() == io.EOF {
 				goto DONE
 			}
-			return nil, z.Err()
+			return "", nil, z.Err()
 		case htmlpkg.TextToken:
 			data := string(z.Text())
 			data = stdhtml.UnescapeString(data)
@@ -353,11 +353,11 @@ DONE:
 		return oi < oj
 	})
 
-	res := &ParserResult{
-		Message:  buf.String(),
-		Entities: ents,
-	}
-	return res, nil
+	// res := &ParserResult{
+	// 	Message:  buf.String(),
+	// 	Entities: ents,
+	// }
+	return buf.String(), ents, nil
 }
 
 // Unparse inserts HTML-like tags into text using entities. Accepts UTF-8 text and

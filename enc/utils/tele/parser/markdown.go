@@ -289,13 +289,14 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 	text = reSpoiler.ReplaceAllString(text, `<spoiler>$1</spoiler>`)
 
 	// 3) Now pass HTML-like result to htmlparser which will produce message + entities.
-	// fmt.Println(text)
-	pOut, err := htmlparser.Parse(text)
-	if err != nil {
-		return "", nil, err
-	}
-	// pOut.Message is UTF-8; pOut.Entities is []tg.MessageEntityClass
-	return pOut.Message, pOut.Entities, nil
+	//fmt.Println(text)
+	return htmlparser.Parse(text)
+	// if err != nil {
+	// 	return "", nil, err
+	// }
+	// fmt.Println(pOut.Message)
+	// // pOut.Message is UTF-8; pOut.Entities is []tg.MessageEntityClass
+	// return pOut.Message, pOut.Entities, nil
 }
 
 // Unparse converts a text and tg message entities into Markdown-ish plaintext (reconstructing delimiters).

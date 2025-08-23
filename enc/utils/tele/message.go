@@ -9,6 +9,7 @@ import (
 	"enc/internal/clients/telegram"
 	"enc/internal/logger"
 	"enc/utils/tele/parser"
+	"enc/utils/tele/parser/htmlparser"
 )
 
 type Message struct {
@@ -28,6 +29,7 @@ type EditOptions struct {
 }
 
 type ReplyOptions struct {
+	HtmlParseMode   bool
 	ReplyMarkup tg.ReplyMarkupClass
 	// will add more fields as required
 }
@@ -43,7 +45,7 @@ func NewMsgFromGotg(m *gp.Message, c *ext.Context, chatID int64, senderID int64)
 		Ctx:       c,
 		ChatID:    chatID,
 		SenderID:  senderID,
-		ID:        m.Message.ID,
+		ID:        m.ID,
 		ReplyToID: replyTo,
 	}
 }
@@ -72,7 +74,13 @@ func (m *Message) ReplyText(text string) (*Message, error) {
 }
 
 func (m *Message) Reply(text string, replyOptions *ReplyOptions) (*Message, error) {
-	pText, entities, _ := parser.Parse(text, true)
+	var pText string
+	var entities []tg.MessageEntityClass
+	if replyOptions.HtmlParseMode {
+		pText, entities, _ = htmlparser.Parse(text)
+	} else {
+		pText, entities, _ = parser.Parse(text, true)
+	}
 	inputRep := &tg.InputReplyToMessage{
 		ReplyToMsgID: m.ID,
 	}

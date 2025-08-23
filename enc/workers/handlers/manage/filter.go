@@ -105,7 +105,12 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 				"`" + bot.CustomRename + "`",
 			)
 		} else {
-			_, _ = msg.ReplyText("Kindly send " + cmd + " --help")
+			_, _ = msg.Reply(
+				"Kindly send " +
+				cmd +
+				" --help",
+				tele.ReplyOptions{HtmlParseMode: true},
+				)
 		}
 		return nil
 
@@ -188,11 +193,12 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	match := pargs["match"].(string)
 	newName := pargs["rename"].(string)
 	if !(match != "" && newName != "") {
-		_, _ = msg.ReplyText(
+		_, _ = msg.Reply(
 			"Args;\n" +
 				"--rename & --match" +
-				"\nare Required. Do `" +
-				cmd + " --help` for help.",
+				"\nare Required. Do <code>" +
+				cmd + " --help</code> for help.",
+				tele.ReplyOptions{HtmlParseMode: true},
 		)
 		return nil
 	}
@@ -343,8 +349,9 @@ func DelAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 	match := pargs["name"].(string)
 	id := pargs["id"].(string)
 	if match == "" && id == "" {
-		_, _ = msg.ReplyText(
-			fmt.Sprintf("Missing required argument.\nNeed help? Send: `%s --help`", cmd),
+		_, _ = msg.Reply(
+			fmt.Sprintf("Missing required argument.\nNeed help? Send: <code>%s --help</code>", cmd),
+			tele.ReplyOptions{HtmlParseMode: true},
 		)
 		return nil
 	}
@@ -440,7 +447,8 @@ func Filter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	tagCap := pargs["tag-caption"].(string)
 	if remove == "" && tagFile == "" && tagCap == "" {
 		_, _ = msg.ReplyText(
-			fmt.Sprintf("Missing required argument.\nNeed help? Send: `%s --help`", cmd),
+			fmt.Sprintf("Missing required argument.\nNeed help? Send: <code>%s --help</code>", cmd),
+			tele.ReplyOptions{HtmlParseMode: true},
 		)
 		return nil
 	}
@@ -564,11 +572,12 @@ func MatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 	pargs := arg.Values
 	match := pargs["match"].(string)
 	if match == "" {
-		_, _ = msg.ReplyText(
+		_, _ = msg.Reply(
 			"Argument;\n" +
 				"--match" +
-				"\nis required. Do `" +
-				cmd + " --help` for help.",
+				"\nis required. Do <code>" +
+				cmd + " --help</code> for help.",
+				tele.ReplyOptions{HtmlParseMode: true},
 		)
 		return nil
 	}
@@ -614,6 +623,9 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 		return nil
 	}
 	helpMsg := "A command to view or delete Filename/Release Filter Settings.\nFlags:"
+	if args == "" {
+		args += "--help"
+	}
 	arg := argparser.ParseFlags(
 		cmd,
 		helpMsg,
@@ -682,7 +694,10 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 	name := pargs["name"].(string)
 	iD := pargs["id"].(string)
 	if name == "" && iD == "" {
-		_, _ = msg.ReplyText("`At least one argument excluding --release & --delete is required.`")
+		_, _ = msg.Reply(
+			"<code>At least one argument excluding --release & --delete is required.</code>",
+			tele.ReplyOptions{HtmlParseMode: true},
+		)
 		return nil
 	}
 	var Filter *types.MatchedFilterData
@@ -812,11 +827,12 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	release := pargs["release-group"].(string)
 	data := pargs["filter"].([]string)
 	if release == "" || len(data) == 0 {
-		_, _ = msg.ReplyText(
+		_, _ = msg.Reply(
 			"Arguments;\n" +
 				"--release-group & --filter" +
-				"\nare required. Do `" +
-				cmd + " --help` for help.",
+				"\nare required. Do <code>" +
+				cmd + " --help</code> for help.",
+				tele.ReplyOptions{HtmlParseMode: true},
 		)
 		return nil
 	}
@@ -829,10 +845,11 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	}
 	datas := convertStrToMtchFiltr(data)
 	if len(datas) == 0 {
-		_, _ = msg.ReplyText("Valid filter data could not be constructed from arguments." +
-			"\nNeed help? Send `" +
+		_, _ = msg.Reply("Valid filter data could not be constructed from arguments." +
+			"\nNeed help? Send <code>" +
 			cmd +
-			" --help`.",
+			" --help</code>.",
+			tele.ReplyOptions{HtmlParseMode: true},
 		)
 		return nil
 	}
@@ -858,6 +875,9 @@ func ManageExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message,
 		return nil
 	}
 	helpMsg := "A command to view or delete extended release filter settings.\nFlags:"
+	if args == "" {
+		args += "--help"
+	}
 	arg := argparser.ParseFlags(
 		cmd,
 		helpMsg,
