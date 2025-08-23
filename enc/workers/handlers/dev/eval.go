@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"reflect"
-	"strings"
 
 	"github.com/celestix/gotgproto/ext"
 	"github.com/traefik/yaegi/interp"
