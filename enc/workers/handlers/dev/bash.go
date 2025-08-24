@@ -6,7 +6,7 @@ import (
 	"os/exec"
 
 	"github.com/celestix/gotgproto/ext"
-	
+
 	"enc/utils"
 	"enc/utils/tele"
 )
@@ -18,14 +18,14 @@ func Bash(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) 
 		}
 	}
 	helpMsg := utils.StringFormat(
-	"Run bash/system commands in bot",
-    "Much care must be taken especially on Local deployment",
-	"",
-    "USAGE:",
-    "Command requires executables as argument",
-    `For example "/bash ls"`,
+		"Run bash/system commands in bot",
+		"Much care must be taken especially on Local deployment",
+		"",
+		"USAGE:",
+		"Command requires executables as argument",
+		`For example "/bash ls"`,
 	)
-	
+
 	if args == "" || utils.SendHelp(args) {
 		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
 		return nil
@@ -69,10 +69,10 @@ func Bash(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) 
 	// If output is long, upload as a file and send as document
 	if len(OUTPUT) > maxLen {
 		_, _ = msg.UploadDoc(&tele.UploadOptions{
-			Bytes:    []byte(OUTPUT),
-			Name:     "exec.txt",
-			Caption:  args,
-			Quote:    true,
+			Bytes:   []byte(OUTPUT),
+			Name:    "exec.txt",
+			Caption: args,
+			Quote:   true,
 		})
 		_ = bMsg.Delete()
 		return nil

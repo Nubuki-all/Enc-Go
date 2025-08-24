@@ -6,8 +6,8 @@ import (
 
 	"github.com/celestix/gotgproto/ext"
 	gp "github.com/celestix/gotgproto/types"
-	"github.com/gotd/td/tg"
 	"github.com/gotd/td/telegram/uploader"
+	"github.com/gotd/td/tg"
 
 	//"enc/internal/bot"
 	"enc/internal/clients/telegram"
@@ -29,7 +29,7 @@ type Message struct {
 
 type EditOptions struct {
 	HtmlParseMode bool
-	ReplyMarkup tg.ReplyMarkupClass
+	ReplyMarkup   tg.ReplyMarkupClass
 	// will add more fields as required
 }
 
@@ -40,11 +40,11 @@ type ReplyOptions struct {
 }
 
 type UploadOptions struct {
-	Name     string
-	Caption  string
-	Path     string
-	Bytes    []byte
-	Quote    bool
+	Name          string
+	Caption       string
+	Path          string
+	Bytes         []byte
+	Quote         bool
 	HtmlParseMode bool
 	ReplyMarkup   tg.ReplyMarkupClass
 	// will add more fields as required
@@ -192,7 +192,7 @@ func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
 		logger.Error(err)
 		return nil, err
 	}
-	
+
 	if uploadOptions.Quote {
 		inputRep = &tg.InputReplyToMessage{
 			ReplyToMsgID: m.ID,

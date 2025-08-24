@@ -99,10 +99,10 @@ func Eval(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) 
 	if len(eval) > maxLen {
 		out = fmt.Sprintf("EVAL:\n%s\n\nOUTPUT:\n%s", args, eval)
 		_, _ = msg.UploadDoc(&tele.UploadOptions{
-			Bytes:    []byte(out),
-			Name:     "eval.txt",
-			Caption:  args,
-			Quote:    true,
+			Bytes:   []byte(out),
+			Name:    "eval.txt",
+			Caption: args,
+			Quote:   true,
 		})
 		_ = bMsg.Delete()
 		return nil
