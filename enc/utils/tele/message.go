@@ -4,6 +4,7 @@ import (
 	"github.com/celestix/gotgproto/ext"
 	gp "github.com/celestix/gotgproto/types"
 	"github.com/gotd/td/tg"
+	"github.com/gotd/td/telegram/uploader"
 
 	//"enc/internal/bot"
 	"enc/internal/clients/telegram"
@@ -24,11 +25,23 @@ type Message struct {
 }
 
 type EditOptions struct {
+	HtmlParseMode bool
 	ReplyMarkup tg.ReplyMarkupClass
 	// will add more fields as required
 }
 
 type ReplyOptions struct {
+	HtmlParseMode bool
+	ReplyMarkup   tg.ReplyMarkupClass
+	// will add more fields as required
+}
+
+type UploadOptions struct {
+	Name     string
+	Caption  string
+	Path     string
+	Bytes    []byte
+	Quote    bool
 	HtmlParseMode bool
 	ReplyMarkup   tg.ReplyMarkupClass
 	// will add more fields as required
@@ -117,7 +130,13 @@ func (m *Message) EditText(text string) (*Message, error) {
 }
 
 func (m *Message) Edit(text string, editOptions *EditOptions) (*Message, error) {
-	pText, entities, _ := parser.Parse(text, true)
+	var pText string
+	var entities []tg.MessageEntityClass
+	if editOptions.HtmlParseMode {
+		pText, entities, _ = htmlparser.Parse(text)
+	} else {
+		pText, entities, _ = parser.Parse(text, true)
+	}
 	msg, err := m.Ctx.EditMessage(m.ChatID, &tg.MessagesEditMessageRequest{
 		ID:          m.ID,
 		Message:     pText,
@@ -140,6 +159,72 @@ func (m *Message) RawText() (string, error) {
 		return "", nil
 	}
 	return parser.Unparse(m.Raw.Text, m.Raw.Entities)
+}
+
+func (m *Message) Delete() error {
+	return m.Ctx.DeleteMessages(m.ChatID, []int{m.ID})
+}
+
+func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
+	var file tg.InputFileClass
+	var inputRep *tg.InputReplyToMessage
+	var err error
+	ctx := m.Ctx
+	uClient := uploader.NewUploader(ctx.Raw)
+	if path := uploadOptions.Path; path != "" {
+		file, err = uClient.FromPath(ctx, path)
+	} else if bytes := uploadOptions.Bytes; bytes != nil {
+		name := uploadOptions.Name
+		if name == "" {
+			name = "Unknown"
+		}
+		file, err = uClient.FromBytes(ctx, name, bytes)
+	} else {
+		err = fmt.Errorf("No content was specified to upload.")
+	}
+	if err != nil {
+		logger.Error(err)
+		return nil, err
+	}
+	
+	if uploadOptions.Quote {
+		inputRep = &tg.InputReplyToMessage{
+			ReplyToMsgID: m.ID,
+		}
+	}
+	var pCaption string
+	var entities []tg.MessageEntityClass
+	if caption := uploadOptions.Caption; caption != "" {
+		if uploadOptions.HtmlParseMode {
+			pCaption, entities, _ = htmlparser.Parse(caption)
+		} else {
+			pCaption, entities, _ = parser.Parse(caption, true)
+		}
+	}
+	media := &tg.InputMediaUploadedDocument{
+		File: file,
+		// set attributes so file has a name
+		Attributes: []tg.DocumentAttributeClass{
+			&tg.DocumentAttributeFilename{FileName: file.GetName()},
+		},
+	}
+	msg, err := ctx.SendMedia(m.ChatID,
+		&tg.MessagesSendMediaRequest{
+			Media:       media,
+			Message:     pCaption,
+			Entities:    entities,
+			ReplyTo:     inputRep,
+			ReplyMarkup: uploadOptions.ReplyMarkup,
+		},
+	)
+	if err != nil {
+		logger.ErrorW(err.Error())
+		return nil, err
+	}
+	if m.Raw == nil {
+		return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID), nil
+	}
+	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.SenderID), nil
 }
 
 func SendMessage(id int64, text string) error {
