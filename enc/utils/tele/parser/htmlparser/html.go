@@ -6,6 +6,7 @@ import (
 	stdhtml "html"
 	"io"
 	"reflect"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -88,6 +89,13 @@ func runeIndexFromUTF16Offset(s string, offset int) int {
 // Returned Entities have Offsets/Lengths expressed in UTF-16 code units (as ints).
 func Parse(input string) (string, []tg.MessageEntityClass, error) {
 	// Use UTF-8 input for tokenizer (do NOT expand surrogates here)
+
+	// Trim surrounding whitespace but preserve opening/closing tags (like Pyrogram does).
+	openTagTrim := regexp.MustCompile(`^[ \t\r\n\f\v]*(<[^>]+>)[ \t\r\n\f\v]*`)
+	closeTagTrim := regexp.MustCompile(`[ \t\r\n\f\v]*(</[^>]+>)[ \t\r\n\f\v]*$`)
+	input = openTagTrim.ReplaceAllString(input, "$1")
+	input = closeTagTrim.ReplaceAllString(input, "$1")
+
 	z := htmlpkg.NewTokenizer(strings.NewReader(input))
 
 	var buf bytes.Buffer
