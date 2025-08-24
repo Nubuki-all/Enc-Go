@@ -106,6 +106,7 @@ func Eval(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) 
 		})
 		_ = bMsg.Delete()
 		return nil
+	}
 	text := fmt.Sprintf(`<pre language="go">\n%s\n</pre>\n\n<pre language="Output:">\n%s\n</pre>`, args, eval)
 	_, _ = bMsg.Edit(text, &tele.EditOptions{
 		HtmlParseMode: true,
