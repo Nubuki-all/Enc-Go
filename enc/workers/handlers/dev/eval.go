@@ -84,9 +84,9 @@ func Eval(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) 
 		return nil
 	}
 	bMsg, err := msg.ReplyText("`Processing…`")
-	if err != nil (
+	if err != nil {
 		return err
-	)
+	}
 	out, err := EvalGoSnippet(args, ctx, update, msg)
 	var eval string
 	if err != nil {
