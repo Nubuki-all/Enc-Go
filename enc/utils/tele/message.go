@@ -1,6 +1,9 @@
 package tele
 
 import (
+	"fmt"
+	"path/filepath"
+
 	"github.com/celestix/gotgproto/ext"
 	gp "github.com/celestix/gotgproto/types"
 	"github.com/gotd/td/tg"
@@ -170,11 +173,14 @@ func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
 	var inputRep *tg.InputReplyToMessage
 	var err error
 	ctx := m.Ctx
+	bytes := uploadOptions.Bytes
+	name := uploadOptions.Name
+	path := uploadOptions.Path
 	uClient := uploader.NewUploader(ctx.Raw)
-	if path := uploadOptions.Path; path != "" {
+	if path != "" {
+		name = filepath.Base(path)
 		file, err = uClient.FromPath(ctx, path)
-	} else if bytes := uploadOptions.Bytes; bytes != nil {
-		name := uploadOptions.Name
+	} else if bytes != nil {
 		if name == "" {
 			name = "Unknown"
 		}
@@ -205,7 +211,7 @@ func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
 		File: file,
 		// set attributes so file has a name
 		Attributes: []tg.DocumentAttributeClass{
-			&tg.DocumentAttributeFilename{FileName: file.GetName()},
+			&tg.DocumentAttributeFilename{FileName: name},
 		},
 	}
 	msg, err := ctx.SendMedia(m.ChatID,
