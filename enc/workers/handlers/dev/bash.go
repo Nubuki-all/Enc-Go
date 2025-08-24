@@ -6,7 +6,6 @@ import (
 	"os/exec"
 
 	"github.com/celestix/gotgproto/ext"
-	"github.com/gotd/td/telegram/uploader"
 	
 	"enc/utils"
 	"enc/utils/tele"
@@ -53,7 +52,7 @@ func Bash(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) 
 		pid = cmdExec.Process.Pid
 	}
 
-	_ := cmdExec.Wait()
+	_ = cmdExec.Wait()
 
 	stdout := stdoutBuf.String()
 	stderr := stderrBuf.String()
@@ -65,7 +64,7 @@ func Bash(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) 
 		stdout = "Tip:\nIf you want to see the results of your code, print them to stdout."
 	}
 
-	OUTPUT := fmt.Sprintf("QUERY:\n__Command:__\n%s\n__PID:__\n%d\n\nstderr:\n%s\n\nOutput:\n%s", cmd, pid, stderr, stdout)
+	OUTPUT := fmt.Sprintf("QUERY:\n__Command:__\n%s\n__PID:__\n%d\n\nstderr:\n%s\n\nOutput:\n%s", args, pid, stderr, stdout)
 
 	// If output is long, upload as a file and send as document
 	if len(OUTPUT) > maxLen {
