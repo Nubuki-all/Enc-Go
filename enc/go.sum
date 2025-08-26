@@ -3,8 +3,8 @@ github.com/5rahim/tanuki v0.1.6/go.mod h1:SsWK3IOr0m5pJnaRTjdp5JFK5q7AVpbXYiCZu8
 github.com/AnimeKaizoku/cacher v1.0.3 h1:foNAmLfY/DXfA4yEy4uP6WK2Ni7JC+s3QhZv72Dn6zs=
 github.com/AnimeKaizoku/cacher v1.0.3/go.mod h1:jw0de/b0K6W7Y3T9rHCMGVKUf6oG7hENNcssxYcZTCc=
 github.com/benbjohnson/clock v1.1.0/go.mod h1:J11/hYXuz8f4ySSvYwY0FKfm+ezbsZBKZxNJlLklBHA=
-github.com/celestix/gotgproto v1.0.0-beta21 h1:VUuAC/Kj5Sdu/WZan3ZUb0GFNAavFxMYxmHAhCBX0J8=
-github.com/celestix/gotgproto v1.0.0-beta21/go.mod h1:viDkHe9rBegJoEE/jNuFfbBM0XZ3pSx/ugjaNaVnbvU=
+github.com/celestix/gotgproto v1.0.0-beta21.0.20250822161242-dc548ccbc755 h1:lTO0wn4w5hoeHL7laT8tsaGihmGkH4yIKHSB74dqtGg=
+github.com/celestix/gotgproto v1.0.0-beta21.0.20250822161242-dc548ccbc755/go.mod h1:xjZlGA8ABRKkfGMmkHKyz520hK6pMfyE8yxpSTqohME=
 github.com/celestix/telegraph-go/v2 v2.0.4 h1:w8HWymJFhMSMPjdGoyTh3/NqE3eXAT1njTvelh0338k=
 github.com/celestix/telegraph-go/v2 v2.0.4/go.mod h1:vu2LtqM7MgOAJ2LDF8XK27DWdd1QYLBfZGhalEh086Y=
 github.com/cenk/hub v1.0.1/go.mod h1:rJM1LNAW0ppT8FMMuPK6c2NP/R2nH/UthtuRySSaf6Y=
