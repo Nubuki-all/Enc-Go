@@ -33,13 +33,13 @@ func ChangeEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 		return nil
 	}
 	var alt, cmd string
-	if strings.HasPrefix("-2 ") {
+	if strings.HasPrefix(args, "-2 ") {
 		alt, cmd, _ = strings.Cut(args, " ")
 		bot.FFmpeg2Args = cmd
-	} else if strings.HasPrefix("-3 ") {
+	} else if strings.HasPrefix(args, "-3 ") {
 		alt, cmd, _ = strings.Cut(args, " ")
 		bot.FFmpeg3Args = cmd
-	} else if strings.HasPrefix("-4 ") {
+	} else if strings.HasPrefix(args, "-4 ") {
 		alt, cmd, _ = strings.Cut(args, " ")
 		bot.FFmpeg4Args = cmd
 	} else {
@@ -48,12 +48,13 @@ func ChangeEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 	}
 	db.SaveFFmpegArgs(ctx)
 	if alt != "" {
-		utils.EJob.Reset()
+		utils.EJob.Reset(false)
 	}
 	_, _ = msg.Reply(
 		fmt.Sprintf("<pre language=\"Changed encoding%s CLI parameters to:\">%s</pre>", alt, cmd),
 		&tele.ReplyOptions{HtmlParseMode: true},
 	)
+	return nil
 }
 
 func CheckEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
@@ -76,7 +77,7 @@ func CheckEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		_, err := msg.ReplyText(fmt.Sprintf("Unknown argument: %s\nNeed help? Send `%s --help`.", args, cmd))
 		return err
 	}
-	var arg, params strings
+	var arg, params string
 	if args == "" {
 		params = bot.FFmpegArgs
 	} else if len(args) < 2 {
@@ -98,7 +99,7 @@ func CheckEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		if arg != "" {
 			idx = " " + arg
 		}
-		_, _ = msg.ReplyText(fmt.Sprintf("**Encoding params not found, use /set%s to set encoding params.**"), idx)
+		_, _ = msg.ReplyText(fmt.Sprintf("**Encoding params not found, use /set%s to set encoding params.**", idx))
 		return nil
 	}
 	_, _ = msg.Reply(
@@ -163,7 +164,6 @@ func ResetSEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg 
 			bot.FFmpeg2Args = ""
 		} else if defaultEnv = config.Conf.FFmpeg2; defaultEnv != "" {
 			bot.FFmpeg2Args = defaultEnv
-			reset = true
 		} else {
 			return envNotSet()
 		}
@@ -172,7 +172,6 @@ func ResetSEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg 
 			bot.FFmpeg3Args = ""
 		} else if defaultEnv = config.Conf.FFmpeg3; defaultEnv != "" {
 			bot.FFmpeg3Args = defaultEnv
-			reset = true
 		} else {
 			return envNotSet()
 		}
@@ -181,7 +180,6 @@ func ResetSEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg 
 			bot.FFmpeg4Args = ""
 		} else  if defaultEnv := config.Conf.FFmpeg4; defaultEnv != "" {
 			bot.FFmpeg4Args = defaultEnv
-			reset = true
 		} else {
 			return envNotSet()
 		}
