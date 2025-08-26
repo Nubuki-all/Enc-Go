@@ -2,8 +2,8 @@ package manage
 
 import (
 	"fmt"
-	"strings"
 	"strconv"
+	"strings"
 
 	"github.com/celestix/gotgproto/ext"
 	//"github.com/gotd/td/tg"
@@ -84,12 +84,12 @@ func CheckEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		return needHelp()
 	} else {
 		arg = args[:2]
-		if arg  == "-2" {
-		params = bot.FFmpeg2Args
-		} else if arg  == "-3" {
-		params = bot.FFmpeg3Args
-		} else if arg  == "-4" {
-		params = bot.FFmpeg4Args
+		if arg == "-2" {
+			params = bot.FFmpeg2Args
+		} else if arg == "-3" {
+			params = bot.FFmpeg3Args
+		} else if arg == "-4" {
+			params = bot.FFmpeg4Args
 		} else {
 			return needHelp()
 		}
@@ -136,12 +136,12 @@ func ResetEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		return needHelp()
 	} else {
 		arg := args[:2]
-		if arg  == "-2" {
-		return ResetSEParams(ctx, update, msg, arg)
-		} else if arg  == "-3" {
-		return ResetSEParams(ctx, update, msg, arg)
-		} else if arg  == "-4" {
-		return ResetSEParams(ctx, update, msg, arg)
+		if arg == "-2" {
+			return ResetSEParams(ctx, update, msg, arg)
+		} else if arg == "-3" {
+			return ResetSEParams(ctx, update, msg, arg)
+		} else if arg == "-4" {
+			return ResetSEParams(ctx, update, msg, arg)
 		} else {
 			return needHelp()
 		}
@@ -159,7 +159,7 @@ func ResetSEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg 
 		return err
 	}
 	var defaultEnv string
-	if arg  == "-2" {
+	if arg == "-2" {
 		if bot.FFmpeg2Args != "" {
 			bot.FFmpeg2Args = ""
 		} else if defaultEnv = config.Conf.FFmpeg2; defaultEnv != "" {
@@ -167,7 +167,7 @@ func ResetSEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg 
 		} else {
 			return envNotSet()
 		}
-	} else if arg  == "-3" {
+	} else if arg == "-3" {
 		if bot.FFmpeg3Args != "" {
 			bot.FFmpeg3Args = ""
 		} else if defaultEnv = config.Conf.FFmpeg3; defaultEnv != "" {
@@ -175,10 +175,10 @@ func ResetSEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg 
 		} else {
 			return envNotSet()
 		}
-	} else if arg  == "-4" {
+	} else if arg == "-4" {
 		if bot.FFmpeg4Args != "" {
 			bot.FFmpeg4Args = ""
-		} else  if defaultEnv := config.Conf.FFmpeg4; defaultEnv != "" {
+		} else if defaultEnv := config.Conf.FFmpeg4; defaultEnv != "" {
 			bot.FFmpeg4Args = defaultEnv
 		} else {
 			return envNotSet()
@@ -189,7 +189,7 @@ func ResetSEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg 
 			"Encoding params%s deleted.\nTry again to reset to the param in .env",
 			arg,
 		))
-	} else  {
+	} else {
 		_, _ = msg.Reply(
 			fmt.Sprintf("<pre language=\"Reset encoding CLI parameters%s to:\">%s</pre>", arg, defaultEnv),
 			&tele.ReplyOptions{HtmlParseMode: true},
@@ -205,13 +205,13 @@ func SetMuxArgs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	helpMsg := "Set, reset or disable muxing after transcoding.\n" +
 		"Arguments:\n" +
 		"    ffmpeg params without the (-i input & output)\n" +
-        "        Do not pass encoding params, only map, metadata, dispositions are allowed.\n" +
-        "    or:\n" +
-        "\n" +
+		"        Do not pass encoding params, only map, metadata, dispositions are allowed.\n" +
+		"    or:\n" +
+		"\n" +
 		"    reset\n" +
-        "        to reset the mux_args to same parameter in env.\n" +
-        "    clear\n" +
-        "        to clear mux_args."
+		"        to reset the mux_args to same parameter in env.\n" +
+		"    clear\n" +
+		"        to clear mux_args."
 	if args == "" || utils.SendHelp(args) {
 		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
 		return nil
@@ -232,7 +232,7 @@ func SetMuxArgs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 			return nil
 		}
 		args = config.Conf.MuxArgs
-	} 
+	}
 	bot.MuxArgs = args
 	db.SaveMuxArgs(ctx)
 	_, _ = msg.Reply(
@@ -264,15 +264,14 @@ func GetMuxArgs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	return nil
 }
 
-
 func Version(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
 	helpMsg := "Tag a realese with what numbers you specify:\n" +
-	"    - numbers (floats can be specified.)\n" +
-	"    - off/disable to turn off\n" +
-	"Sending this command without argument will check for previous version tags and display them."
+		"    - numbers (floats can be specified.)\n" +
+		"    - off/disable to turn off\n" +
+		"Sending this command without argument will check for previous version tags and display them."
 	if utils.SendHelp(args) {
 		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
 		return nil
@@ -308,7 +307,6 @@ func Version(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 	)
 	return nil
 }
-
 
 func MGlobalPOptions(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
@@ -424,14 +422,14 @@ func Pause(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string)
 		return nil
 	}
 	helpMsg := "Pause bot;\n" +
-	"Prevent bot from encoding for a specified duration.\n" +
-	"muxing and renaming are not paused.\n" +
-	"Arguments:\n" +
-	"    - A number\n" +
-	"        • for instance: /pause 900 to pause for 900 seconds or;\n" +
-	"          /pause 0 to pause indefinitely till you cancel with /pause off\n" +
-	"    - off/disable (To unpause)\n" +
-	"    - no argument; (To check state)"
+		"Prevent bot from encoding for a specified duration.\n" +
+		"muxing and renaming are not paused.\n" +
+		"Arguments:\n" +
+		"    - A number\n" +
+		"        • for instance: /pause 900 to pause for 900 seconds or;\n" +
+		"          /pause 0 to pause indefinitely till you cancel with /pause off\n" +
+		"    - off/disable (To unpause)\n" +
+		"    - no argument; (To check state)"
 	if utils.SendHelp(args) {
 		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
 		return nil
@@ -444,7 +442,7 @@ func Pause(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string)
 			status = "currently"
 		}
 		reply = fmt.Sprintf("**Pause Status:** `Bot is %s paused.`", status)
-	} else	if strings.EqualFold(args, "off") || strings.EqualFold(args, "disable") {
+	} else if strings.EqualFold(args, "off") || strings.EqualFold(args, "disable") {
 		if b, _ := utils.GetPauseStatus(0); !b {
 			reply = "**Bot was not paused**"
 		} else {

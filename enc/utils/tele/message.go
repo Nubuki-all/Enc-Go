@@ -9,8 +9,8 @@ import (
 	"github.com/gotd/td/telegram/uploader"
 	"github.com/gotd/td/tg"
 
-	"enc/internal/bot"
 	"enc/config"
+	"enc/internal/bot"
 	"enc/internal/clients/telegram"
 	"enc/internal/logger"
 	"enc/utils/tele/parser"
@@ -261,13 +261,13 @@ func EditMessage(id int64, msgID int, text string) error {
 	return err
 }
 
-//Broadcast a message to every registered user in bot and returns a list of the messages sent.
+// Broadcast a message to every registered user in bot and returns a list of the messages sent.
 func BcMsg(text string, exceptUser int64, mlist []*Message) []*Message {
-	AddMessage := func (id int64) {
+	AddMessage := func(id int64) {
 		ctx := telegram.Context
 		pText, entities, _ := parser.Parse(text, true)
 		resp, err := ctx.SendMessage(id, &tg.MessagesSendMessageRequest{
-			Message: pText,
+			Message:  pText,
 			Entities: entities,
 		},
 		)

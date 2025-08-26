@@ -37,8 +37,8 @@ type settingRecord struct {
 
 // arrRecord stores slices of strings as JSON
 type arrRecord struct {
-	BotID string   `gorm:"primaryKey"`
-	Key   string   `gorm:"primaryKey"`
+	BotID string  `gorm:"primaryKey"`
+	Key   string  `gorm:"primaryKey"`
 	Value []int64 //`gorm:"type:TEXT"`
 }
 

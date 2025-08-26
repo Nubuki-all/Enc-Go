@@ -16,7 +16,6 @@ import (
 
 var Timer = NewEnTimer()
 
-
 // EnTimer provides pause and countdown functionality
 type EnTimer struct {
 	mu       sync.Mutex

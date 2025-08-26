@@ -156,13 +156,14 @@ func EnsureDirectories() {
 		}
 	}
 }
+
 func AddOwners() {
 	var s []int64
 	for _, owner := range strings.Fields(config.Conf.Owner) {
 		if id, err := strconv.ParseInt(owner, 10, 64); err == nil {
 			s = append(s, id)
 		} else {
-			logger.Warnw("Couldn't Parse owner id:- " + owner, zap.Error(err))
+			logger.Warnw("Couldn't Parse owner id:- "+owner, zap.Error(err))
 		}
 	}
 	config.Rconf.Owners = s
@@ -177,7 +178,7 @@ func AddTempUsers() {
 	// owners := strings.Fields(config.Conf.Owner)
 	for _, t := range strings.Fields(raw) {
 		if id, err := strconv.ParseInt(t, 10, 64); err != nil {
-			logger.Warnw("Couldn't Parse temp_user id:- " + t, zap.Error(err))
+			logger.Warnw("Couldn't Parse temp_user id:- "+t, zap.Error(err))
 			continue
 		}
 		if slice.Contains(config.Rconf.Owners, id) || slice.Contains(bot.TempUsers, id) {
