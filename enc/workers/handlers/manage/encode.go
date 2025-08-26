@@ -2,7 +2,6 @@ package manage
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/celestix/gotgproto/ext"
