@@ -221,9 +221,9 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 		body := parts[2]
 
 		// Prevent out of bounds errors
-		if strings.HasSuffix(body, "\n") {
-			body = strings.TrimRight(body, "\n")
-		}
+		// if strings.HasSuffix(body, "\n") {
+		// 	body = strings.TrimRight(body, "\n")
+		// }
 		// If the captured "lang" looks suspicious (contains spaces or too long), treat it as part of the body.
 		if !langValidRe.MatchString(lang) {
 			// Put it back into the body (we need original newline between lang and body)

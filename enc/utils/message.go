@@ -69,3 +69,17 @@ func StringFormat(s ...string) string {
 	}
 	return sb.String()
 }
+
+func YesNo(b bool) string {
+	if b {
+		return "Yes"
+	}
+	return "No"
+}
+
+// isPositiveNumber returns true if the string is a valid number greater than zero.
+func isPositiveNumber(s string) bool {
+	f, err := strconv.ParseInt(s, 10, 64)
+
+	return err == nil && f > 0
+}

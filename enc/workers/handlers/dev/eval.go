@@ -73,12 +73,10 @@ func Eval(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) 
 			return nil
 		}
 	}
-	helpMsg := utils.StringFormat(
-		"Evaluate and execute code within bot.",
-		"Command requires code to execute as arguments.",
-		"For example:",
-		`println("Hello-World")`,
-	)
+	helpMsg := "Evaluate and execute code within bot.\n" +
+		"Command requires code to execute as arguments.\n" +
+		"For example:\n" +
+		`println("Hello-World")`
 	if args == "" || utils.SendHelp(args) {
 		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
 		return nil

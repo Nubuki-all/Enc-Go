@@ -9,7 +9,8 @@ import (
 	"github.com/gotd/td/telegram/uploader"
 	"github.com/gotd/td/tg"
 
-	//"enc/internal/bot"
+	"enc/internal/bot"
+	"enc/config"
 	"enc/internal/clients/telegram"
 	"enc/internal/logger"
 	"enc/utils/tele/parser"
@@ -258,4 +259,43 @@ func EditMessage(id int64, msgID int, text string) error {
 	},
 	)
 	return err
+}
+
+//Broadcast a message to every registered user in bot and returns a list of the messages sent.
+func BcMsg(text string, exceptUser int64, mlist []*Message) []*Message {
+	AddMessage := func (id int64) {
+		ctx := telegram.Context
+		pText, entities, _ := parser.Parse(text, true)
+		resp, err := ctx.SendMessage(id, &tg.MessagesSendMessageRequest{
+			Message: pText,
+			Entities: entities,
+		},
+		)
+		if err != nil {
+			logger.ErrorW(err.Error())
+			return nil, err
+		}
+		msg := NewMsgFromGotg(resp, ctx, id, ctx.Self.ID)
+		mlist = append(mlist, msg)
+	}
+	for _, owner := range strings.Fields(config.Conf.Owner) {
+		if id, err := strconv.ParseInt(owner, 10, 64); err == nil {
+			if id == exceptUser {
+				continue
+			}
+			AddMessage(id)
+		}
+	}
+	for _, user := range strings.Fields(bot.TempUsers) {
+		if id, err := strconv.ParseInt(user, 10, 64); err == nil {
+			if id == exceptUser {
+				continue
+			}
+			AddMessage(id)
+		}
+	}
+	if logchat := config.Conf.LogChannel; logchat != 0 {
+		AddMessage(logchat)
+	}
+	return mlist
 }

@@ -11,21 +11,18 @@ import (
 	"enc/internal/bot"
 	"enc/internal/bot/state"
 	"enc/internal/logger"
+	"enc/utils/tele"
 )
 
 var Timer = NewEnTimer()
 
-// MessageEditor defines an interface for editing a message
-type MessageEditor interface {
-	Edit(text string) error
-}
 
 // EnTimer provides pause and countdown functionality
 type EnTimer struct {
 	mu       sync.Mutex
 	indPause bool
 	timeLeft int
-	msgs     []MessageEditor
+	msgs     []*tele.Message
 	once     sync.Once
 }
 
@@ -80,7 +77,7 @@ func (et *EnTimer) loop() {
 		et.mu.Lock()
 		if len(et.msgs) > 0 {
 			for _, m := range et.msgs {
-				if err := m.Edit("**Timer ended or cancelled and bot has been unpaused.**"); err != nil {
+				if _, err := m.EditText("**Timer ended or cancelled and bot has been unpaused.**"); err != nil {
 					logger.WarnW("EnTimer: message edit failed", zap.Error(err))
 				}
 			}
@@ -91,7 +88,7 @@ func (et *EnTimer) loop() {
 }
 
 // NewTimer starts a new countdown for duration seconds, storing optional msgs to edit upon end
-func (et *EnTimer) NewTimer(duration int, msgs []MessageEditor) {
+func (et *EnTimer) NewTimer(duration int, msgs []*tele.Message) {
 	et.mu.Lock()
 	defer et.mu.Unlock()
 	et.timeLeft = duration
@@ -99,7 +96,7 @@ func (et *EnTimer) NewTimer(duration int, msgs []MessageEditor) {
 }
 
 // PauseIndefinitely sets indefinite pause, with optional msgs
-func (et *EnTimer) PauseIndefinitely(msgs []MessageEditor) {
+func (et *EnTimer) PauseIndefinitely(msgs []*tele.Message) {
 	et.mu.Lock()
 	defer et.mu.Unlock()
 	et.indPause = true

@@ -31,12 +31,12 @@ var (
 )
 
 var (
-	Autoname    string
 	FFmpegArgs  string
 	FFmpeg2Args string
 	FFmpeg3Args string
 	FFmpeg4Args string
 	MuxArgs     string
+	// named FFmpeg for historical reasons, even though other encoders are supported
 )
 
 var ID int64

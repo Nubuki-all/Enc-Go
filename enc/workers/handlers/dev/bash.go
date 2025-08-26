@@ -17,14 +17,12 @@ func Bash(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) 
 			return nil
 		}
 	}
-	helpMsg := utils.StringFormat(
-		"Run bash/system commands in bot",
-		"Much care must be taken especially on Local deployment",
-		"",
-		"USAGE:",
-		"Command requires executables as argument",
-		`For example "/bash ls"`,
-	)
+	helpMsg := "Run bash/system commands in bot\n" +
+		"Much care must be taken especially on Local deployment\n" +
+		"\n" +
+		"USAGE:\n" +
+		"Command requires executables as argument\n" +
+		`For example "/bash ls"` +
 
 	if args == "" || utils.SendHelp(args) {
 		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))

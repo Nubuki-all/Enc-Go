@@ -788,13 +788,11 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		_, _ = msg.ReplyText(err.Error())
 		return nil
 	}
-	helpMsg := utils.StringFormat(
-		"A command to auto tag captions if release group is matched and file contains futher matches.",
-		"Note: It matches the release group & file name.",
-		"Please use double qoutes while passing arguments ",
-		"to avoid malformed filters",
-		"Flags:",
-	)
+	helpMsg := "A command to auto tag captions if release group is matched and file contains futher matches.\n" +
+		"Note: It matches the release group & file name.\n" +
+		"Please use double qoutes while passing arguments " +
+		"to avoid malformed filters.\n" +
+		"Flags:\n"
 	arg := argparser.ParseFlags(
 		cmd,
 		helpMsg,

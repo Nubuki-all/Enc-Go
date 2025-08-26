@@ -55,6 +55,16 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		"xtag":      EventHandlerWithArgs(manage.ExtCapFilter),
 		"extag":     EventHandlerWithArgs(manage.ManageExtCapFilter),
 
+		//Encode parameter-related Handlers
+		"set":     EventHandlerWithArgs(manage.ChangeEParams),
+		"get":     EventHandlerWithArgs(manage.CheckEParams),
+		"reset":   EventHandlerWithArgs(manage.ResetEParams),
+		"mset":    EventHandlerWithArgs(manage.SetMuxArgs),
+		"mget":    EventHandlerWithArgs(manage.GetMuxArgs),
+		"v":       EventHandlerWithArgs(manage.Version),
+		"parse":   EventHandlerWithArgs(manage.MGlobalPOptions),
+		"pause":   EventHandlerWithArgs(manage.Pause),
+
 		// Dev Handlers
 		"eval": EventHandlerWithRawArgs(dev.Eval),
 		"bash": EventHandlerWithRawArgs(dev.Bash),
