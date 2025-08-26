@@ -438,7 +438,7 @@ func Pause(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string)
 
 	if args == "" {
 		status := "not"
-		if b, _ := utils.GetPauseStatus(0); !b {
+		if b, _ := utils.GetPauseStatus(0); b {
 			status = "currently"
 		}
 		reply = fmt.Sprintf("**Pause Status:** `Bot is %s paused.`", status)
@@ -449,7 +449,7 @@ func Pause(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string)
 			entimer.Timer.StopTimer()
 			reply = "**Pausing Cancelled**"
 		}
-	} else if !utils.IsPositiveNumber(args) {
+	} else if !(args == "0" || utils.IsPositiveNumber(args)) {
 		_, _ = msg.Reply("Invaid Number."+
 			"\nNeed help? Send <code>"+
 			update.Args()[0]+
