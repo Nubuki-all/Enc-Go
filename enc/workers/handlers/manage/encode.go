@@ -312,7 +312,9 @@ func Version(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 
 
 func MGlobalPOptions(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
-	if !utils.UserIsOwner(msg.SenderID)
+	if !utils.UserIsOwner(msg.SenderID) {
+		return nil
+	}
 	if args == "" {
 		args += "--help"
 	}
@@ -416,7 +418,7 @@ func MGlobalPOptions(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 	}
 	_, _ = msg.ReplyText(reply)
 	return nil
-}
+{
 
 func Pause(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
@@ -470,9 +472,9 @@ func Pause(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string)
 		reply = fmt.Sprintf("`Bot has been paused for %s`", utils.TimeFormatter(float64(i)))
 	}
 	nMsg, err := msg.ReplyText(reply)
-	if err != nil (
+	if err != nil {
 		return err
-	)
+	}
 	mList := tele.BcMsg(reply, msg.SenderID, []*tele.Message{nMsg})
 	if i > 0 {
 		entimer.Timer.NewTimer(i, mList)

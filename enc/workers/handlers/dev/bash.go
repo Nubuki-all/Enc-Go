@@ -22,7 +22,7 @@ func Bash(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) 
 		"\n" +
 		"USAGE:\n" +
 		"Command requires executables as argument\n" +
-		`For example "/bash ls"` +
+		`For example "/bash ls"`
 
 	if args == "" || utils.SendHelp(args) {
 		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))

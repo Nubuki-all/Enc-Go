@@ -4,7 +4,7 @@ import (
 	//"context"
 	"fmt"
 	"strconv"
-	"strings"
+	//"strings"
 	"time"
 
 	"github.com/celestix/gotgproto/ext"
@@ -64,7 +64,7 @@ func Start(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 		if err == nil && user != nil {
 			ownerName = user.FirstName
 		}
-		outMsg = fmt.Sprintf("%sYou're not allowed access to this bot\nAsk [%s](tg://user?id=%s) (nicely) to grant you access.", msg1, ownerName, ownerIDStr)
+		outMsg = fmt.Sprintf("%sYou're not allowed access to this bot\nAsk [%d](tg://user?id=%s) (nicely) to grant you access.", msg1, ownerName, ownerID)
 	} else {
 		outMsg = msg2
 	}
@@ -173,7 +173,7 @@ func StartBack(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 		if err == nil && user != nil {
 			ownerName = user.FirstName
 		}
-		outMsg = fmt.Sprintf("%sYou're not allowed access to this bot\nAsk [%s](tg://user?id=%s) (nicely) to grant you access.", msg1, ownerName, ownerIDStr)
+		outMsg = fmt.Sprintf("%sYou're not allowed access to this bot\nAsk [%d](tg://user?id=%s) (nicely) to grant you access.", msg1, ownerName, ownerID)
 	} else {
 		outMsg = msg2
 	}
