@@ -182,7 +182,7 @@ func AddTempUsers() {
 			logger.WarnW("Couldn't Parse temp_user id:- " + t, zap.Error(err))
 			continue
 		}
-		if slices.Contains(config.Rconf.Owners, id) || slice.Contains(bot.TempUsers, id) {
+		if slices.Contains(config.Rconf.Owners, id) || slices.Contains(bot.TempUsers, id) {
 			continue
 		}
 		bot.TempUsers = append(bot.TempUsers, id)
