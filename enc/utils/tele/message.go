@@ -284,7 +284,7 @@ func BcMsg(text string, exceptUser int64, mlist []*Message) []*Message {
 		}
 		AddMessage(owner)
 	}
-	for _, user := range strings.Fields(bot.TempUsers) {
+	for _, user := range bot.TempUsers {
 		if user == exceptUser {
 			continue
 		}
