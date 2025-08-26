@@ -418,7 +418,7 @@ func MGlobalPOptions(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 	}
 	_, _ = msg.ReplyText(reply)
 	return nil
-{
+}
 
 func Pause(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
