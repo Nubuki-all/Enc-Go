@@ -58,14 +58,9 @@ func Start(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	if utils.UserIsTemp(msg.SenderID) {
 		outMsg = msg3
 	} else if !utils.UserIsAllowed(msg.SenderID) {
-		ownerIDStr := strings.Split(config.Conf.Owner, " ")[0]
-		ownerID, _ := strconv.ParseInt(
-			ownerIDStr,
-			10,
-			64,
-		)
+		ownerID := config.Rconf.Owners[0]
 		user, err := tele.GetUser(ownerID)
-		ownerName := ownerIDStr
+		ownerName := strconv.FormatInt(ownerID, 10)
 		if err == nil && user != nil {
 			ownerName = user.FirstName
 		}
@@ -172,14 +167,9 @@ func StartBack(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	if utils.UserIsTemp(msg.SenderID) {
 		outMsg = msg3
 	} else if !utils.UserIsAllowed(msg.SenderID) {
-		ownerIDStr := strings.Split(config.Conf.Owner, " ")[0]
-		ownerID, _ := strconv.ParseInt(
-			ownerIDStr,
-			10,
-			64,
-		)
+		ownerID := config.Rconf.Owners[0]
 		user, err := tele.GetUser(ownerID)
-		ownerName := ownerIDStr
+		ownerName := strconv.FormatInt(ownerID, 10)
 		if err == nil && user != nil {
 			ownerName = user.FirstName
 		}

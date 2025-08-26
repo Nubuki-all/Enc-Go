@@ -99,6 +99,7 @@ type RuntimeConfig struct {
 	GroupEncList     []interface{}
 	MaxMessageLength int
 	OnlyOwnerPM      bool
+	Owners           []int64
 	PauseStatus      int
 	Paused           []interface{}
 	PreviewBatch     map[string]interface{}

@@ -39,7 +39,7 @@ type settingRecord struct {
 type arrRecord struct {
 	BotID string   `gorm:"primaryKey"`
 	Key   string   `gorm:"primaryKey"`
-	Value []string `gorm:"type:TEXT"`
+	Value []int64 //`gorm:"type:TEXT"`
 }
 
 // mapRecord stores arbitrary maps (e.g. RSSDict) as JSON

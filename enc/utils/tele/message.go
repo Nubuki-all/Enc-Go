@@ -278,21 +278,17 @@ func BcMsg(text string, exceptUser int64, mlist []*Message) []*Message {
 		msg := NewMsgFromGotg(resp, ctx, id, ctx.Self.ID)
 		mlist = append(mlist, msg)
 	}
-	for _, owner := range strings.Fields(config.Conf.Owner) {
-		if id, err := strconv.ParseInt(owner, 10, 64); err == nil {
-			if id == exceptUser {
-				continue
-			}
-			AddMessage(id)
+	for _, owner := range config.Rconf.Owners {
+		if owner == exceptUser {
+			continue
 		}
+		AddMessage(owner)
 	}
 	for _, user := range strings.Fields(bot.TempUsers) {
-		if id, err := strconv.ParseInt(user, 10, 64); err == nil {
-			if id == exceptUser {
-				continue
-			}
-			AddMessage(id)
+		if user == exceptUser {
+			continue
 		}
+		AddMessage(user)
 	}
 	if logchat := config.Conf.LogChannel; logchat != 0 {
 		AddMessage(logchat)

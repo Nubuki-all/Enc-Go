@@ -20,7 +20,7 @@ var (
 	SQS             bool
 	Started         bool
 	CustomRename    string
-	TempUsers       []string
+	TempUsers       []int64
 	BatchIng        []string
 	BatchQueue      map[string]any
 	ECancel         map[string]any

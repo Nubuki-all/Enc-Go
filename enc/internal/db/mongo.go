@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"slices"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -121,7 +122,7 @@ func LoadMap(coll *mongo.Collection, key string, target *map[string]interface{})
 }
 
 // loadSlice reads an array of strings under key into the target slice
-func LoadSlice(coll *mongo.Collection, key string, target *[]string) {
+func LoadSlice(coll *mongo.Collection, key string, target *[]int64) {
 	if !useMongo {
 		return
 	}
@@ -133,7 +134,10 @@ func LoadSlice(coll *mongo.Collection, key string, target *[]string) {
 
 	if arr, ok := result[key].(bson.A); ok {
 		for _, v := range arr {
-			if s, ok := v.(string); ok {
+			if s, ok := v.(int64); ok {
+				if slices.Contains(*target, s) {
+					continue
+				}
 				*target = append(*target, s)
 			}
 		}

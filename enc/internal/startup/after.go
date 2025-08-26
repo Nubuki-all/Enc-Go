@@ -154,21 +154,17 @@ func startQbit() {
 
 // onStart sends a startup notification to owners and log channel
 func onStart() {
-	for _, owner := range strings.Fields(config.Conf.Owner) {
-		if id, err := strconv.ParseInt(owner, 10, 64); err == nil {
-			cerr := tele.SendMessage(
-				id,
-				fmt.Sprintf(
-					"**I'm %s %s**",
-					random.Enquip(),
-					random.Enmoji(),
-				),
-			)
-			if cerr != nil {
-				logger.ErrorW(cerr.Error())
-			}
-		} else if err != nil {
-			logger.ErrorW(err.Error())
+	for _, owner := range config.Rconf.Owners {
+		cerr := tele.SendMessage(
+			owner,
+			fmt.Sprintf(
+				"**I'm %s %s**",
+				random.Enquip(),
+				random.Enmoji(),
+			),
+		)
+		if cerr != nil {
+			logger.ErrorW(cerr.Error())
 		}
 	}
 	if config.Conf.LogChannel != 0 {
@@ -268,12 +264,10 @@ func onTermination(ctx context.Context) {
 			logger.ErrorW(err.Error())
 		}
 	} else {
-		for _, owner := range strings.Fields(config.Conf.Owner) {
-			if id, err := strconv.ParseInt(owner, 10, 64); err == nil {
-				serr := tele.SendMessage(id, farewell)
-				if serr != nil {
-					logger.ErrorW(serr.Error())
-				}
+		for _, owner := range config.Rconf.Owners {
+			serr := tele.SendMessage(owner, farewell)
+			if serr != nil {
+				logger.ErrorW(serr.Error())
 			}
 		}
 	}

@@ -14,13 +14,11 @@ func UserIsAllowed(userID int64) bool {
 }
 
 func UserIsOwner(userID int64) bool {
-	str := strconv.FormatInt(userID, 10)
-	return strings.Contains(config.Conf.Owner, str)
+	return slices.Contains(config.Rconf.Owners, userID)
 }
 
 func UserIsTemp(userID int64) bool {
-	str := strconv.FormatInt(userID, 10)
-	return slices.Contains(bot.TempUsers, str)
+	return slices.Contains(bot.TempUsers, userID)
 }
 
 func UserIsDev(userID int64) bool {
@@ -32,20 +30,18 @@ func AllowPM() bool {
 }
 
 func AddTempUser(userID int64) {
-	str := strconv.FormatInt(userID, 10)
-	bot.TempUsers = append(bot.TempUsers, str)
+	bot.TempUsers = append(bot.TempUsers, userID)
 }
 
 func RmTempUser(userID int64) {
-	str := strconv.FormatInt(userID, 10)
-	bot.TempUsers = remove(bot.TempUsers, str)
+	bot.TempUsers = remove(bot.TempUsers, userID)
 }
 
 func SendHelp(args string) bool {
 	return strings.EqualFold(args, "-h") || strings.EqualFold(args, "--help")
 }
 
-func remove(s []string, r string) []string {
+func remove(s []int64, r int64) []int64 {
 	out := s[:0]
 	for _, v := range s {
 		if v != r {

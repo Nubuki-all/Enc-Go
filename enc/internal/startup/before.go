@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 
 func Initialize() {
 	DetectDocker()
+	AddOwners()
 	DownloadThumbnail()
 	SetupCustomRename()
 	DownloadLinks()
@@ -154,18 +156,33 @@ func EnsureDirectories() {
 		}
 	}
 }
+func AddOwners() {
+	var s []int64
+	for _, owner := range strings.Fields(config.Conf.Owner) {
+		if id, err := strconv.ParseInt(owner, 10, 64); err == nil {
+			s = append(s, id)
+		} else {
+			logger.Warnw("Couldn't Parse owner id:- " + owner, zap.Error(err))
+		}
+	config.Rconf.Owners = s
+}
 
 func AddTempUsers() {
 	raw := config.Conf.TempUser
 	if raw == "" {
 		return
 	}
-	owners := strings.Fields(config.Conf.Owner)
+	var id int64
+	// owners := strings.Fields(config.Conf.Owner)
 	for _, t := range strings.Fields(raw) {
-		if contains(owners, t) || contains(bot.TempUsers, t) {
+		if id, err := strconv.ParseInt(t, 10, 64); err != nil {
+			logger.Warnw("Couldn't Parse temp_user id:- " + t, zap.Error(err))
 			continue
 		}
-		bot.TempUsers = append(bot.TempUsers, t)
+		if slice.Contains(config.Rconf.Owners, id) || slice.Contains(bot.TempUsers, id) {
+			continue
+		}
+		bot.TempUsers = append(bot.TempUsers, id)
 		logger.InfoW("Added temp user", zap.String("user", t))
 	}
 }
