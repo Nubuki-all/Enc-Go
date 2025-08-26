@@ -164,6 +164,7 @@ func AddOwners() {
 		} else {
 			logger.Warnw("Couldn't Parse owner id:- " + owner, zap.Error(err))
 		}
+	}
 	config.Rconf.Owners = s
 }
 
