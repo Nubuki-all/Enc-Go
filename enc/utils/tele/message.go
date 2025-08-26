@@ -273,7 +273,6 @@ func BcMsg(text string, exceptUser int64, mlist []*Message) []*Message {
 		)
 		if err != nil {
 			logger.ErrorW(err.Error())
-			return nil
 		}
 		msg := NewMsgFromGotg(resp, ctx, id, ctx.Self.ID)
 		mlist = append(mlist, msg)
