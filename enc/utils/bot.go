@@ -251,3 +251,10 @@ func RemoveRFilterByIndex(s []*types.RenameFilterData, index int) []*types.Renam
 	ret = append(ret, s[:index]...)
 	return append(ret, s[index+1:]...)
 }
+
+// isPositiveNumber returns true if the string is a valid number greater than zero.
+func IsPositiveNumber(s string) bool {
+	f, err := strconv.ParseInt(s, 10, 64)
+
+	return err == nil && f > 0
+}

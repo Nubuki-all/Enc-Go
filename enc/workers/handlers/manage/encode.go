@@ -239,6 +239,7 @@ func SetMuxArgs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		fmt.Sprintf("<pre language=\"Changed mux_args to:\">%s</pre>", args),
 		&tele.ReplyOptions{HtmlParseMode: true},
 	)
+	return nil
 }
 
 func GetMuxArgs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
@@ -298,7 +299,7 @@ func Version(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		return nil
 	}
 	if _, err := strconv.ParseFloat(args, 64); err != nil {
-		_, _ = msg.ReplyText(fmt.Sprintf("Unknown argument: `%s`"), args)
+		_, _ = msg.ReplyText(fmt.Sprintf("Unknown argument: `%s`", args))
 		return nil
 	}
 	bot.ReleaseVersion = args
@@ -450,7 +451,7 @@ func Pause(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string)
 			entimer.Timer.StopTimer()
 			reply = "**Pausing Cancelled**"
 		}
-	} else if !utils.isPositiveNumber(args) {
+	} else if !utils.IsPositiveNumber(args) {
 		_, _ = msg.Reply("Invaid Number."+
 			"\nNeed help? Send <code>"+
 			update.Args()[0]+
@@ -477,7 +478,7 @@ func Pause(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string)
 	if i > 0 {
 		entimer.Timer.NewTimer(i, mList)
 	} else {
-		entimer.Timer.pause_indefinitely(mList)
+		entimer.Timer.PauseIndefinitely(mList)
 	}
 	return nil
 }
