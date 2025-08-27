@@ -170,7 +170,7 @@ func (m *Message) Delete() error {
 }
 
 func (m *Message) Forward(chatID int64) (*Message, error) {
-	update, err := m.Ctx.ForwardMessages(m.ChatID, chatID,
+	resp, err := m.Ctx.ForwardMessages(m.ChatID, chatID,
 		&tg.MessagesForwardMessagesRequest{
 			DropAuthor: true,
 			ID: []int{m.ID},
@@ -181,9 +181,15 @@ func (m *Message) Forward(chatID int64) (*Message, error) {
 		return nil, err
 	}
 	var msg *gp.Message
-	switch u := update.(type) {
+	var updates []tg.UpdateClass
+	switch r := resp.(type) {
+	case *tg.Updates:
+		updates = r.GetUpdates()
+	}
+	update := updates[0]
+	switch update := update.(type) {
 	case *tg.UpdateNewMessage:
-		m := u.GetMessage()
+		m := update.GetMessage()
 		msg = gp.ConstructMessage(m)
 	}
 	return NewMsgFromGotg(msg, m.Ctx, chatID, m.Ctx.Self.ID), nil
@@ -318,7 +324,7 @@ func BcMsg(text string, exceptUser int64, mlist []*Message) []*Message {
 
 func ForwardMessage(fromChatID, toChatID int64, msgID int) (*Message, error) {
 	ctx := telegram.Context
-	update, err := ctx.ForwardMessages(fromChatID, toChatID,
+	resp, err := ctx.ForwardMessages(fromChatID, toChatID,
 		&tg.MessagesForwardMessagesRequest{
 			DropAuthor: true,
 			ID: []int{msgID},
@@ -329,9 +335,15 @@ func ForwardMessage(fromChatID, toChatID int64, msgID int) (*Message, error) {
 		return nil, err
 	}
 	var msg *gp.Message
-	switch u := update.(type) {
+	var updates []tg.UpdateClass
+	switch r := resp.(type) {
+	case *tg.Updates:
+		updates = r.GetUpdates()
+	}
+	update := updates[0]
+	switch update := update.(type) {
 	case *tg.UpdateNewMessage:
-		m := u.GetMessage()
+		m := update.GetMessage()
 		msg = gp.ConstructMessage(m)
 	}
 	return NewMsgFromGotg(msg, ctx, toChatID, ctx.Self.ID), nil
