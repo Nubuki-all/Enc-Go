@@ -25,7 +25,7 @@ func Restart(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 	}
 	db.SaveAll(ctx)
 	err := utils.ExecRestart(msg.ChatID, rMsg.ID)
-	if err != {
+	if err != nil {
 		_, _ = rMsg.EditText("**Restart failed:** " + err.Error())
 	}
 	return nil
