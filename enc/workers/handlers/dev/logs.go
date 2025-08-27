@@ -1,7 +1,6 @@
 package dev
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
@@ -71,7 +70,6 @@ func GetLogs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 	}
 	chunks := utils.SplitText(msgText, "\n", false)
 	preMsg := msg
-	var err error
 	for _, chunk := range chunks {
 		out := "<pre>" + chunk + "</pre>"
 		preMsg, err = preMsg.Reply(out,
