@@ -70,7 +70,7 @@ func CheckEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		"    To check for ffmpeg2, 3 and 4 custom encoding params\n" +
 		"No argument to check first encoding params"
 	if utils.SendHelp(args) {
-		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg), false)
+		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg, false))
 		return nil
 	}
 	needHelp := func() error {
