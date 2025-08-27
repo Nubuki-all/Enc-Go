@@ -173,7 +173,7 @@ func (m *Message) Forward(chatID int64) (*Message, error) {
 	resp, err := m.Ctx.ForwardMessages(m.ChatID, chatID,
 		&tg.MessagesForwardMessagesRequest{
 			DropAuthor: true,
-			ID: []int{m.ID},
+			ID:         []int{m.ID},
 		},
 	)
 	if err != nil {
@@ -327,7 +327,7 @@ func ForwardMessage(fromChatID, toChatID int64, msgID int) (*Message, error) {
 	resp, err := ctx.ForwardMessages(fromChatID, toChatID,
 		&tg.MessagesForwardMessagesRequest{
 			DropAuthor: true,
-			ID: []int{msgID},
+			ID:         []int{msgID},
 		},
 	)
 	if err != nil {

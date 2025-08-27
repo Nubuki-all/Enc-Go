@@ -1,7 +1,6 @@
 package manage
 
 import (
-
 	"github.com/celestix/gotgproto/ext"
 
 	"enc/internal/db"
