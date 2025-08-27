@@ -181,9 +181,9 @@ func (m *Message) Forward(chatID int64) (*Message, error) {
 		return nil, err
 	}
 	var msg *gp.Message
-	switch update := update.(type) {
+	switch u := update.(type) {
 	case *tg.UpdateNewMessage:
-		m := update.GetMessage()
+		m := u.GetMessage()
 		msg = gp.ConstructMessage(m)
 	}
 	return NewMsgFromGotg(msg, m.Ctx, chatID, m.Ctx.Self.ID), nil
@@ -329,9 +329,9 @@ func ForwardMessage(fromChatID, toChatID int64, msgID int) (*Message, error) {
 		return nil, err
 	}
 	var msg *gp.Message
-	switch update := update.(type) {
+	switch u := update.(type) {
 	case *tg.UpdateNewMessage:
-		m := update.GetMessage()
+		m := u.GetMessage()
 		msg = gp.ConstructMessage(m)
 	}
 	return NewMsgFromGotg(msg, ctx, toChatID, ctx.Self.ID), nil

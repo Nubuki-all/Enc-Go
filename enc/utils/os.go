@@ -355,7 +355,7 @@ func ExecRestart(chatID int64, msgID int) error {
 	if err != nil {
 		return err
 	}
-	id = fmt.Sprintf("%d:%d", chatID, msgID)
+	id := fmt.Sprintf("%d:%d", chatID, msgID)
 	argv := []string{"restart", id}
 	env := os.Environ()
 	// Make sure any listeners you want preserved are NOT close-on-exec.
