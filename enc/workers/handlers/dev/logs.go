@@ -11,17 +11,16 @@ import (
 	"enc/utils/tele"
 )
 
-
 func GetLogs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
-    if !utils.UserIsOwner(msg.SenderID) {
+	if !utils.UserIsOwner(msg.SenderID) {
 		if !utils.UserIsDev(msg.SenderID) {
 			return nil
 		}
 	}
 	helpMsg := "Upload bot's logs in txt format.\n" +
-    "Or as a message if an argument is specified." +
-    "Arguments:\n" 
-    arg := argparser.ParseFlags(
+		"Or as a message if an argument is specified." +
+		"Arguments:\n"
+	arg := argparser.ParseFlags(
 		cmd,
 		helpMsg,
 		argList,
@@ -44,8 +43,8 @@ func GetLogs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 	logFileName := config.Conf.LogFileName
 	if sNum < 1 {
 		_, _ = msg.UploadDoc(&tele.UploadOptions{
-			Path:    logFileName,
-			Quote:   true,
+			Path:  logFileName,
+			Quote: true,
 		})
 		return nil
 	}
