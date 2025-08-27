@@ -72,8 +72,9 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		"restart": EventHandlerWithArgs(manage.Restart),
 
 		// Dev Handlers
-		"eval": EventHandlerWithRawArgs(dev.Eval),
 		"bash": EventHandlerWithRawArgs(dev.Bash),
+		"eval": EventHandlerWithRawArgs(dev.Eval),
+		"logs": EventHandlerWithArgs(dev.GetLogs),
 	}
 
 	for cmd, handler := range cmdHandlers {

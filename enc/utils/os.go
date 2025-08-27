@@ -188,6 +188,9 @@ func ReadNToLastLine(filename string, n int) (string, error) {
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 	}
+	if err := scanner.Err(); err != nil {
+		return "", err
+	}
 	if len(lines) < n {
 		return "", fmt.Errorf("not enough lines")
 	}
@@ -358,7 +361,5 @@ func ExecRestart(chatID int64, msgID int) error {
 	id := fmt.Sprintf("%d:%d", chatID, msgID)
 	argv := []string{filepath.Base(exe), "restart", id}
 	env := os.Environ()
-	// Make sure any listeners you want preserved are NOT close-on-exec.
-	// For listeners created with net.Listen, you may need to call File() and set FD_CLOEXEC = 0.
 	return syscall.Exec(exe, argv, env)
 }
