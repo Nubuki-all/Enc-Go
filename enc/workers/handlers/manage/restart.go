@@ -1,0 +1,32 @@
+package manage
+
+import (
+	"strconv"
+
+	"github.com/celestix/gotgproto/ext"
+
+	"enc/internal/db"
+	"enc/utils"
+	"enc/utils/tele"
+)
+
+func Restart(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+	if !utils.UserIsOwner(msg.SenderID) {
+		return nil
+	}
+	helpMsg := "Restarts bot."
+	if utils.SendHelp(args) {
+		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg, false))
+		return nil
+	}
+	rMsg, err := msg.ReplyText("`Restarting Please Wait…`")
+	if err != nil {
+		return nil
+	}
+	db.SaveAll(ctx)
+	err := utils.ExecRestart(msg.ChatID, rMsg.ID)
+	if err != {
+		_, _ = rMsg.EditText("**Restart failed:** " + err.Error())
+	}
+	return nil
+}

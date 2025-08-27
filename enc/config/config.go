@@ -33,7 +33,7 @@ type Config struct {
 	Encoder               string
 	ExtCap                bool
 	FBanner               bool
-	FChannel              int
+	FChannel              int64
 	FChannelStat          int
 	FCodec                string
 	FFmpeg                string
@@ -221,7 +221,7 @@ func LoadConfig() error {
 		Encoder:               viper.GetString("ENCODER"),
 		ExtCap:                viper.GetBool("EXTENDED_CAPTIONS"),
 		FBanner:               viper.GetBool("FBANNER"),
-		FChannel:              viper.GetInt("FCHANNEL"),
+		FChannel:              viper.GetInt64("FCHANNEL"),
 		FChannelStat:          viper.GetInt("FCHANNEL_STAT"),
 		FCodec:                viper.GetString("FCODEC"),
 		FFmpeg:                viper.GetString("FFMPEG"),

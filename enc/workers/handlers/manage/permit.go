@@ -38,7 +38,11 @@ func TempUnauth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 
 	// If the command is a reply, extract ID from replied-to message
 	if msg.ReplyToID != 0 {
-		message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
+		err = message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
+		if err != nil {
+			_, _ = msg.ReplyText(err.Error())
+			return nil
+		}
 	}
 	if repMsg := message.ReplyToMessage; repMsg != nil {
 		peer := repMsg.Message.FromID
@@ -112,7 +116,11 @@ func TempAuth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 
 	// If the command is a reply, extract SenderID from replied message
 	if msg.ReplyToID != 0 {
-		message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
+		err = message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
+		if err != nil {
+			_, _ = msg.ReplyText(err.Error())
+			return nil
+		}
 	}
 	if repMsg := message.ReplyToMessage; repMsg != nil {
 		peer := repMsg.Message.FromID

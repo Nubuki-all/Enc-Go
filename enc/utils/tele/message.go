@@ -169,6 +169,26 @@ func (m *Message) Delete() error {
 	return m.Ctx.DeleteMessages(m.ChatID, []int{m.ID})
 }
 
+func (m *Message) Forward(chatID int64) (*Message, error) {
+	update, err := m.Ctx.ForwardMessages(m.ChatID, chatID,
+		&tg.MessagesForwardMessagesRequest{
+			DropAuthor: true,
+			ID: []int{m.ID},
+		},
+	)
+	if err != nil {
+		logger.ErrorW(err.Error())
+		return nil, err
+	}
+	var msg *gp.Message
+	switch update := update.(type) {
+	case *tg.UpdateNewMessage:
+		m := update.GetMessage()
+		msg = gp.ConstructMessage(m)
+	}
+	return NewMsgFromGotg(msg, m.Ctx, chatID, m.Ctx.Self.ID), nil
+}
+
 func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
 	var file tg.InputFileClass
 	var inputRep *tg.InputReplyToMessage
@@ -273,6 +293,7 @@ func BcMsg(text string, exceptUser int64, mlist []*Message) []*Message {
 		)
 		if err != nil {
 			logger.ErrorW(err.Error())
+			return
 		}
 		msg := NewMsgFromGotg(resp, ctx, id, ctx.Self.ID)
 		mlist = append(mlist, msg)
@@ -293,4 +314,25 @@ func BcMsg(text string, exceptUser int64, mlist []*Message) []*Message {
 		AddMessage(logchat)
 	}
 	return mlist
+}
+
+func ForwardMessage(fromChatID, toChatID int64, msgID int) (*Message, error) {
+	ctx := telegram.Context
+	update, err := ctx.ForwardMessages(fromChatID, toChatID,
+		&tg.MessagesForwardMessagesRequest{
+			DropAuthor: true,
+			ID: []int{msgID},
+		},
+	)
+	if err != nil {
+		logger.ErrorW(err.Error())
+		return nil, err
+	}
+	var msg *gp.Message
+	switch update := update.(type) {
+	case *tg.UpdateNewMessage:
+		m := update.GetMessage()
+		msg = gp.ConstructMessage(m)
+	}
+	return NewMsgFromGotg(msg, ctx, toChatID, ctx.Self.ID), nil
 }

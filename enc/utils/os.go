@@ -347,3 +347,18 @@ func PosInStream(file, lang1, lang2, mode string) (aPos, sPos int) {
 	}
 	return
 }
+
+// Replace current process with new executable at same path
+// returns only on error
+func ExecRestart(chatID int64, msgID int) error {
+	exe, err := os.Executable()
+	if err != nil {
+		return err
+	}
+	id = fmt.Sprintf("%d:%d", chatID, msgID)
+	argv := []string{"restart", id}
+	env := os.Environ()
+	// Make sure any listeners you want preserved are NOT close-on-exec.
+	// For listeners created with net.Listen, you may need to call File() and set FD_CLOEXEC = 0.
+	return syscall.Exec(exe, argv, env)
+}

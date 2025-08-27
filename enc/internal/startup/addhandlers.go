@@ -65,6 +65,12 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		"parse": EventHandlerWithArgs(manage.MGlobalPOptions),
 		"pause": EventHandlerWithArgs(manage.Pause),
 
+		// Forward Handler
+		"forward": EventHandlerWithArgs(manage.FCForward),
+
+		// Run-control Handlers
+		"restart": EventHandlerWithArgs(manage.Restart),
+
 		// Dev Handlers
 		"eval": EventHandlerWithRawArgs(dev.Eval),
 		"bash": EventHandlerWithRawArgs(dev.Bash),

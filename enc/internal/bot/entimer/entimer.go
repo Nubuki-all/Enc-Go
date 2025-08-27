@@ -109,6 +109,6 @@ func (et *EnTimer) StopTimer() {
 	defer et.mu.Unlock()
 	et.timeLeft = 0
 	et.indPause = false
-	et.msgs = nil
+	// et.msgs = nil
 	bot.Paused.Set(state.DefaultPause, false)
 }

@@ -4,9 +4,47 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/celestix/gotgproto/ext"
+
+	"enc/config"
 	"enc/internal/bot"
 	"enc/internal/bot/types"
+	"enc/utils"
+	"enc/utils/tele"
 )
+
+func FCForward(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+	fchannel := config.Conf.FChannel
+	chatID := msg.ChatID
+	if !(utils.UserIsOwner(msg.SenderID) || chatID == fchannel) {
+		return nil
+	}
+	helpMsg := "Forwards replied message to conf.FCHANNEL"
+	if utils.SendHelp(args) {
+		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg, false))
+		return nil
+	}
+	var reply string
+	repMsgID := msg.ReplyToID
+	if fchannel == 0 {
+		reply = "`FCHANNEL env not set.`"
+	} else if repMsgID != 0 {
+		reply = "`Reply with a message to forward to FCHANNEL`"
+	}
+	if reply != "" {
+		_, _ = msg.ReplyText(reply)
+		return nil
+	}
+	_, err := tele.ForwardMessage(chatID, fchannel, repMsgID)
+	if err != nil {
+		reply = "**Message could not be forwarded:**\nError: " +
+			err.Error()
+	} else {
+		reply = "`Forwarded succesfully.`"
+	}
+	_, _ = msg.ReplyText(reply)
+	return nil
+}
 
 func RenameFilterExists(name string, caseSensitive bool) bool {
 	for _, filter := range bot.RenameFilters {
