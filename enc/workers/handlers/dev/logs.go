@@ -7,7 +7,9 @@ import (
 
 	"github.com/celestix/gotgproto/ext"
 
+	"enc/config"
 	"enc/utils"
+	"enc/utils/argparser"
 	"enc/utils/tele"
 )
 
@@ -17,6 +19,12 @@ func GetLogs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 			return nil
 		}
 	}
+	cmd := update.Args()[0]
+	argList, err := utils.SplitQuotedFieldsErr(args)
+		if err != nil {
+			_, _ = msg.ReplyText(err.Error())
+			return nil
+		}
 	helpMsg := "Upload bot's logs in txt format.\n" +
 		"Or as a message if an argument is specified." +
 		"Arguments:\n"
@@ -39,6 +47,7 @@ func GetLogs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		_, _ = msg.ReplyText(err.Error())
 		return nil
 	}
+	pargs := arg.Values
 	sNum := pargs["from"].(int)
 	logFileName := config.Conf.LogFileName
 	if sNum < 1 {
@@ -50,7 +59,7 @@ func GetLogs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 	}
 	var builder strings.Builder
 	for i := sNum - 1; i >= 1; i-- {
-		line := utils.ReadNToLastLine(logFileName, i)
+		line, _ := utils.ReadNToLastLine(logFileName, i)
 		if line != "" {
 			builder.WriteString(line)
 			builder.WriteString("\n")
