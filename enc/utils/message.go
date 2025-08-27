@@ -50,7 +50,10 @@ func remove(s []int64, r int64) []int64 {
 	return out
 }
 
-func CodeBlock(s string) string {
+func CodeBlock(s string, html bool) string {
+	if html {
+		return "<pre>" + s + "</pre>"
+	}
 	return "```" + s + "```"
 }
 

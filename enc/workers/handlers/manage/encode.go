@@ -29,7 +29,7 @@ func ChangeEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 		"    - Alternatively you can also create a custom bash script and pass the path of the script.\n" +
 		"To set for FFMPEG2(or 3 or 4), add -2 or -3 and so on, before the shell command for encoding."
 	if args == "" || utils.SendHelp(args) {
-		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
+		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg, false))
 		return nil
 	}
 	var alt, cmd string
@@ -70,7 +70,7 @@ func CheckEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		"    To check for ffmpeg2, 3 and 4 custom encoding params\n" +
 		"No argument to check first encoding params"
 	if utils.SendHelp(args) {
-		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
+		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg), false)
 		return nil
 	}
 	needHelp := func() error {
@@ -123,7 +123,7 @@ func ResetEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		"    To initially delete, then reset suffixed encoding parameters; ffmpeg2, 3 and 4\n" +
 		"No argument to immediately reset the first & default encoding parameters, it cannot be deleted."
 	if utils.SendHelp(args) {
-		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
+		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg, false))
 		return nil
 	}
 	needHelp := func() error {
@@ -213,7 +213,7 @@ func SetMuxArgs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		"    clear\n" +
 		"        to clear mux_args."
 	if args == "" || utils.SendHelp(args) {
-		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
+		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg, false))
 		return nil
 	}
 	if strings.EqualFold(args, "clear") {
@@ -249,7 +249,7 @@ func GetMuxArgs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	helpMsg := "Get currently set mux_args.\n" +
 		"Requires no arguments and any given will be ignored."
 	if utils.SendHelp(args) {
-		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
+		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg, false))
 		return nil
 	}
 	params := bot.MuxArgs
@@ -273,7 +273,7 @@ func Version(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		"    - off/disable to turn off\n" +
 		"Sending this command without argument will check for previous version tags and display them."
 	if utils.SendHelp(args) {
-		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
+		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg, false))
 		return nil
 	}
 	notSet := func() {
@@ -433,7 +433,7 @@ func Pause(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string)
 		"    - off/disable (To unpause)\n" +
 		"    - no argument; (To check state)"
 	if utils.SendHelp(args) {
-		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
+		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg, false))
 		return nil
 	}
 	var reply string

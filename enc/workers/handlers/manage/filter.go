@@ -72,7 +72,9 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 			),
 		)
 		if out := arg.Output; out != "" {
-			_, _ = msg.ReplyText(utils.CodeBlock(out))
+			_, _ = msg.Reply(utils.CodeBlock(out, true),
+				&tele.ReplyOptions{HtmlParseMode: true},
+			)
 			return nil
 		} else if err := arg.Err; err != nil {
 			_, _ = msg.ReplyText(err.Error())
@@ -183,7 +185,9 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.ReplyText(utils.CodeBlock(out))
+		_, _ = msg.Reply(utils.CodeBlock(out, true),
+			&tele.ReplyOptions{HtmlParseMode: true},
+		)
 		return nil
 	} else if err := arg.Err; err != nil {
 		_, _ = msg.ReplyText(err.Error())
@@ -234,7 +238,7 @@ func VAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 		"\n    --list/-l : List all Rename filters" +
 		"\n    Name/id of rename filter gotten from listing to view filter parameters."
 	if args == "" || strings.EqualFold(args, "-h") || strings.EqualFold(args, "--help") {
-		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
+		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg, false))
 		return nil
 	}
 	if strings.EqualFold(args, "-l") || strings.EqualFold(args, "--list") {
@@ -339,7 +343,9 @@ func DelAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.ReplyText(utils.CodeBlock(out))
+		_, _ = msg.Reply(utils.CodeBlock(out, true),
+			&tele.ReplyOptions{HtmlParseMode: true},
+		)
 		return nil
 	} else if err := arg.Err; err != nil {
 		_, _ = msg.ReplyText(err.Error())
@@ -435,7 +441,9 @@ func Filter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.ReplyText(utils.CodeBlock(out))
+		_, _ = msg.Reply(utils.CodeBlock(out, true),
+			&tele.ReplyOptions{HtmlParseMode: true},
+		)
 		return nil
 	} else if err := arg.Err; err != nil {
 		_, _ = msg.ReplyText(err.Error())
@@ -468,7 +476,7 @@ func VFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 	}
 	helpMsg := "View currently added filter.\nRequires no arguments."
 	if strings.EqualFold(args, "-h") || strings.EqualFold(args, "--help") {
-		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
+		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg, false))
 		return nil
 	}
 	if bot.Filters == nil {
@@ -494,7 +502,7 @@ func DelFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	}
 	helpMsg := "Delete previously added filter.\nRequires no arguments."
 	if strings.EqualFold(args, "-h") || strings.EqualFold(args, "--help") {
-		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
+		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg, false))
 		return nil
 	}
 	if bot.Filters == nil {
@@ -563,7 +571,9 @@ func MatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.ReplyText(utils.CodeBlock(out))
+		_, _ = msg.Reply(utils.CodeBlock(out, true),
+			&tele.ReplyOptions{HtmlParseMode: true},
+		)
 		return nil
 	} else if err := arg.Err; err != nil {
 		_, _ = msg.ReplyText(err.Error())
@@ -657,7 +667,9 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.ReplyText(utils.CodeBlock(out))
+		_, _ = msg.Reply(utils.CodeBlock(out, true),
+			&tele.ReplyOptions{HtmlParseMode: true},
+		)
 		return nil
 	} else if err := arg.Err; err != nil {
 		_, _ = msg.ReplyText(err.Error())
@@ -815,7 +827,9 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.ReplyText(utils.CodeBlock(out))
+		_, _ = msg.Reply(utils.CodeBlock(out, true),
+			&tele.ReplyOptions{HtmlParseMode: true},
+		)
 		return nil
 	} else if err := arg.Err; err != nil {
 		_, _ = msg.ReplyText(err.Error())
@@ -902,7 +916,9 @@ func ManageExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message,
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.ReplyText(utils.CodeBlock(out))
+		_, _ = msg.Reply(utils.CodeBlock(out, true),
+			&tele.ReplyOptions{HtmlParseMode: true},
+		)
 		return nil
 	} else if err := arg.Err; err != nil {
 		_, _ = msg.ReplyText(err.Error())

@@ -25,7 +25,7 @@ func Bash(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) 
 		`For example "/bash ls"`
 
 	if args == "" || utils.SendHelp(args) {
-		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg))
+		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg, false))
 		return nil
 	}
 
