@@ -20,10 +20,10 @@ func GetLogs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 	}
 	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)
-		if err != nil {
-			_, _ = msg.ReplyText(err.Error())
-			return nil
-		}
+	if err != nil {
+		_, _ = msg.ReplyText(err.Error())
+		return nil
+	}
 	helpMsg := "Upload bot's logs in txt format.\n" +
 		"Or as a message if an argument is specified." +
 		"Arguments:\n"
