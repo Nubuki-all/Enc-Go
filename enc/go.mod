@@ -29,7 +29,7 @@ require (
 	moul.io/zapgorm2 v1.3.0
 )
 
-// replace github.com/celestix/gotgproto => github.com/Nubuki-all/gotgproto v1.0.0-beta21.0.20250818084237-c9112aafd13d
+replace github.com/celestix/gotgproto => github.com/Nubuki-all/gotgproto peer-fixes
 
 require (
 	github.com/AnimeKaizoku/cacher v1.0.3 // indirect

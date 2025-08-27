@@ -353,7 +353,9 @@ func MGlobalPOptions(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.ReplyText(utils.CodeBlock(out))
+		_, _ = msg.Reply(fmt.Sprintf("<pre>%s</pre>", out),
+			&tele.ReplyOptions{HtmlParseMode: true},
+		)
 		return nil
 	} else if err := arg.Err; err != nil {
 		_, _ = msg.ReplyText(err.Error())
