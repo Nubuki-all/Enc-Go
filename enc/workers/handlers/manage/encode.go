@@ -175,7 +175,7 @@ func ResetSEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg 
 		} else {
 			return envNotSet()
 		}
-	} else if arg == "-4" {
+		if bot.FFmpeg4Args != "" {
 		if bot.FFmpeg4Args != "" {
 			bot.FFmpeg4Args = ""
 		} else if defaultEnv := config.Conf.FFmpeg4; defaultEnv != "" {
