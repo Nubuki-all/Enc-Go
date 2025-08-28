@@ -16,7 +16,7 @@ import (
 func FCForward(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	fchannel := config.Conf.FChannel
 	chatID := msg.ChatID
-	if !(utils.UserIsOwner(msg.SenderID) || chatID == fchannel) {
+	if !utils.UserIsOwner(msg.SenderID) && chatID != fchannel {
 		return nil
 	}
 	helpMsg := "Forwards replied message to conf.FCHANNEL"

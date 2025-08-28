@@ -8,6 +8,8 @@ import (
 
 	"github.com/5rahim/tanuki"
 	"go.uber.org/zap"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	"enc/config"
 	"enc/internal/bot"
@@ -137,7 +139,7 @@ func ParseName(
 			aTag = fil2
 		}
 	} else {
-		aTag, _ := GetFileTag(infile, false, false)
+		aTag, _ = GetFileTag(infile, false, false)
 		if aTag == "" {
 			aTag = GetCusTag(filteredName, relGroup, false)
 		}
@@ -378,7 +380,9 @@ func CustCap(
 	}
 
 	// Format title (capitalize words)
-	title = strings.Title(strings.ToLower(title))
+	// title = strings.Title(strings.ToLower(title))
+	undCaser := cases.Title(language.Und, cases.NoLower)
+	title = undCaser.String(title)
 
 	// Auto-rename (assumes AutoRename returns (ok bool, out string, err error))
 

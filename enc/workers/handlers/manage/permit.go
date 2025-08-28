@@ -45,7 +45,7 @@ func TempUnauth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		}
 	}
 	if repMsg := message.ReplyToMessage; repMsg != nil {
-		peer := repMsg.Message.FromID
+		peer := repMsg.FromID
 		if peerUser, ok := peer.(*tg.PeerUser); ok {
 			newID = peerUser.UserID
 		}
@@ -123,7 +123,7 @@ func TempAuth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		}
 	}
 	if repMsg := message.ReplyToMessage; repMsg != nil {
-		peer := repMsg.Message.FromID
+		peer := repMsg.FromID
 		if peerUser, ok := peer.(*tg.PeerUser); ok {
 			newID = peerUser.UserID
 		}

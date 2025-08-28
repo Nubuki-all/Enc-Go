@@ -191,14 +191,6 @@ func AddTempUsers() {
 	}
 }
 
-func contains(slice []string, s string) bool {
-	for _, v := range slice {
-		if v == s {
-			return true
-		}
-	}
-	return false
-}
 
 func LoadDB() {
 	// 1) Initialize Mongo (or switch to local fallback)

@@ -5,7 +5,9 @@ import (
 	"strings"
 
 	"go.uber.org/zap"
+	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+
 
 	"enc/internal/bot"
 	"enc/internal/bot/types"
@@ -153,6 +155,7 @@ func GetFileTag(infile string, caption, audioOnly bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	undCaser := cases.Title(language.Und, cases.NoLower)
 	// Non-caption mode
 	if !caption {
 		if aInfo != "" {
@@ -166,14 +169,14 @@ func GetFileTag(infile string, caption, audioOnly bool) (string, error) {
 			case sz == 2:
 				if parts[0] == parts[1] {
 					if audioOnly {
-						return strings.Title(parts[0]), nil
+						return undCaser.String(parts[0]), nil
 					}
 					return "", nil
 				}
 				return "Dual", nil
 			default:
 				if audioOnly && sz == 1 {
-					return strings.Title(parts[0]), nil
+					return undCaser.String(parts[0]), nil
 				}
 				return "", nil
 			}
@@ -218,7 +221,7 @@ func GetFileTag(infile string, caption, audioOnly bool) (string, error) {
 					if sParts[0] != sParts[1] {
 						out.WriteString(fmt.Sprintf("(%s & %s subs)", sParts[0], sParts[1]))
 					} else {
-						out.WriteString(fmt.Sprintf("(%s-subs)", strings.Title(sParts[0])))
+						out.WriteString(fmt.Sprintf("(%s-subs)", undCaser.String(sParts[0])))
 					}
 				}
 			default:
@@ -227,7 +230,7 @@ func GetFileTag(infile string, caption, audioOnly bool) (string, error) {
 					dual = true
 				}
 				if !dual {
-					out.WriteString(fmt.Sprintf("(%s-sub)", strings.Title(sInfo)))
+					out.WriteString(fmt.Sprintf("(%s-sub)", undCaser.String(sInfo)))
 				}
 			}
 		}

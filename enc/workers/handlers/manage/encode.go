@@ -84,13 +84,14 @@ func CheckEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		return needHelp()
 	} else {
 		arg = args[:2]
-		if arg == "-2" {
+		switch arg {
+case "-2":
 			params = bot.FFmpeg2Args
-		} else if arg == "-3" {
+		case "-3":
 			params = bot.FFmpeg3Args
-		} else if arg == "-4" {
+		case "-4":
 			params = bot.FFmpeg4Args
-		} else {
+		default:
 			return needHelp()
 		}
 	}
@@ -136,13 +137,14 @@ func ResetEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		return needHelp()
 	} else {
 		arg := args[:2]
-		if arg == "-2" {
+		switch arg {
+case "-2":
 			return ResetSEParams(ctx, update, msg, arg)
-		} else if arg == "-3" {
+		case "-3":
 			return ResetSEParams(ctx, update, msg, arg)
-		} else if arg == "-4" {
+		case "-4":
 			return ResetSEParams(ctx, update, msg, arg)
-		} else {
+		default:
 			return needHelp()
 		}
 	}
@@ -159,7 +161,8 @@ func ResetSEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg 
 		return err
 	}
 	var defaultEnv string
-	if arg == "-2" {
+	switch arg {
+case "-2":
 		if bot.FFmpeg2Args != "" {
 			bot.FFmpeg2Args = ""
 		} else if defaultEnv = config.Conf.FFmpeg2; defaultEnv != "" {
@@ -167,7 +170,7 @@ func ResetSEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg 
 		} else {
 			return envNotSet()
 		}
-	} else if arg == "-3" {
+	case "-3":
 		if bot.FFmpeg3Args != "" {
 			bot.FFmpeg3Args = ""
 		} else if defaultEnv = config.Conf.FFmpeg3; defaultEnv != "" {
@@ -175,7 +178,7 @@ func ResetSEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg 
 		} else {
 			return envNotSet()
 		}
-		if bot.FFmpeg4Args != "" {
+	case "-4":
 		if bot.FFmpeg4Args != "" {
 			bot.FFmpeg4Args = ""
 		} else if defaultEnv := config.Conf.FFmpeg4; defaultEnv != "" {
@@ -451,7 +454,7 @@ func Pause(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string)
 			entimer.Timer.StopTimer()
 			reply = "**Pausing Cancelled**"
 		}
-	} else if !(args == "0" || utils.IsPositiveNumber(args)) {
+	} else if args != "0" && !utils.IsPositiveNumber(args) {
 		_, _ = msg.Reply("Invaid Number."+
 			"\nNeed help? Send <code>"+
 			update.Args()[0]+
@@ -464,7 +467,7 @@ func Pause(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string)
 		_, _ = msg.ReplyText(reply)
 		return nil
 	}
-	i, err := strconv.Atoi(args)
+	i, _ := strconv.Atoi(args)
 	if i == 0 {
 		reply = "**Bot has been paused indefinitely.**"
 	} else {

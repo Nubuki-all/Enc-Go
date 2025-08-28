@@ -92,9 +92,7 @@ func ParseCommands(cmds string) []tg.BotCommand {
 		description := strings.TrimSpace(parts[1])
 
 		// Remove leading "/" from command if present
-		if strings.HasPrefix(command, "/") {
-			command = strings.TrimPrefix(command, "/")
-		}
+		command = strings.TrimPrefix(command, "/")
 
 		if command != "" && description != "" {
 			commands = append(commands, tg.BotCommand{

@@ -83,7 +83,10 @@ func InitLocalDB() error {
 	}
 	// Use WAL mode for better concurrency
 	sqlDB, _ := localdb.DB()
-	sqlDB.Exec("PRAGMA journal_mode=WAL;")
+	_, err = sqlDB.Exec("PRAGMA journal_mode=WAL;")
+	if err != nil {
+		logger.Error(err)
+	}
 
 	// Auto-migrate schemas
 	err = localdb.AutoMigrate(&queueRecord{}, &settingRecord{}, &arrRecord{}, &mapRecord{}, &filterRecord{})

@@ -213,7 +213,7 @@ func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
 		}
 		file, err = uClient.FromBytes(ctx, name, bytes)
 	} else {
-		err = fmt.Errorf("No content was specified to upload.")
+		err = fmt.Errorf("no content was specified to upload")
 	}
 	if err != nil {
 		logger.Error(err)

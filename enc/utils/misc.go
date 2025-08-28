@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"hash/crc32"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -118,7 +117,7 @@ func TxtToStr(path string) (string, error) {
 	if !FileExists(path) {
 		return "", nil
 	}
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
 	}
@@ -172,7 +171,7 @@ func GetReadableFileSize(size int64) string {
 //}
 
 func readLines(path string) ([]string, error) {
-	data, err := ioutil.ReadFile(path)
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -199,7 +198,7 @@ func GetHTML(link string) (string, error) {
 		return "", err
 	}
 	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
@@ -492,7 +491,7 @@ func TextFilter() (nameFilter, releaseFilter, captionFilter string, err error) {
 	}
 	for path, ptr := range files {
 		if _, err := os.Stat(path); err == nil {
-			data, e := ioutil.ReadFile(path)
+			data, e := os.ReadFile(path)
 			if e != nil {
 				return "", "", "", e
 			}

@@ -49,30 +49,7 @@ var markdownRe = regexp.MustCompile(
 )
 
 // HTML templates
-func opening(tag string) string { return "<" + tag + ">" }
-func closing(tag string) string { return "</" + tag + ">" }
-func urlMarkup(url, text string) string {
-	return fmt.Sprintf(`<a href="%s">%s</a>`, html.EscapeString(url), html.EscapeString(text))
-}
-
-func emojiMarkup(id, char string) string {
-	// keep same shape as Pyrogram: <emoji id=...>char</emoji>
-	return fmt.Sprintf(`<emoji id=%s>%s</emoji>`, html.EscapeString(id), html.EscapeString(char))
-}
-
-// Helper: replace only once at given index (like utils.replace_once)
-func replaceOnceAt(s, old, repl string, at int) (string, error) {
-	// confirm old occurs at 'at'
-	if at < 0 || at+len(old) > len(s) {
-		// fallback to strings.Replace once
-		return strings.Replace(s, old, repl, 1), nil
-	}
-	if s[at:at+len(old)] != old {
-		// fallback
-		return strings.Replace(s, old, repl, 1), nil
-	}
-	return s[:at] + repl + s[at+len(old):], nil
-}
+// func opening(tag string) string { return "<" + tag + ">" }
 
 func escapeAttr(s string) string {
 	return strings.ReplaceAll(html.EscapeString(s), `"`, "&quot;")
@@ -111,9 +88,7 @@ func escapeAndCreateQuotes(text string, strict bool) string {
 		if strings.HasPrefix(line, BLOCKQUOTE_EXPANDABLE_DELIM) && !insideBlockquote {
 			// strip leading delim and optional space
 			strip := strings.TrimPrefix(line, BLOCKQUOTE_EXPANDABLE_DELIM)
-			if strings.HasPrefix(strip, " ") {
-				strip = strings.TrimPrefix(strip, " ")
-			}
+			strip = strings.TrimPrefix(strip, " ")
 			parsed := strip
 			if strict {
 				parsed = html.EscapeString(parsed)
@@ -129,9 +104,7 @@ func escapeAndCreateQuotes(text string, strict bool) string {
 			// remove leading ">" if present for last line
 			if strings.HasPrefix(line, BLOCKQUOTE_DELIM) {
 				line = strings.TrimPrefix(line, BLOCKQUOTE_DELIM)
-				if strings.HasPrefix(line, " ") {
-					line = strings.TrimPrefix(line, " ")
-				}
+				line = strings.TrimPrefix(line, " ")
 			}
 			strip := line[:len(line)-len(BLOCKQUOTE_EXPANDABLE_END_DELIM)]
 			parsed := strip
@@ -148,9 +121,7 @@ func escapeAndCreateQuotes(text string, strict bool) string {
 		if insideBlockquote {
 			// strip leading ">" and optional space
 			strip := strings.TrimPrefix(line, BLOCKQUOTE_DELIM)
-			if strings.HasPrefix(strip, " ") {
-				strip = strings.TrimPrefix(strip, " ")
-			}
+			strip = strings.TrimPrefix(strip, " ")
 			parsed := strip
 			if strict {
 				parsed = html.EscapeString(parsed)
@@ -167,9 +138,7 @@ func escapeAndCreateQuotes(text string, strict bool) string {
 		}
 		if strings.HasPrefix(line, BLOCKQUOTE_DELIM) {
 			strip := strings.TrimPrefix(line, BLOCKQUOTE_DELIM)
-			if strings.HasPrefix(strip, " ") {
-				strip = strings.TrimPrefix(strip, " ")
-			}
+			strip = strings.TrimPrefix(strip, " ")
 			parsed := strip
 			if strict {
 				parsed = html.EscapeString(parsed)
@@ -237,11 +206,11 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 		// escapeAndCreateQuotes. Only escape now if strict==false.
 		if !strict {
 			body = html.EscapeString(body)
-		} else {
+		} // else {
 			// If strict is true, we assume the body has already been escaped by prior step.
 			// However as a safety measure, if body contains raw '<' or '&' sequences that look unescaped,
 			// you could optionally call html.EscapeString here. (Not done to avoid double-escape.)
-		}
+		// }
 
 		if lang != "" {
 			// Escape attribute value safely (quotes etc.)
@@ -415,7 +384,7 @@ func Unparse(text string, entities []tg.MessageEntityClass) (string, error) {
 // so the offsets computed using utf16.Encode will match.
 func addSurrogatesForOffsets(s string) string {
 	// Build []uint16 UTF-16 encoding and then convert each code unit to a rune (so indexing by bytes matches code units)
-	runes := []rune(s)
+	runes := s //[]rune(s)
 	var u16 []uint16
 	for _, r := range runes {
 		if r < 0x10000 {

@@ -27,7 +27,7 @@ type ParserResult struct {
 // This simplifies offset/length arithmetic because Telegram uses UTF-16 code units.
 func addSurrogatesForOffsets(s string) string {
 	var u16 []uint16
-	for _, r := range []rune(s) {
+	for _, r := range s {
 		if r < 0x10000 {
 			u16 = append(u16, uint16(r))
 		} else {
@@ -64,24 +64,6 @@ func utf16Units(s string) int {
 		}
 	}
 	return cnt
-}
-
-// runeIndexFromUTF16Offset returns the rune index in s that corresponds to the given
-// UTF-16 code-unit offset. If offset is beyond end, returns len([]rune(s)).
-func runeIndexFromUTF16Offset(s string, offset int) int {
-	runes := []rune(s)
-	count := 0
-	for i, r := range runes {
-		cu := 1
-		if r > 0xFFFF {
-			cu = 2
-		}
-		if count+cu > offset {
-			return i
-		}
-		count += cu
-	}
-	return len(runes)
 }
 
 // Parse converts HTML-like input into plain UTF-8 message and gotd/td entities.
