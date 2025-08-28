@@ -226,7 +226,7 @@ func onRestart() error {
 	} else if strings.HasPrefix(cmd, "update") {
 		fields := strings.Split(cmd, " ")
 		if len(fields) > 1 && fields[1] == "True" {
-			msg = "**Updated successfully!**"
+			msg = "**Updated to:** `" + bot.Version + "`"
 		} else {
 			msg = "**No major update found, but restarted!**"
 		}

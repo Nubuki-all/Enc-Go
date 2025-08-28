@@ -220,7 +220,8 @@ func LoadDB() {
 	logger.InfoW("Loading state from MongoDB")
 	db.LoadMap(db.QueueCol, "batches", &bot.BatchQueue)
 	db.LoadQueue()
-	db.LoadMap(db.RSSCol, "rss", &bot.RSSDict)
+	db.LoadRSSDict()
+	//db.LoadMap(db.RSSCol, "rss", &bot.RSSDict)
 
 	db.LoadSlice(db.UsersCol, "t_users", &bot.TempUsers)
 

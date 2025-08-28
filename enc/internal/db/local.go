@@ -142,17 +142,32 @@ func LoadLocalDB() {
 	}
 
 	// Load maps (e.g. RSSDict)
-	var maps []mapRecord
-	if err := localdb.Find(&maps, "bot_id = ?", config.Rconf.BotID).Error; err == nil {
-		for _, m := range maps {
-			if m.Key == "rss" {
-				var mp map[string]interface{}
-				if err := json.Unmarshal([]byte(m.Value), &mp); err == nil {
-					bot.RSSDict = mp
-				}
+	loadRSSDict := func() {
+		var rec mapRecord
+		err := localdb.First(&rec, "bot_id = ? AND key = ?", config.Rconf.BotID, "rss").Error
+		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				// nothing saved yet
+				return
 			}
+			logger.Error(err)
+			return 
 		}
+	
+		var m map[string]*types.FeedData
+		if err := json.Unmarshal([]byte(rec.Value), &m); err != nil {
+			logger.WarnW("LoadRSSLocal: could not unmarshal rss json", zap.Error(err))
+			return
+		}
+		if m == nil {
+			return
+		}
+		bot.RSSDictMutex.Lock()
+		bot.RSSDict = m
+		bot.RSSDictMutex.Unlock()
+		return
 	}
+	loadRSSDict()
 
 	var rec filterRecord
 	err := localdb.First(&rec, "bot_id = ?", config.Rconf.BotID).Error
@@ -222,7 +237,9 @@ func SaveRSSLocal() {
 	if config.Conf.DatabaseURL != "" || localdb == nil {
 		return
 	}
+	bot.RSSDictMutex.Lock()
 	data, err := json.Marshal(bot.RSSDict)
+	bot.RSSDictMutex.Unlock()
 	if err != nil {
 		logger.WarnW("could not marshal RSSDict", zap.Error(err))
 		return

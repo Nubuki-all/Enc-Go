@@ -6,17 +6,28 @@ type QueueKey struct {
 	MessageID int   `bson:"message_id"`
 }
 
+type FileMeta struct {
+	Type       string `bson:"type"`                 // "document" or "video"
+	DocumentID int64  `bson:"document_id,omitempty"`
+	AccessHash int64  `bson:"access_hash,omitempty"`
+	FileRef    []byte `bson:"file_ref,omitempty"`   // file_reference byte slice
+	FileName   string `bson:"file_name,omitempty"`
+	MimeType   string `bson:"mime_type,omitempty"`
+	Size       int64  `bson:"size,omitempty"`
+}
+
 // QueueEntry holds all the data from your Python list
 type QueueEntry struct {
 	Key       QueueKey   `bson:"key"`
 	Name      string     `bson:"name"`
-	Sender    [2]int64   `bson:"sender"`  // [sender_id, message_id]
+	Sender    int64`bson:"sender"`     // sender_id
 	Version   string     `bson:"version"` // cust_v or get_v()
 	Filter    FilterData `bson:"filter"`  // holds Fil1, Fil2, Fil3
 	Source    [2]string  `bson:"source"`  // e.g. {"tg","None"}
 	ForceName string     `bson:"force_name"`
 	AniList   bool       `bson:"anilist"` // true/false
 	URI       string     `bson:"uri"`     // generic URI
+	Doc       *FileMeta  `bson:"file_meta,omitempty"`
 }
 
 // Queue is a FIFO container with fast lookup

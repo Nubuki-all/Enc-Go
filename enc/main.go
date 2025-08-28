@@ -17,7 +17,7 @@ func main() {
 		log.Fatalf("logger init error: %v", err)
 	}
 	defer logger.Logger.Sync()
-	logger.Logger.Info(strings.Repeat("=", 30))
+	logger.Info("Starting up" + strings.Repeat(".", 10))
 	if config.Rconf.Error != nil {
 		logger.Criticalf("Failed to load config: %v", config.Rconf.Error)
 	}

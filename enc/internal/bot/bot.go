@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"sync"
 	"time"
 
 	"enc/internal/bot/state"
@@ -14,6 +15,7 @@ var (
 	DockerDeployed  bool
 	GroupEnc        bool
 	TempOnlyInGroup bool
+	RSSRanOnce      bool  
 	ReportFailedDl  bool
 	ReportFailedEnc bool
 	SAS             bool
@@ -24,7 +26,7 @@ var (
 	BatchIng        []string
 	BatchQueue      map[string]any
 	ECancel         map[string]any
-	RSSDict         map[string]any
+	RSSDictMutex    sync.RWMutex  
 	UCancel         []any
 	PreviewBatch    any
 	PreviewList     any
@@ -47,6 +49,7 @@ var (
 	Aria2Client       *arigo.Client
 	Filters           = &types.FilterData{}
 	Queue             = types.NewQueue()
+	RSSDict           = make(map[string]*types.FeedData)
 	Paused            = &state.PauseState{}
 	RGExtendedFilters = []*types.RGExtendedFilterData{}
 	NameFilters       = []*types.MatchedFilterData{}

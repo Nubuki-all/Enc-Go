@@ -25,8 +25,8 @@ func GetLogs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		return nil
 	}
 	helpMsg := "Upload bot's logs in txt format.\n" +
-		"Or as a message if an argument is specified." +
-		"Arguments:\n"
+		"Or as a message if an argument is specified.\n" +
+		"Argument(s):\n"
 	arg := argparser.ParseFlags(
 		cmd,
 		helpMsg,
