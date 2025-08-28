@@ -85,7 +85,7 @@ func CheckEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	} else {
 		arg = args[:2]
 		switch arg {
-case "-2":
+		case "-2":
 			params = bot.FFmpeg2Args
 		case "-3":
 			params = bot.FFmpeg3Args
@@ -138,7 +138,7 @@ func ResetEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	} else {
 		arg := args[:2]
 		switch arg {
-case "-2":
+		case "-2":
 			return ResetSEParams(ctx, update, msg, arg)
 		case "-3":
 			return ResetSEParams(ctx, update, msg, arg)
@@ -162,7 +162,7 @@ func ResetSEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg 
 	}
 	var defaultEnv string
 	switch arg {
-case "-2":
+	case "-2":
 		if bot.FFmpeg2Args != "" {
 			bot.FFmpeg2Args = ""
 		} else if defaultEnv = config.Conf.FFmpeg2; defaultEnv != "" {

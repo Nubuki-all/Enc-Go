@@ -18,7 +18,6 @@ require (
 	github.com/spf13/pflag v1.0.7
 	github.com/spf13/viper v1.20.1
 	github.com/traefik/yaegi v0.16.1
-	github.com/yuin/goldmark v1.7.13
 	go.mongodb.org/mongo-driver v1.17.4
 	go.uber.org/zap v1.27.0
 	golang.org/x/net v0.43.0

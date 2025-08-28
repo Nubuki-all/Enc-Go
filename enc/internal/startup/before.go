@@ -191,7 +191,6 @@ func AddTempUsers() {
 	}
 }
 
-
 func LoadDB() {
 	// 1) Initialize Mongo (or switch to local fallback)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

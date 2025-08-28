@@ -693,15 +693,15 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 			_, _ = msg.ReplyText("`No name/release filters yet!`")
 			return nil
 		}
-			listHeader := "**List of all "
-			listHeader += typeName
-			listHeader += " filters**\n"
-			var sb strings.Builder
-			for i, filter := range filters {
-				sb.WriteString(fmt.Sprintf("%v. `%s`\n", i, filter.Match))
-			}
-			_, _ = msg.ReplyText(listHeader + sb.String())
-			return nil
+		listHeader := "**List of all "
+		listHeader += typeName
+		listHeader += " filters**\n"
+		var sb strings.Builder
+		for i, filter := range filters {
+			sb.WriteString(fmt.Sprintf("%v. `%s`\n", i, filter.Match))
+		}
+		_, _ = msg.ReplyText(listHeader + sb.String())
+		return nil
 	}
 	name := pargs["name"].(string)
 	iD := pargs["id"].(string)
@@ -717,15 +717,16 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 	if iD == "" {
 		id = -1
 	} else {
-	i, err := strconv.Atoi(iD)
-	if err == nil {
-		id = i
-	} else {
-		_, _ = msg.ReplyText(
-			fmt.Sprintf("**--id:** `%s` is not a valid number.", iD),
-		)
-		return nil
-	}}
+		i, err := strconv.Atoi(iD)
+		if err == nil {
+			id = i
+		} else {
+			_, _ = msg.ReplyText(
+				fmt.Sprintf("**--id:** `%s` is not a valid number.", iD),
+			)
+			return nil
+		}
+	}
 	for i, filter := range filters {
 		if id == i || name == filter.Match {
 			Filter = filter
@@ -935,13 +936,13 @@ func ManageExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message,
 			_, _ = msg.ReplyText("`No extended release filters yet!`")
 			return nil
 		}
-			listHeader := "**List of all extended release filters**\n"
-			var sb strings.Builder
-			for i, filter := range bot.RGExtendedFilters {
-				sb.WriteString(fmt.Sprintf("%v. `%s`\n", i, filter.Match))
-			}
-			_, _ = msg.ReplyText(listHeader + sb.String())
-			return nil
+		listHeader := "**List of all extended release filters**\n"
+		var sb strings.Builder
+		for i, filter := range bot.RGExtendedFilters {
+			sb.WriteString(fmt.Sprintf("%v. `%s`\n", i, filter.Match))
+		}
+		_, _ = msg.ReplyText(listHeader + sb.String())
+		return nil
 	}
 	name := pargs["name"].(string)
 	iD := pargs["id"].(string)
@@ -954,15 +955,16 @@ func ManageExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message,
 	if iD == "" {
 		id = -1
 	} else {
-	i, err := strconv.Atoi(iD)
-	if err == nil {
-		id = i
-	} else {
-		_, _ = msg.ReplyText(
-			fmt.Sprintf("**--id:** `%s` is not a valid number.", iD),
-		)
-		return nil
-	}}
+		i, err := strconv.Atoi(iD)
+		if err == nil {
+			id = i
+		} else {
+			_, _ = msg.ReplyText(
+				fmt.Sprintf("**--id:** `%s` is not a valid number.", iD),
+			)
+			return nil
+		}
+	}
 	for i, filter := range bot.RGExtendedFilters {
 		if id == i || name == filter.Match {
 			Filter = filter

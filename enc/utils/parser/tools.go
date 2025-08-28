@@ -8,7 +8,6 @@ import (
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 
-
 	"enc/internal/bot"
 	"enc/internal/bot/types"
 	"enc/internal/logger"

@@ -207,9 +207,9 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 		if !strict {
 			body = html.EscapeString(body)
 		} // else {
-			// If strict is true, we assume the body has already been escaped by prior step.
-			// However as a safety measure, if body contains raw '<' or '&' sequences that look unescaped,
-			// you could optionally call html.EscapeString here. (Not done to avoid double-escape.)
+		// If strict is true, we assume the body has already been escaped by prior step.
+		// However as a safety measure, if body contains raw '<' or '&' sequences that look unescaped,
+		// you could optionally call html.EscapeString here. (Not done to avoid double-escape.)
 		// }
 
 		if lang != "" {
