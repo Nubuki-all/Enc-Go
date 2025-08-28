@@ -15,7 +15,7 @@ var (
 	DockerDeployed  bool
 	GroupEnc        bool
 	TempOnlyInGroup bool
-	RSSRanOnce      bool  
+	RSSRanOnce      bool
 	ReportFailedDl  bool
 	ReportFailedEnc bool
 	SAS             bool
@@ -26,7 +26,7 @@ var (
 	BatchIng        []string
 	BatchQueue      map[string]any
 	ECancel         map[string]any
-	RSSDictMutex    sync.RWMutex  
+	RSSDictMutex    sync.RWMutex
 	UCancel         []any
 	PreviewBatch    any
 	PreviewList     any

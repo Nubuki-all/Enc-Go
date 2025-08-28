@@ -7,8 +7,8 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/text/language"
 
-	"enc/internal/bot/types"
 	"enc/internal/bot"
+	"enc/internal/bot/types"
 	"enc/internal/logger"
 	"enc/utils"
 )

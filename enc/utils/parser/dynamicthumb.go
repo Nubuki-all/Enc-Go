@@ -9,8 +9,8 @@ import (
 	"go.uber.org/zap"
 
 	"enc/internal/bot"
-	"enc/internal/logger"
 	"enc/internal/bot/types"
+	"enc/internal/logger"
 	"enc/utils"
 )
 

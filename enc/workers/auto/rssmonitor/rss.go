@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/mmcdole/gofeed"
-	
+
 	"enc/internal/bot"
 	"enc/internal/db"
 	"enc/internal/logger"
@@ -39,12 +39,12 @@ func sendRSS(feedMsg string, chatID int64) (*Event, error) {
 	return &Event{Text: feedMsg}, nil
 }
 
-
 // enleech / enleech2 are worker functions. In Python you created tasks with asyncio.
 // Here we start goroutines to run them concurrently. Ensure they are safe.
 func enleech(event *Event, args string, pyro interface{}, flag bool) {
 	// placeholder
 }
+
 func enleech2(event *Event, args string, pyro interface{}, flag bool) {
 	// placeholder
 }
@@ -60,7 +60,6 @@ func checkCmds(cmd string, allowed ...string) bool {
 }
 
 // ----- RSS monitor implementation -----
-
 
 // fakeEventHandler mimics your Python function that accepts an Event and dispatches to enleech/enleech2.
 func fakeEventHandler(event *Event) {
@@ -288,8 +287,6 @@ func rssMonitorOnce(ctx context.Context) {
 		bot.RSSRanOnce = true
 	}
 }
-
-
 
 // ----- Public helper to schedule RSS -----
 

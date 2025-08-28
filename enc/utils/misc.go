@@ -80,7 +80,6 @@ func Gfn(fn interface{}) string {
 	return fmt.Sprintf("%T", fn)
 }
 
-
 // StringEscape unescapes escaped characters in a string
 func StringEscape(s string) string {
 	if s == "" {
@@ -449,7 +448,7 @@ func AutoRename(parsedName, originalName string, caption, banner bool) (bool, st
 		capOpt := filter.ReplaceCaption
 		var outCap string
 		switch capOpt {
-case "0":
+		case "0":
 			outCap = parsedName
 		case "1", "":
 			outCap = defaultFunc()
@@ -464,7 +463,7 @@ case "0":
 		bannerOpt := filter.ReplaceBanner
 		var outStr string
 		switch bannerOpt {
-case "1":
+		case "1":
 			outStr = captionFunc()
 		case "0":
 			outStr = defaultFunc()

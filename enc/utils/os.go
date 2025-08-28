@@ -309,7 +309,7 @@ func GetStreamInfo(file string) (audioLang, subLang string, err error) {
 			}
 		}
 		switch type_ {
-case "audio":
+		case "audio":
 			aBuf.WriteString(lang + "|")
 		case "subtitle":
 			sBuf.WriteString(lang + "|")
@@ -344,7 +344,7 @@ func PosInStream(file, lang1, lang2, mode string) (aPos, sPos int) {
 		}
 	}
 	switch mode {
-case "a", "audio":
+	case "a", "audio":
 		return aPos, -1
 	case "s", "sub":
 		return -1, sPos

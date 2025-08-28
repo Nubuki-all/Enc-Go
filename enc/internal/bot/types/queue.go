@@ -7,10 +7,10 @@ type QueueKey struct {
 }
 
 type FileMeta struct {
-	Type       string `bson:"type"`                 // "document" or "video"
+	Type       string `bson:"type"` // "document" or "video"
 	DocumentID int64  `bson:"document_id,omitempty"`
 	AccessHash int64  `bson:"access_hash,omitempty"`
-	FileRef    []byte `bson:"file_ref,omitempty"`   // file_reference byte slice
+	FileRef    []byte `bson:"file_ref,omitempty"` // file_reference byte slice
 	FileName   string `bson:"file_name,omitempty"`
 	MimeType   string `bson:"mime_type,omitempty"`
 	Size       int64  `bson:"size,omitempty"`
@@ -20,7 +20,7 @@ type FileMeta struct {
 type QueueEntry struct {
 	Key       QueueKey   `bson:"key"`
 	Name      string     `bson:"name"`
-	Sender    int64`bson:"sender"`     // sender_id
+	Sender    int64      `bson:"sender"`  // sender_id
 	Version   string     `bson:"version"` // cust_v or get_v()
 	Filter    FilterData `bson:"filter"`  // holds Fil1, Fil2, Fil3
 	Source    [2]string  `bson:"source"`  // e.g. {"tg","None"}

@@ -221,7 +221,7 @@ func LoadDB() {
 	db.LoadMap(db.QueueCol, "batches", &bot.BatchQueue)
 	db.LoadQueue()
 	db.LoadRSSDict()
-	//db.LoadMap(db.RSSCol, "rss", &bot.RSSDict)
+	// db.LoadMap(db.RSSCol, "rss", &bot.RSSDict)
 
 	db.LoadSlice(db.UsersCol, "t_users", &bot.TempUsers)
 

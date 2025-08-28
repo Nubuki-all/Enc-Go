@@ -13,7 +13,6 @@ import (
 	"github.com/gotd/td/tg"
 )
 
-
 // ProgressFunc is called on progress events. start is the download start time,
 // done is bytes downloaded so far, total is total size (0 if unknown).
 type ProgressFunc func(start time.Time, done, total int64)
@@ -22,11 +21,11 @@ type ProgressFunc func(start time.Time, done, total int64)
 
 // progressWriter is an io.Writer that counts bytes and calls cb(start, done, total).
 type progressWriter struct {
-	w      io.Writer
-	start  time.Time
-	total  int64
+	w       io.Writer
+	start   time.Time
+	total   int64
 	written int64
-	cb     ProgressFunc
+	cb      ProgressFunc
 }
 
 func NewProgressWriter(w io.Writer, total int64, cb ProgressFunc) *progressWriter {
@@ -130,7 +129,7 @@ func DownloadParallel(ctx context.Context, d *downloader.Downloader, client down
 	if threads > 0 {
 		builder = builder.WithThreads(threads)
 	}
-	
+
 	_, err = builder.Parallel(ctx, pwa)
 	return err
 }

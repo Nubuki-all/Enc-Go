@@ -122,29 +122,29 @@ func LoadMap(coll *mongo.Collection, key string, target *map[string]interface{})
 }
 
 func LoadRSSDict() {
-    if !useMongo {
-        return
-    }
+	if !useMongo {
+		return
+	}
 
-    filter := bson.M{"_id": config.Rconf.BotID}
-    // Only fetch the rss subdocument
-    opts := options.FindOne().SetProjection(bson.M{"rss": 1})
+	filter := bson.M{"_id": config.Rconf.BotID}
+	// Only fetch the rss subdocument
+	opts := options.FindOne().SetProjection(bson.M{"rss": 1})
 
-    // decode directly into a struct with the exact expected type
-    var doc struct {
-        RSS map[string]*types.FeedData `bson:"rss"`
-    }
+	// decode directly into a struct with the exact expected type
+	var doc struct {
+		RSS map[string]*types.FeedData `bson:"rss"`
+	}
 
-    if err := RSSCol.FindOne(context.Background(), filter, opts).Decode(&doc); err != nil {
-        if err == mongo.ErrNoDocuments {
-            return
-        }
-        logger.Errorf("FindOne decode: %w", err)
-    }
-    // swap in under lock
-    bot.RSSDictMutex.Lock()
-    bot.RSSDict = doc.RSS
-    bot.RSSDictMutex.Unlock()
+	if err := RSSCol.FindOne(context.Background(), filter, opts).Decode(&doc); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return
+		}
+		logger.Errorf("FindOne decode: %w", err)
+	}
+	// swap in under lock
+	bot.RSSDictMutex.Lock()
+	bot.RSSDict = doc.RSS
+	bot.RSSDictMutex.Unlock()
 }
 
 // loadSlice reads an array of strings under key into the target slice

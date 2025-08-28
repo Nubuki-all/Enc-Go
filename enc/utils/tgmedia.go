@@ -4,16 +4,16 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	
-	"github.com/gotd/td/tg"
+
 	mtp_errors "github.com/celestix/gotgproto/errors"
-	
+	"github.com/gotd/td/tg"
+
 	"enc/internal/bot/types"
 )
 
 type FileInfo struct {
-	Name  string
-	Size  int64
+	Name string
+	Size int64
 }
 
 // mediaToFileMeta converts a tg.MessageMediaClass -> *FileMeta for documents/videos.
@@ -36,7 +36,6 @@ func MediaToFileMeta(m tg.MessageMediaClass) *types.FileMeta {
 			case *tg.DocumentAttributeFilename:
 				fileName = a.FileName
 			}
-			
 		}
 
 		// Mime & detection of video type
@@ -92,7 +91,6 @@ func BuildInputFileLocation(meta *types.FileMeta) (tg.InputFileLocationClass, er
 	}
 }
 
-
 func GetInputFileLocationAndSize(media tg.MessageMediaClass) (tg.InputFileLocationClass, *FileInfo, error) {
 	switch v := media.(type) {
 	case *tg.MessageMediaPhoto: // messageMediaPhoto#695150d7
@@ -123,7 +121,6 @@ func GetInputFileLocationAndSize(media tg.MessageMediaClass) (tg.InputFileLocati
 			case *tg.DocumentAttributeFilename:
 				fileName = a.FileName
 			}
-			
 		}
 		file := &FileInfo{
 			Name: fileName,

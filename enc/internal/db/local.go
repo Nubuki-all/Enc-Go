@@ -151,9 +151,9 @@ func LoadLocalDB() {
 				return
 			}
 			logger.Error(err)
-			return 
+			return
 		}
-	
+
 		var m map[string]*types.FeedData
 		if err := json.Unmarshal([]byte(rec.Value), &m); err != nil {
 			logger.WarnW("LoadRSSLocal: could not unmarshal rss json", zap.Error(err))
