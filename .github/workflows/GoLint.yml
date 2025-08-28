@@ -13,13 +13,13 @@ jobs:
       - name: update golang dependencies
         run: cd enc && go get -u && go mod tidy
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6.1.1
+        uses: golangci/golangci-lint-action@v8
         continue-on-error: true
         with:
-          # version: v2.1 # Specify a golangci-lint version
+          version: v2.1 # Specify a golangci-lint version
           working-directory: enc
           #skip-cache: true
-          args: --timeout 30m --issues-exit-code=0 # Exit with 0 even if issues are found, useful for reformatting
+          args: --issues-exit-code=0 # Exit with 0 even if issues are found, useful for reformatting
       - name: Install gofumpt
         run: go install mvdan.cc/gofumpt@latest
       - name: reformat go
