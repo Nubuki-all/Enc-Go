@@ -239,7 +239,7 @@ func SplitQuotedFieldsErr(s string) ([]string, error) {
 	}
 
 	if inQuote {
-		return nil, fmt.Errorf("Unclosed quote")
+		return nil, fmt.Errorf("unclosed quote")
 	}
 	if b.Len() > 0 {
 		out = append(out, b.String())

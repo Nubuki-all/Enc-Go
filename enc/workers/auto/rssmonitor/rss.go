@@ -3,11 +3,11 @@ package rssmonitor
 
 import (
 	"context"
-	"errors"
+	//"errors"
 	"fmt"
-	"net/http"
+	//"net/http"
 	"strings"
-	"sync"
+	//"sync"
 	"time"
 
 	"github.com/mmcdole/gofeed"
@@ -29,29 +29,6 @@ type Event struct {
 }
 
 // ----- External helpers you need to provide -----
-
-// getHTML fetches raw HTML or feed content. Timeout applied.
-func getHTML(ctx context.Context, url string) (string, error) {
-	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	// optional: set custom user-agent
-	req.Header.Set("User-Agent", "MyBot/1.0 (+https://example.com)")
-
-	client := &http.Client{Timeout: 15 * time.Second}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode >= 400 {
-		return "", fmt.Errorf("http status %d", resp.StatusCode)
-	}
-	b := new(strings.Builder)
-	_, err = b.ReadFrom(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	return b.String(), nil
-}
 
 // sendRSS should create/send the RSS-derived command to the configured chat
 // and return an Event representing the sent message (or nil). Implement it
@@ -306,7 +283,7 @@ func rssMonitorOnce(ctx context.Context) {
 	}
 	if allPaused {
 		PauseRSS()
-		log.InfoW("No active rss feed. Rss Monitor has been paused!")
+		logger.InfoW("No active rss feed. Rss Monitor has been paused!")
 	} else if !bot.RSSRanOnce {
 		bot.RSSRanOnce = true
 	}

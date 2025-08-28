@@ -80,14 +80,9 @@ func Gfn(fn interface{}) string {
 	return fmt.Sprintf("%T", fn)
 }
 
-// StringEscape unescapes escaped characters in a string
-func StringEscape(s string) string {
-	// Go strings handle escapes; as placeholder simply return original
-	return s
-}
 
 // StringEscape unescapes escaped characters in a string
-func stringEscape(s string) string {
+func StringEscape(s string) string {
 	if s == "" {
 		return s
 	}
@@ -305,7 +300,7 @@ func ValueCheck(val string) string {
 }
 
 // stdr formats seconds into HH:MM:SS.
-func stdr(seconds int) string {
+func Stdr(seconds int) string {
 	d := time.Duration(seconds) * time.Second
 	h := int(d.Hours())
 	m := int(d.Minutes()) % 60
@@ -453,13 +448,14 @@ func AutoRename(parsedName, originalName string, caption, banner bool) (bool, st
 	captionFunc := func() string {
 		capOpt := filter.ReplaceCaption
 		var outCap string
-		if capOpt == "0" {
+		switch capOpt {
+case "0":
 			outCap = parsedName
-		} else if capOpt == "1" || capOpt == "" {
+		case "1", "":
 			outCap = defaultFunc()
-		} else if capOpt == "00" {
+		case "00":
 			outCap = originalName
-		} else {
+		default:
 			outCap = capOpt
 		}
 		return outCap
@@ -467,13 +463,14 @@ func AutoRename(parsedName, originalName string, caption, banner bool) (bool, st
 	bannerFunc := func() string {
 		bannerOpt := filter.ReplaceBanner
 		var outStr string
-		if bannerOpt == "1" {
+		switch bannerOpt {
+case "1":
 			outStr = captionFunc()
-		} else if bannerOpt == "0" {
+		case "0":
 			outStr = defaultFunc()
-		} else if bannerOpt == "" || bannerOpt == "00" {
+		case "", "00":
 			outStr = originalName
-		} else {
+		default:
 			outStr = bannerOpt
 		}
 		return outStr

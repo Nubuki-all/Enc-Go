@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/text/language"
 
-	"enc/intenal/bot/types"
+	"enc/internal/bot/types"
 	"enc/internal/bot"
 	"enc/internal/logger"
 	"enc/utils"
@@ -329,7 +329,7 @@ func CustomRename(title, season, episode, audio, codec string) (string, string) 
 	// Use strings replacer for simple placeholders
 	res := pattern
 	for key, val := range data {
-		placeholder := fmt.Sprintf("{%%s}", key)
+		placeholder := fmt.Sprintf("{%s}", key)
 		res = strings.ReplaceAll(res, placeholder, val)
 	}
 	res = strings.TrimSpace(res) + ".mkv"

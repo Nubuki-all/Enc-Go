@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	
@@ -17,14 +18,14 @@ type FileInfo struct {
 
 // mediaToFileMeta converts a tg.MessageMediaClass -> *FileMeta for documents/videos.
 // Returns nil for non-document media.
-func mediaToFileMeta(m tg.MessageMediaClass) *types.FileMeta {
+func MediaToFileMeta(m tg.MessageMediaClass) *types.FileMeta {
 	if m == nil {
 		return nil
 	}
 
 	switch mm := m.(type) {
 	case *tg.MessageMediaDocument:
-		doc := mm.GetDocument()
+		doc, _ := mm.Document.AsNotEmpty()
 		if doc == nil {
 			return nil
 		}
@@ -126,7 +127,9 @@ func GetInputFileLocationAndSize(media tg.MessageMediaClass) (tg.InputFileLocati
 		}
 		file := &FileInfo{
 			Name: fileName,
-			Size: v.Size,
+			Size: f.Size,
 		}
 		return f.AsInputDocumentFileLocation(), file, nil
+	}
 	return nil, nil, mtp_errors.ErrUnknownTypeMedia
+}

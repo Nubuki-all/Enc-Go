@@ -165,7 +165,6 @@ func LoadLocalDB() {
 		bot.RSSDictMutex.Lock()
 		bot.RSSDict = m
 		bot.RSSDictMutex.Unlock()
-		return
 	}
 	loadRSSDict()
 

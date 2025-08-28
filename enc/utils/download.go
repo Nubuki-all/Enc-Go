@@ -11,7 +11,7 @@ import (
 
 // downloadToFile downloads the given URL and writes to outPath.
 // It creates directories as needed. Returns error on failure.
-func downloadToFile(ctx context.Context, url string, outPath string) error {
+func DownloadToFile(ctx context.Context, url string, outPath string) error {
 	if url == "" || outPath == "" {
 		return fmt.Errorf("empty url or output path")
 	}

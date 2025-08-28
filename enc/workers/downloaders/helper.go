@@ -3,7 +3,7 @@ package downloaders
 import (
 	"context"
 	"errors"
-	"fmt"
+	//"fmt"
 	"io"
 	"os"
 	"sync/atomic"
@@ -122,13 +122,15 @@ func DownloadParallel(ctx context.Context, d *downloader.Downloader, client down
 
 	pwa := NewProgressWriterAt(f, size, cb)
 
+	if partSize > 0 {
+		d = d.WithPartSize(partSize)
+	}
+
 	builder := d.Download(client, loc)
 	if threads > 0 {
 		builder = builder.WithThreads(threads)
 	}
-	if partSize > 0 {
-		builder = builder.WithPartSize(partSize)
-	}
+	
 	_, err = builder.Parallel(ctx, pwa)
 	return err
 }

@@ -157,7 +157,7 @@ func SRemove(folders bool, filenames ...string) {
 
 // KillProcessByName kills a process by name (simplified; cross-platform limitations)
 func KillProcessByName(name string) error {
-	return fmt.Errorf("Not implemented: KillProcessByName should be implemented with proper OS tools")
+	return fmt.Errorf("not implemented: KillProcessByName should be implemented with proper OS tools")
 }
 
 // QClean removes temp directories and attempts to kill ffmpeg
@@ -221,7 +221,6 @@ func SizeOf(path string) int64 {
 // XOr66 kills all user processes (DANGEROUS, placeholder)
 func XOr66() {
 	// Not safe or recommended to implement cross-platform
-	return
 }
 
 // ReX restarts the bot
@@ -309,9 +308,10 @@ func GetStreamInfo(file string) (audioLang, subLang string, err error) {
 				lang = l
 			}
 		}
-		if type_ == "audio" {
+		switch type_ {
+case "audio":
 			aBuf.WriteString(lang + "|")
-		} else if type_ == "subtitle" {
+		case "subtitle":
 			sBuf.WriteString(lang + "|")
 		}
 	}
@@ -343,9 +343,10 @@ func PosInStream(file, lang1, lang2, mode string) (aPos, sPos int) {
 			}
 		}
 	}
-	if mode == "a" || mode == "audio" {
+	switch mode {
+case "a", "audio":
 		return aPos, -1
-	} else if mode == "s" || mode == "sub" {
+	case "s", "sub":
 		return -1, sPos
 	}
 	return

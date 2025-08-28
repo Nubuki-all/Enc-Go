@@ -10,8 +10,8 @@ import (
 
 	"enc/internal/bot"
 	"enc/internal/logger"
-	"enc/internal/types"
-	"enc/internal/utils"
+	"enc/internal/bot/types"
+	"enc/utils"
 )
 
 // DynamicThumb tries to download a cover image for `name` and save it to `thumb`.
@@ -97,7 +97,7 @@ func DynamicThumb(ctx context.Context, name string, thumb string, useAniList boo
 
 	// 4) Download cover if URL found
 	if coverURL != "" {
-		if dlErr := utils.downloadToFile(ctx, coverURL, thumb); dlErr != nil {
+		if dlErr := utils.DownloadToFile(ctx, coverURL, thumb); dlErr != nil {
 			// Python suppressed errors — we log and continue
 			logger.Warn("DynamicThumb: download failed", "url", coverURL, "err", dlErr)
 			// return values but nil error to mirror Python's silent failure

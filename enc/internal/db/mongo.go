@@ -121,7 +121,7 @@ func LoadMap(coll *mongo.Collection, key string, target *map[string]interface{})
 	}
 }
 
-func LoadRSSDict() error {
+func LoadRSSDict() {
     if !useMongo {
         return
     }
@@ -137,7 +137,7 @@ func LoadRSSDict() error {
 
     if err := RSSCol.FindOne(context.Background(), filter, opts).Decode(&doc); err != nil {
         if err == mongo.ErrNoDocuments {
-            return nil
+            return
         }
         logger.Errorf("FindOne decode: %w", err)
     }

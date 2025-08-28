@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"enc/config"
-	"enc/intenal/bot/types"
+	"enc/internal/bot/types"
 	"enc/internal/bot"
 	"enc/internal/logger"
 	"enc/utils"
@@ -479,9 +479,7 @@ func CustCap(
 	}
 	if encoder != "" {
 		encr := encoder
-		if strings.HasPrefix(encr, "@") {
-			encr = strings.TrimPrefix(encr, "@")
-		}
+		encr = strings.TrimPrefix(encr, "@")
 		captionBuilder.WriteString(fmt.Sprintf("**%s Encoder:** `%s`\n", ccd, encr))
 	}
 
