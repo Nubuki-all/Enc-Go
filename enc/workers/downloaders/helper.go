@@ -13,9 +13,11 @@ import (
 	"github.com/gotd/td/tg"
 )
 
+var ErrDownloadCanceled = errors.New("download canceled by user")
+
 // ProgressFunc is called on progress events. start is the download start time,
 // done is bytes downloaded so far, total is total size (0 if unknown).
-type ProgressFunc func(start time.Time, done, total int64)
+type ProgressFunc func(start time.Time, done, total int64, w io.Writer, wa io.WriterAt)
 
 // ================= progress writers ======================
 
@@ -23,6 +25,7 @@ type ProgressFunc func(start time.Time, done, total int64)
 type progressWriter struct {
 	w       io.Writer
 	start   time.Time
+	Cancel bool
 	total   int64
 	written int64
 	cb      ProgressFunc
@@ -42,7 +45,10 @@ func (p *progressWriter) Write(b []byte) (int, error) {
 	if n > 0 {
 		new := atomic.AddInt64(&p.written, int64(n))
 		if p.cb != nil {
-			p.cb(p.start, new, p.total)
+			p.cb(p.start, new, p.total, p, nil)
+		}
+		if p.Cancel {
+			return n, ErrDownloadCanceled
 		}
 	}
 	return n, err
@@ -53,6 +59,7 @@ func (p *progressWriter) Write(b []byte) (int, error) {
 type progressWriterAt struct {
 	f       *os.File
 	start   time.Time
+	Cancel bool
 	total   int64
 	written int64
 	cb      ProgressFunc
@@ -72,7 +79,10 @@ func (p *progressWriterAt) WriteAt(b []byte, off int64) (int, error) {
 	if n > 0 {
 		new := atomic.AddInt64(&p.written, int64(n))
 		if p.cb != nil {
-			p.cb(p.start, new, p.total)
+			p.cb(p.start, new, p.total, nil, p)
+		}
+		if p.Cancel {
+			return n, ErrDownloadCanceled
 		}
 	}
 	return n, err

@@ -27,6 +27,7 @@ var (
 	BatchQueue      map[string]any
 	ECancel         map[string]any
 	RSSDictMutex    sync.RWMutex
+	ECallbackDataMutex sync.RWMutex
 	UCancel         []any
 	PreviewBatch    any
 	PreviewList     any
@@ -47,6 +48,7 @@ var ReleaseVersion string
 
 var (
 	Aria2Client       *arigo.Client
+	ECallbackData     = make(map[string]*types.CallbackInfo)
 	Filters           = &types.FilterData{}
 	Queue             = types.NewQueue()
 	RSSDict           = make(map[string]*types.FeedData)

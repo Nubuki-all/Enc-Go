@@ -246,47 +246,28 @@ var (
 )
 
 // Code stores or updates an entry. Without index, it appends and returns its key.
-func Code(data, infile, outfile string, user, stime interface{}, index ...int) (string, error) {
-	mutex.Lock()
-	defer mutex.Unlock()
-	if len(index) == 0 {
-		key := len(Storage)
-		Storage[key] = CodeEntry{Data: data}
-		return strconv.Itoa(key), nil
+func StoreCallbackInfo(data *types.CallbackInfo, key string) string {
+	bot.ECallbackDataMutex.Lock()
+	defer bot.ECallbackDataMutex.Unlock()
+	if key == "" {
+		k := len(bot.ECallbackData)
+		key = strconv.Itoa(k)
 	}
-	idx := index[0]
-	if _, ok := Storage[idx]; !ok {
-		return "", errors.New("invalid index")
-	}
-	Storage[idx] = CodeEntry{Data: data, InFile: infile, OutFile: outfile, User: user, Stime: stime}
-	return "", nil
+	bot.ECallbackData[key] = data
+	return index
 }
 
 // Decode retrieves (and optionally removes) an entry by key.
-func Decode(key interface{}, pop bool) (CodeEntry, bool) {
-	mutex.Lock()
-	defer mutex.Unlock()
-	var idx int
-	switch v := key.(type) {
-	case string:
-		i, err := strconv.Atoi(v)
-		if err != nil {
-			return CodeEntry{}, false
-		}
-		idx = i
-	case int:
-		idx = v
-	default:
-		return CodeEntry{}, false
-	}
-	entry, ok := Storage[idx]
-	if !ok {
-		return CodeEntry{}, false
-	}
-	if pop {
-		delete(Storage, idx)
-	}
-	return entry, true
+func GetCallbackInfo(key string) (*types.CallbackInfo, bool) {
+	bot.ECallbackDataMutex.Lock()
+	defer bot.ECallbackDataMutex.Unlock()
+	return bot.ECallbackData[key]
+}
+
+func DelCallbackInfo(key string) {
+	bot.ECallbackDataMutex.Lock()
+	defer bot.ECallbackDataMutex.Unlock()
+	delete(bot.ECallbackData, key)
 }
 
 // ValueCheck returns a placeholder if the value is empty.

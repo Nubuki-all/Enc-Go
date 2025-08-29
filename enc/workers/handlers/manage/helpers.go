@@ -49,7 +49,7 @@ func FCForward(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 func RenameFilterExists(name string, caseSensitive bool) bool {
 	for _, filter := range bot.RenameFilters {
 		if strings.EqualFold(filter.Match, name) {
-			if !(caseSensitive || filter.CaseSensitive) {
+			if !caseSensitive && !filter.CaseSensitive {
 				return true
 			}
 			if filter.Match == name {
@@ -80,7 +80,7 @@ func MatchFilterExists(name string, filters []*types.MatchedFilterData) bool {
 func ReleaseFilterExists(name string, caseSensitive bool) bool {
 	for _, filter := range bot.ReleaseFilters {
 		if strings.EqualFold(filter.Match, name) {
-			if !(caseSensitive || filter.CaseSensitive) {
+			if !caseSensitive && !filter.CaseSensitive {
 				return true
 			}
 			if filter.Match == name {
@@ -122,7 +122,7 @@ func convertStrToMtchFiltr(datas []string) []*types.MatchedFilterData {
 func ReleaseExtFilterExists(name string, caseSensitive bool) bool {
 	for _, filter := range bot.RGExtendedFilters {
 		if strings.EqualFold(filter.Match, name) {
-			if !(caseSensitive || filter.CaseSensitive) {
+			if !caseSensitive && !filter.CaseSensitive {
 				return true
 			}
 			if filter.Match == name {

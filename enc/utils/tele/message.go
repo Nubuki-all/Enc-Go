@@ -121,6 +121,7 @@ func (m *Message) EditText(text string) (*Message, error) {
 		ID:       m.ID,
 		Message:  pText,
 		Entities: entities,
+		ReplyMarkup: m.Raw.ReplyMarkup,
 	},
 	)
 	if err != nil {

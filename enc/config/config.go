@@ -179,7 +179,7 @@ func LoadConfig() error {
 	viper.SetDefault("DUMP_LEECH", true)
 	viper.SetDefault("EXTENDED_CAPTIONS", true)
 	viper.SetDefault("FFMPEG", `ffmpeg -i """{input}""" -preset ultrafast -c:v libx265 -crf 27 -map 0:v -c:a aac -map 0:a -c:s copy -map 0:s? """{output}"""`)
-	viper.SetDefault("FINISHED_PROGRESS_STR", "🧡")
+	// viper.SetDefault("FINISHED_PROGRESS_STR", "🧡")
 	viper.SetDefault("FLOOD_SLEEP_THRESHOLD", 600)
 	viper.SetDefault("LOG_FILE_NAME", "logs.txt")
 	viper.SetDefault("MI_IN_CAPTION", true)
