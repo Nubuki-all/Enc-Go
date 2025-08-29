@@ -2,7 +2,7 @@ package utils
 
 import (
 	//"bufio"
-	"errors"
+	//"errors"
 	"fmt"
 	"hash/crc32"
 	"io"
@@ -12,7 +12,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"enc/config"
@@ -231,20 +230,6 @@ func SplitText(text, sep string, pre bool) []string {
 	return chunks
 }
 
-// CodeStorage holds arbitrary data entries indexed by integer keys.
-type CodeEntry struct {
-	Data    string
-	InFile  string
-	OutFile string
-	User    interface{}
-	Stime   interface{}
-}
-
-var (
-	Storage = make(map[int]CodeEntry)
-	mutex   sync.RWMutex
-)
-
 // Code stores or updates an entry. Without index, it appends and returns its key.
 func StoreCallbackInfo(data *types.CallbackInfo, key string) string {
 	bot.ECallbackDataMutex.Lock()
@@ -254,11 +239,11 @@ func StoreCallbackInfo(data *types.CallbackInfo, key string) string {
 		key = strconv.Itoa(k)
 	}
 	bot.ECallbackData[key] = data
-	return index
+	return key
 }
 
 // Decode retrieves (and optionally removes) an entry by key.
-func GetCallbackInfo(key string) (*types.CallbackInfo, bool) {
+func GetCallbackInfo(key string) *types.CallbackInfo {
 	bot.ECallbackDataMutex.Lock()
 	defer bot.ECallbackDataMutex.Unlock()
 	return bot.ECallbackData[key]

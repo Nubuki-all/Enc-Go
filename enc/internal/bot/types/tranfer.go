@@ -4,7 +4,7 @@ import "time"
 
 type TransferInfo struct {
 	Path          string
-	Sender        string
+	Sender        int64
 	IsCancelled   bool
 	ID            string
 	Canceller     int64

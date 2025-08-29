@@ -21,6 +21,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		return nil
 	}
 	cmd := update.Args()[0]
+	var err error
 	helpMsg := "Downloads the replied media: to a location (specified) locally\n" +
 	"Available arguments:\n" +
 	"  Path to download (Non-quoted). End the args with '/' to specify the folder in which to download and let the bot auto detected filename\n" +
@@ -32,6 +33,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		)
 		return err
 	}
+	message := update.EffectiveMessage
 	if msg.ReplyToID != 0 {
 		err = message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
 		if err != nil {
@@ -116,10 +118,9 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 			folder, fileName = filepath.Split(args)
 		}
 	}
-	if tgFileName == "" [
+	if tgFileName == "" {
 		tgFileName = "image" + time.Now().Format("2006-01-02_15-04-05") + ".jpg"
-	return "video_" + ts + ".mkv"
-	]
+	}
 	if fileName == "" {
 		fileName = tgFileName
 	}
@@ -136,13 +137,13 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		Size:  fInfo.Size,
 	}
 	download.Init(id, msg.SenderID)
-	download.Start()
+	err = download.Start()
 	if err != nil {
 	_, _ = msg.ReplyText("Download failed due to Error:\n" + err.Error())
 	} else {
-		_, _ = msg.ReplyText(fmt.Sprint(
+		_, _ = msg.ReplyText(fmt.Sprintf(
 			"__Saved to__ `%s` __successfully!__",
-			dl.Path
+			download.Path,
 		))
 	}
 	return nil

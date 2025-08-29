@@ -7,6 +7,7 @@ import (
     "github.com/gotd/td/telegram/message/markup"
 	"github.com/gotd/td/tg"
 
+    "enc/config"
     "enc/internal/logger"
     "enc/internal/bot/types"
     "enc/utils"
@@ -45,7 +46,7 @@ func (dl *Downloader) Init(id string, sender int64) {
     _, _ = dl.Msg.Edit(
 		"<code>Waiting for download to start…</code>",
 		&tele.EditOptions{
-		    HtmlParseMode: true
+		    HtmlParseMode: true,
 			ReplyMarkup: dl.GenButtons(),
 		},
 	)
@@ -55,7 +56,7 @@ func (dl *Downloader) Start() error {
     dl.Path = dl.Folder + dl.FileName
     var err error
     if dl.InputLoc != nil {
-        tgDl := NewTgDl(dl.Path, dl.InputLoc, dl.Size, dl.Msg, dl.TransferInfo)
+        tgDl := NewTgDl(dl.InputLoc, dl.Size, dl.Msg, dl.TransferInfo)
         err = tgDl.Start()
     }
     dl.UnRegister()

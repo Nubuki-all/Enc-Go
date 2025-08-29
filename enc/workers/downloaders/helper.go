@@ -17,7 +17,7 @@ var ErrDownloadCanceled = errors.New("download canceled by user")
 
 // ProgressFunc is called on progress events. start is the download start time,
 // done is bytes downloaded so far, total is total size (0 if unknown).
-type ProgressFunc func(start time.Time, done, total int64, w io.Writer, wa io.WriterAt)
+type ProgressFunc func(start time.Time, done, total int64, w *progressWriter, wa *progressWriterAt)
 
 // ================= progress writers ======================
 
