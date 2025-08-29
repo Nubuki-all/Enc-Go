@@ -3,8 +3,8 @@ package transfer
 import (
 	"fmt"
 	"path/filepath"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/celestix/gotgproto/ext"
 	//"github.com/gotd/td/tg"
@@ -23,13 +23,13 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	cmd := update.Args()[0]
 	var err error
 	helpMsg := "Downloads the replied media: to a location (specified) locally\n" +
-	"Available arguments:\n" +
-	"  Path to download (Non-quoted). End the args with '/' to specify the folder in which to download and let the bot auto detected filename\n" +
-	"  or flags (path is ignored):"
+		"Available arguments:\n" +
+		"  Path to download (Non-quoted). End the args with '/' to specify the folder in which to download and let the bot auto detected filename\n" +
+		"  or flags (path is ignored):"
 	helpFunc := func(s string) error {
 		_, err := msg.ReplyText(
 			s + "\nNeed help? Send `" +
-			cmd + " --help`",
+				cmd + " --help`",
 		)
 		return err
 	}
@@ -52,7 +52,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		return helpFunc(err.Error())
 	}
 	var folder, fileName, tgFileName string
-	
+
 	if fInfo != nil {
 		tgFileName = fInfo.Name
 	}
@@ -99,7 +99,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		pargs := arg.Values
 		dir := pargs["dir"].(string)
 		file := pargs["file"].(string)
-		//home := pargs["home"].(bool)
+		// home := pargs["home"].(bool)
 		caption := pargs["caption"].(bool)
 		if dir != "" && !strings.HasSuffix(dir, "/") {
 			dir += "/"
@@ -130,16 +130,16 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	}
 	id := fmt.Sprintf("%d:%d", msg.ChatID, msg.ID)
 	download := downloaders.Downloader{
-		Msg: sMsg,
+		Msg:      sMsg,
 		InputLoc: inputLoc,
-		Folder: folder,
+		Folder:   folder,
 		FileName: fileName,
-		Size:  fInfo.Size,
+		Size:     fInfo.Size,
 	}
 	download.Init(id, msg.SenderID)
 	err = download.Start()
 	if err != nil {
-	_, _ = msg.ReplyText("Download failed due to Error:\n" + err.Error())
+		_, _ = msg.ReplyText("Download failed due to Error:\n" + err.Error())
 	} else {
 		_, _ = msg.ReplyText(fmt.Sprintf(
 			"__Saved to__ `%s` __successfully!__",

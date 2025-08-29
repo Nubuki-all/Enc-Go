@@ -25,7 +25,7 @@ type ProgressFunc func(start time.Time, done, total int64, w *progressWriter, wa
 type progressWriter struct {
 	w       io.Writer
 	start   time.Time
-	Cancel bool
+	Cancel  bool
 	total   int64
 	written int64
 	cb      ProgressFunc
@@ -59,7 +59,7 @@ func (p *progressWriter) Write(b []byte) (int, error) {
 type progressWriterAt struct {
 	f       *os.File
 	start   time.Time
-	Cancel bool
+	Cancel  bool
 	total   int64
 	written int64
 	cb      ProgressFunc

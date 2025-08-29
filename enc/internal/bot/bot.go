@@ -10,27 +10,27 @@ import (
 )
 
 var (
-	AnilistParse    bool
-	CaptionParse    bool
-	DockerDeployed  bool
-	GroupEnc        bool
-	TempOnlyInGroup bool
-	RSSRanOnce      bool
-	ReportFailedDl  bool
-	ReportFailedEnc bool
-	SAS             bool
-	SQS             bool
-	Started         bool
-	CustomRename    string
-	TempUsers       []int64
-	BatchIng        []string
-	BatchQueue      map[string]any
-	ECancel         map[string]any
-	RSSDictMutex    sync.RWMutex
+	AnilistParse       bool
+	CaptionParse       bool
+	DockerDeployed     bool
+	GroupEnc           bool
+	TempOnlyInGroup    bool
+	RSSRanOnce         bool
+	ReportFailedDl     bool
+	ReportFailedEnc    bool
+	SAS                bool
+	SQS                bool
+	Started            bool
+	CustomRename       string
+	TempUsers          []int64
+	BatchIng           []string
+	BatchQueue         map[string]any
+	ECancel            map[string]any
+	RSSDictMutex       sync.RWMutex
 	ECallbackDataMutex sync.RWMutex
-	UCancel         []any
-	PreviewBatch    any
-	PreviewList     any
+	UCancel            []any
+	PreviewBatch       any
+	PreviewList        any
 )
 
 var (

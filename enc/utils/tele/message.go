@@ -118,9 +118,9 @@ func (m *Message) Reply(text string, replyOptions *ReplyOptions) (*Message, erro
 func (m *Message) EditText(text string) (*Message, error) {
 	pText, entities, _ := parser.Parse(text, true)
 	msg, err := m.Ctx.EditMessage(m.ChatID, &tg.MessagesEditMessageRequest{
-		ID:       m.ID,
-		Message:  pText,
-		Entities: entities,
+		ID:          m.ID,
+		Message:     pText,
+		Entities:    entities,
 		ReplyMarkup: m.Raw.ReplyMarkup,
 	},
 	)
