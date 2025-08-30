@@ -23,7 +23,7 @@ func CancelDownload(ctx *ext.Context, update *ext.Update, query *tele.CallbackQu
 		return cleanOldMessage(ctx, update, query)
 	}
 	sender := query.SenderID
-	if info.Sender == sender {
+	if info.Sender != sender && !utils.UserIsOwner(sender) {
 		_ = query.Answer(notAllowed, false)
 		return nil
 	}
