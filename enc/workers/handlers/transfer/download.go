@@ -142,7 +142,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	err = download.Start()
 	if err != nil {
 		_, _ = sMsg.Edit(
-			"Download failed due to Error:\n" + err.Error(),
+			"Download failed due to Error:\n"+err.Error(),
 			&tele.EditOptions{},
 		)
 	} else {
