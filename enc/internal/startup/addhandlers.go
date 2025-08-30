@@ -18,7 +18,7 @@ import (
 	"enc/workers/handlers"
 	"enc/workers/handlers/dev"
 	"enc/workers/handlers/manage"
-	"enc/workers/handlers/tranfer"
+	"enc/workers/handlers/transfer"
 )
 
 func AddAllHandlers() {
@@ -78,7 +78,7 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		"logs": EventHandlerWithArgs(dev.GetLogs),
 		
 		// Transfer Handlers 
-		"download": EventHandlerWithArgs(tranfer.Download),
+		"download": EventHandlerWithArgs(transfer.Download),
 	}
 
 	for cmd, handler := range cmdHandlers {
