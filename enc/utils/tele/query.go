@@ -2,19 +2,14 @@ package tele
 
 import (
 	"fmt"
-	"path/filepath"
+	//"path/filepath"
 
 	"github.com/celestix/gotgproto/ext"
-	gp "github.com/celestix/gotgproto/types"
-	"github.com/gotd/td/telegram/uploader"
+	//gp "github.com/celestix/gotgproto/types"
 	"github.com/gotd/td/tg"
 
 	"enc/config"
-	"enc/internal/bot"
-	"enc/internal/clients/telegram"
 	"enc/internal/logger"
-	"enc/utils/tele/parser"
-	"enc/utils/tele/parser/htmlparser"
 )
 
 type CallbackQuery struct {
