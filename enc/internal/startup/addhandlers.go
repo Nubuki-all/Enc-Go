@@ -76,8 +76,8 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		"bash": EventHandlerWithRawArgs(dev.Bash),
 		"eval": EventHandlerWithRawArgs(dev.Eval),
 		"logs": EventHandlerWithArgs(dev.GetLogs),
-		
-		// Transfer Handlers 
+
+		// Transfer Handlers
 		"download": EventHandlerWithArgs(transfer.Download),
 	}
 
