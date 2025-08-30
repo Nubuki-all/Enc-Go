@@ -16,9 +16,9 @@ import (
 )
 
 const (
-	callbackData  = "cancel_download"
-	callbackDataB = "back"
-	callbackDataI = "dl_info"
+	CallbackData  = "cancel_download"
+	CallbackDataB = "back"
+	CallbackDataI = "dl_info"
 )
 
 type Downloader struct {
@@ -78,7 +78,7 @@ func (dl *Downloader) GenButtons() tg.ReplyMarkupClass {
 		markup.Row(
 			markup.Callback(
 				random.Enmoji()+" Cancel Download",
-				[]byte(callbackData),
+				[]byte(CallbackData),
 			),
 		),
 	}
@@ -87,7 +87,7 @@ func (dl *Downloader) GenButtons() tg.ReplyMarkupClass {
 			markup.Row(
 				markup.Callback(
 					"ℹ️",
-					[]byte(callbackDataI),
+					[]byte(CallbackDataI),
 				),
 			),
 		)

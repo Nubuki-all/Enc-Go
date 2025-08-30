@@ -15,7 +15,9 @@ import (
 	"enc/internal/logger"
 	"enc/utils/tele"
 	"enc/utils/tele/parser"
+	"enc/workers/downloaders"
 	"enc/workers/handlers"
+	"enc/workers/handlers/callbacks"
 	"enc/workers/handlers/dev"
 	"enc/workers/handlers/manage"
 	"enc/workers/handlers/transfer"
@@ -90,9 +92,23 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 }
 
 func AddCBHandlers(dispatch dispatcher.Dispatcher) {
-	dispatch.AddHandler(onevent.NewCallbackQuery(filters.CallbackQuery.Prefix("ihelp"), CallbackEventHandler(handlers.Help)))
-	dispatch.AddHandler(onevent.NewCallbackQuery(filters.CallbackQuery.Prefix("back_cb"), CallbackEventHandler(handlers.StartBack)))
-	dispatch.AddHandler(onevent.NewCallbackQuery(filters.CallbackQuery.Prefix("icommands"), CallbackEventHandler(handlers.Commands)))
+	callbackHandlers := map[string]func(*ext.Context, *ext.Update) error{
+		// Welcome Handlers
+		"ihelp": CallbackEventHandler(handlers.Help),
+		"back_cb": CallbackEventHandler(handlers.StartBack),
+		"icommands": CallbackEventHandler(handlers.Commands),
+		
+		// Tranfer Handlers
+		downloaders.CallbackData:  CallbackEventHandler(callbacks.CancelDownload),
+
+
+	}
+	for prefix, handler := range callbackHandlers {
+		dispatch.AddHandler(onevent.NewCallbackQuery(
+			filters.CallbackQuery.Prefix(prefix),
+			handler,
+		))
+	}
 }
 
 func addSuffixcmd(cmd string) string {
@@ -117,17 +133,17 @@ func BaseEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message) err
 	}
 }
 
-func CallbackEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message) error) func(*ext.Context, *ext.Update) error {
+func CallbackEventHandler(handler func(*ext.Context, *ext.Update, *tele.CallbackQuery) error) func(*ext.Context, *ext.Update) error {
 	return func(ctx *ext.Context, update *ext.Update) error {
 		user := update.EffectiveUser()
 		chat := update.EffectiveChat()
-		msg := &tele.Message{
-			Ctx:      ctx,
-			ChatID:   chat.GetID(),
-			SenderID: user.ID,
-			ID:       update.CallbackQuery.MsgID,
-		}
-		err := handler(ctx, update, msg)
+		query :=  tele.NewQueryFromGotg(
+			update.CallbackQuery,
+			ctx,
+			chat.GetID(),
+			user.ID,
+		)
+		err := handler(ctx, update, query)
 		if err != nil {
 			logger.ErrorW(err.Error())
 		}

@@ -44,22 +44,98 @@ func NewTgDl(location tg.InputFileLocationClass, size int64, msg *tele.Message, 
 	}
 }
 
+// progressEvent carries a single event (same fields you already pass to dl.ProgressCallback).
+type progressEvent struct {
+	start time.Time
+	done  int64
+	total int64
+	pw    *progressWriter
+	pwa   *progressWriterAt
+}
+
+// Start uses a channel-based throttler around dl.ProgressCallback.
+// First event is handled immediately; subsequent events are throttled to `interval`.
 func (dl *TgDownload) Start() error {
 	ctx := dl.msg.Ctx
 	interval := 10 * time.Second
-	lastCheck := time.Now()
-	progressFunc := func(start time.Time, done, total int64, w *progressWriter, wa *progressWriterAt) {
-		if time.Since(lastCheck) >= interval {
-			// Pass arguments explicitly to the goroutine.
-			// This is the idiomatic way to prevent a race condition.
-			go func(s time.Time, d, t int64, pw *progressWriter, pwa *progressWriterAt) {
-				dl.ProgressCallback(s, d, t, pw, pwa)
-			}(start, done, total, w, wa) // The arguments are passed here.
 
-			lastCheck = time.Now()
+	// single-slot buffered channel: holds latest event.
+	ch := make(chan progressEvent, 1)
+	doneCh := make(chan struct{})
+	var wg sync.WaitGroup
+
+	// Consumer goroutine: calls dl.ProgressCallback immediately for the first event,
+	// then at most once per interval after that.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		var lastCall time.Time        // zero -> no call yet
+		var stored *progressEvent    // latest event queued while waiting for interval
+
+		for {
+			select {
+			case ev := <-ch:
+				now := time.Now()
+				// If no call has happened yet -> immediate first run.
+				// Otherwise, if enough time passed since lastCall -> immediate run.
+				if lastCall.IsZero() || now.Sub(lastCall) >= interval {
+					// Call in goroutine so consumer stays responsive.
+					go dl.ProgressCallback(ev.start, ev.done, ev.total, ev.pw, ev.pwa)
+					lastCall = now
+				} else {
+					// Store latest event to be executed on next tick (latest wins).
+					stored = &ev
+				}
+
+			case <-ticker.C:
+				// On each tick, if we have a stored event, call it now.
+				if stored != nil {
+					ev := *stored
+					go dl.ProgressCallback(ev.start, ev.done, ev.total, ev.pw, ev.pwa)
+					lastCall = time.Now()
+					stored = nil
+				}
+
+			case <-doneCh:
+				// flush last stored event synchronously so final update happens before exit
+				if stored != nil {
+					ev := *stored
+					dl.ProgressCallback(ev.start, ev.done, ev.total, ev.pw, ev.pwa)
+					stored = nil
+				}
+				return
+			}
+		}
+	}()
+
+	// The progressFunc we hand to the downloader (hot path). It's non-blocking and
+	// replaces older queued values when overloaded.
+	progressFunc := func(start time.Time, done, total int64, w *progressWriter, wa *progressWriterAt) {
+		ev := progressEvent{start: start, done: done, total: total, pw: w, pwa: wa}
+
+		// Try fast non-blocking send; if channel is full, remove the old value and replace with new
+		select {
+		case ch <- ev:
+			// sent successfully
+		default:
+			// channel full — drop the old and put the new one so latest wins
+			select {
+			case <-ch:
+			default:
+			}
+			select {
+			case ch <- ev:
+			default:
+				// if still can't send (shouldn't happen), just drop it
+			}
 		}
 	}
-	return DownloadParallel(
+
+	// call the downloader with your progressFunc
+	err := DownloadParallel(
 		ctx,
 		dl.downloader,
 		ctx.Raw,
@@ -69,9 +145,15 @@ func (dl *TgDownload) Start() error {
 		dl.threads,
 		dl.partSize,
 		progressFunc,
-		// dl.ProgressCallback,
 	)
+
+	// signal consumer to finish and wait for it (this flushes the last event)
+	close(doneCh)
+	wg.Wait()
+
+	return err
 }
+
 
 func (dl *TgDownload) ProgressCallback(start time.Time, done, total int64, w *progressWriter, wa *progressWriterAt) {
 	if dl.PauseProgress {
@@ -100,7 +182,7 @@ func (dl *TgDownload) ProgressCallback(start time.Time, done, total int64, w *pr
 		finStr = random.EnHearts()
 	}
 	bar := strings.Repeat(finStr, filled) + strings.Repeat(unfinStr, 10-filled)
-	progress := fmt.Sprintf("```%s```\n**Progress:** `%.2f%%`\n", bar, percentage)
+	progress := fmt.Sprintf("```\n%s```\n**Progress:** `%.2f%%`\n", bar, percentage)
 	// ensure fallbacks for time strings
 	if timeToCompletion == "" {
 		timeToCompletion = "0 s"

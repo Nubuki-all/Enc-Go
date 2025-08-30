@@ -117,11 +117,15 @@ func (m *Message) Reply(text string, replyOptions *ReplyOptions) (*Message, erro
 
 func (m *Message) EditText(text string) (*Message, error) {
 	pText, entities, _ := parser.Parse(text, true)
+	var replyMarkup tg.ReplyMarkupClass
+	if m.Raw {
+		replyMarkup = m.Raw.ReplyMarkup
+	}
 	msg, err := m.Ctx.EditMessage(m.ChatID, &tg.MessagesEditMessageRequest{
 		ID:          m.ID,
 		Message:     pText,
 		Entities:    entities,
-		ReplyMarkup: m.Raw.ReplyMarkup,
+		ReplyMarkup: replyMarkup,
 	},
 	)
 	if err != nil {
