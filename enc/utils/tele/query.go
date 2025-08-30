@@ -1,8 +1,6 @@
 package tele
 
 import (
-	"fmt"
-	//"path/filepath"
 
 	"github.com/celestix/gotgproto/ext"
 	//gp "github.com/celestix/gotgproto/types"
