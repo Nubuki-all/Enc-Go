@@ -5,10 +5,10 @@ import (
 	//"path/filepath"
 
 	"github.com/celestix/gotgproto/ext"
-	// gp "github.com/celestix/gotgproto/types"
+	//gp "github.com/celestix/gotgproto/types"
 	"github.com/gotd/td/tg"
 
-	"enc/config"
+	//"enc/config"
 	"enc/internal/logger"
 )
 
@@ -22,7 +22,7 @@ type CallbackQuery struct {
 	User     *tg.User
 }
 
-func NewQueryFromGotg(q *tg.UpdateBotCallbackQuery, c *ext.Context, chatID int64, senderID int64) *Message {
+func NewQueryFromGotg(q *tg.UpdateBotCallbackQuery, c *ext.Context, chatID int64, senderID int64) *CallbackQuery {
 	return &CallbackQuery{
 		Query:    q,
 		Ctx:      c,
