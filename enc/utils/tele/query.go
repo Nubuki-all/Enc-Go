@@ -37,7 +37,7 @@ func NewQueryFromGotg(q *tg.UpdateBotCallbackQuery, c *ext.Context, chatID int64
 	}
 }
 
-func (query *CallbackQuery) Answer(msg string alert bool) error {
+func (query *CallbackQuery) Answer(msg string, alert bool) error {
 	_, err := query.Ctx.AnswerCallback(&tg.MessagesSetBotCallbackAnswerRequest{
 		Alert:   alert,
 		QueryID: query.Query.QueryID,
