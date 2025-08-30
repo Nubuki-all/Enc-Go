@@ -80,13 +80,13 @@ func (dl *TgDownload) ProgressCallback(start time.Time, done, total int64, w *pr
 	elapsedTime := utils.TimeFormatter(diff)
 	timeToCompletion := utils.TimeFormatter(float64(total-done) / float64(speed))
 	filled := int(math.Floor(percentage / 10.0))
-	unfinStr := dl.ufstr
-	if unfinStr == "" {
-		unfinStr = random.EnHearts()
-	}
 	finStr := dl.fstr
+	unfinStr := dl.ufstr
+	if finStr == "" {
+		finStr = random.EnHearts()
+	}
 	bar := strings.Repeat(finStr, filled) + strings.Repeat(unfinStr, 10-filled)
-	progress := fmt.Sprintf("```%s```\n<b>Progress:</b> `%.2f%%`\n", bar, percentage)
+	progress := fmt.Sprintf("```%s```\n**Progress:** `%.2f%%`\n", bar, percentage)
 	// ensure fallbacks for time strings
 	if timeToCompletion == "" {
 		timeToCompletion = "0 s"

@@ -45,7 +45,7 @@ func (dl *Downloader) Init(id string, sender int64) {
 	}
 	dl.pauseOnDLInfo = config.Conf.PauseOnDLInfo
 	dl.Register()
-	_, _ = dl.Msg.Edit(
+	dl.Msg, _ = dl.Msg.Edit(
 		"<code>Waiting for download to start…</code>",
 		&tele.EditOptions{
 			HtmlParseMode: true,

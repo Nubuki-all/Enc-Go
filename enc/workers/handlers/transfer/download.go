@@ -52,8 +52,10 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		return helpFunc(err.Error())
 	}
 	var folder, fileName, tgFileName string
+	var size int64
 
 	if fInfo != nil {
+		size = fInfo.Size
 		tgFileName = fInfo.Name
 	}
 	if strings.HasPrefix(args, "-") {
@@ -134,17 +136,23 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		InputLoc: inputLoc,
 		Folder:   folder,
 		FileName: fileName,
-		Size:     fInfo.Size,
+		Size:     size,
 	}
 	download.Init(id, msg.SenderID)
 	err = download.Start()
 	if err != nil {
-		_, _ = msg.ReplyText("Download failed due to Error:\n" + err.Error())
+		_, _ = sMsg.Edit(
+			"Download failed due to Error:\n" + err.Error(),
+			&tele.EditOptions{},
+		)
 	} else {
-		_, _ = msg.ReplyText(fmt.Sprintf(
-			"__Saved to__ `%s` __successfully!__",
-			download.Path,
-		))
+		_, _ = sMsg.Edit(
+			fmt.Sprintf(
+				"__Saved to__ `%s` __successfully!__",
+				download.Path,
+			),
+			&tele.EditOptions{},
+		)
 	}
 	return nil
 }
