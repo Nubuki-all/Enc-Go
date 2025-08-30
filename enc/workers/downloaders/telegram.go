@@ -72,8 +72,8 @@ func (dl *TgDownload) Start() error {
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 
-		var lastCall time.Time        // zero -> no call yet
-		var stored *progressEvent    // latest event queued while waiting for interval
+		var lastCall time.Time    // zero -> no call yet
+		var stored *progressEvent // latest event queued while waiting for interval
 
 		for {
 			select {
@@ -153,7 +153,6 @@ func (dl *TgDownload) Start() error {
 
 	return err
 }
-
 
 func (dl *TgDownload) ProgressCallback(start time.Time, done, total int64, w *progressWriter, wa *progressWriterAt) {
 	if dl.PauseProgress {

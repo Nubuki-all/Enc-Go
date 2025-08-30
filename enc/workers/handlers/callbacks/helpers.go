@@ -15,10 +15,9 @@ import (
 	"enc/utils/tele"
 )
 
-
 func cleanOldMessage(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
-    _ = query.Answer("⛔ Old button.  Removing…", false)
-    time.Sleep(5 * time.Second)
-    err := query.GetMessage().Delete()
+	_ = query.Answer("⛔ Old button.  Removing…", false)
+	time.Sleep(5 * time.Second)
+	err := query.GetMessage().Delete()
 	return err
 }

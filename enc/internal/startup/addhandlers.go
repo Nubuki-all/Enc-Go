@@ -94,14 +94,12 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 func AddCBHandlers(dispatch dispatcher.Dispatcher) {
 	callbackHandlers := map[string]func(*ext.Context, *ext.Update) error{
 		// Welcome Handlers
-		"ihelp": CallbackEventHandler(handlers.Help),
-		"back_cb": CallbackEventHandler(handlers.StartBack),
+		"ihelp":     CallbackEventHandler(handlers.Help),
+		"back_cb":   CallbackEventHandler(handlers.StartBack),
 		"icommands": CallbackEventHandler(handlers.Commands),
-		
+
 		// Tranfer Handlers
-		downloaders.CallbackData:  CallbackEventHandler(callbacks.CancelDownload),
-
-
+		downloaders.CallbackData: CallbackEventHandler(callbacks.CancelDownload),
 	}
 	for prefix, handler := range callbackHandlers {
 		dispatch.AddHandler(onevent.NewCallbackQuery(
@@ -137,7 +135,7 @@ func CallbackEventHandler(handler func(*ext.Context, *ext.Update, *tele.Callback
 	return func(ctx *ext.Context, update *ext.Update) error {
 		user := update.EffectiveUser()
 		chat := update.EffectiveChat()
-		query :=  tele.NewQueryFromGotg(
+		query := tele.NewQueryFromGotg(
 			update.CallbackQuery,
 			ctx,
 			chat.GetID(),

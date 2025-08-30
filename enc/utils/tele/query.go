@@ -18,22 +18,22 @@ import (
 )
 
 type CallbackQuery struct {
-	ChatID    int64
-	SenderID  int64
-	ID        int
-	Ctx       *ext.Context
-	Query     *tg.UpdateBotCallbackQuery
-	Chat      *tg.Chat
-	User      *tg.User
+	ChatID   int64
+	SenderID int64
+	ID       int
+	Ctx      *ext.Context
+	Query    *tg.UpdateBotCallbackQuery
+	Chat     *tg.Chat
+	User     *tg.User
 }
 
 func NewQueryFromGotg(q *tg.UpdateBotCallbackQuery, c *ext.Context, chatID int64, senderID int64) *Message {
 	return &CallbackQuery{
-		Query:      q,
-		Ctx:       c,
-		ChatID:    chatID,
-		SenderID:  senderID,
-		ID:        q.MsgID,
+		Query:    q,
+		Ctx:      c,
+		ChatID:   chatID,
+		SenderID: senderID,
+		ID:       q.MsgID,
 	}
 }
 

@@ -17,20 +17,19 @@ import (
 
 const notAllowed = "You're not allowed to do this!"
 
-
 func CancelDownload(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
-    id := fmt.Sprintf("%s:%s", query.ChatID, query.ID)
-    info := utils.GetCallbackInfo(id)
-    if info == nil {
-        return cleanOldMessage(ctx, update, query)
-    }
-    sender := query.SenderID
-    if info.Sender == sender {
+	id := fmt.Sprintf("%s:%s", query.ChatID, query.ID)
+	info := utils.GetCallbackInfo(id)
+	if info == nil {
+		return cleanOldMessage(ctx, update, query)
+	}
+	sender := query.SenderID
+	if info.Sender == sender {
 		_ = query.Answer(notAllowed, false)
 		return nil
-    }
-    _ = query.Answer("Cancelling download please wait…", false)
-    info.IsCancelled = true
-    info.Canceller = sender
+	}
+	_ = query.Answer("Cancelling download please wait…", false)
+	info.IsCancelled = true
+	info.Canceller = sender
 	return nil
 }
