@@ -5,6 +5,7 @@ import (
 	//"io"
 	"math"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gotd/td/telegram/downloader"
@@ -182,7 +183,7 @@ func (dl *TgDownload) ProgressCallback(start time.Time, done, total int64, w *pr
 	}
 	bar := strings.Repeat(finStr, filled) + strings.Repeat(unfinStr, 10-filled)
 	progress := fmt.Sprintf("```\n%s```\n**Progress:** `%.2f%%`\n", bar, percentage)
-	// ensure fallbacks for time strings
+	// ensure fallbacks for time trings
 	if timeToCompletion == "" {
 		timeToCompletion = "0 s"
 	}
