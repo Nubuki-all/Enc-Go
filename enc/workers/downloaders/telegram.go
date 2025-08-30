@@ -46,6 +46,19 @@ func NewTgDl(location tg.InputFileLocationClass, size int64, msg *tele.Message, 
 
 func (dl *TgDownload) Start() error {
 	ctx := dl.msg.Ctx
+	interval := 10 * time.Second
+	lastCheck := time.Now()
+	progressFunc := func(start time.Time, done, total int64, w *progressWriter, wa *progressWriterAt) {
+		if time.Since(lastCheck) >= interval {
+			// Pass arguments explicitly to the goroutine.
+			// This is the idiomatic way to prevent a race condition.
+			go func(s time.Time, d, t int64, pw *progressWriter, pwa *progressWriterAt) {
+				dl.ProgressCallback(s, d, t, pw, pwa)
+			}(start, done, total, w, wa) // The arguments are passed here.
+			
+			lastCheck = time.Now()
+		}
+	}
 	return DownloadParallel(
 		ctx,
 		dl.downloader,
@@ -55,7 +68,8 @@ func (dl *TgDownload) Start() error {
 		dl.Path,
 		dl.threads,
 		dl.partSize,
-		dl.ProgressCallback,
+		progressFunc,
+		//dl.ProgressCallback,
 	)
 }
 
