@@ -130,7 +130,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	if err != nil {
 		return nil
 	}
-	id := fmt.Sprintf("%d:%d", msg.ChatID, msg.ID)
+	id := fmt.Sprintf("%d:%d", sMsg.ChatID, sMsg.ID)
 	download := &downloaders.Downloader{
 		Msg:      sMsg,
 		InputLoc: inputLoc,
