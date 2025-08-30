@@ -55,7 +55,7 @@ func (dl *TgDownload) Start() error {
 			go func(s time.Time, d, t int64, pw *progressWriter, pwa *progressWriterAt) {
 				dl.ProgressCallback(s, d, t, pw, pwa)
 			}(start, done, total, w, wa) // The arguments are passed here.
-			
+
 			lastCheck = time.Now()
 		}
 	}
@@ -69,7 +69,7 @@ func (dl *TgDownload) Start() error {
 		dl.threads,
 		dl.partSize,
 		progressFunc,
-		//dl.ProgressCallback,
+		// dl.ProgressCallback,
 	)
 }
 
