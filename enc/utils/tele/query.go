@@ -1,9 +1,8 @@
 package tele
 
 import (
-
 	"github.com/celestix/gotgproto/ext"
-	//gp "github.com/celestix/gotgproto/types"
+	// gp "github.com/celestix/gotgproto/types"
 	"github.com/gotd/td/tg"
 
 	//"enc/config"
