@@ -136,6 +136,7 @@ var requiredEnvVars = []string{
 	"APP_ID",
 	"API_HASH",
 	"BOT_TOKEN",
+	"OWNER",
 }
 
 func formatReleaseName(name string) string {

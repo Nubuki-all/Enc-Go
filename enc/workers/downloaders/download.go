@@ -1,6 +1,7 @@
 package downloaders
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/gotd/td/tg"
 
 	"enc/config"
+	"enc/internal/bot"
 	"enc/internal/bot/types"
 	"enc/internal/logger"
 	"enc/utils"
@@ -32,6 +34,7 @@ type Downloader struct {
 	Uri           string
 	Size          int64
 	Qbit          bool
+	err           error
 	pauseOnDLInfo bool
 }
 
@@ -62,8 +65,12 @@ func (dl *Downloader) Start() error {
 		err = tgDl.Start()
 	}
 	dl.UnRegister()
-	if err != nil {
-		logger.Error(err)
+	if err != nil || d.IsCancelled { // for downloaders that don't return an err on download cancel 
+		dl.err = err
+		dl.CleanDownload()
+		if !d.IsCancelled {
+			logger.Error(err)
+		}
 	}
 	return err
 }
@@ -104,4 +111,41 @@ func (dl *Downloader) Register() {
 
 func (dl *Downloader) UnRegister() {
 	utils.DelCallbackInfo(dl.ID)
+}
+
+func (dl *Downloader) ReportStatus() (*tele.Message, error) {
+	var status string 
+	if err := dl.err; err == nil {
+		status = "was completed successfully."
+	} else if dl.IsCancelled{
+		status = "was cancelled"
+		if cncl := dl.Canceller; cncl != 0 && cncl != dl.Sender {
+			userName := "Unknown"
+			user, err := tele.GetUser(cncl)
+			if err == nil {
+				userName = user.FirstName
+			}
+			status = fmt.Sprintf("%s by [%s](tg://user?id=%d)", status, userName, cncl)
+		}
+		status += "."
+	} else {
+		status = fmt.Sprintf("failed with error:\n`%s`", dl.err.Error())
+	}
+	text := fmt.Sprintf("Download of `%s` %s", dl.FileName, status)
+	msg := dl.Msg
+	
+	if bot.ReportFailedDl && reportee := config.Rconf.Owners[0]; reportee != msg.ChatID{
+		if dl.err != nil && !dl.IsCancelled {
+			go func (text string, id int64) {
+				err:= tele.SendMessage(id, text)
+				if err != nil {
+					logger.Error()
+				}
+			}(text, reportee)
+		}
+	}
+	return msg.Edit(text,
+		&tele.EditOptions{},
+	)
+	
 }

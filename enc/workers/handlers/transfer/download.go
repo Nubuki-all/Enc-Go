@@ -141,10 +141,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	download.Init(id, msg.SenderID)
 	err = download.Start()
 	if err != nil {
-		_, _ = sMsg.Edit(
-			"Download failed due to Error:\n"+err.Error(),
-			&tele.EditOptions{},
-		)
+		_, _ = dl.ReportStatus()
 	} else {
 		_, _ = sMsg.Edit(
 			fmt.Sprintf(

@@ -164,8 +164,7 @@ func (dl *TgDownload) ProgressCallback(start time.Time, done, total int64, w *pr
 			w.Cancel = true
 		} else if wa != nil {
 			wa.Cancel = true
-		}
-		// return
+		}	
 	}
 	diff := time.Since(start).Round(time.Second).Seconds()
 	if total < done {
@@ -183,7 +182,6 @@ func (dl *TgDownload) ProgressCallback(start time.Time, done, total int64, w *pr
 	}
 	bar := strings.Repeat(finStr, filled) + strings.Repeat(unfinStr, 10-filled)
 	progress := fmt.Sprintf("```\n%s```\n**Progress:** `%.2f%%`\n", bar, percentage)
-	// ensure fallbacks for time trings
 	if timeToCompletion == "" {
 		timeToCompletion = "0 s"
 	}
@@ -193,9 +191,9 @@ func (dl *TgDownload) ProgressCallback(start time.Time, done, total int64, w *pr
 	tmp := fmt.Sprintf(
 		"%s`%s of %s`\n**Speed:** `%s/s`\n**ETA:** `%s`\n**Elapsed:** `%s`\n",
 		progress,
-		utils.HBS(done),  // e.g. "1.2 MiB"
-		utils.HBS(total), // e.g. "10.0 MiB"
-		utils.HBS(speed), // e.g. "100 KiB"
+		utils.HBS(done),
+		utils.HBS(total),
+		utils.HBS(speed),
 		timeToCompletion,
 		elapsedTime,
 	)
