@@ -141,7 +141,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	download.Init(id, msg.SenderID)
 	err = download.Start()
 	if err != nil {
-		_, _ = dl.ReportStatus()
+		_, _ = download.ReportStatus()
 	} else {
 		_, _ = sMsg.Edit(
 			fmt.Sprintf(
