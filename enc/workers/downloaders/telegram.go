@@ -164,7 +164,7 @@ func (dl *TgDownload) ProgressCallback(start time.Time, done, total int64, w *pr
 			w.Cancel = true
 		} else if wa != nil {
 			wa.Cancel = true
-		}	
+		}
 	}
 	diff := time.Since(start).Round(time.Second).Seconds()
 	if total < done {
