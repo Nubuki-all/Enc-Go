@@ -3,6 +3,7 @@ package downloaders
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/gotd/td/telegram/message/markup"
@@ -62,7 +63,7 @@ func (dl *Downloader) Start() error {
 	if dl.Folder == "" {
 		dl.Folder = config.Conf.DownloadDir
 	}
-	dl.Path = dl.Folder + dl.FileName
+	dl.Path = filepath.Join(dl.Folder, dl.FileName)
 	var err error
 	if dl.InputLoc != nil {
 		tgDl := NewTgDl(dl.InputLoc, dl.Size, dl.Msg, dl.TransferInfo)
