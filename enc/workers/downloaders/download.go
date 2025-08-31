@@ -28,6 +28,7 @@ type Downloader struct {
 	LCMsg         *tele.Message
 	Msg           *tele.Message
 	InputLoc      tg.InputFileLocationClass
+	Completed     bool
 	DlInfo        bool
 	Folder        string
 	FileName      string
@@ -58,6 +59,9 @@ func (dl *Downloader) Init(id string, sender int64) {
 }
 
 func (dl *Downloader) Start() error {
+	if dl.Folder == "" {
+		dl.Folder = config.Conf.DownloadDir
+	}
 	dl.Path = dl.Folder + dl.FileName
 	var err error
 	if dl.InputLoc != nil {
@@ -72,12 +76,15 @@ func (dl *Downloader) Start() error {
 			logger.Error(err)
 		}
 	}
+	dl.Completed = true
 	return err
 }
 
 func (dl *Downloader) CleanDownload() {
 	err := os.Remove(dl.Path)
-	logger.Error(err)
+	if err != {
+		logger.Error(err)
+	}
 }
 
 func (dl *Downloader) GenButtons() tg.ReplyMarkupClass {

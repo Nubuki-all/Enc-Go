@@ -13,6 +13,7 @@ type Config struct {
 	ADLTimeout            int
 	AlwaysDeployLatest    bool
 	AllowAction           bool
+	AltDownloadDir        string
 	AppID                 int
 	APIHash               string
 	Aria2Port             int
@@ -27,9 +28,12 @@ type Config struct {
 	DBName                string
 	Dev                   int64
 	DLStuff               string
+	DownloadDir           string
 	DumpChannel           int
+	DumpDir               string
 	DumpLeech             bool
 	Dyno                  string
+	EncodeDir             string
 	Encoder               string
 	ExtCap                bool
 	FBanner               bool
@@ -50,8 +54,10 @@ type Config struct {
 	LogChannel            int64
 	LogsInChannel         bool
 	LogFileName           string
+	MediaInfoDir          string
 	MICap                 bool
 	MuxArgs               string
+	MuxDir                string
 	NoBanner              bool
 	NoPM                  bool
 	Ovr                   string
@@ -70,6 +76,7 @@ type Config struct {
 	RSSDirect             bool
 	TelegraphAPI          string
 	TelegraphAuthor       string
+	TempDir               string
 	TempUser              string
 	TGDownloadClient      string
 	TGUploadClient        string
@@ -84,45 +91,14 @@ type Config struct {
 
 // RuntimeConfig holds runtime state
 type RuntimeConfig struct {
-	Aria2            interface{}
-	BatchIncoming    []interface{}
-	BatchQueue       map[string]interface{}
 	BotID            string
-	Cached           bool
-	CachedDL         bool
-	CustomRename     interface{}
-	DisplayAddDLInfo bool
-	DockerDeployed   bool
-	ECancel          map[string]interface{}
 	Error            error
-	GroupEnc         bool
-	GroupEncList     []interface{}
-	MaxMessageLength int
-	OnlyOwnerPM      bool
 	Owners           []int64
-	PauseStatus      int
-	Paused           []interface{}
-	PreviewBatch     map[string]interface{}
-	PreviewList      []interface{}
-	Queue            map[string]interface{}
-	QueueStatus      []interface{}
-	RQueue           []interface{}
 	ReleaseName      string
 	ReleaseNameB     string
-	ReportFailedDL   bool
-	ReportFailedEnc  bool
-	RSSDict          map[string]interface{}
-	RSSRanOnce       bool
-	SAS              bool
-	SET              bool
-	SQS              bool
 	Started          bool
-	TempOnlyInGroup  bool
 	TgpAuthor        string
 	TgpAuthorUrl     string
-	TempUsers        []interface{}
-	UCancel          []interface{}
-	Version2         []interface{}
 }
 
 var (
@@ -157,7 +133,7 @@ func LoadConfig() error {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		log.Println("No .env file found or failed to read .env, falling back to environment variables")
+		log.Println("No {.env file found or failed to read .env, falling back to environment variables")
 	}
 	// Check for missing required env vars
 	for _, key := range requiredEnvVars {
@@ -168,6 +144,7 @@ func LoadConfig() error {
 	// set defaults
 	viper.SetDefault("ARIA2_DL_TIMEOUT", 0)
 	viper.SetDefault("ALLOW_ACTION", true)
+	viper.SetDefault("ALT_DOWNLOAD_DIR", ".downloads2")
 	viper.SetDefault("ARIA2_PORT", 6800)
 	viper.SetDefault("CAP_DECO", "◉")
 	viper.SetDefault("C_LINK", "@ANi_MiNE")
@@ -177,13 +154,18 @@ func LoadConfig() error {
 	viper.SetDefault("DBNAME", "ENC-GO")
 	viper.SetDefault("DEV", 0)
 	viper.SetDefault("DL_STUFF", "")
+	viper.SetDefault("DOWNLOAD_DIR", ".downloads")
+	viper.SetDefault("DUMP_DIR", ".dump")
 	viper.SetDefault("DUMP_LEECH", true)
+	viper.SetDefault("ENCODE_DIR", ".encode")
 	viper.SetDefault("EXTENDED_CAPTIONS", true)
 	viper.SetDefault("FFMPEG", `ffmpeg -i """{input}""" -preset ultrafast -c:v libx265 -crf 27 -map 0:v -c:a aac -map 0:a -c:s copy -map 0:s? """{output}"""`)
 	// viper.SetDefault("FINISHED_PROGRESS_STR", "🧡")
 	viper.SetDefault("FLOOD_SLEEP_THRESHOLD", 600)
 	viper.SetDefault("LOG_FILE_NAME", "logs.txt")
 	viper.SetDefault("MI_IN_CAPTION", true)
+	viper.SetDefault("MEDIAINFO_DIR", ".minfo")
+	viper.SetDefault("MUX_DIR", ".mux")
 	viper.SetDefault("PAUSE_ON_DL_INFO", true)
 	viper.SetDefault("QBIT_PORT", 8090)
 	viper.SetDefault("QBIT_PORT2", 9090)
@@ -193,6 +175,7 @@ func LoadConfig() error {
 	viper.SetDefault("RSS_DELAY", 60)
 	viper.SetDefault("RSS_DIRECT", true)
 	viper.SetDefault("TELEGRAPH_API", "https://api.telegra.ph")
+	viper.SetDefault("TEMP_DIR", ".temp")
 	viper.SetDefault("UN_FINISHED_PROGRESS_STR", "🤍")
 	viper.SetDefault("USE_ANILIST", true)
 	viper.SetDefault("USE_CAPTION", true)
@@ -202,6 +185,7 @@ func LoadConfig() error {
 		ADLTimeout:            viper.GetInt("ARIA2_DL_TIMEOUT"),
 		AlwaysDeployLatest:    viper.GetBool("ALWAYS_DEPLOY_LATEST"),
 		AllowAction:           viper.GetBool("ALLOW_ACTION"),
+		AltDownloadDir:        viper.GetString("ALT_DOWNLOAD_DIR"),
 		AppID:                 viper.GetInt("APP_ID"),
 		APIHash:               viper.GetString("API_HASH"),
 		Aria2Port:             viper.GetInt("ARIA2_PORT"),
@@ -216,9 +200,12 @@ func LoadConfig() error {
 		DBName:                viper.GetString("DBNAME"),
 		Dev:                   viper.GetInt64("DEV"),
 		DLStuff:               viper.GetString("DL_STUFF"),
+		DownloadDir:           viper.GetString("DOWNLOAD_DIR"),
 		DumpChannel:           viper.GetInt("DUMP_CHANNEL"),
+		DumpDir:               viper.GetString("DUMP_DIR"),
 		DumpLeech:             viper.GetBool("DUMP_LEECH"),
 		Dyno:                  viper.GetString("DYNO"),
+		EncodeDir:             viper.GetString("ENCODE_DIR"),
 		Encoder:               viper.GetString("ENCODER"),
 		ExtCap:                viper.GetBool("EXTENDED_CAPTIONS"),
 		FBanner:               viper.GetBool("FBANNER"),
@@ -239,8 +226,10 @@ func LoadConfig() error {
 		LogChannel:            viper.GetInt64("LOG_CHANNEL"),
 		LogsInChannel:         viper.GetBool("LOGS_IN_CHANNEL"),
 		LogFileName:           viper.GetString("LOG_FILE_NAME"),
+		MediaInfoDir:          viper.GetString("MEDIAINFO_DIR"),
 		MICap:                 viper.GetBool("MI_IN_CAPTION"),
 		MuxArgs:               viper.GetString("MUX_ARGS"),
+		MuxDir:                viper.GetString("MUX_DIR"),
 		NoBanner:              viper.GetBool("NO_BANNER"),
 		NoPM:                  viper.GetBool("NO_TEMP_PM"),
 		Ovr:                   viper.GetString("OVR"),
@@ -259,6 +248,7 @@ func LoadConfig() error {
 		RSSDirect:             viper.GetBool("RSS_DIRECT"),
 		TelegraphAPI:          viper.GetString("TELEGRAPH_API"),
 		TelegraphAuthor:       viper.GetString("TELEGRAPH_AUTHOR"),
+		TempDir:               viper.GetString("TEMP_DIR"),
 		TempUser:              viper.GetString("TEMP_USERS"),
 		TGDownloadClient:      viper.GetString("TG_DL_CLIENT"),
 		TGUploadClient:        viper.GetString("TG_UL_CLIENT"),
@@ -274,15 +264,6 @@ func LoadConfig() error {
 	if !strings.HasSuffix(Conf.TelegraphAPI, "/") {
 		Conf.TelegraphAPI += "/"
 	}
-	// Initialize runtime config with defaults
-	Rconf = &RuntimeConfig{
-		BatchQueue:   make(map[string]interface{}),
-		ECancel:      make(map[string]interface{}),
-		PreviewBatch: make(map[string]interface{}),
-		Queue:        make(map[string]interface{}),
-		RSSDict:      make(map[string]interface{}),
-	}
-
 	author := Conf.TelegraphAuthor
 	if author != "" {
 		parts := strings.Split(author, "|")
@@ -314,7 +295,6 @@ func LoadConfig() error {
 
 func init() {
 	if err := LoadConfig(); err != nil {
-		// log.Printf("Failed to load config: %v", err)
 		Conf = &Config{
 			LogFileName: "logs.txt",
 		}

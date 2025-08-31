@@ -2,6 +2,7 @@ package transfer
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -9,7 +10,8 @@ import (
 	"github.com/celestix/gotgproto/ext"
 	//"github.com/gotd/td/tg"
 
-	// "enc/internal/bot"
+	"enc/config"
+	"enc/internal/logger"
 	"enc/utils"
 	"enc/utils/argparser"
 	"enc/utils/tele"
@@ -22,7 +24,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	}
 	cmd := update.Args()[0]
 	var err error
-	helpMsg := "Downloads the replied media: to a location (specified) locally\n" +
+	helpMsg := "Downloads the replied media: to a location (specified or the ALT_DOWNLOAD_DIR env var) locally\n" +
 		"Available arguments:\n" +
 		"  Path to download (Non-quoted). End the args with '/' to specify the folder in which to download and let the bot auto detected filename\n" +
 		"  or flags (path is ignored):"
@@ -79,7 +81,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 				"File Name (Must be in double quotes.)",
 			),
 			argparser.CreateDBoolFlag(
-				"home",
+				"cwd",
 				"h",
 				"(To download to current working directory.).",
 			),
@@ -101,12 +103,18 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		pargs := arg.Values
 		dir := pargs["dir"].(string)
 		file := pargs["file"].(string)
-		// home := pargs["home"].(bool)
+		home := pargs["cwd"].(bool)
 		caption := pargs["caption"].(bool)
-		if dir != "" && !strings.HasSuffix(dir, "/") {
-			dir += "/"
+		if dir != "" {
+			folder = dir
+		} else if home {
+			path, err := os.Getwd()
+			if err == nil {
+				folder = path
+			} else {
+				logger.Error(err)
+			}
 		}
-		folder = dir
 		if caption {
 			name := repMsg.Text
 			if !strings.Contains(name, "\n") {
@@ -125,6 +133,9 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	}
 	if fileName == "" {
 		fileName = tgFileName
+	}
+	if folder == "" {
+		folder = config.Conf.AltDownloadDir
 	}
 	sMsg, err := msg.ReplyText("...")
 	if err != nil {

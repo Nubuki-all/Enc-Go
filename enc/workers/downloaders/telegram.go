@@ -50,8 +50,6 @@ type progressEvent struct {
 	start time.Time
 	done  int64
 	total int64
-	pw    *progressWriter
-	pwa   *progressWriterAt
 }
 
 // Start uses a channel-based throttler around dl.ProgressCallback.
@@ -84,7 +82,7 @@ func (dl *TgDownload) Start() error {
 				// Otherwise, if enough time passed since lastCall -> immediate run.
 				if lastCall.IsZero() || now.Sub(lastCall) >= interval {
 					// Call in goroutine so consumer stays responsive.
-					go dl.ProgressCallback(ev.start, ev.done, ev.total, ev.pw, ev.pwa)
+					go dl.ProgressCallback(ev.start, ev.done, ev.total)
 					lastCall = now
 				} else {
 					// Store latest event to be executed on next tick (latest wins).
@@ -95,7 +93,7 @@ func (dl *TgDownload) Start() error {
 				// On each tick, if we have a stored event, call it now.
 				if stored != nil {
 					ev := *stored
-					go dl.ProgressCallback(ev.start, ev.done, ev.total, ev.pw, ev.pwa)
+					go dl.ProgressCallback(ev.start, ev.done, ev.total)
 					lastCall = time.Now()
 					stored = nil
 				}
@@ -104,7 +102,7 @@ func (dl *TgDownload) Start() error {
 				// flush last stored event synchronously so final update happens before exit
 				if stored != nil {
 					ev := *stored
-					dl.ProgressCallback(ev.start, ev.done, ev.total, ev.pw, ev.pwa)
+					dl.ProgressCallback(ev.start, ev.done, ev.total)
 					stored = nil
 				}
 				return
@@ -115,8 +113,26 @@ func (dl *TgDownload) Start() error {
 	// The progressFunc we hand to the downloader (hot path). It's non-blocking and
 	// replaces older queued values when overloaded.
 	progressFunc := func(start time.Time, done, total int64, w *progressWriter, wa *progressWriterAt) {
-		ev := progressEvent{start: start, done: done, total: total, pw: w, pwa: wa}
-
+		// would switch to atomic if becomes a problem 
+		if dl.IsCancelled {
+			// mark writer(s) cancelled immediately
+			if w != nil {
+				w.Cancel = true
+			} else if wa != nil {
+				wa.Cancel = true
+			}
+			// drain single-slot channel so no queued event remains
+			for {
+				select {
+				case <-ch:
+					continue
+				default:
+				}
+				break
+			}
+			return
+		}
+		ev := progressEvent{start: start, done: done, total: total}
 		// Try fast non-blocking send; if channel is full, remove the old value and replace with new
 		select {
 		case ch <- ev:
@@ -155,21 +171,14 @@ func (dl *TgDownload) Start() error {
 	return err
 }
 
-func (dl *TgDownload) ProgressCallback(start time.Time, done, total int64, w *progressWriter, wa *progressWriterAt) {
+func (dl *TgDownload) ProgressCallback(start time.Time, done, total int64) {
 	if dl.PauseProgress {
 		return
 	}
-	if dl.IsCancelled {
-		if w != nil {
-			w.Cancel = true
-		} else if wa != nil {
-			wa.Cancel = true
-		}
-	}
-	diff := time.Since(start).Round(time.Second).Seconds()
 	if total < done {
 		return
 	}
+	diff := time.Since(start).Round(time.Second).Seconds()
 	percentage := float64(done * 100 / total)
 	speed := done / int64(diff)
 	elapsedTime := utils.TimeFormatter(diff)

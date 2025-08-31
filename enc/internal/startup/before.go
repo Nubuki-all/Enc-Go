@@ -143,13 +143,15 @@ func SetupFFmpegParams() {
 }
 
 func EnsureDirectories() {
+	c := config.Conf
 	dirs := []string{
-		".downloads",
-		".dump",
-		".encode",
-		".minfo",
-		".mux",
-		".temp",
+		c.DownloadDir,
+		c.DumpDir,
+		c.EncodeDir,
+		c.MuxDir,
+		c.MediaInfoDir,
+		c.TempDir,
+		c.AltDownloadDir,
 	}
 	for _, d := range dirs {
 		if err := os.MkdirAll(d, 0o755); err != nil {

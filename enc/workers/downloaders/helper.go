@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	//"fmt"
+	"path/filepath"
 	"io"
 	"os"
 	"sync/atomic"
@@ -77,9 +78,9 @@ func NewProgressWriterAt(f *os.File, total int64, cb ProgressFunc) *progressWrit
 func (p *progressWriterAt) WriteAt(b []byte, off int64) (int, error) {
 	n, err := p.f.WriteAt(b, off)
 	if n > 0 {
-		new := atomic.AddInt64(&p.written, int64(n))
+		done := atomic.AddInt64(&p.written, int64(n))
 		if p.cb != nil {
-			p.cb(p.start, new, p.total, nil, p)
+			p.cb(p.start, done, p.total, nil, p)
 		}
 		if p.Cancel {
 			return n, ErrDownloadCanceled
@@ -98,6 +99,11 @@ func DownloadStream(ctx context.Context, d *downloader.Downloader, client downlo
 		return errors.New("missing downloader/client/loc")
 	}
 	// Build destination file
+	dirPath := filepath.Dir(outPath)
+	err := os.MkdirAll(dirPath, os.ModePerm)
+	if err != nil {
+		return err
+	}
 	outFile, err := os.Create(outPath)
 	if err != nil {
 		return err
@@ -120,6 +126,11 @@ func DownloadParallel(ctx context.Context, d *downloader.Downloader, client down
 		return errors.New("missing downloader/client/loc")
 	}
 	// prepare file for random writes
+	dirPath := filepath.Dir(outPath)
+	err := os.MkdirAll(dirPath, os.ModePerm)
+	if err != nil {
+		return err
+	}
 	f, err := os.Create(outPath)
 	if err != nil {
 		return err
