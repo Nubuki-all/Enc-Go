@@ -61,7 +61,9 @@ func (dl *TgDownload) Start() error {
 	// single-slot buffered channel: holds latest event.
 	ch := make(chan progressEvent, 1)
 	doneCh := make(chan struct{})
+	var closeOnce sync.Once
 	var wg sync.WaitGroup
+	closeDone := func() { closeOnce.Do(func() { close(doneCh) }) }
 
 	// Consumer goroutine: calls dl.ProgressCallback immediately for the first event,
 	// then at most once per interval after that.
@@ -121,15 +123,7 @@ func (dl *TgDownload) Start() error {
 			} else if wa != nil {
 				wa.Cancel = true
 			}
-			// drain single-slot channel so no queued event remains
-			for {
-				select {
-				case <-ch:
-					continue
-				default:
-				}
-				break
-			}
+			closeDone()
 			return
 		}
 		ev := progressEvent{start: start, done: done, total: total}
@@ -165,7 +159,7 @@ func (dl *TgDownload) Start() error {
 	)
 
 	// signal consumer to finish and wait for it (this flushes the last event)
-	close(doneCh)
+	closeDone()
 	wg.Wait()
 
 	return err
