@@ -82,7 +82,7 @@ func (dl *Downloader) Start() error {
 
 func (dl *Downloader) CleanDownload() {
 	err := os.Remove(dl.Path)
-	if err != {
+	if err != nil {
 		logger.Error(err)
 	}
 }
