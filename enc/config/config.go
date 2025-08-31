@@ -260,7 +260,7 @@ func LoadConfig() error {
 		UVS:                   viper.GetBool("UPLOAD_VIDEO_AS_SPOILER"),
 		Workers:               viper.GetInt("WORKERS"),
 	}
-	
+
 	Rconf = &RuntimeConfig{}
 	if !strings.HasSuffix(Conf.TelegraphAPI, "/") {
 		Conf.TelegraphAPI += "/"
