@@ -65,10 +65,10 @@ func (dl *Downloader) Start() error {
 		err = tgDl.Start()
 	}
 	dl.UnRegister()
-	if err != nil || d.IsCancelled { // for downloaders that don't return an err on download cancel
+	if err != nil || dl.IsCancelled { // for downloaders that don't return an err on download cancel 
 		dl.err = err
 		dl.CleanDownload()
-		if !d.IsCancelled {
+		if !dl.IsCancelled {
 			logger.Error(err)
 		}
 	}
@@ -133,11 +133,12 @@ func (dl *Downloader) ReportStatus() (*tele.Message, error) {
 	}
 	text := fmt.Sprintf("Download of `%s` %s", dl.FileName, status)
 	msg := dl.Msg
-
-	if bot.ReportFailedDl && reportee := config.Rconf.Owners[0]; reportee != msg.ChatID {
-		if dl.err != nil && !dl.IsCancelled {
-			go func(text string, id int64) {
-				err := tele.SendMessage(id, text)
+	
+	if bot.ReportFailedDl {
+		reportee := config.Rconf.Owners[0]
+		if reportee != msg.ChatID && dl.err != nil && !dl.IsCancelled {
+			go func (text string, id int64) {
+				err:= tele.SendMessage(id, text)
 				if err != nil {
 					logger.Error()
 				}
