@@ -113,7 +113,7 @@ func (dl *TgDownload) Start() error {
 	// The progressFunc we hand to the downloader (hot path). It's non-blocking and
 	// replaces older queued values when overloaded.
 	progressFunc := func(start time.Time, done, total int64, w *progressWriter, wa *progressWriterAt) {
-		// would switch to atomic if becomes a problem 
+		// would switch to atomic if becomes a problem
 		if dl.IsCancelled {
 			// mark writer(s) cancelled immediately
 			if w != nil {

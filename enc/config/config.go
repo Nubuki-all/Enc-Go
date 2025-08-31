@@ -91,14 +91,14 @@ type Config struct {
 
 // RuntimeConfig holds runtime state
 type RuntimeConfig struct {
-	BotID            string
-	Error            error
-	Owners           []int64
-	ReleaseName      string
-	ReleaseNameB     string
-	Started          bool
-	TgpAuthor        string
-	TgpAuthorUrl     string
+	BotID        string
+	Error        error
+	Owners       []int64
+	ReleaseName  string
+	ReleaseNameB string
+	Started      bool
+	TgpAuthor    string
+	TgpAuthorUrl string
 }
 
 var (
