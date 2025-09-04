@@ -65,17 +65,17 @@ func (dl *Downloader) Start() error {
 	if dl.Folder == "" {
 		dl.Folder = config.Conf.DownloadDir
 	}
+	defer dl.UnRegister()
 	dl.Path = filepath.Join(dl.Folder, dl.FileName)
 	var err error
 	if dl.InputLoc != nil {
 		tgDl := NewTgDl(dl.InputLoc, dl.Size, dl.Msg, dl.TransferInfo)
 		err = tgDl.Start()
 	} else if dl.Uri != "" {
-		folder := filepath.Abs(dl.Folder)
+		folder, _ := filepath.Abs(dl.Folder)
 		dl.aria2Dl = NewAria2Dl(dl.Uri, folder, dl.Selected, dl.Msg, dl.TransferInfo)
 		err = dl.aria2Dl.Start()
 	}
-	dl.UnRegister()
 	if err != nil || dl.IsCancelled { // for downloaders that don't return an err on download cancel
 		dl.err = err
 		dl.CleanDownload()
@@ -89,7 +89,8 @@ func (dl *Downloader) Start() error {
 
 func (dl *Downloader) CleanDownload() {
 	if dl.aria2Dl != nil {
-		return dl.aria2Dl.Clean()
+		dl.aria2Dl.Clean()
+		return
 	}
 	err := os.Remove(dl.Path)
 	if err != nil {

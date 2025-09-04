@@ -57,8 +57,9 @@ func (dl *Aria2Download) Start() error {
 	if dl.client == nil {
 		return fmt.Errorf("Aria2 Client is inactive.")
 	}
-	dlTimeout := config.Conf.ADLTimeout * time.Second
-	progressInterval := config.Conf.ProgresUpdateInterval * time.Second
+	rconf := conf.Rconf
+	dlTimeout := rconf.ADLTimeout * time.Second
+	progressInterval := rconf.ProgresUpdateInterval * time.Second
 	updateInterval := 1 * time.Second
 
 	ctx, cancel := context.WithTimeout(context.Background(), dlTimeout)
@@ -202,11 +203,11 @@ func (dl *Aria2Download) ProgressCallback(start time.Time, gid string) string {
 		return ""
 	}
 	var name string
-	dl.name = arigo.GetDownloadName(status)
+	dl.name, _ = arigo.GetDownloadName(status)
 	if dl.selectedName != "" {
 		name = dl.selectedName
 	} else {
-		name, _ = dl.name
+		name = dl.name
 	}
 	total := int64(status.TotalLength)
 	current := int64(status.CompletedLength)
@@ -237,7 +238,7 @@ func (dl *Aria2Download) ProgressCallback(start time.Time, gid string) string {
 	tmp := fmt.Sprintf(
 		"%s`%s of %s`\n**Speed:** `%s/s`\n**Remains:** `%s`\n**ETA:** `%s`\n**Elapsed:** `%s`\n",
 		progress,
-		utils.HBS(done),
+		utils.HBS(current),
 		utils.HBS(total),
 		utils.HBS(speed),
 		utils.HBS(remainingSize),
@@ -246,7 +247,7 @@ func (dl *Aria2Download) ProgressCallback(start time.Time, gid string) string {
 	)
 	msgHead := "`Download Pending…`"
 	if !strings.HasSuffix(name, ".torrent") {
-		if dl.selectedPath {
+		if dl.selectedPath != "" {
 			dl.Path = dl.selectedPath
 		} else {
 			dl.Path = filepath.Join(status.Dir, name)
@@ -281,11 +282,11 @@ func (dl *Aria2Download) Select(gid string) (err error) {
 	if err != nil {
 		return err
 	}
-	status, err = dl.client.TellStatus(gid)
+	status, err := dl.client.TellStatus(gid)
 	if err != nil {
 		return err
 	}
-	for file := range status.Files {
+	for _, file := range status.Files {
 		if file.Selected {
 			dl.selectedPath = file.Path
 			dl.selectedName = filepath.Base(file.Path)
@@ -321,14 +322,14 @@ func (dl *Aria2Download) UpdateCallback(gid string) string {
 		}
 		return ""
 	}
-	var name string
-	if dl.selectedName != "" {
-		name = dl.selectedName
-	} else {
-		name, _ := arigo.GetDownloadName(status)
-	}
+	// var name string
+	// if dl.selectedName != "" {
+	// 	name = dl.selectedName
+	// } else {
+	// 	name, _ := arigo.GetDownloadName(status)
+	// }
 	if !strings.HasSuffix(name, ".torrent") {
-		if dl.selectedPath {
+		if dl.selectedPath != "" {
 			dl.Path = dl.selectedPath
 		} else {
 			dl.Path = filepath.Join(status.Dir, name)

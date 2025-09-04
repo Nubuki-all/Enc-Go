@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -92,9 +93,11 @@ type Config struct {
 
 // RuntimeConfig holds runtime state
 type RuntimeConfig struct {
+	ADLTimeout   time.Duration
 	BotID        string
 	Error        error
 	Owners       []int64
+	ProgresUpdateInterval time.Duration
 	ReleaseName  string
 	ReleaseNameB string
 	Started      bool
@@ -296,6 +299,8 @@ func LoadConfig() error {
 	if Conf.ProgresUpdateInterval < 2 {
 		Conf.ProgresUpdateInterval = 2
 	}
+	Rconf.ADLTimeout = time.Duration(Conf.ADLTimeout)
+	Rconf.ProgresUpdateInterval = time.Duration(Conf.ProgresUpdateInterval)
 
 	return nil
 }

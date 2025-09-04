@@ -56,7 +56,7 @@ type progressEvent struct {
 // First event is handled immediately; subsequent events are throttled to `interval`.
 func (dl *TgDownload) Start() error {
 	ctx := dl.msg.Ctx
-	interval := config.Conf.ProgresUpdateInterval * time.Second
+	interval := config.Rconf.ProgresUpdateInterval * time.Second
 
 	// single-slot buffered channel: holds latest event.
 	ch := make(chan progressEvent, 1)

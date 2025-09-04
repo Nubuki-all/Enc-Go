@@ -32,6 +32,7 @@ require (
 replace github.com/celestix/gotgproto => github.com/Nubuki-all/gotgproto v1.0.0-beta21.0.20250827000157-055fe7a9f0ff
 
 replace github.com/siku2/arigo => github.com/Nubuki-all/arigo v0.0.0-20250904201643-4a96e2b73c13
+replace github.com/cenkalti/rpc2 => github.com/Nubuki-all/rpc2 v0.0.0-20250903152609-4270a8aef277
 
 require (
 	github.com/AnimeKaizoku/cacher v1.0.3 // indirect
