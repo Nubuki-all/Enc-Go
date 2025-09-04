@@ -10,12 +10,12 @@ require (
 	github.com/celestix/telegraph-go/v2 v2.0.4
 	github.com/dustin/go-humanize v1.0.1
 	github.com/gotd/contrib v0.21.0
-	github.com/gotd/td v0.130.0
+	github.com/gotd/td v0.131.0
 	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/shirou/gopsutil/v3 v3.24.5
-	github.com/siku2/arigo v0.2.0
-	github.com/spf13/pflag v1.0.7
+	github.com/siku2/arigo v0.3.0
+	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.20.1
 	github.com/traefik/yaegi v0.16.1
 	go.mongodb.org/mongo-driver v1.17.4
@@ -25,12 +25,13 @@ require (
 	golang.org/x/time v0.12.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gorm.io/driver/sqlite v1.6.0
-	gorm.io/gorm v1.30.2
+	gorm.io/gorm v1.30.3
 	moul.io/zapgorm2 v1.3.0
 )
 
 replace github.com/celestix/gotgproto => github.com/Nubuki-all/gotgproto v1.0.0-beta21.0.20250827000157-055fe7a9f0ff
-replace github.com/siku2/arigo => github.com/Nubuki-all/arigo test
+
+replace github.com/siku2/arigo => github.com/Nubuki-all/arigo v0.0.0-20250904201643-4a96e2b73c13
 
 require (
 	github.com/AnimeKaizoku/cacher v1.0.3 // indirect

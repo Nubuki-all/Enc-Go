@@ -323,7 +323,7 @@ func PosInStream(file, lang1, lang2, mode string) (aPos, sPos int) {
 	aPos, sPos = -1, -1
 	aLang, sLang, err := GetStreamInfo(file)
 	if err != nil {
-		return
+		return aPos, sPos
 	}
 	if aLang != "" {
 		langs := strings.Split(aLang, "|")
@@ -349,7 +349,7 @@ func PosInStream(file, lang1, lang2, mode string) (aPos, sPos int) {
 	case "s", "sub":
 		return -1, sPos
 	}
-	return
+	return aPos, sPos
 }
 
 // Replace current process with new executable at same path

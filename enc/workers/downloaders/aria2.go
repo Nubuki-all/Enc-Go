@@ -22,21 +22,21 @@ import (
 
 type Aria2Download struct {
 	*types.TransferInfo
-	Size       int64
-	msg        *tele.Message
-	client     *arigo.Client
-	err        error
-	completed  bool
-	timeout    bool
-	ufstr      string
-	fstr       string
-	name       string
-	dir        string
-	gid        string
-	selected   string
+	Size         int64
+	msg          *tele.Message
+	client       *arigo.Client
+	err          error
+	completed    bool
+	timeout      bool
+	ufstr        string
+	fstr         string
+	name         string
+	dir          string
+	gid          string
+	selected     string
 	selectedName string
 	selectedPath string
-	uri        string
+	uri          string
 }
 
 func NewAria2Dl(uri, dir, selected string, msg *tele.Message, tInfo *types.TransferInfo) *Aria2Download {
@@ -60,22 +60,22 @@ func (dl *Aria2Download) Start() error {
 	dlTimeout := config.Conf.ADLTimeout * time.Second
 	progressInterval := config.Conf.ProgresUpdateInterval * time.Second
 	updateInterval := 1 * time.Second
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), dlTimeout)
 	defer cancel()
 
 	done := make(chan error, 1)
 	start := time.Now()
-	
+
 	resp, err := dl.client.AddURI(
 		arigo.URIs(dl.uri), &arigo.Options{
 			Dir: dl.dir,
-	})
+		})
 	if err != nil {
 		return err
 	}
 	gid := resp.Gid
-	dl.gid = gid 
+	dl.gid = gid
 	status, err := resp.TellStatus()
 	if err != nil {
 		return err
@@ -153,20 +153,20 @@ func (dl *Aria2Download) Start() error {
 	select {
 	case finalErr = <-done:
 	case <-ctx.Done():
-	    return fmt.Errorf("download context done: %w", ctx.Err())
+		return fmt.Errorf("download context done: %w", ctx.Err())
 	}
-	
+
 	if finalErr != nil {
-	    return finalErr
+		return finalErr
 	}
 	if dl.selected != "" && !dl.IsCancelled { // if IsCancelled is atomic.Bool: !dl.IsCancelled.Load()
-	    finalStatus, sErr := dl.client.TellStatus(gid)
-	    if sErr != nil {
-	    	return sErr
-	    }
-	    arigo.RemoveUnselectedFiles(finalStatus)
+		finalStatus, sErr := dl.client.TellStatus(gid)
+		if sErr != nil {
+			return sErr
+		}
+		arigo.RemoveUnselectedFiles(finalStatus)
 	}
-	
+
 	return nil
 }
 
@@ -203,7 +203,7 @@ func (dl *Aria2Download) ProgressCallback(start time.Time, gid string) string {
 	}
 	var name string
 	dl.name = arigo.GetDownloadName(status)
-	if dl.selectedName != ""{
+	if dl.selectedName != "" {
 		name = dl.selectedName
 	} else {
 		name, _ = dl.name
@@ -213,7 +213,7 @@ func (dl *Aria2Download) ProgressCallback(start time.Time, gid string) string {
 	remainingSize := total - current
 	speed := int64(status.DownloadSpeed)
 	var timeToCompletion string
-	
+
 	diff := time.Since(start).Round(time.Second).Seconds()
 	percentage := float64(current * 100 / total)
 	elapsedTime := utils.TimeFormatter(diff)
@@ -252,22 +252,21 @@ func (dl *Aria2Download) ProgressCallback(start time.Time, gid string) string {
 			dl.Path = filepath.Join(status.Dir, name)
 		}
 		msgHead = fmt.Sprintf("**Downloading:**\n`%s`\n**via:** ", name)
-        if status.BitTorrent.Info.Name != "" {
-        	msgHead += "Torrent."
-        } else {
-        	msgHead += "Direct Link."
-        }
+		if status.BitTorrent.Info.Name != "" {
+			msgHead += "Torrent."
+		} else {
+			msgHead += "Direct Link."
+		}
 	}
 	txt := msgHead + "\n" + tmp
 	_, _ = dl.msg.EditText(txt)
 	return status.GID
 }
 
-
 func (dl *Aria2Download) Select(gid string) (err error) {
 	err = dl.client.Pause(gid)
 	if err != nil {
-		return
+		return err
 	}
 	err = dl.client.ChangeOptions(
 		gid,
@@ -276,23 +275,22 @@ func (dl *Aria2Download) Select(gid string) (err error) {
 		},
 	)
 	if err != nil {
-		return
+		return err
 	}
 	err = dl.client.Pause(gid)
 	if err != nil {
-		return
+		return err
 	}
 	status, err = dl.client.TellStatus(gid)
 	if err != nil {
-		return
+		return err
 	}
 	for file := range status.Files {
-		if file.Selected{
+		if file.Selected {
 			dl.selectedPath = file.Path
 			dl.selectedName = filepath.Base(file.Path)
 		}
 	}
-	
 }
 
 func (dl *Aria2Download) UpdateCallback(gid string) string {
@@ -324,7 +322,7 @@ func (dl *Aria2Download) UpdateCallback(gid string) string {
 		return ""
 	}
 	var name string
-	if dl.selectedName != ""{
+	if dl.selectedName != "" {
 		name = dl.selectedName
 	} else {
 		name, _ := arigo.GetDownloadName(status)

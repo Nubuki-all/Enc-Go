@@ -292,7 +292,7 @@ func LoadConfig() error {
 		Rconf.ReleaseNameB = Rconf.ReleaseName
 	}
 	Rconf.BotID = strings.SplitN(Conf.BotToken, ":", 2)[0]
-	
+
 	if Conf.ProgresUpdateInterval < 2 {
 		Conf.ProgresUpdateInterval = 2
 	}
