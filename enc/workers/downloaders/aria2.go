@@ -57,7 +57,7 @@ func (dl *Aria2Download) Start() error {
 	if dl.client == nil {
 		return fmt.Errorf("Aria2 Client is inactive.")
 	}
-	rconf := conf.Rconf
+	rconf := config.Rconf
 	dlTimeout := rconf.ADLTimeout * time.Second
 	progressInterval := rconf.ProgresUpdateInterval * time.Second
 	updateInterval := 1 * time.Second
@@ -75,7 +75,7 @@ func (dl *Aria2Download) Start() error {
 	if err != nil {
 		return err
 	}
-	gid := resp.Gid
+	gid := resp.GID
 	dl.gid = gid
 	status, err := resp.TellStatus()
 	if err != nil {
@@ -292,6 +292,7 @@ func (dl *Aria2Download) Select(gid string) (err error) {
 			dl.selectedName = filepath.Base(file.Path)
 		}
 	}
+	return nil
 }
 
 func (dl *Aria2Download) UpdateCallback(gid string) string {
@@ -322,12 +323,12 @@ func (dl *Aria2Download) UpdateCallback(gid string) string {
 		}
 		return ""
 	}
-	// var name string
-	// if dl.selectedName != "" {
-	// 	name = dl.selectedName
-	// } else {
-	// 	name, _ := arigo.GetDownloadName(status)
-	// }
+	var name string
+	if dl.selectedName != "" {
+		name = dl.selectedName
+	} else {
+		name, _ = arigo.GetDownloadName(status)
+	}
 	if !strings.HasSuffix(name, ".torrent") {
 		if dl.selectedPath != "" {
 			dl.Path = dl.selectedPath
