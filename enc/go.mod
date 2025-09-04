@@ -30,6 +30,7 @@ require (
 )
 
 replace github.com/celestix/gotgproto => github.com/Nubuki-all/gotgproto v1.0.0-beta21.0.20250827000157-055fe7a9f0ff
+replace github.com/siku2/arigo => github.com/Nubuki-all/arigo test
 
 require (
 	github.com/AnimeKaizoku/cacher v1.0.3 // indirect

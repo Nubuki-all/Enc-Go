@@ -63,6 +63,7 @@ type Config struct {
 	Ovr                   string
 	Owner                 string
 	PauseOnDLInfo         bool
+	ProgresUpdateInterval int
 	QDLTimeout            int
 	QBitPort              int
 	QBitPort2             int
@@ -167,6 +168,7 @@ func LoadConfig() error {
 	viper.SetDefault("MEDIAINFO_DIR", ".minfo")
 	viper.SetDefault("MUX_DIR", ".mux")
 	viper.SetDefault("PAUSE_ON_DL_INFO", true)
+	viper.SetDefault("PROGRESS_UPDATE_INTERVAL", 10)
 	viper.SetDefault("QBIT_PORT", 8090)
 	viper.SetDefault("QBIT_PORT2", 9090)
 	viper.SetDefault("QBIT_TIMEOUT", 20)
@@ -235,6 +237,7 @@ func LoadConfig() error {
 		Ovr:                   viper.GetString("OVR"),
 		Owner:                 viper.GetString("OWNER"),
 		PauseOnDLInfo:         viper.GetBool("PODI"),
+		ProgresUpdateInterval: viper.GetInt("PROGRESS_UPDATE_INTERVAL"),
 		QDLTimeout:            viper.GetInt("QBIT_DL_TIMEOUT"),
 		QBitPort:              viper.GetInt("QBIT_PORT"),
 		QBitPort2:             viper.GetInt("QBIT_PORT2"),
@@ -289,7 +292,10 @@ func LoadConfig() error {
 		Rconf.ReleaseNameB = Rconf.ReleaseName
 	}
 	Rconf.BotID = strings.SplitN(Conf.BotToken, ":", 2)[0]
-	// Rconf.SET = true
+	
+	if Conf.ProgresUpdateInterval < 2 {
+		Conf.ProgresUpdateInterval = 2
+	}
 
 	return nil
 }

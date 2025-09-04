@@ -83,9 +83,15 @@ func Finalize(ctx context.Context) {
 func startRPC() {
 	cmd := exec.Command("aria2c",
 		"--enable-rpc=true",
+		"--rpc-listen-all",
+		"--rpc-max-request-size=1024M",
 		"--rpc-listen-port="+strconv.Itoa(config.Conf.Aria2Port),
+		"--seed-time=0",
+		"--follow-torrent=mem",
+		"--summary-interval=0",
 		"--daemon=true",
 		"--allow-overwrite=true",
+		"--user-agent=Wget/1.12",
 	)
 	if err := cmd.Start(); err != nil {
 		logger.ErrorW("failed to start aria2c", zap.Error(err))
@@ -98,18 +104,19 @@ func startRPC() {
 		logger.ErrorW("aria2 API init failed", zap.Error(err))
 		return
 	}
-	gid, err := client.AddURI(arigo.URIs("https://nyaa.si/download/1752639.torrent"), nil)
+	_, err = client.AddURI(arigo.URIs("https://nyaa.si/download/1752639.torrent"), nil)
 	if err != nil {
 		logger.ErrorW("aria2 API test download failed", zap.Error(err))
 		return
 	}
 	time.Sleep(1 * time.Second)
-	err = gid.Delete()
-	if err != nil {
-		logger.ErrorW("aria2 API test cleanup failed", zap.Error(err))
-		return
-	}
-	bot.Aria2Client = &client
+	statuses := client.GetDownloads()
+	client.DeleteDownloads(statuses, true, true, true)
+	// if err != nil {
+	// 	logger.ErrorW("aria2 API test cleanup failed", zap.Error(err))
+	// 	return
+	// }
+	bot.Aria2Client = client
 	bot.SAS = true
 }
 
