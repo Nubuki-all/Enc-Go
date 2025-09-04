@@ -240,7 +240,7 @@ func (dl *Aria2Download) ProgressCallback(start time.Time, gid string) string {
 		utils.HBS(done),
 		utils.HBS(total),
 		utils.HBS(speed),
-		utils.HBS(remainingSize)
+		utils.HBS(remainingSize),
 		timeToCompletion,
 		elapsedTime,
 	)
