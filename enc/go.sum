@@ -6,6 +6,8 @@ github.com/Nubuki-all/arigo v0.0.0-20250904201643-4a96e2b73c13 h1:CxZP84V8gjlCrS
 github.com/Nubuki-all/arigo v0.0.0-20250904201643-4a96e2b73c13/go.mod h1:As29KMqTIkqY+rPgwF+dfnHeufI3oVO8kb9iej+2Zho=
 github.com/Nubuki-all/gotgproto v1.0.0-beta21.0.20250827000157-055fe7a9f0ff h1:AUrJHnTDKS5zfnEQu9EvFvbwb9dnH/yIHEFVvP98yTg=
 github.com/Nubuki-all/gotgproto v1.0.0-beta21.0.20250827000157-055fe7a9f0ff/go.mod h1:xjZlGA8ABRKkfGMmkHKyz520hK6pMfyE8yxpSTqohME=
+github.com/Nubuki-all/rpc2 v0.0.0-20250903152609-4270a8aef277 h1:vsSEimiES2L+tnAdmj1sS4eGyWTJBmLuMhPVeI5E6OM=
+github.com/Nubuki-all/rpc2 v0.0.0-20250903152609-4270a8aef277/go.mod h1:2yfU5b86vOr16+iY1jN3MvT6Kxc9Nf8j5iZWwUf7iaw=
 github.com/PuerkitoBio/goquery v1.10.3 h1:pFYcNSqHxBD06Fpj/KsbStFRsgRATgnf3LeXiUkhzPo=
 github.com/PuerkitoBio/goquery v1.10.3/go.mod h1:tMUX0zDMHXYlAQk6p35XxQMqMweEKB7iK7iLNd4RH4Y=
 github.com/andybalholm/cascadia v1.3.3 h1:AG2YHrzJIm4BZ19iwJ/DAua6Btl3IwJX+VI4kktS1LM=
@@ -17,8 +19,6 @@ github.com/cenkalti/backoff/v4 v4.3.0 h1:MyRJ/UdXutAwSAT+s3wNd7MfTIcy71VQueUuFK3
 github.com/cenkalti/backoff/v4 v4.3.0/go.mod h1:Y3VNntkOUPxTVeUxJ/G5vcM//AlwfmyYozVcomhLiZE=
 github.com/cenkalti/hub v1.0.2 h1:Nqv9TNaA9boeO2wQFW8o87BY3zKthtnzXmWGmJqhAV8=
 github.com/cenkalti/hub v1.0.2/go.mod h1:8LAFAZcCasb83vfxatMUnZHRoQcffho2ELpHb+kaTJU=
-github.com/cenkalti/rpc2 v1.0.4 h1:MJWmm7mbt8r/ZkQS+qr/e2KMMrhMLPr/62CYZIHybdI=
-github.com/cenkalti/rpc2 v1.0.4/go.mod h1:2yfU5b86vOr16+iY1jN3MvT6Kxc9Nf8j5iZWwUf7iaw=
 github.com/coder/websocket v1.8.13 h1:f3QZdXy7uGVz+4uCJy2nTZyM0yTBj8yANEHhqlXZ9FE=
 github.com/coder/websocket v1.8.13/go.mod h1:LNVeNrXQZfe5qhS9ALED3uA+l5pPqvwXg3CKoDBB2gs=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

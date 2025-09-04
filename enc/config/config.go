@@ -93,16 +93,16 @@ type Config struct {
 
 // RuntimeConfig holds runtime state
 type RuntimeConfig struct {
-	ADLTimeout   time.Duration
-	BotID        string
-	Error        error
-	Owners       []int64
+	ADLTimeout            time.Duration
+	BotID                 string
+	Error                 error
+	Owners                []int64
 	ProgresUpdateInterval time.Duration
-	ReleaseName  string
-	ReleaseNameB string
-	Started      bool
-	TgpAuthor    string
-	TgpAuthorUrl string
+	ReleaseName           string
+	ReleaseNameB          string
+	Started               bool
+	TgpAuthor             string
+	TgpAuthorUrl          string
 }
 
 var (
