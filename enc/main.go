@@ -26,7 +26,10 @@ func main() {
 	telegraph.Init()
 	telegram.InitClient()
 	startup.Finalize(telegram.Context)
-	telegram.Client.Idle()
+	err := telegram.Client.Idle()
+	if err != nil {
+		logger.Error(err)
+	}
 
 	// … rest of your app …
 }

@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"enc/internal/logger"
 )
 
 // downloadToFile downloads the given URL and writes to outPath.
@@ -33,7 +35,12 @@ func DownloadToFile(ctx context.Context, url string, outPath string) error {
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			logger.Error(err)
+		}
+	}()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("bad status: %s", resp.Status)

@@ -254,7 +254,10 @@ func onTermination(ctx context.Context) {
 		// persist state
 		db.SaveAll(ctx)
 		if db.UseMongo() {
-			db.Client.Disconnect(ctx)
+			err := db.Client.Disconnect(ctx)
+			if err != nil {
+				logger.Warn(err)
+			}
 		} // else {
 		//	localdb.SaveQueueLocal()
 		//	localdb.SaveSettingsLocal()

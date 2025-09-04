@@ -58,7 +58,12 @@ func DownloadThumbnail() {
 		logger.WarnW("Failed to create thumbnail file", zap.Error(err))
 		return
 	}
-	defer out.Close()
+	defer func () {
+		err := out.Close()
+		if err != nil {
+			logger.Warn(err)
+		}
+		}()
 
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
