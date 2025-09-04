@@ -22,7 +22,7 @@ func EnQuotes() string {
 	if err != nil {
 		return fmt.Sprintf("%s **Nubuki-all:** `Could not fetch quote: %v`", em, err)
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 
 	var arr []zenQuote
 	if err := json.NewDecoder(resp.Body).Decode(&arr); err != nil {

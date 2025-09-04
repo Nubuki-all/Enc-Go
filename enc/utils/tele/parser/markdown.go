@@ -36,7 +36,7 @@ var FIXED_WIDTH_DELIMS = map[string]bool{
 
 // MARKDOWN_RE roughly matches the Python one: any of the delimiters OR an optional
 // emoji/link syntax: (![text](url) or [text](url) with optional ! for emoji).
-var markdownRe = regexp.MustCompile(
+/*var markdownRe = regexp.MustCompile(
 	fmt.Sprintf(`(%s|%s|%s|%s|%s|%s|%s)|(!?)\[(.+?)\]\((.+?)\)`,
 		regexp.QuoteMeta(PRE_DELIM),
 		regexp.QuoteMeta(CODE_DELIM),
@@ -46,7 +46,7 @@ var markdownRe = regexp.MustCompile(
 		regexp.QuoteMeta(BOLD_DELIM),
 		regexp.QuoteMeta(SPOILER_DELIM),
 	),
-)
+)*/
 
 // HTML templates
 // func opening(tag string) string { return "<" + tag + ">" }

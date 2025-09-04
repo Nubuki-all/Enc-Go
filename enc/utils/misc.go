@@ -196,7 +196,7 @@ func GetHTML(link string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
@@ -344,7 +344,7 @@ func CRC32(filename string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
+	defer file.Close() //nolint:errcheck
 	chk := crc32.NewIEEE()
 	if _, err := io.Copy(chk, file); err != nil {
 		return "", err

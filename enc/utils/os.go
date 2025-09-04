@@ -181,7 +181,7 @@ func ReadNToLastLine(filename string, n int) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer file.Close()
+	defer file.Close() //nolint:errcheck
 
 	lines := []string{}
 	scanner := bufio.NewScanner(file)

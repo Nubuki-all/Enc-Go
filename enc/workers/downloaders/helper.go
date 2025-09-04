@@ -108,7 +108,7 @@ func DownloadStream(ctx context.Context, d *downloader.Downloader, client downlo
 	if err != nil {
 		return err
 	}
-	defer outFile.Close()
+	defer outFile.Close() //nolint:errcheck
 
 	pw := NewProgressWriter(outFile, size, cb)
 
@@ -135,7 +135,7 @@ func DownloadParallel(ctx context.Context, d *downloader.Downloader, client down
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	// pre-allocate if size known (best-effort; ignore error)
 	_ = f.Truncate(size)

@@ -27,7 +27,7 @@ type Aria2Download struct {
 	client       *arigo.Client
 	err          error
 	completed    bool
-	timeout      bool
+	// timeout      bool
 	ufstr        string
 	fstr         string
 	name         string
@@ -55,7 +55,7 @@ func NewAria2Dl(uri, dir, selected string, msg *tele.Message, tInfo *types.Trans
 
 func (dl *Aria2Download) Start() error {
 	if dl.client == nil {
-		return fmt.Errorf("Aria2 Client is inactive.")
+		return fmt.Errorf("aria2 Client is inactive")
 	}
 	rconf := config.Rconf
 	dlTimeout := rconf.ADLTimeout * time.Second
@@ -87,14 +87,11 @@ func (dl *Aria2Download) Start() error {
 		defer metaCancel()
 
 		// poll until FollowedBy is present or metaCtx expires
-		for {
-			if len(status.FollowedBy) > 0 {
-				break
-			}
+		for len(status.FollowedBy) > 0 {
 			// check context
 			select {
 			case <-metaCtx.Done():
-				return fmt.Errorf("Could not fetch selected torrent (timeout waiting for metadata)")
+				return fmt.Errorf("could not fetch selected torrent (timeout waiting for metadata)")
 			default:
 			}
 			time.Sleep(1 * time.Second) // small backoff
@@ -138,13 +135,6 @@ func (dl *Aria2Download) Start() error {
 					return
 				}
 				curGid = dl.UpdateCallback(curGid)
-			}
-			// Optionally check if download finished via TellStatus/Check, set curGid=""
-			// If your ProgressCallback or UpdateCallback can signal completion (by returning ""),
-			// the code above handles it and will exit. Otherwise add a check:
-			select {
-			default:
-				// non-blocking: continue
 			}
 			// continue loop
 		}

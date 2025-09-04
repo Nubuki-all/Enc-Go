@@ -201,7 +201,7 @@ func GetAniInfo(search string, id, idMal *int, asHtml bool) (*Media, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 	// body, _ := ioutil.ReadAll(resp.Body)
 	var gqlResp struct {
 		Data struct {

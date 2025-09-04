@@ -53,10 +53,13 @@ func DownloadToFile(ctx context.Context, url string, outPath string) error {
 		return err
 	}
 	_, err = io.Copy(f, resp.Body)
-	f.Close()
 	if err != nil {
 		_ = os.Remove(tmpPath)
 		return err
+	}
+	err = f.Close()
+	if err != nil {
+		logger.Warn(err)
 	}
 	return os.Rename(tmpPath, outPath)
 }

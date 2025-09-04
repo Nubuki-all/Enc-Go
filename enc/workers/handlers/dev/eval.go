@@ -48,7 +48,7 @@ func EvalGoSnippet(code string, ctx *ext.Context, update *ext.Update, msg *tele.
 	_, evalErr := i.Eval(code)
 
 	// Close the writer
-	w.Close()
+	_ = w.Close()
 
 	// Read the captured output
 	var outBuf bytes.Buffer

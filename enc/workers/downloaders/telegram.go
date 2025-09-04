@@ -105,7 +105,7 @@ func (dl *TgDownload) Start() error {
 				if stored != nil {
 					ev := *stored
 					dl.ProgressCallback(ev.start, ev.done, ev.total)
-					stored = nil
+					// stored = nil
 				}
 				return
 			}

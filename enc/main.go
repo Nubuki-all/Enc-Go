@@ -16,7 +16,7 @@ func main() {
 	if err := logger.Init(config.Conf.LogFileName, config.Conf.JsonLog); err != nil {
 		log.Fatalf("logger init error: %v", err)
 	}
-	defer logger.Logger.Sync()
+	defer func() {_ = logger.Logger.Sync()}()
 	logger.Info("Starting up" + strings.Repeat(".", 10))
 	if config.Rconf.Error != nil {
 		logger.Criticalf("Failed to load config: %v", config.Rconf.Error)

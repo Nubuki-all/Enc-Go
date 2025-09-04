@@ -108,7 +108,12 @@ func DownloadLinks() {
 			continue
 		}
 		_, err = io.Copy(out, resp.Body)
-		out.Close()
+		defer func() {
+			err := out.Close()
+			if err != nil {
+				logger.Warn(err)
+			}
+		}()
 		if err != nil {
 			logger.WarnW("Failed writing file", zap.String("file", fn), zap.Error(err))
 		} else {

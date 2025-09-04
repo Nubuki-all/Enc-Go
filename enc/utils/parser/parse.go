@@ -349,7 +349,7 @@ func CustCap(
 
 	// AniList lookup (get episodes count / english title) — optional
 	var totalEpisodes string
-	if !(bot.AnilistParse && useAniList) {
+	if (!bot.AnilistParse && !useAniList) {
 		// Parsing turned off, skip AniList
 		logger.Debug("AniList parsing turned off, ignoring AniList Lookup")
 	} else {
