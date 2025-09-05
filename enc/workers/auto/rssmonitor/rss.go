@@ -120,10 +120,10 @@ func matchIncludeExclude(titleLower string, inf [][]string, exf [][]string) bool
 // rssMonitor performs a single sweep over the Bot.RSSDict similar to the Python coroutine.
 func rssMonitorOnce(ctx context.Context) {
 	// guard: check services like _bot.sas/_bot.sqs
-	if (!bot.SAS && !bot.SQS) {
+	if !bot.SAS && !bot.SQS {
 		// wait a bit and re-check (like your Python early sleep)
 		time.Sleep(10 * time.Second)
-		if (!bot.SAS && !bot.SQS) {
+		if !bot.SAS && !bot.SQS {
 			logger.WarnW("RSS scheduler paused since a download service is not responding…")
 			PauseRSS()
 			return
