@@ -169,7 +169,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	}
 	download.Init(id, msg.SenderID)
 	err = download.Start()
-	if err != nil {
+	if err != nil || download.IsCancelled {
 		_, _ = download.ReportStatus()
 	} else {
 		_, _ = sMsg.Edit(

@@ -124,7 +124,7 @@ func (dl *Aria2Download) Start() error {
 		defer uTicker.Stop()
 		defer pTicker.Stop()
 
-		curGid := gid
+		curGid := dl.ProgressCallback(start, gid)
 		for {
 			select {
 			case <-ctx.Done():
@@ -350,7 +350,7 @@ func (dl *Aria2Download) Clean() {
 	var statuses []arigo.Status
 	for _, gid := range status.FollowedBy {
 		status, err := dl.client.TellStatus(gid)
-		if err != nil {
+		if err == nil {
 			statuses = append(statuses, status)
 		}
 	}
