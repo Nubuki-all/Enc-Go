@@ -97,8 +97,8 @@ func startRPC() {
 		"--http-accept-gzip=true",
 		"--split=10",
 		"--disk-cache=40M",
-        "--min-split-size=10M",
-        "--optimize-concurrent-downloads=true",
+		"--min-split-size=10M",
+		"--optimize-concurrent-downloads=true",
 	)
 	if err := cmd.Start(); err != nil {
 		logger.ErrorW("failed to start aria2c", zap.Error(err))

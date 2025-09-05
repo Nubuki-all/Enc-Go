@@ -14,7 +14,7 @@ import (
 	"github.com/gotd/td/telegram/downloader"
 	"github.com/gotd/td/tg"
 	"github.com/siku2/arigo"
-	
+
 	"enc/config"
 	"enc/internal/bot"
 	"enc/utils"
@@ -161,7 +161,6 @@ func DownloadParallel(ctx context.Context, d *downloader.Downloader, client down
 	return err
 }
 
-
 func GetAria2DlInfo(uri string) *utils.DLInfo {
 	aria2 := bot.Aria2Client
 	dlInfo := &utils.DLInfo{}
@@ -172,8 +171,8 @@ func GetAria2DlInfo(uri string) *utils.DLInfo {
 	folder, _ := filepath.Abs(config.Conf.TempDir)
 	resp, err := aria2.AddURI(
 		arigo.URIs(uri), &arigo.Options{
-		Dir: folder,
-	})
+			Dir: folder,
+		})
 	if err != nil {
 		dlInfo.Error = err
 		return dlInfo
@@ -236,4 +235,3 @@ func GetAria2DlInfo(uri string) *utils.DLInfo {
 	}
 	return dlInfo
 }
-

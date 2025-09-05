@@ -20,11 +20,11 @@ var (
 // Hash: torrent hash
 // Name: torrent name
 type DLInfo struct {
-	Count    int
+	Count int
 	Files []string
-	Error    error
-	Hash     string
-	Name     string
+	Error error
+	Hash  string
+	Name  string
 }
 
 // String implements fmt.Stringer
