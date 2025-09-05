@@ -184,7 +184,7 @@ func GetAria2DlInfo(uri string) *utils.DLInfo {
 		return dlInfo
 	}
 	timeout := 90 * time.Second
-	ctx, cancel := context.WithTimeout(ctx, timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
 	for dlInfo.Name == "" {
 		// check context
@@ -228,7 +228,7 @@ func GetAria2DlInfo(uri string) *utils.DLInfo {
 			}
 		}
 		for _, file := range status.Files {
-			relPath, _ := filepath.Rel(folder, file)
+			relPath, _ := filepath.Rel(folder, file.Path)
 			dlInfo.Files = append(dlInfo.Files, relPath)
 		}
 		dlInfo.Count = len(dlInfo.Files)

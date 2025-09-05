@@ -116,7 +116,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		file := pargs["file"].(string)
 		home := pargs["cwd"].(bool)
 		caption := pargs["caption"].(bool)
-		select := pargs["select"].(string)
+		selected := pargs["select"].(string)
 		if dir != "" {
 			folder = dir
 		} else if home {

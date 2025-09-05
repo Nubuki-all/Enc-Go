@@ -29,7 +29,7 @@ type DLInfo struct {
 
 // String implements fmt.Stringer
 func (d *DLInfo) String() string {
-	if d.Error != "" {
+	if d.Error != nil {
 		return d.Error.Error()
 	}
 	return d.Name
