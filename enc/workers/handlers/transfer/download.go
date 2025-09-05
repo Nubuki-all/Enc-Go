@@ -147,6 +147,8 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		if fileName == "" {
 			fileName = tgFileName
 		}
+	} else {
+		fileName = link
 	}
 	if folder == "" {
 		folder = config.Conf.AltDownloadDir
