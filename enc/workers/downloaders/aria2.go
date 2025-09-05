@@ -62,7 +62,15 @@ func (dl *Aria2Download) Start() error {
 	progressInterval := rconf.ProgresUpdateInterval * time.Second
 	updateInterval := 1 * time.Second
 
-	ctx, cancel := context.WithTimeout(context.Background(), dlTimeout)
+	var ctx context.Context
+	var cancel context.CancelFunc
+	
+	if dlTimeout == 0 {
+		ctx, cancel = context.Background(), func() {} 
+	} else {
+		ctx, cancel = context.WithTimeout(context.Background(), dlTimeout)
+	}
+	
 	defer cancel()
 
 	done := make(chan error, 1)
