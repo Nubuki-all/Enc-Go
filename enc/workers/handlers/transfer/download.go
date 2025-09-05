@@ -59,7 +59,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	if err != nil {
 		return helpFunc(err.Error())
 	}
-	var folder, fileName, tgFileName string
+	var folder, fileName, selected, tgFileName string
 	var size int64
 
 	if fInfo != nil {
@@ -116,7 +116,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		file := pargs["file"].(string)
 		home := pargs["cwd"].(bool)
 		caption := pargs["caption"].(bool)
-		selected := pargs["select"].(string)
+		selected = pargs["select"].(string)
 		if dir != "" {
 			folder = dir
 		} else if home {
