@@ -26,7 +26,7 @@ func main() {
 	telegraph.Init()
 	telegram.InitClient()
 	startup.Finalize(telegram.Context)
-	defer bot.Aria2Client.Close()  //nolint:errcheck
+	defer bot.Aria2Client.Close() //nolint:errcheck
 	err := telegram.Client.Idle()
 	if err != nil {
 		logger.Error(err)

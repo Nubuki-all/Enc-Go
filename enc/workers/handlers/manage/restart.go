@@ -3,8 +3,8 @@ package manage
 import (
 	"github.com/celestix/gotgproto/ext"
 
-	"enc/internal/db"
 	"enc/internal/bot"
+	"enc/internal/db"
 	"enc/utils"
 	"enc/utils/tele"
 )
