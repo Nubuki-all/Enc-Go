@@ -51,7 +51,7 @@ func DownloadThumbnail() {
 		logger.WarnW("Failed to download thumbnail", zap.Error(err))
 		return
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 
 	out, err := os.Create(".thumb.jpg")
 	if err != nil {
@@ -95,7 +95,7 @@ func DownloadLinks() {
 			logger.WarnW("Failed to download link", zap.String("url", link), zap.Error(err))
 			continue
 		}
-		defer resp.Body.Close()
+		defer resp.Body.Close() //nolint:errcheck
 
 		// derive file name from URL
 		fn := filepath.Base(resp.Request.URL.Path)
