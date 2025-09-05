@@ -137,7 +137,7 @@ func LoadConfig() error {
 
 	err := viper.ReadInConfig()
 	if err != nil {
-		log.Println("No {.env file found or failed to read .env, falling back to environment variables")
+		log.Println("No .env file found or failed to read .env, falling back to environment variables")
 	}
 	// Check for missing required env vars
 	for _, key := range requiredEnvVars {
