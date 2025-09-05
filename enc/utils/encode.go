@@ -19,20 +19,20 @@ var (
 // Error: error message if any
 // Hash: torrent hash
 // Name: torrent name
-type QbitC struct {
+type DLInfo struct {
 	Count    int
-	FileList []string
-	Error    string
+	Files []string
+	Error    error
 	Hash     string
 	Name     string
 }
 
 // String implements fmt.Stringer
-func (q QbitC) String() string {
-	if q.Error != "" {
-		return q.Error
+func (d *DLInfo) String() string {
+	if d.Error != "" {
+		return d.Error.Error()
 	}
-	return q.Name
+	return d.Name
 }
 
 // EncodeInfo tracks encoding status

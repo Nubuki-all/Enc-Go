@@ -3,15 +3,21 @@ package downloaders
 import (
 	"context"
 	"errors"
-	//"fmt"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync/atomic"
 	"time"
 
 	"github.com/gotd/td/telegram/downloader"
 	"github.com/gotd/td/tg"
+	"github.com/siku2/arigo"
+	
+	"enc/config"
+	"enc/internal/bot"
+	"enc/utils"
 )
 
 var ErrDownloadCanceled = errors.New("download canceled by user")
@@ -154,3 +160,80 @@ func DownloadParallel(ctx context.Context, d *downloader.Downloader, client down
 	_, err = builder.Parallel(ctx, pwa)
 	return err
 }
+
+
+func GetAria2DlInfo(uri string) *utils.DLInfo {
+	aria2 := bot.Aria2Client
+	dlInfo := &utils.DLInfo{}
+	if aria2 == nil {
+		dlInfo.Error = fmt.Errorf("aria2 Client is inactive")
+		return dlInfo
+	}
+	folder, _ := filepath.Abs(config.Conf.TempDir)
+	resp, err := aria2.AddURI(
+		arigo.URIs(uri), &arigo.Options{
+		Dir: folder,
+	})
+	if err != nil {
+		dlInfo.Error = err
+		return dlInfo
+	}
+	status, err := resp.TellStatus()
+	if err != nil {
+		dlInfo.Error = err
+		return dlInfo
+	}
+	timeout := 90 * time.Second
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	for dlInfo.Name == "" {
+		// check context
+		select {
+		case <-ctx.Done():
+			dlInfo.Error = fmt.Errorf("could not fetch selected torrent info")
+			return dlInfo
+		default:
+		}
+		time.Sleep(1 * time.Second) // small backoff
+		status, err = aria2.TellStatus(status.GID)
+		if err != nil {
+			dlInfo.Error = fmt.Errorf("TellStatus while waiting for metadata: %w", err)
+			return dlInfo
+		}
+		if len(status.FollowedBy) > 0 {
+			status, err = aria2.TellStatus(status.FollowedBy[0])
+			if err != nil {
+				dlInfo.Error = fmt.Errorf("TellStatus while waiting for metadata: %w", err)
+				return dlInfo
+			}
+		}
+		if status.Status == arigo.StatusError {
+			dlInfo.Error = fmt.Errorf("Aria2 Download failed: %s", status.ErrorMessage)
+			return dlInfo
+		}
+		files := status.Files
+		if len(files) == 0 {
+			continue
+		}
+		if strings.HasPrefix(files[0].Path, "[METADATA]") {
+			continue
+		}
+		name, _ := arigo.GetDownloadName(status)
+		if strings.HasSuffix(name, ".torrent") {
+			continue
+		}
+		if status.BitTorrent.Info.Name == "" {
+			if !strings.HasPrefix(files[0].Path, status.Dir) {
+				continue
+			}
+		}
+		for _, file := range status.Files {
+			relPath, _ := filepath.Rel(folder, file)
+			dlInfo.Files = append(dlInfo.Files, relPath)
+		}
+		dlInfo.Count = len(dlInfo.Files)
+		dlInfo.Name = name
+	}
+	return dlInfo
+}
+

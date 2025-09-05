@@ -92,6 +92,13 @@ func startRPC() {
 		"--daemon=true",
 		"--allow-overwrite=true",
 		"--user-agent=Wget/1.12",
+		"--bt-remove-unselected-file=true",
+		"--max-connection-per-server=10",
+		"--http-accept-gzip=true",
+		"--split=10",
+		"--disk-cache=40M",
+        "--min-split-size=10M",
+        "--optimize-concurrent-downloads=true",
 	)
 	if err := cmd.Start(); err != nil {
 		logger.ErrorW("failed to start aria2c", zap.Error(err))

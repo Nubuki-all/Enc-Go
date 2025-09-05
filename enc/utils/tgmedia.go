@@ -92,6 +92,9 @@ func BuildInputFileLocation(meta *types.FileMeta) (tg.InputFileLocationClass, er
 }
 
 func GetInputFileLocationAndSize(media tg.MessageMediaClass) (tg.InputFileLocationClass, *FileInfo, error) {
+	if media == nil {
+		return nil, nil, nil
+	}
 	switch v := media.(type) {
 	case *tg.MessageMediaPhoto: // messageMediaPhoto#695150d7
 		f, ok := v.Photo.AsNotEmpty()
