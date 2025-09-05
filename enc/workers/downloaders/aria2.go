@@ -216,7 +216,7 @@ func (dl *Aria2Download) ProgressCallback(start time.Time, gid string) string {
 
 	diff := time.Since(start).Round(time.Second).Seconds()
 	if total > 0 {
-		percentage := float64(current * 100 / total)
+		percentage = float64(current * 100 / total)
 	}
 	elapsedTime := utils.TimeFormatter(diff)
 	if remainingSize > 0 && speed > 0 {
