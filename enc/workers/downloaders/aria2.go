@@ -95,7 +95,7 @@ func (dl *Aria2Download) Start() error {
 		defer metaCancel()
 
 		// poll until FollowedBy is present or metaCtx expires
-		for len(status.FollowedBy) > 0 {
+		for len(status.FollowedBy) == 0 {
 			// check context
 			select {
 			case <-metaCtx.Done():
@@ -239,10 +239,10 @@ func (dl *Aria2Download) ProgressCallback(start time.Time, gid string) string {
 	tmp := fmt.Sprintf(
 		"%s`%s of %s`\n**Speed:** `%s/s`\n**Remains:** `%s`\n**ETA:** `%s`\n**Elapsed:** `%s`\n",
 		progress,
-		utils.HBS(current),
-		utils.HBS(total),
-		utils.HBS(speed),
-		utils.HBS(remainingSize),
+		utils.VHBS(current),
+		utils.VHBS(total),
+		utils.VHBS(speed),
+		utils.VHBS(remainingSize),
 		timeToCompletion,
 		elapsedTime,
 	)

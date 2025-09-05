@@ -338,6 +338,10 @@ func HBS(size int64) string {
 	return fmt.Sprintf("%.2f %sB", sz, units[i])
 }
 
+func VHBS(size int64) string {
+	return ValueCheck(HBS(size))
+}
+
 // CRC32 computes the CRC-32 checksum of a file.
 func CRC32(filename string) (string, error) {
 	file, err := os.Open(filename)

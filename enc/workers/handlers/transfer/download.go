@@ -24,6 +24,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	}
 	cmd := update.Args()[0]
 	var err error
+	var pargs map[string]interface{}
 	helpMsg := "Downloads the replied media/link: to a location (specified or the ALT_DOWNLOAD_DIR env var) locally\n" +
 		"Available arguments:\n" +
 		"  Path to download (Non-quoted). End the args with '/' to specify the folder in which to download and let the bot auto detected filename\n" +
@@ -34,37 +35,6 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 				cmd + " --help`",
 		)
 		return err
-	}
-	var link string
-	message := update.EffectiveMessage
-	if msg.ReplyToID != 0 {
-		err = message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
-		if err != nil {
-			_, _ = msg.ReplyText(err.Error())
-			return nil
-		}
-	} else {
-		return helpFunc("Reply the media message to download.")
-	}
-	repMsg := message.ReplyToMessage
-	if repMsg.Media == nil {
-		if link = repMsg.Text; link == "" {
-			return helpFunc("Replied message is not a media/document/link.")
-		}
-		if !utils.IsURL(link) && !utils.IsMagnet(link) {
-			return helpFunc("`Not a valid link`.")
-		}
-	}
-	inputLoc, fInfo, err := utils.GetInputFileLocationAndSize(repMsg.Media)
-	if err != nil {
-		return helpFunc(err.Error())
-	}
-	var folder, fileName, selected, tgFileName string
-	var size int64
-
-	if fInfo != nil {
-		size = fInfo.Size
-		tgFileName = fInfo.Name
 	}
 	if strings.HasPrefix(args, "-") {
 		argList, err := utils.SplitQuotedFieldsErr(args)
@@ -111,7 +81,40 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 			_, _ = msg.ReplyText(err.Error())
 			return nil
 		}
-		pargs := arg.Values
+		pargs = arg.Values
+	}
+	var link string
+	message := update.EffectiveMessage
+	if msg.ReplyToID != 0 {
+		err = message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
+		if err != nil {
+			_, _ = msg.ReplyText(err.Error())
+			return nil
+		}
+	} else {
+		return helpFunc("Reply the media message to download.")
+	}
+	repMsg := message.ReplyToMessage
+	if repMsg.Media == nil {
+		if link = repMsg.Text; link == "" {
+			return helpFunc("Replied message is not a media/document/link.")
+		}
+		if !utils.IsURL(link) && !utils.IsMagnet(link) {
+			return helpFunc("`Not a valid link`.")
+		}
+	}
+	inputLoc, fInfo, err := utils.GetInputFileLocationAndSize(repMsg.Media)
+	if err != nil {
+		return helpFunc(err.Error())
+	}
+	var folder, fileName, selected, tgFileName string
+	var size int64
+
+	if fInfo != nil {
+		size = fInfo.Size
+		tgFileName = fInfo.Name
+	}
+	if strings.HasPrefix(args, "-") {
 		dir := pargs["dir"].(string)
 		file := pargs["file"].(string)
 		home := pargs["cwd"].(bool)
