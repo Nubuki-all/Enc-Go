@@ -22,11 +22,11 @@ import (
 
 type Aria2Download struct {
 	*types.TransferInfo
-	Size         int64
-	msg          *tele.Message
-	client       *arigo.Client
-	err          error
-	completed    bool
+	Size      int64
+	msg       *tele.Message
+	client    *arigo.Client
+	err       error
+	completed bool
 	// timeout      bool
 	ufstr        string
 	fstr         string
