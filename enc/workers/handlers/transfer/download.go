@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/celestix/gotgproto/ext"
-	//"github.com/gotd/td/tg"
+	"github.com/gotd/td/tg"
 
 	"enc/config"
 	"enc/internal/logger"
@@ -95,10 +95,10 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		return helpFunc("Reply the media message to download.")
 	}
 	repMsg := message.ReplyToMessage
-	if repMsg.media != nil {
-		switch m := repMsg.(type) {
+	if repMsg.Media != nil {
+		switch _ = repMsg.(type) {
 		case *tg.MessageMediaWebPage:
-			repMsg.Media == nil
+			repMsg.Media = nil
 		}
 	}
 	if repMsg.Media == nil {
