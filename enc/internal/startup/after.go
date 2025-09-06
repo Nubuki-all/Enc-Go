@@ -143,7 +143,7 @@ func startQbit() {
 		args := []string{
 			"-d",
 			"--webui-port=" + strconv.Itoa(p),
-			"--profile=" + filepath.Join(wd, "qbit"),
+			"--profile=" + filepath.Join(wd, ".qbit"),
 		}
 
 		// For the second port, add --configuration=1

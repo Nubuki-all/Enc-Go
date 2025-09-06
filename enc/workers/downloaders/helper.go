@@ -281,8 +281,15 @@ func GetQbitDlInfo(uri string) *utils.DLInfo {
 		SavePath: folder,
 		Tags:     tag,
 	}
+	var ctx context.Context
+	var cancel context.CancelFunc
+
 	timeout := config.Rconf.QDLTimeout * time.Second
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	if timeout == 0 {
+		ctx, cancel = context.Background(), func() {}
+	} else {
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	}
 	defer cancel()
 	err = qb.AddTorrentFromUrlCtx(ctx, uri, options.Prepare())
 	if err != nil {

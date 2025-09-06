@@ -12,14 +12,25 @@ import (
 )
 
 func ListFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
-	// validate argument
+	helpMsg := "List items in a torrent along with their file_ids\n" +
+    "Arguments:\n" +
+     "   torrent/magnetic link (Required)"
+     if utils.SendHelp(args) {
+     	_, _ = msg.Reply("<pre>" + helpMsg + "</pre>",
+			&tele.ReplyOptions{HtmlParseMode: true},
+     	)
+     	return nil
+     }
 	if !utils.IsURL(args) && !utils.IsMagnet(args) {
 		_, err := msg.ReplyText("Please pass a valid direct/torrent/magnetic link as argument.")
 		return err
 	}
 	dlInfo := downloaders.GetQbitDlInfo(args)
 	if dlInfo.Error != nil {
-		_, _ = msg.ReplyText(fmt.Sprintf("`%v`", dlInfo.Error))
+		_, _ = msg.Reply(
+			fmt.Sprintf("<pre>%v</pre>", dlInfo.Error),
+			&tele.ReplyOptions{HtmlParseMode: true},
+		)
 		return nil
 	}
 	var sb strings.Builder
