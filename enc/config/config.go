@@ -98,6 +98,7 @@ type RuntimeConfig struct {
 	Error                 error
 	Owners                []int64
 	ProgresUpdateInterval time.Duration
+	QDLTimeout            time.Duration
 	ReleaseName           string
 	ReleaseNameB          string
 	Started               bool

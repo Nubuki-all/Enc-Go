@@ -256,7 +256,7 @@ func getQbitClient(temp bool) (*qbit.Client, error) {
 	return client, nil
 }
 
-func getFilesFromQb(ctx context.Context, hash string, qb *qbit.Client) (files []string, error) {
+func getFilesFromQb(ctx context.Context, hash string, qb *qbit.Client) (files []string, err error) {
 	torFiles, err := qb.GetFilesInformationCtx(ctx, hash)
 	if err != nil {
 		return err

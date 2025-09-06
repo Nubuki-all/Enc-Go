@@ -1,4 +1,4 @@
-package tranfer
+package transfer
 
 import (
 	"fmt"
