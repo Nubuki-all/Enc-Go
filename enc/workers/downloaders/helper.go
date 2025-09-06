@@ -11,6 +11,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	qbit "github.com/autobrr/go-qbittorrent"
+	"github.com/google/uuid"
 	"github.com/gotd/td/telegram/downloader"
 	"github.com/gotd/td/tg"
 	"github.com/siku2/arigo"
@@ -164,7 +166,7 @@ func DownloadParallel(ctx context.Context, d *downloader.Downloader, client down
 func GetAria2DlInfo(uri string) *utils.DLInfo {
 	aria2 := bot.Aria2Client
 	dlInfo := &utils.DLInfo{}
-	if aria2 == nil {
+	if aria2 != nil {
 		dlInfo.Error = fmt.Errorf("aria2 Client is inactive")
 		return dlInfo
 	}
@@ -189,7 +191,7 @@ func GetAria2DlInfo(uri string) *utils.DLInfo {
 		// check context
 		select {
 		case <-ctx.Done():
-			dlInfo.Error = fmt.Errorf("could not fetch selected torrent info")
+			dlInfo.Error = fmt.Errorf("could not get download info")
 			return dlInfo
 		default:
 		}
@@ -232,6 +234,110 @@ func GetAria2DlInfo(uri string) *utils.DLInfo {
 		}
 		dlInfo.Count = len(dlInfo.Files)
 		dlInfo.Name = name
+	}
+	return dlInfo
+}
+
+func getQbitClient(temp bool) (*qbit.Client, error) {
+	var port string
+	if temp {
+		port = strconv.Itoa(config.Conf.QBitPort2)
+	} else {
+		port = strconv.Itoa(config.Conf.QBitPort)
+	}
+	client := qbit.NewClient(qbit.Config{
+		Host:     "http://localhost:" + port,
+		TLSSkipVerify: true,
+		Timeout: 10,
+	})
+	if err := client.Login(); err != nil {
+		return nil, err
+	}
+	return client, nil
+}
+
+func getFilesFromQb(ctx context.Context, hash string, qb *qbit.Client) (files []string, error) {
+	torFiles, err := qb.GetFilesInformationCtx(ctx, hash)
+	if err != nil {
+		return err
+	}
+	for _, file := range torFiles {
+		files = append(files, file.Name)
+	}
+	return nil
+}
+
+func GetQbitDlInfo(uri string) *utils.DLInfo {
+	qb, err := getQbitClient(true)
+	dlInfo := &utils.DLInfo{}
+	if err != nil {
+		dlInfo.Error = fmt.Errorf("aria2 Client is inactive")
+		return dlInfo
+	}
+	folder, _ := filepath.Abs(config.Conf.TempDir)
+	tag := "qb_dl" + uuid.New().String()
+	options := qbit.TorrentAddOptions{
+		SavePath: folder,
+		Tags: tag,
+	}
+	timeout := config.Rconf.QDLTimeout * time.Second
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	err = qb.AddTorrentFromUrlCtx(ctx, uri, options.Prepare())
+	if err != nil {
+		dlInfo.Error = err
+		return dlInfo
+	}
+	torrents, err := qb.GetTorrentsCtx(ctx, qbit.TorrentFilterOptions{Tag: tag})
+	if err != nil {
+		dlInfo.Error = err
+		return dlInfo
+	}
+	defer cancel()
+	for len(torrents) == 0 {
+		// check context
+		select {
+		case <-ctx.Done():
+			dlInfo.Error = fmt.Errorf("timeout while fetching torrent info")
+			return dlInfo
+		default:
+		}
+		time.Sleep(1 * time.Second) // small backoff
+		torrents, err = qb.GetTorrentsCtx(ctx, qbit.TorrentFilterOptions{Tag: tag})
+		if err != nil {
+			dlInfo.Error = fmt.Errorf("error while fetching torrent info: %w", err)
+			return dlInfo
+		}
+	}
+	for torrents[0].State == qbit.TorrentStateMetaDl {
+		select {
+		case <-ctx.Done():
+			dlInfo.Error = fmt.Errorf("timeout while fetching torrent metadata")
+			return dlInfo
+		default:
+		}
+		time.Sleep(1 * time.Second) // small backoff
+		torrents, err = qb.GetTorrentsCtx(ctx, qbit.TorrentFilterOptions{Tag: tag})
+		if err != nil {
+			dlInfo.Error = fmt.Errorf("error while fetching torrent metadata: %w", err)
+			return dlInfo
+		}
+	}
+	if torrents[0].State == qbit.TorrentStateError {
+		dlInfo.Error = "An unknown error occured"
+		return dlInfo
+	}
+	dlInfo.Hash = torrents[0].Hash
+	err = qb.PauseCtx(ctx, []string{dlInfo.Hash})
+	dlInfo.Files, err = getFilesFromQb(ctx, dlInfo.Hash, qb)
+	if err != nil {
+		dlInfo.Error = fmt.Errorf("error while fetching torrent files: %w", err)
+		return dlInfo
+	}
+	dlInfo.Count = len(dlInfo.Files)
+	if dlInfo.Count > 1 {
+		dlInfo.Name = torrents[0].Name
+	} else if dlInfo.Count == 1 {
+		dlInfo.Name = filepath.Base(dlInfo.Files[0])
 	}
 	return dlInfo
 }

@@ -301,6 +301,7 @@ func LoadConfig() error {
 	}
 	Rconf.ADLTimeout = time.Duration(Conf.ADLTimeout)
 	Rconf.ProgresUpdateInterval = time.Duration(Conf.ProgresUpdateInterval)
+	Rconf.QDLTimeout = time.Duration(Conf.QDLTimeout)
 
 	return nil
 }
