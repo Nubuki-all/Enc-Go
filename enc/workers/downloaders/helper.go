@@ -7,8 +7,8 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -260,12 +260,12 @@ func getQbitClient(temp bool) (*qbit.Client, error) {
 func getFilesFromQb(ctx context.Context, hash string, qb *qbit.Client) (files []string, err error) {
 	torFiles, err := qb.GetFilesInformationCtx(ctx, hash)
 	if err != nil {
-		return
+		return files, err
 	}
 	for _, file := range *torFiles {
 		files = append(files, file.Name)
 	}
-	return
+	return files, err
 }
 
 func GetQbitDlInfo(uri string) *utils.DLInfo {
