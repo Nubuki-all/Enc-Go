@@ -19,6 +19,7 @@ import (
 )
 
 func Up(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
+	fmt.Println(msg.SenderID)
 	if !utils.UserIsAllowed(msg.SenderID) {
 		// To delete()
 		return nil
