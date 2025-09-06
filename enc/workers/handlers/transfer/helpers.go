@@ -13,14 +13,14 @@ import (
 
 func ListFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	helpMsg := "List items in a torrent along with their file_ids\n" +
-    "Arguments:\n" +
-     "   torrent/magnetic link (Required)"
-     if utils.SendHelp(args) {
-     	_, _ = msg.Reply("<pre>" + helpMsg + "</pre>",
+		"Arguments:\n" +
+		"   torrent/magnetic link (Required)"
+	if utils.SendHelp(args) {
+		_, _ = msg.Reply("<pre>"+helpMsg+"</pre>",
 			&tele.ReplyOptions{HtmlParseMode: true},
-     	)
-     	return nil
-     }
+		)
+		return nil
+	}
 	if !utils.IsURL(args) && !utils.IsMagnet(args) {
 		_, err := msg.ReplyText("Please pass a valid direct/torrent/magnetic link as argument.")
 		return err
