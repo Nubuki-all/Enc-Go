@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	
+
 	"enc/internal/logger"
 )
 
@@ -85,17 +85,23 @@ func ExtractEmbedDotPrefix(efs fs.FS, srcDir, destDir string) error {
 		if err != nil {
 			return err
 		}
-		defer func() {err := in.Close(); if err != nil {
-			logger.Error(err)
-		}}()
+		defer func() {
+			err := in.Close()
+			if err != nil {
+				logger.Error(err)
+			}
+		}()
 
 		out, err := os.OpenFile(target, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
 		if err != nil {
 			return err
 		}
-		defer func() {err := out.Close(); if err != nil {
-			logger.Error(err)
-		}}()
+		defer func() {
+			err := out.Close()
+			if err != nil {
+				logger.Error(err)
+			}
+		}()
 
 		if _, err := io.Copy(out, in); err != nil {
 			return err
