@@ -69,7 +69,7 @@ func EvalGoSnippet(code string, ctx *ext.Context, update *ext.Update, msg *tele.
 
 func Eval(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	fmt.Println(msg.SenderID)
-	fmt.Println(msg.Raw.FromID)
+	fmt.Println(update.Entities.Users)
 	if !utils.UserIsOwner(msg.SenderID) {
 		if !utils.UserIsDev(msg.SenderID) {
 			return nil
