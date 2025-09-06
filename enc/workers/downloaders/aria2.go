@@ -292,7 +292,7 @@ func (dl *Aria2Download) Select(gid string) (err error) {
 	if err != nil {
 		return err
 	}
-	err = dl.client.Pause(gid)
+	err = dl.client.Unpause(gid)
 	if err != nil {
 		return err
 	}
