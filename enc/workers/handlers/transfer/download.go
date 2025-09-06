@@ -97,8 +97,8 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	repMsg := message.ReplyToMessage
 	if repMsg.media != nil {
 		switch m := repMsg.(type) {
-			case *tg.MessageMediaWebPage:
-				repMsg.Media == nil
+		case *tg.MessageMediaWebPage:
+			repMsg.Media == nil
 		}
 	}
 	if repMsg.Media == nil {
