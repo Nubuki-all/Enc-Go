@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"strconv"
 	"sync/atomic"
 	"time"
 
@@ -259,12 +260,12 @@ func getQbitClient(temp bool) (*qbit.Client, error) {
 func getFilesFromQb(ctx context.Context, hash string, qb *qbit.Client) (files []string, err error) {
 	torFiles, err := qb.GetFilesInformationCtx(ctx, hash)
 	if err != nil {
-		return err
+		return
 	}
-	for _, file := range torFiles {
+	for _, file := range *torFiles {
 		files = append(files, file.Name)
 	}
-	return nil
+	return
 }
 
 func GetQbitDlInfo(uri string) *utils.DLInfo {
@@ -323,7 +324,7 @@ func GetQbitDlInfo(uri string) *utils.DLInfo {
 		}
 	}
 	if torrents[0].State == qbit.TorrentStateError {
-		dlInfo.Error = "An unknown error occured"
+		dlInfo.Error = fmt.Errorf("An unknown error occured")
 		return dlInfo
 	}
 	dlInfo.Hash = torrents[0].Hash
