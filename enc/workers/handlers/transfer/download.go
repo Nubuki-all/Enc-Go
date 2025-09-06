@@ -95,6 +95,12 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		return helpFunc("Reply the media message to download.")
 	}
 	repMsg := message.ReplyToMessage
+	if repMsg.media != nil {
+		switch m := repMsg.(type) {
+			case *tg.MessageMediaWebPage:
+				repMsg.Media == nil
+		}
+	}
 	if repMsg.Media == nil {
 		if link = repMsg.Text; link == "" {
 			return helpFunc("Replied message is not a media/document/link.")

@@ -133,9 +133,8 @@ func (dl *Downloader) UnRegister() {
 
 func (dl *Downloader) ReportStatus() (*tele.Message, error) {
 	var status string
-	if err := dl.err; err == nil {
-		status = "was completed successfully."
-	} else if dl.IsCancelled {
+	var err error
+	if dl.IsCancelled {
 		status = "was cancelled"
 		if cncl := dl.Canceller; cncl != 0 && cncl != dl.Sender {
 			userName := "Unknown"
@@ -146,8 +145,10 @@ func (dl *Downloader) ReportStatus() (*tele.Message, error) {
 			status = fmt.Sprintf("%s by [%s](tg://user?id=%d)", status, userName, cncl)
 		}
 		status += "."
+	} else if err = dl.err; err == nil {
+		status = "was completed successfully."
 	} else {
-		status = fmt.Sprintf("failed with error:\n`%s`", dl.err.Error())
+		status = fmt.Sprintf("failed with error:\n`%s`", err.Error())
 	}
 	text := fmt.Sprintf("Download of `%s` %s", dl.FileName, status)
 	msg := dl.Msg
@@ -158,7 +159,7 @@ func (dl *Downloader) ReportStatus() (*tele.Message, error) {
 			go func(text string, id int64) {
 				err := tele.SendMessage(id, text)
 				if err != nil {
-					logger.Error()
+					logger.Error(err)
 				}
 			}(text, reportee)
 		}

@@ -100,7 +100,6 @@ func (dl *Aria2Download) Start() error {
 			select {
 			case <-metaCtx.Done():
 				return fmt.Errorf("could not fetch selected torrent (timeout waiting for metadata)")
-			default:
 			}
 			time.Sleep(1 * time.Second) // small backoff
 			status, err = dl.client.TellStatus(gid)
@@ -112,6 +111,18 @@ func (dl *Aria2Download) Start() error {
 		status, err = dl.client.TellStatus(gid)
 		if err != nil {
 			return fmt.Errorf("TellStatus for child gid: %w", err)
+		}
+		for status.Status == arigo.StatusWaiting {
+			// check context
+			select {
+			case <-metaCtx.Done():
+				return fmt.Errorf("could not fetch selected torrent (timeout waiting for download)")
+			}
+			time.Sleep(1 * time.Second) // small backoff
+			status, err = dl.client.TellStatus(gid)
+			if err != nil {
+				return fmt.Errorf("TellStatus while waiting for download: %w", err)
+			}
 		}
 		err = dl.Select(status.GID)
 		if err != nil {
@@ -129,7 +140,7 @@ func (dl *Aria2Download) Start() error {
 			select {
 			case <-ctx.Done():
 				// timeout or external cancel
-				done <- fmt.Errorf("download timed out/ctx done: %w", ctx.Err())
+				done <- fmt.Errorf("download timed out after %s", utils.TimeFormatter(dlTimeout.Seconds()))
 				return
 			case <-pTicker.C:
 				if curGid == "" {
@@ -152,7 +163,7 @@ func (dl *Aria2Download) Start() error {
 	select {
 	case finalErr = <-done:
 	case <-ctx.Done():
-		return fmt.Errorf("download context done: %w", ctx.Err())
+		return fmt.Errorf("download timed out after %s", utils.TimeFormatter(dlTimeout.Seconds()))
 	}
 
 	if finalErr != nil {
