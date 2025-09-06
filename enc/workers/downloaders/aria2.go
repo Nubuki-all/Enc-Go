@@ -100,6 +100,7 @@ func (dl *Aria2Download) Start() error {
 			select {
 			case <-metaCtx.Done():
 				return fmt.Errorf("could not fetch selected torrent (timeout waiting for metadata)")
+			default:
 			}
 			time.Sleep(1 * time.Second) // small backoff
 			status, err = dl.client.TellStatus(gid)
@@ -117,6 +118,7 @@ func (dl *Aria2Download) Start() error {
 			select {
 			case <-metaCtx.Done():
 				return fmt.Errorf("could not fetch selected torrent (timeout waiting for download)")
+			default:
 			}
 			time.Sleep(1 * time.Second) // small backoff
 			status, err = dl.client.TellStatus(gid)
