@@ -3,6 +3,7 @@ package transfer
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/celestix/gotgproto/ext"
 
@@ -43,6 +44,7 @@ func ListFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	prevMsg := msg
 	for _, part := range parts {
 		prevMsg, _ = prevMsg.ReplyText(part)
+		time.Sleep(1 * time.Second)
 	}
 	return nil
 }
