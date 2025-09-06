@@ -108,7 +108,7 @@ func (dl *Aria2Download) Start() error {
 				return fmt.Errorf("TellStatus while waiting for metadata: %w", err)
 			}
 		}
-		gid := status.FollowedBy[0]
+		gid = status.FollowedBy[0]
 		status, err = dl.client.TellStatus(gid)
 		if err != nil {
 			return fmt.Errorf("TellStatus for child gid: %w", err)
