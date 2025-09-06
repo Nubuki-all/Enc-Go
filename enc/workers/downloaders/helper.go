@@ -283,6 +283,7 @@ func GetQbitDlInfo(uri string) *utils.DLInfo {
 	}
 	timeout := config.Rconf.QDLTimeout * time.Second
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
 	err = qb.AddTorrentFromUrlCtx(ctx, uri, options.Prepare())
 	if err != nil {
 		dlInfo.Error = err
@@ -293,7 +294,6 @@ func GetQbitDlInfo(uri string) *utils.DLInfo {
 		dlInfo.Error = err
 		return dlInfo
 	}
-	defer cancel()
 	for len(torrents) == 0 {
 		// check context
 		select {
@@ -324,11 +324,15 @@ func GetQbitDlInfo(uri string) *utils.DLInfo {
 		}
 	}
 	if torrents[0].State == qbit.TorrentStateError {
-		dlInfo.Error = fmt.Errorf("An unknown error occured")
+		dlInfo.Error = fmt.Errorf("an unknown error occured")
 		return dlInfo
 	}
 	dlInfo.Hash = torrents[0].Hash
 	err = qb.PauseCtx(ctx, []string{dlInfo.Hash})
+	if err != nil {
+		dlInfo.Error = fmt.Errorf("error while pausing to fetch torrent files: %w", err)
+		return dlInfo
+	}
 	dlInfo.Files, err = getFilesFromQb(ctx, dlInfo.Hash, qb)
 	if err != nil {
 		dlInfo.Error = fmt.Errorf("error while fetching torrent files: %w", err)
