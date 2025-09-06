@@ -2,7 +2,7 @@ package main
 
 import (
 	"embed"
-	
+
 	"enc/internal/logger"
 	"enc/utils"
 )

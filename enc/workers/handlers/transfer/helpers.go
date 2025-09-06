@@ -2,16 +2,16 @@ package transfer
 
 import (
 	"fmt"
-	
+
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
-	
+
 	"enc/utils"
 	"enc/utils/tele"
 	"enc/workers/downloaders"
 )
 
-func ListFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error  {
+func ListFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	// validate argument
 	if !utils.IsURL(link) && !utils.IsMagnet(link) {
 		_, err := msg.ReplyText("Please pass a valid direct/torrent/magnetic link as argument.")

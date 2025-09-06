@@ -6,9 +6,11 @@ toolchain go1.24.6
 
 require (
 	github.com/5rahim/tanuki v0.1.6
+	github.com/autobrr/go-qbittorrent v1.14.0
 	github.com/celestix/gotgproto v1.0.0-beta21.0.20250822161242-dc548ccbc755
 	github.com/celestix/telegraph-go/v2 v2.0.4
 	github.com/dustin/go-humanize v1.0.1
+	github.com/google/uuid v1.6.0
 	github.com/gotd/contrib v0.21.0
 	github.com/gotd/td v0.131.0
 	github.com/mattn/go-sqlite3 v1.14.32
@@ -37,12 +39,14 @@ replace github.com/cenkalti/rpc2 => github.com/Nubuki-all/rpc2 v0.0.0-2025090315
 
 require (
 	github.com/AnimeKaizoku/cacher v1.0.3 // indirect
+	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/PuerkitoBio/goquery v1.10.3 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
+	github.com/avast/retry-go v3.0.0+incompatible // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cenkalti/hub v1.0.2 // indirect
 	github.com/cenkalti/rpc2 v1.0.4 // indirect
-	github.com/coder/websocket v1.8.13 // indirect
+	github.com/coder/websocket v1.8.14 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
 	github.com/fatih/color v1.18.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
@@ -56,7 +60,6 @@ require (
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/gotd/ige v0.2.2 // indirect
 	github.com/gotd/neo v0.1.5 // indirect

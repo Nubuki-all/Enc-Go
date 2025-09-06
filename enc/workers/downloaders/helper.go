@@ -246,9 +246,9 @@ func getQbitClient(temp bool) (*qbit.Client, error) {
 		port = strconv.Itoa(config.Conf.QBitPort)
 	}
 	client := qbit.NewClient(qbit.Config{
-		Host:     "http://localhost:" + port,
+		Host:          "http://localhost:" + port,
 		TLSSkipVerify: true,
-		Timeout: 10,
+		Timeout:       10,
 	})
 	if err := client.Login(); err != nil {
 		return nil, err
@@ -278,7 +278,7 @@ func GetQbitDlInfo(uri string) *utils.DLInfo {
 	tag := "qb_dl" + uuid.New().String()
 	options := qbit.TorrentAddOptions{
 		SavePath: folder,
-		Tags: tag,
+		Tags:     tag,
 	}
 	timeout := config.Rconf.QDLTimeout * time.Second
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
