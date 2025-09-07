@@ -268,16 +268,7 @@ func getFilesFromQb(ctx context.Context, qb *qbit.Client, hash string) (files []
 	return files, err
 }
 
-func getFilesFromQb(ctx context.Context, hash string, qb *qbit.Client) (files []string, err error) {
-	torFiles, err := qb.GetFilesInformationCtx(ctx, hash)
-	if err != nil {
-		return files, err
-	}
-	for _, file := range *torFiles {
-		files = append(files, file.Name)
-	}
-	return files, err
-}
+
 
 func GetQbitDlInfo(uri string) *utils.DLInfo {
 	qb, err := getQbitClient(true)
@@ -389,7 +380,7 @@ func CleanAllQbit(ctx context.Context) {
 	}
 	var hashes []string
 	for _, tor := range torrents {
-		hashes = append(hashes, tor.Hashes)
+		hashes = append(hashes, tor.Hash)
 	}
 	if len(hashes) == 0 {
 		return
