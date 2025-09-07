@@ -372,7 +372,6 @@ func RestartDetached(chatID int64, msgID int) error {
 	argv := []string{"restart", id}
 	// env := os.Environ()
 	cmd := exec.Command(exe, argv...)
-	var set func()
 	devnull, err := os.OpenFile("/dev/null", os.O_RDWR, 0)
 	if err != nil {
 		set
