@@ -366,7 +366,7 @@ func ExecRestart(chatID int64, msgID int) error {
 }
 
 func RestartDetached(chatID int64, msgID int) error {
-	path, err := os.Executable()
+	exe, err := os.Executable()
 	if err != nil {
 		return err
 	}
