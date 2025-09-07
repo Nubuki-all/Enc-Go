@@ -26,6 +26,7 @@ import (
 	"enc/utils/tele"
 	//"enc/internal/rss"
 	//"enc/internal/workers"
+	"enc/workers/downloaders"
 )
 
 // After wires up background workers, RPC & torrent clients, and hook handlers.
@@ -259,6 +260,7 @@ func onRestart() error {
 func onTermination(ctx context.Context) {
 	defer func() {
 		// persist state
+		downloaders.CleanAllQbit(ctx)
 		db.SaveAll(ctx)
 		if db.UseMongo() {
 			err := db.Client.Disconnect(ctx)

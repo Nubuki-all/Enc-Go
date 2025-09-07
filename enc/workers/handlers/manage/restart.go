@@ -7,6 +7,7 @@ import (
 	"enc/internal/db"
 	"enc/utils"
 	"enc/utils/tele"
+	"enc/workers/downloaders"
 )
 
 func Restart(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
@@ -22,6 +23,7 @@ func Restart(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 	if err != nil {
 		return nil
 	}
+	downloaders.CleanAllQbit(ctx)
 	db.SaveAll(ctx)
 	bot.Aria2Client.Close() //nolint:errcheck
 	err = utils.ExecRestart(msg.ChatID, rMsg.ID)

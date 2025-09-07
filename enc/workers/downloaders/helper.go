@@ -257,6 +257,17 @@ func getQbitClient(temp bool) (*qbit.Client, error) {
 	return client, nil
 }
 
+func getFilesFromQb(ctx context.Context, qb *qbit.Client, hash string) (files []string, err error) {
+	torFiles, err := qb.GetFilesInformationCtx(ctx, hash)
+	if err != nil {
+		return files, err
+	}
+	for _, file := range *torFiles {
+		files = append(files, file.Name)
+	}
+	return files, err
+}
+
 func getFilesFromQb(ctx context.Context, hash string, qb *qbit.Client) (files []string, err error) {
 	torFiles, err := qb.GetFilesInformationCtx(ctx, hash)
 	if err != nil {
@@ -267,6 +278,7 @@ func getFilesFromQb(ctx context.Context, hash string, qb *qbit.Client) (files []
 	}
 	return files, err
 }
+
 
 func GetQbitDlInfo(uri string) *utils.DLInfo {
 	qb, err := getQbitClient(true)
@@ -340,7 +352,7 @@ func GetQbitDlInfo(uri string) *utils.DLInfo {
 		dlInfo.Error = fmt.Errorf("error while pausing to fetch torrent files: %w", err)
 		return dlInfo
 	}
-	dlInfo.Files, err = getFilesFromQb(ctx, dlInfo.Hash, qb)
+	dlInfo.Files, err = getFilesFromQb(ctx, qb, dlInfo.Hash)
 	if err != nil {
 		dlInfo.Error = fmt.Errorf("error while fetching torrent files: %w", err)
 		return dlInfo
@@ -351,5 +363,38 @@ func GetQbitDlInfo(uri string) *utils.DLInfo {
 	} else if dlInfo.Count == 1 {
 		dlInfo.Name = filepath.Base(dlInfo.Files[0])
 	}
+	err = qb.DeleteTagsCtx(ctx, []string{tag})
+	if err != nil {
+		dlInfo.Error = fmt.Errorf("error cleaning up after fetching torrent files: %w", err)
+		return dlInfo
+	}
+	err = qb.DeleteTorrentsCtx(ctx, []string{dlInfo.Hash}, true)
+	if err != nil {
+		dlInfo.Error = fmt.Errorf("error cleaning up after fetching torrent files: %w", err)
+		return dlInfo
+	}
 	return dlInfo
+}
+
+func CleanAllQbit(ctx context.Context) {
+	if !bot.SQS {
+		return
+	}
+	qb, err := getQbitClient(false)
+	if err != nil {
+		return
+	}
+	torrents, err := qb.GetTorrentsCtx(ctx, qbit.TorrentFilterOptions{})
+	if err != nil {
+		return
+	}
+	var hashes []string
+	for _, tor := range torrents {
+		hashes = append(hashes, tor.Hashes)
+	}
+	if len(hashes) == 0 {
+		return
+	}
+	_ = qb.RemoveTagsCtx(ctx, hashes, "")
+	_ = qb.DeleteTorrentsCtx(ctx, hashes, true)
 }
