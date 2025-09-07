@@ -371,7 +371,7 @@ func RestartDetached(chatID int64, msgID int) error {
 		return err
 	}
 	id := fmt.Sprintf("%d:%d", chatID, msgID)
-	argv := []string{filepath.Base(exe), "restart", id}
+	argv := []string{"restart", id}
 	// env := os.Environ()
 	cmd := exec.Command(exe, argv...)
 	cmd.Stdout = os.Stdout
