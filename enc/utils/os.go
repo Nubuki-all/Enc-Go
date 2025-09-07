@@ -365,7 +365,6 @@ func ExecRestart(chatID int64, msgID int) error {
 	return syscall.Exec(exe, argv, env)
 }
 
-
 func RestartDetached(chatID int64, msgID int) error {
 	path, err := os.Executable()
 	if err != nil {
@@ -373,7 +372,7 @@ func RestartDetached(chatID int64, msgID int) error {
 	}
 	id := fmt.Sprintf("%d:%d", chatID, msgID)
 	argv := []string{filepath.Base(exe), "restart", id}
-	//env := os.Environ()
+	// env := os.Environ()
 	cmd := exec.Command(exe, argv)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

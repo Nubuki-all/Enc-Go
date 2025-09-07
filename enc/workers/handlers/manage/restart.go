@@ -29,7 +29,7 @@ func Restart(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		bot.Aria2Client.Close() //nolint:errcheck
 	}
 	println("here")
-	//err = utils.ExecRestart(msg.ChatID, rMsg.ID)
+	// err = utils.ExecRestart(msg.ChatID, rMsg.ID)
 	err = utils.RestartDetached(msg.ChatID, rMsg.ID)
 	if err != nil {
 		_, _ = rMsg.EditText("**Restart failed:** " + err.Error())
