@@ -25,7 +25,9 @@ func Restart(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 	}
 	downloaders.CleanAllQbit(ctx)
 	db.SaveAll(ctx)
-	bot.Aria2Client.Close() //nolint:errcheck
+	if bot.Aria2Client != nil {
+		bot.Aria2Client.Close() //nolint:errcheck
+	}
 	err = utils.ExecRestart(msg.ChatID, rMsg.ID)
 	if err != nil {
 		_, _ = rMsg.EditText("**Restart failed:** " + err.Error())
