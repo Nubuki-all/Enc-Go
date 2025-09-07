@@ -268,8 +268,6 @@ func getFilesFromQb(ctx context.Context, qb *qbit.Client, hash string) (files []
 	return files, err
 }
 
-
-
 func GetQbitDlInfo(uri string) *utils.DLInfo {
 	qb, err := getQbitClient(true)
 	dlInfo := &utils.DLInfo{}
