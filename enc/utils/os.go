@@ -354,15 +354,13 @@ func PosInStream(file, lang1, lang2, mode string) (aPos, sPos int) {
 
 // Replace current process with new executable at same path
 // returns only on error
-func ExecRestart(chatID int64, msgID int) error {
-	exe, err := os.Executable()
+func Restart(chatID int64, msgID int) error {
+	err := RestartDetached(chatID, msgID)
 	if err != nil {
 		return err
 	}
-	id := fmt.Sprintf("%d:%d", chatID, msgID)
-	argv := []string{filepath.Base(exe), "restart", id}
-	env := os.Environ()
-	return syscall.Exec(exe, argv, env)
+	os.Exit(0)
+	return nil
 }
 
 func RestartDetached(chatID int64, msgID int) error {
@@ -374,9 +372,19 @@ func RestartDetached(chatID int64, msgID int) error {
 	argv := []string{"restart", id}
 	// env := os.Environ()
 	cmd := exec.Command(exe, argv...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Stdin = nil
+	var set func()
+	devnull, err := os.OpenFile("/dev/null", os.O_RDWR, 0)
+	if err != nil {
+		set
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		cmd.Stdin = nil
+	} else {
+		defer devnull.Close()
+		cmd.Stdin = devnull
+		cmd.Stdout = devnull
+		cmd.Stderr = devnull
+	}
 
 	// Detach: create a new session so the child won't be in the parent's process group.
 	cmd.SysProcAttr = &syscall.SysProcAttr{
@@ -387,6 +395,5 @@ func RestartDetached(chatID int64, msgID int) error {
 	if err := cmd.Start(); err != nil {
 		return err
 	}
-	os.Exit(0)
 	return nil
 }
