@@ -355,6 +355,8 @@ func PosInStream(file, lang1, lang2, mode string) (aPos, sPos int) {
 // Replace current process with new executable at same path
 // returns only on error
 func ExecRestart(chatID int64, msgID int) error {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
 	exe, err := os.Executable()
 	if err != nil {
 		return err
