@@ -355,8 +355,6 @@ func PosInStream(file, lang1, lang2, mode string) (aPos, sPos int) {
 // Replace current process with new executable at same path
 // returns only on error
 func ExecRestart(chatID int64, msgID int) error {
-	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
 	exe, err := os.Executable()
 	if err != nil {
 		return err
@@ -365,4 +363,31 @@ func ExecRestart(chatID int64, msgID int) error {
 	argv := []string{filepath.Base(exe), "restart", id}
 	env := os.Environ()
 	return syscall.Exec(exe, argv, env)
+}
+
+
+func RestartDetached(chatID int64, msgID int) error {
+	path, err := os.Executable()
+	if err != nil {
+		return err
+	}
+	id := fmt.Sprintf("%d:%d", chatID, msgID)
+	argv := []string{filepath.Base(exe), "restart", id}
+	//env := os.Environ()
+	cmd := exec.Command(exe, argv)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Stdin = nil
+
+	// Detach: create a new session so the child won't be in the parent's process group.
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setsid: true,
+	}
+
+	// Optionally close inherited fds by setting cmd.ExtraFiles = nil and redirect streams.
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	os.Exit(0)
+	return nil
 }
