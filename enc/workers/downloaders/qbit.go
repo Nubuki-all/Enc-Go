@@ -269,7 +269,7 @@ func (dl *QbitDownload) ProgressCallback(ctx context.Context, start time.Time, t
 	case qbit.TorrentStatePausedDl:
 		msgHead = "`Download Paused.`"
 	case qbit.TorrentStateDownloading:
-		msgHead = f"**Downloading:**\n`" + name + "`"
+		msgHead = "**Downloading:**\n`" + name + "`"
 		msgHead += "\n**via:** Torrent."
 	default:
 		msgHead = "`..................`"
