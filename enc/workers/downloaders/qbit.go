@@ -338,6 +338,7 @@ func (dl *QbitDownload) UpdateCallback(ctx context.Context, tag string) (ok bool
 	case qbit.TorrentStateStoppedUp:
 		dl.completed = true
 		return
+	}
 	if dl.IsCancelled {
 		err = qb.PauseCtx(ctx, []string{torrent.Hash})
 		if err != nil {
@@ -354,6 +355,7 @@ func (dl *QbitDownload) Clean() {
 		logger.WarnW("Qbittorrent Dl: Calling Clean on a download that exited early")
 		return
 	}
+	ctx := dl.msg.Ctx
 	err = qb.DeleteTagsCtx(ctx, []string{dl.tag})
 	if err != nil {
 		logger.Error(err)
