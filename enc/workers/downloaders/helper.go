@@ -281,6 +281,8 @@ func GetQbitDlInfo(uri string) *utils.DLInfo {
 		SavePath: folder,
 		Tags:     tag,
 	}
+	qbOptions := options.Prepare()
+	qbOptions["seedingTimeLimit"] = "0"
 	var ctx context.Context
 	var cancel context.CancelFunc
 
@@ -291,7 +293,7 @@ func GetQbitDlInfo(uri string) *utils.DLInfo {
 		ctx, cancel = context.WithTimeout(context.Background(), timeout)
 	}
 	defer cancel()
-	err = qb.AddTorrentFromUrlCtx(ctx, uri, options.Prepare())
+	err = qb.AddTorrentFromUrlCtx(ctx, uri, qbOptions)
 	if err != nil {
 		dlInfo.Error = err
 		return dlInfo
