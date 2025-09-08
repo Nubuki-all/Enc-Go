@@ -286,7 +286,7 @@ func (dl *QbitDownload) Select(ctx context.Context, hash string) (err error) {
 	if err != nil {
 		return err
 	}
-	files, err = getFilesFromQb(ctx, qb, hash)
+	files, err := getFilesFromQb(ctx, qb, hash)
 	if err != nil {
 		return err
 	}
@@ -357,7 +357,7 @@ func (dl *QbitDownload) Clean() {
 	}
 	ctx := dl.msg.Ctx
 	qb := dl.client
-	err = qb.DeleteTagsCtx(ctx, []string{dl.tag})
+	err := qb.DeleteTagsCtx(ctx, []string{dl.tag})
 	if err != nil {
 		logger.Error(err)
 	}
