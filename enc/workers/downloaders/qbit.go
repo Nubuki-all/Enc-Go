@@ -14,7 +14,6 @@ import (
 	"github.com/google/uuid"
 
 	"enc/config"
-	"enc/internal/bot"
 	"enc/internal/bot/types"
 	"enc/internal/logger"
 	"enc/utils"
