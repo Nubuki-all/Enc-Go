@@ -6,8 +6,8 @@ import (
 	//"io"
 	"math"
 	"path/filepath"
-	"strings"
 	"strconv"
+	"strings"
 	"time"
 
 	qbit "github.com/autobrr/go-qbittorrent"
@@ -191,26 +191,26 @@ func (dl *QbitDownload) ProgressCallback(ctx context.Context, start time.Time, t
 	torrents, err = qb.GetTorrentsCtx(ctx, qbit.TorrentFilterOptions{Tag: tag})
 	if err != nil {
 		dl.err = err
-		return
+		return ok
 	}
 	torrent = torrents[0]
 	switch torrent.State {
 	case qbit.TorrentStateError:
 		dl.err = fmt.Errorf("an unknown error occured")
-		return
+		return ok
 	case qbit.TorrentStatePausedUp:
 		dl.completed = true
-		return
+		return ok
 	case qbit.TorrentStateStoppedUp:
 		dl.completed = true
-		return
+		return ok
 	}
 	if dl.IsCancelled {
 		err = qb.PauseCtx(ctx, []string{torrent.Hash})
 		if err != nil {
 			dl.err = err
 		}
-		return
+		return ok
 	}
 
 	ok = true
@@ -227,7 +227,7 @@ func (dl *QbitDownload) ProgressCallback(ctx context.Context, start time.Time, t
 	speed := torrent.DlSpeed
 	eta := torrent.ETA
 	var percentage float64
-	var timeToCompletion string 
+	var timeToCompletion string
 
 	diff := time.Since(start).Round(time.Second).Seconds()
 	if total > 0 {
@@ -277,7 +277,7 @@ func (dl *QbitDownload) ProgressCallback(ctx context.Context, start time.Time, t
 	}
 	txt := msgHead + "\n" + tmp
 	_, _ = dl.msg.EditText(txt)
-	return
+	return ok
 }
 
 func (dl *QbitDownload) Select(ctx context.Context, hash string) (err error) {
@@ -295,7 +295,7 @@ func (dl *QbitDownload) Select(ctx context.Context, hash string) (err error) {
 		return fmt.Errorf("qbittorrent: file_id not found.")
 	}
 	fileIDs := make([]string, 0, len(files)-1)
-	for i, _ := range files {
+	for i := range files {
 		if i == s {
 			continue
 		}
@@ -325,29 +325,29 @@ func (dl *QbitDownload) UpdateCallback(ctx context.Context, tag string) (ok bool
 	torrents, err = qb.GetTorrentsCtx(ctx, qbit.TorrentFilterOptions{Tag: tag})
 	if err != nil {
 		dl.err = err
-		return
+		return ok
 	}
 	torrent = torrents[0]
 	switch torrent.State {
 	case qbit.TorrentStateError:
 		dl.err = fmt.Errorf("an unknown error occured")
-		return
+		return ok
 	case qbit.TorrentStatePausedUp:
 		dl.completed = true
-		return
+		return ok
 	case qbit.TorrentStateStoppedUp:
 		dl.completed = true
-		return
+		return ok
 	}
 	if dl.IsCancelled {
 		err = qb.PauseCtx(ctx, []string{torrent.Hash})
 		if err != nil {
 			dl.err = err
 		}
-		return
+		return ok
 	}
 	ok = true
-	return
+	return ok
 }
 
 func (dl *QbitDownload) Clean() {
