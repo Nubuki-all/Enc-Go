@@ -378,7 +378,7 @@ func RestartDetached(chatID int64, msgID int) error {
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = nil
 	} else {
-		defer devnull.Close()
+		defer devnull.Close() //nolint:errcheck
 		cmd.Stdin = devnull
 		cmd.Stdout = devnull
 		cmd.Stderr = devnull

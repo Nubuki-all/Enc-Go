@@ -273,6 +273,7 @@ func (dl *QbitDownload) ProgressCallback(ctx context.Context, start time.Time, t
 		msgHead += "\n**via:** Torrent."
 	default:
 		msgHead = "`..................`"
+		logger.Info(torrent.State) // debug
 	}
 	txt := msgHead + "\n" + tmp
 	_, _ = dl.msg.EditText(txt)
@@ -291,7 +292,7 @@ func (dl *QbitDownload) Select(ctx context.Context, hash string) (err error) {
 	}
 	s, _ := strconv.Atoi(dl.selected)
 	if s > (len(files) - 1) {
-		return fmt.Errorf("qbittorrent: file_id not found.")
+		return fmt.Errorf("qbittorrent: file_id not found")
 	}
 	fileIDs := make([]string, 0, len(files)-1)
 	for i := range files {
