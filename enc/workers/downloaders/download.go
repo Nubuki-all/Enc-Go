@@ -30,6 +30,7 @@ type Downloader struct {
 	Msg           *tele.Message
 	InputLoc      tg.InputFileLocationClass
 	aria2Dl       *Aria2Download
+	qbitDl        *QbitDownload
 	Completed     bool
 	DlInfo        bool
 	Folder        string
@@ -71,10 +72,20 @@ func (dl *Downloader) Start() error {
 	if dl.InputLoc != nil {
 		tgDl := NewTgDl(dl.InputLoc, dl.Size, dl.Msg, dl.TransferInfo)
 		err = tgDl.Start()
+	} else if dl.Qbit && dl.Uri != "" {
+		folder, _ := filepath.Abs(dl.Folder)
+		dl.qbitDl = NewQbtitDl(dl.Uri, folder, dl.Selected, dl.Msg, dl.TransferInfo)
+		err = dl.qbitDl.Start()
+		if err == nil {
+			dl.FileName = dl.qbitDl.name
+		}
 	} else if dl.Uri != "" {
 		folder, _ := filepath.Abs(dl.Folder)
 		dl.aria2Dl = NewAria2Dl(dl.Uri, folder, dl.Selected, dl.Msg, dl.TransferInfo)
 		err = dl.aria2Dl.Start()
+		if err == nil {
+			dl.FileName = dl.aria2Dl.name
+		}
 	}
 	if err != nil || dl.IsCancelled { // for downloaders that don't return an err on download cancel
 		dl.err = err
@@ -90,6 +101,10 @@ func (dl *Downloader) Start() error {
 func (dl *Downloader) CleanDownload() {
 	if dl.aria2Dl != nil {
 		dl.aria2Dl.Clean()
+		return
+	}
+	if dl.qbitDl != nil {
+		dl.qbitDl.Clean()
 		return
 	}
 	err := os.Remove(dl.Path)

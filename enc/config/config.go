@@ -98,6 +98,7 @@ type RuntimeConfig struct {
 	Error                 error
 	Owners                []int64
 	ProgresUpdateInterval time.Duration
+	QBitTimeout           time.Duration
 	QDLTimeout            time.Duration
 	ReleaseName           string
 	ReleaseNameB          string
@@ -302,6 +303,7 @@ func LoadConfig() error {
 	}
 	Rconf.ADLTimeout = time.Duration(Conf.ADLTimeout)
 	Rconf.ProgresUpdateInterval = time.Duration(Conf.ProgresUpdateInterval)
+	Rconf.QBitTimeout = time.Duration(Conf.QBitTimeout)
 	Rconf.QDLTimeout = time.Duration(Conf.QDLTimeout)
 
 	return nil

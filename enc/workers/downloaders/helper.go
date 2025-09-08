@@ -284,7 +284,7 @@ func GetQbitDlInfo(uri string) *utils.DLInfo {
 	var ctx context.Context
 	var cancel context.CancelFunc
 
-	timeout := config.Rconf.QDLTimeout * time.Second
+	timeout := config.Rconf.QBitTimeout * time.Second
 	if timeout == 0 {
 		ctx, cancel = context.Background(), func() {}
 	} else {
@@ -346,11 +346,12 @@ func GetQbitDlInfo(uri string) *utils.DLInfo {
 		return dlInfo
 	}
 	dlInfo.Count = len(dlInfo.Files)
-	if dlInfo.Count > 1 {
+	/*if dlInfo.Count > 1 {
 		dlInfo.Name = torrents[0].Name
 	} else if dlInfo.Count == 1 {
-		dlInfo.Name = filepath.Base(dlInfo.Files[0])
-	}
+		dlInfo.Name = filepath.Base(torrents[0].ContentPath)
+	}*/
+	dlInfo.Name = torrents[0].Name
 	err = qb.DeleteTagsCtx(ctx, []string{tag})
 	if err != nil {
 		dlInfo.Error = fmt.Errorf("error cleaning up after fetching torrent files: %w", err)

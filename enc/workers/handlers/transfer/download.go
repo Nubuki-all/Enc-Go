@@ -71,6 +71,11 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 				"c",
 				"(To use download with caption instead of filename.)",
 			),
+			argparser.CreateDBoolFlag(
+				"qb",
+				"q",
+				"(To download using qbittorrent instead of aria2.)",
+			),
 		)
 		if out := arg.Output; out != "" {
 			_, _ = msg.Reply(utils.CodeBlock(out, true),
@@ -114,6 +119,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		return helpFunc(err.Error())
 	}
 	var folder, fileName, selected, tgFileName string
+	var qbit bool
 	var size int64
 
 	if fInfo != nil {
@@ -126,6 +132,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		home := pargs["cwd"].(bool)
 		caption := pargs["caption"].(bool)
 		selected = pargs["select"].(string)
+		qbit = pargs["qb"].(bool)
 		if dir != "" {
 			folder = dir
 		} else if home {
@@ -175,6 +182,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		Size:     size,
 		Selected: selected,
 		Uri:      link,
+		Qbit:     qbit,
 	}
 	download.Init(id, msg.SenderID)
 	err = download.Start()
