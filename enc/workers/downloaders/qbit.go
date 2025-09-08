@@ -47,7 +47,7 @@ func NewQbtitDl(uri, dir, selected string, msg *tele.Message, tInfo *types.Trans
 	return &QbitDownload{
 		TransferInfo: tInfo,
 		msg:          msg,
-		client:       *qbit.Client,
+		client:       nil,
 		dir:          dir,
 		selected:     selected,
 		ufstr:        conf.UnfinishedProgressStr,
@@ -113,7 +113,7 @@ func (dl *QbitDownload) Start() (err error) {
 		}
 	}
 	if torrents[0].State == qbit.TorrentStateMetaDl {
-		_, _ = msg.EditText("`Getting torrent's metadata. Please wait…`")
+		_, _ = dl.msg.EditText("`Getting torrent's metadata. Please wait…`")
 	}
 	for torrents[0].State == qbit.TorrentStateMetaDl {
 		select {
@@ -185,32 +185,32 @@ func (dl *QbitDownload) Start() (err error) {
 
 func (dl *QbitDownload) ProgressCallback(ctx context.Context, start time.Time, tag string) (ok bool) {
 	if dl.PauseProgress {
-		return dl.UpdateCallback(tag)
+		return dl.UpdateCallback(ctx, tag)
 	}
 	qb := dl.client
-	torrents, err = qb.GetTorrentsCtx(ctx, qbit.TorrentFilterOptions{Tag: tag})
+	torrents, err := qb.GetTorrentsCtx(ctx, qbit.TorrentFilterOptions{Tag: tag})
 	if err != nil {
 		dl.err = err
-		return ok
+		return
 	}
 	torrent = torrents[0]
 	switch torrent.State {
 	case qbit.TorrentStateError:
 		dl.err = fmt.Errorf("an unknown error occured")
-		return ok
+		return
 	case qbit.TorrentStatePausedUp:
 		dl.completed = true
-		return ok
+		return
 	case qbit.TorrentStateStoppedUp:
 		dl.completed = true
-		return ok
+		return
 	}
 	if dl.IsCancelled {
 		err = qb.PauseCtx(ctx, []string{torrent.Hash})
 		if err != nil {
 			dl.err = err
 		}
-		return ok
+		return
 	}
 
 	ok = true
@@ -227,7 +227,7 @@ func (dl *QbitDownload) ProgressCallback(ctx context.Context, start time.Time, t
 	speed := torrent.DlSpeed
 	eta := torrent.ETA
 	var percentage float64
-	var timeToCompletion string
+	var timeToCompletion string 
 
 	diff := time.Since(start).Round(time.Second).Seconds()
 	if total > 0 {
@@ -277,7 +277,7 @@ func (dl *QbitDownload) ProgressCallback(ctx context.Context, start time.Time, t
 	}
 	txt := msgHead + "\n" + tmp
 	_, _ = dl.msg.EditText(txt)
-	return ok
+	return
 }
 
 func (dl *QbitDownload) Select(ctx context.Context, hash string) (err error) {
@@ -295,7 +295,7 @@ func (dl *QbitDownload) Select(ctx context.Context, hash string) (err error) {
 		return fmt.Errorf("qbittorrent: file_id not found.")
 	}
 	fileIDs := make([]string, 0, len(files)-1)
-	for i := range files {
+	for i, _ := range files {
 		if i == s {
 			continue
 		}
@@ -322,32 +322,32 @@ func (dl *QbitDownload) Select(ctx context.Context, hash string) (err error) {
 
 func (dl *QbitDownload) UpdateCallback(ctx context.Context, tag string) (ok bool) {
 	qb := dl.client
-	torrents, err = qb.GetTorrentsCtx(ctx, qbit.TorrentFilterOptions{Tag: tag})
+	torrents, err := qb.GetTorrentsCtx(ctx, qbit.TorrentFilterOptions{Tag: tag})
 	if err != nil {
 		dl.err = err
-		return ok
+		return
 	}
 	torrent = torrents[0]
 	switch torrent.State {
 	case qbit.TorrentStateError:
 		dl.err = fmt.Errorf("an unknown error occured")
-		return ok
+		return
 	case qbit.TorrentStatePausedUp:
 		dl.completed = true
-		return ok
+		return
 	case qbit.TorrentStateStoppedUp:
 		dl.completed = true
-		return ok
+		return
 	}
 	if dl.IsCancelled {
 		err = qb.PauseCtx(ctx, []string{torrent.Hash})
 		if err != nil {
 			dl.err = err
 		}
-		return ok
+		return
 	}
 	ok = true
-	return ok
+	return
 }
 
 func (dl *QbitDownload) Clean() {
@@ -356,6 +356,7 @@ func (dl *QbitDownload) Clean() {
 		return
 	}
 	ctx := dl.msg.Ctx
+	qb := dl.client
 	err = qb.DeleteTagsCtx(ctx, []string{dl.tag})
 	if err != nil {
 		logger.Error(err)
