@@ -204,6 +204,7 @@ func (dl *QbitDownload) ProgressCallback(ctx context.Context, start time.Time, t
 	case qbit.TorrentStateStoppedUp:
 		dl.completed = true
 		return
+	}
 	if dl.IsCancelled {
 		err = qb.PauseCtx(ctx, []string{torrent.Hash})
 		if err != nil {
