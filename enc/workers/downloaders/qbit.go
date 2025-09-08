@@ -183,7 +183,7 @@ func (dl *QbitDownload) Start() (err error) {
 	return nil
 }
 
-func (dl *QbitDownload) ProgressCallback(ctx context.Context start time.Time, tag string) (ok bool) {
+func (dl *QbitDownload) ProgressCallback(ctx context.Context, start time.Time, tag string) (ok bool) {
 	if dl.PauseProgress {
 		return dl.UpdateCallback(tag)
 	}
@@ -269,7 +269,7 @@ func (dl *QbitDownload) ProgressCallback(ctx context.Context start time.Time, ta
 	case qbit.TorrentStatePausedDl:
 		msgHead = "`Download Paused.`"
 	case qbit.TorrentStateDownloading:
-		msgHead = f"**Downloading:**\n`" + name "`"
+		msgHead = f"**Downloading:**\n`" + name + "`"
 		msgHead += "\n**via:** Torrent."
 	default:
 		msgHead = "`..................`"
@@ -279,7 +279,7 @@ func (dl *QbitDownload) ProgressCallback(ctx context.Context start time.Time, ta
 	return
 }
 
-func (dl *QbitDownload) Select(ctx, hash string) (err error) {
+func (dl *QbitDownload) Select(ctx context.Context, hash string) (err error) {
 	qb := dl.client
 	err = qb.PauseCtx(ctx, []string{hash})
 	if err != nil {
