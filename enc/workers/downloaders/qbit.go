@@ -85,7 +85,7 @@ func (dl *QbitDownload) Start() (err error) {
 		SavePath: dl.dir,
 		Tags:     tag,
 	}
-	qbOptions = options.Prepare()
+	qbOptions := options.Prepare()
 	qbOptions["seedingTimeLimit"] = "0"
 	err = qb.AddTorrentFromUrlCtx(ctx, dl.uri, qbOptions)
 	if err != nil {
