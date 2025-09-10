@@ -56,7 +56,7 @@ func GetMessages(chatId int64, ids ...tg.InputMessageClass) (msgs []*gp.Message,
 			AccessHash: peer.AccessHash,
 		}
 		messages, err = ctx.Raw.ChannelsGetMessages(ctx, &tg.ChannelsGetMessagesRequest{
-			Channel: channel
+			Channel: channel,
 			ID:      Ids,
 		})
 	default:

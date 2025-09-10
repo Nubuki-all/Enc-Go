@@ -25,7 +25,9 @@ type Uploader struct {
 	Msg           *tele.Message
 	Reply         *tele.Message
 	Caption       string
+	FileName      string
 	ThumbPath     string
+	Bytes         []byte
 	CleanOnComplete bool
 	Done            bool
 	ForceDocument bool
@@ -55,7 +57,10 @@ func (ul *Uploader) Init(id, path string, sender int64) {
 func (ul *Uploader) Start() error {
 	defer ul.UnRegister()
 	var err error
-	tgUl := NewTgUl(ul.ForceDocument, ul.ThumbPath, ul.Msg, ul.Reply, ul.TransferInfo)
+	if ul.Path != ""{
+		ul.FileName = filepath.Base(ul.Path)
+	}
+	tgUl := NewTgUl(ul.FileName, ul.ThumbPath, ul.ForceDocument, ul.Msg, ul.Reply, ul.TransferInfo)
 	err = tgUl.Start()
 	if err != nil {
 		ul.err = err

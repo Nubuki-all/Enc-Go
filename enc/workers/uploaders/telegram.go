@@ -41,7 +41,7 @@ type TgUpload struct {
 	bytes        []byte
 }
 
-func NewTgUl(name thumb string, forceDocument bool, msg, reply *tele.Message, tInfo *types.TransferInfo) *TgUpload {
+func NewTgUl(name, thumb string, forceDocument bool, msg, reply *tele.Message, tInfo *types.TransferInfo) *TgUpload {
 	conf := config.Conf
 	return &TgUpload{
 		TransferInfo: tInfo,
@@ -49,7 +49,7 @@ func NewTgUl(name thumb string, forceDocument bool, msg, reply *tele.Message, tI
 		name:         name,
 		reply:        reply,
 		thumb:        thumb,
-		upload:       uploader.NewUploader(msg.Ctx.Raw)
+		upload:       uploader.NewUploader(msg.Ctx.Raw),
 		forceDoc:     forceDocument,
 		ufstr:        conf.UnfinishedProgressStr,
 		fstr:         conf.FinishedProgressStr,
@@ -245,8 +245,8 @@ func (ul *TgUpload) Chunk(ctx context.Context, state uploader.ProgressState) err
 	return nil
 }
 
-func (ul *TgUpload) getThumbWithDuration(ctx context.Context ext string) (thumb tg.InputFileClass, dur int) {
-	path string 
+func (ul *TgUpload) getThumbWithDuration(ctx context.Context, ext string) (thumb tg.InputFileClass, dur int) {
+	var path string 
 	if len(ul.bytes) > 0 {
 		tmp := &utils.TempFile{}
 		tmp.FromBytes(ext, ul.bytes)
@@ -291,7 +291,7 @@ func (ul *TgUpload) sendMedia(media *tg.InputMediaUploadedDocument) (err error) 
 			&tele.UploadOptions{
 				Quote: true,
 				Caption: ul.caption,
-			}
+			},
 		)
 	} else {
 		_, err = ul.msg.Edit(ul.caption,
