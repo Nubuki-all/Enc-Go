@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/gabriel-vasile/mimetype"
-    "github.com/gotd/td/telegram/uploader"
-    "github.com/gotd/td/tg"
+	"github.com/gotd/td/telegram/uploader"
+	"github.com/gotd/td/tg"
 
 	"enc/config"
 	"enc/internal/bot/types"
@@ -31,14 +31,14 @@ type TgUpload struct {
 	err       error
 	completed bool
 	forceDoc  bool
-	quote bool
-	ufstr        string
-	fstr         string
-	dir          string
-	name         string
-	thumb        string
-	action       string
-	bytes        []byte
+	quote     bool
+	ufstr     string
+	fstr      string
+	dir       string
+	name      string
+	thumb     string
+	action    string
+	bytes     []byte
 }
 
 func NewTgUl(name, thumb string, forceDocument bool, msg, reply *tele.Message, tInfo *types.TransferInfo) *TgUpload {
@@ -57,7 +57,7 @@ func NewTgUl(name, thumb string, forceDocument bool, msg, reply *tele.Message, t
 }
 
 func (ul *TgUpload) Start() (err error) {
-	// configure 
+	// configure
 	_ = ul.upload.WithProgress(ul)
 	_ = ul.upload.WithThreads(4)
 	ul.action = "upload"
@@ -89,32 +89,32 @@ func (ul *TgUpload) Start() (err error) {
 	ul.pchan = make(chan *uploaders.ProgressState, 1)
 	start := time.Now()
 	progressInterval := config.Rconf.ProgresUpdateInterval * time.Second
-	
+
 	go func() {
 		ticker := time.NewTicker(progressInterval)
 		defer ticker.Stop()
-		
+
 		var stored *uploaders.ProgressState
 		for {
 			select {
-			case <- ctx.Done():
+			case <-ctx.Done():
 				done <- fmt.Errorf("upload timed out after %s", utils.TimeFormatter(dlTimeout.Seconds()))
 				return
-			case ev := <- ul.pchan:
+			case ev := <-ul.pchan:
 				ul.ProgressCallback(start, ev)
 				return
 			case <-doneCh:
 				return
 			}
 		}
-		
+
 		for {
 			select {
 			case <-ctx.Done():
 				// timeout or external cancel
 				done <- fmt.Errorf("upload timed out after %s", utils.TimeFormatter(dlTimeout.Seconds()))
 				return
-			case ev := <- ul.pchan:
+			case ev := <-ul.pchan:
 				stored = ev
 			case <-ticker.C:
 				if stored != nil {
@@ -122,14 +122,14 @@ func (ul *TgUpload) Start() (err error) {
 				}
 			case <-doneCh:
 				return
-			}		
+			}
 		}
 	}()
-	
+
 	var dhuration int
 	var inputFile, thumbFile tg.InputFileClass
 	var mime mimetype.MIME
-	defer func() {_ = ul.msg.Action("", 0)}()
+	defer func() { _ = ul.msg.Action("", 0) }()
 	if len(ul.bytes) == 0 {
 		mime, _ = mimetype.DetectFile(ul.Path)
 		ul.dir = filepath.Dir(ul.Path)
@@ -140,7 +140,7 @@ func (ul *TgUpload) Start() (err error) {
 	}
 	close(doneCh)
 	if err != nil {
-		return
+		return err
 	}
 	attributes := []tg.DocumentAttributeClass{
 		&tg.DocumentAttributeFilename{FileName: ul.name},
@@ -149,18 +149,17 @@ func (ul *TgUpload) Start() (err error) {
 		thumbFile, duration = ul.getThumbWithDuration(ctx, mime.Extension())
 		attributes = append(attributes, &tg.DocumentAttributeVideo{
 			SupportsStreaming: true,
-			Duration: duration,
-			
+			Duration:          duration,
 		})
 	} else {
 		thumbFile = ul.uploadThumbnail(ctx)
 	}
 	media := &tg.InputMediaUploadedDocument{
-		File: inputFile,
-		MimeType: mime.String(),
-		ForceFile: asDoc,
-		Spoiler: spoiler, 
-		Thumb:   thumbFile,
+		File:       inputFile,
+		MimeType:   mime.String(),
+		ForceFile:  asDoc,
+		Spoiler:    spoiler,
+		Thumb:      thumbFile,
 		Attributes: attributes,
 	}
 	return ul.sendMedia(media)
@@ -212,14 +211,12 @@ func (ul *TgUpload) ProgressCallback(start time.Time, upload *uploaders.Progress
 	if dl.dir != "" {
 		msgHead = "**From folder:** `" + dl.dir + "`\n"
 	}
-    msgHead += "**File:** `" + upload.Name + "`"
-	    msgHead = conf.Config.CapDeco + " **Uploading…**\n" + msgHead
+	msgHead += "**File:** `" + upload.Name + "`"
+	msgHead = conf.Config.CapDeco + " **Uploading…**\n" + msgHead
 	txt := msgHead + "\n" + tmp
 	_, _ = ul.msg.EditText(txt)
 	return ok
 }
-
-
 
 func (ul *TgUpload) Chunk(ctx context.Context, state uploader.ProgressState) error {
 	if ul.IsCancelled {
@@ -246,7 +243,7 @@ func (ul *TgUpload) Chunk(ctx context.Context, state uploader.ProgressState) err
 }
 
 func (ul *TgUpload) getThumbWithDuration(ctx context.Context, ext string) (thumb tg.InputFileClass, dur int) {
-	var path string 
+	var path string
 	if len(ul.bytes) > 0 {
 		tmp := &utils.TempFile{}
 		tmp.FromBytes(ext, ul.bytes)
@@ -261,18 +258,18 @@ func (ul *TgUpload) getThumbWithDuration(ctx context.Context, ext string) (thumb
 	thumbPath, dur, err := utils.GetVideoThumbnailAndDuration(path, tmp.Name)
 	if err != nil {
 		logger.Error(err)
-		return
+		return thumb, dur
 	} else if thumbPath == "" {
 		logger.Warn("Could not get video thumbnail!")
-		return
+		return thumb, dur
 	}
 	uClient := uploader.NewUploader(ul.msg.Ctx.Raw)
 	thumb, err = uClient.FromPath(ctx, thumbPath)
 	if err != nil {
 		logger.Error("Uploading thumbnail to telegram server failed with: ", err)
-		return
+		return thumb, dur
 	}
-	return
+	return thumb, dur
 }
 
 func (ul *TgUpload) uploadThumbnail(ctx context.Context) (thumb tg.InputFileClass) {
@@ -280,16 +277,16 @@ func (ul *TgUpload) uploadThumbnail(ctx context.Context) (thumb tg.InputFileClas
 	thumb, err = uClient.FromPath(ctx, ul.thumb)
 	if err != nil {
 		logger.Error("Uploading thumbnail to telegram server failed with: ", err)
-		return
+		return thumb
 	}
-	return
+	return thumb
 }
 
 func (ul *TgUpload) sendMedia(media *tg.InputMediaUploadedDocument) (err error) {
 	if ul.reply != nil {
 		_, err = ul.reply.ReplyMediaDoc(media,
 			&tele.UploadOptions{
-				Quote: true,
+				Quote:   true,
 				Caption: ul.caption,
 			},
 		)
@@ -298,5 +295,5 @@ func (ul *TgUpload) sendMedia(media *tg.InputMediaUploadedDocument) (err error) 
 			&tele.EditOptions{Media: media},
 		)
 	}
-	return
+	return err
 }

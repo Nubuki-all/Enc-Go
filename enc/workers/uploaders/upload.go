@@ -17,23 +17,22 @@ import (
 )
 
 const (
-	CallbackData  = "cancel_upload"
+	CallbackData = "cancel_upload"
 )
 
 type Uploader struct {
 	*types.TransferInfo
-	Msg           *tele.Message
-	Reply         *tele.Message
-	Caption       string
-	FileName      string
-	ThumbPath     string
-	Bytes         []byte
+	Msg             *tele.Message
+	Reply           *tele.Message
+	Caption         string
+	FileName        string
+	ThumbPath       string
+	Bytes           []byte
 	CleanOnComplete bool
 	Done            bool
-	ForceDocument bool
-	err           error
+	ForceDocument   bool
+	err             error
 }
-
 
 func (ul *Uploader) Init(id, path string, sender int64) {
 	if ul.TransferInfo == nil {
@@ -57,7 +56,7 @@ func (ul *Uploader) Init(id, path string, sender int64) {
 func (ul *Uploader) Start() error {
 	defer ul.UnRegister()
 	var err error
-	if ul.Path != ""{
+	if ul.Path != "" {
 		ul.FileName = filepath.Base(ul.Path)
 	}
 	tgUl := NewTgUl(ul.FileName, ul.ThumbPath, ul.ForceDocument, ul.Msg, ul.Reply, ul.TransferInfo)

@@ -16,7 +16,7 @@ import (
 	//"sync"
 	"syscall"
 	"time"
-	
+
 	"enc/config"
 )
 
@@ -395,26 +395,25 @@ func RestartDetached(chatID int64, msgID int) error {
 	return nil
 }
 
-
 type TempFile struct {
-	File    *os.File
-	Name    string
-	KeepOpen    bool
+	File     *os.File
+	Name     string
+	KeepOpen bool
 }
 
 func (tmp *TempFile) Create(ext string) (err error) {
 	dir, err := filepath.Abs(config.Conf.TempDir)
 	if err != nil {
-		return
+		return err
 	}
-	tmp.File, err = os.CreateTemp(dir, "*" + ext)
+	tmp.File, err = os.CreateTemp(dir, "*"+ext)
 	if err != nil {
-		return
+		return err
 	}
 	tmp.Name = tmp.File.Name()
 	if !tmp.KeepOpen {
 		if err = tmp.File.Close(); err != nil {
-			return
+			return err
 		}
 	}
 	return nil
@@ -423,19 +422,19 @@ func (tmp *TempFile) Create(ext string) (err error) {
 func (tmp *TempFile) FromBytes(ext string, bytes []byte) (err error) {
 	dir, err := filepath.Abs(config.Conf.TempDir)
 	if err != nil {
-		return
+		return err
 	}
-	tmp.File, err = os.CreateTemp(dir, "*" + ext)
+	tmp.File, err = os.CreateTemp(dir, "*"+ext)
 	if err != nil {
-		return
+		return err
 	}
 	tmp.Name = tmp.File.Name()
 	if _, err = tmp.File.Write(bytes); err != nil {
-		return 
+		return err
 	}
 	if !tmp.KeepOpen {
 		if err = tmp.File.Close(); err != nil {
-			return
+			return err
 		}
 	}
 	return nil
@@ -444,7 +443,7 @@ func (tmp *TempFile) FromBytes(ext string, bytes []byte) (err error) {
 func (tmp *TempFile) Remove() (err error) {
 	if tmp.KeepOpen {
 		if err = tmp.File.Close(); err != nil {
-			return
+			return err
 		}
 	}
 	return os.Remove(tmp.Name)

@@ -64,7 +64,7 @@ func NewMsgFromGotg(m *gp.Message, c *ext.Context, chatID int64, senderID int64)
 				replyTo = 0
 			}
 		}
-		
+
 	}
 	return &Message{
 		Raw:       m,
@@ -73,7 +73,7 @@ func NewMsgFromGotg(m *gp.Message, c *ext.Context, chatID int64, senderID int64)
 		SenderID:  senderID,
 		ID:        m.ID,
 		ReplyToID: replyTo,
-		TopicID: topicID,
+		TopicID:   topicID,
 	}
 }
 
@@ -320,7 +320,7 @@ func (m *Message) ReplyMediaDoc(media tg.InputMediaClass, uploadOptions *UploadO
 func SendMessage(id int64, text string) error {
 	pText, entities, _ := parser.Parse(text, true)
 	_, err := telegram.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
-		Message: pText,
+		Message:  pText,
 		Entities: entities,
 	},
 	)
@@ -353,8 +353,8 @@ func (m *Message) Action(action string, prog int) error {
 func EditMessage(id int64, msgID int, text string) error {
 	pText, entities, _ := parser.Parse(text, true)
 	_, err := telegram.Context.EditMessage(id, &tg.MessagesEditMessageRequest{
-		ID:      msgID,
-		Message: pText,
+		ID:       msgID,
+		Message:  pText,
 		Entities: entities,
 	},
 	)
@@ -422,4 +422,3 @@ func ForwardMessage(fromChatID, toChatID int64, msgID int) (*Message, error) {
 	}
 	return NewMsgFromGotg(msg, ctx, toChatID, ctx.Self.ID), nil
 }
-

@@ -9,8 +9,8 @@ import (
 	mtp_errors "github.com/celestix/gotgproto/errors"
 	"github.com/celestix/gotgproto/storage"
 	gp "github.com/celestix/gotgproto/types"
-	"github.com/gotd/td/tg"
 	"github.com/gotd/td/constant"
+	"github.com/gotd/td/tg"
 
 	"enc/internal/clients/telegram"
 )
@@ -63,7 +63,7 @@ func GetMessages(chatId int64, ids ...tg.InputMessageClass) (msgs []*gp.Message,
 		messages, err = ctx.Raw.MessagesGetMessages(ctx, ids)
 	}
 	if err != nil {
-		return
+		return msgs, err
 	}
 	var msgArray tg.MessageClassArray
 	switch m := messages.(type) {
@@ -77,14 +77,14 @@ func GetMessages(chatId int64, ids ...tg.InputMessageClass) (msgs []*gp.Message,
 		// SavePeersFromClassArray(p, m.Chats, m.Users)
 		msgArray = m.Messages
 	default:
-		return
+		return msgs, err
 	}
-	
+
 	for _, msg := range msgArray {
 		msgs = append(msgs, gp.ConstructMessage(msg))
 	}
 	if len(msgs) == 0 {
 		err = fmt.Errorf("no messages was found")
 	}
-	return
+	return msgs, err
 }
