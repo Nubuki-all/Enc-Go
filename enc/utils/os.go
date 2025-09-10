@@ -16,6 +16,8 @@ import (
 	//"sync"
 	"syscall"
 	"time"
+	
+	"enc/config"
 )
 
 // Enshell runs a shell command and returns the output and error
@@ -261,7 +263,7 @@ func GetStreamDuration(file string) int {
 }
 
 // GetVideoThumbnail captures a thumbnail from a video file
-func GetVideoThumbnail(file, output string, withDur bool) (string, int, error) {
+func GetVideoThumbnailAndDuration(file, output string) (string, int, error) {
 	duration := GetStreamDuration(file)
 	if duration <= 0 {
 		return "", 0, nil
@@ -275,10 +277,7 @@ func GetVideoThumbnail(file, output string, withDur bool) (string, int, error) {
 	if !FileExists(output) {
 		return "", duration, nil
 	}
-	if withDur {
-		return output, duration, nil
-	}
-	return output, 0, nil
+	return output, duration, nil
 }
 
 // GetStreamInfo extracts audio/subtitle language info from streams
@@ -394,4 +393,59 @@ func RestartDetached(chatID int64, msgID int) error {
 		return err
 	}
 	return nil
+}
+
+
+type TempFile struct {
+	File    *os.File
+	Name    string
+	KeepOpen    bool
+}
+
+func (tmp *TempFile) Create(ext string) (err error) {
+	dir, err := filepath.Abs(config.Conf.TempDir)
+	if err != nil {
+		return
+	}
+	tmp.File, err = os.CreateTemp(dir, "*" + ext)
+	if err != nil {
+		return
+	}
+	tmp.Name = tmp.File.Name()
+	if !tmp.KeepOpen {
+		if err = tmp.File.Close(); err != nil {
+			return
+		}
+	}
+	return nil
+}
+
+func (tmp *TempFile) FromBytes(ext string, bytes []byte) (err error) {
+	dir, err := filepath.Abs(config.Conf.TempDir)
+	if err != nil {
+		return
+	}
+	tmp.File, err = os.CreateTemp(dir, "*" + ext)
+	if err != nil {
+		return
+	}
+	tmp.Name = tmp.File.Name()
+	if _, err = tmp.File.Write(bytes); err != nil {
+		return 
+	}
+	if !tmp.KeepOpen {
+		if err = tmp.File.Close(); err != nil {
+			return
+		}
+	}
+	return nil
+}
+
+func (tmp *TempFile) Remove() (err error) {
+	if tmp.KeepOpen {
+		if err = tmp.File.Close(); err != nil {
+			return
+		}
+	}
+	return os.Remove(tmp.Name)
 }

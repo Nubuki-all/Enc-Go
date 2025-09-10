@@ -31,8 +31,8 @@ type Downloader struct {
 	InputLoc      tg.InputFileLocationClass
 	aria2Dl       *Aria2Download
 	qbitDl        *QbitDownload
-	Completed     bool
 	DlInfo        bool
+	Done          bool
 	Folder        string
 	FileName      string
 	Selected      string
@@ -94,7 +94,7 @@ func (dl *Downloader) Start() error {
 			logger.Error(err)
 		}
 	}
-	dl.Completed = true
+	dl.Done = true
 	return err
 }
 

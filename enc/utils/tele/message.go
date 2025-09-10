@@ -26,11 +26,13 @@ type Message struct {
 	Chat      *tg.Chat
 	User      *tg.User
 	ReplyToID int
+	TopicID   int
 }
 
 type EditOptions struct {
 	HtmlParseMode bool
 	ReplyMarkup   tg.ReplyMarkupClass
+	Media         tg.InputMediaClass
 	// will add more fields as required
 }
 
@@ -53,9 +55,16 @@ type UploadOptions struct {
 
 // NewFromGotg constructs a wrapper from a concrete *gp.Message.
 func NewMsgFromGotg(m *gp.Message, c *ext.Context, chatID int64, senderID int64) *Message {
-	replyTo := 0
-	if replyMessage, ok := m.ReplyTo.(*tg.MessageReplyHeader); ok {
-		replyTo = replyMessage.ReplyToMsgID
+	var replyTo, topicID int
+	if msgHeader, ok := m.ReplyTo.(*tg.MessageReplyHeader); ok {
+		replyTo = msgHeader.ReplyToMsgID
+		if msgHeader.ForumTopic {
+			if topicID = msgHeader.ReplyToTopID; topicID == 0 {
+				topicID = replyTo
+				replyTo = 0
+			}
+		}
+		
 	}
 	return &Message{
 		Raw:       m,
@@ -64,6 +73,7 @@ func NewMsgFromGotg(m *gp.Message, c *ext.Context, chatID int64, senderID int64)
 		SenderID:  senderID,
 		ID:        m.ID,
 		ReplyToID: replyTo,
+		TopicID: topicID,
 	}
 }
 
@@ -151,6 +161,7 @@ func (m *Message) Edit(text string, editOptions *EditOptions) (*Message, error) 
 		Message:     pText,
 		Entities:    entities,
 		ReplyMarkup: editOptions.ReplyMarkup,
+		Media:       editOptions.Media,
 	},
 	)
 	if err != nil {
@@ -265,27 +276,85 @@ func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
 	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.SenderID), nil
 }
 
+func (m *Message) ReplyMediaDoc(media tg.InputMediaClass, uploadOptions *UploadOptions) (*Message, error) {
+	if uploadOptions.Quote {
+		inputRep = &tg.InputReplyToMessage{
+			ReplyToMsgID: m.ID,
+		}
+	}
+	var pCaption string
+	var entities []tg.MessageEntityClass
+	if caption := uploadOptions.Caption; caption != "" {
+		if uploadOptions.HtmlParseMode {
+			pCaption, entities, _ = htmlparser.Parse(caption)
+		} else {
+			pCaption, entities, _ = parser.Parse(caption, true)
+		}
+	}
+	media := &tg.InputMediaUploadedDocument{
+		File: file,
+		// set attributes so file has a name
+		Attributes: []tg.DocumentAttributeClass{
+			&tg.DocumentAttributeFilename{FileName: name},
+		},
+	}
+	msg, err := ctx.SendMedia(m.ChatID,
+		&tg.MessagesSendMediaRequest{
+			Media:       media,
+			Message:     pCaption,
+			Entities:    entities,
+			ReplyTo:     inputRep,
+			ReplyMarkup: uploadOptions.ReplyMarkup,
+		},
+	)
+	if err != nil {
+		logger.ErrorW(err.Error())
+		return nil, err
+	}
+	if m.Raw == nil {
+		return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID), nil
+	}
+	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.SenderID), nil
+}
+
 func SendMessage(id int64, text string) error {
-	// peer, _ := GetPeer(id)
 	pText, entities, _ := parser.Parse(text, true)
-	// ParseMarkdown(text, true)
 	_, err := telegram.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
 		Message: pText,
-		// Peer:     peer,
 		Entities: entities,
 	},
 	)
 	return err
 }
 
+func (m *Message) Action(action string, prog int) error {
+	ctx := m.Ctx
+	inputPeer, err := ctx.ResolveInputPeerById(m.ChatID)
+	if err != nil {
+		return err
+	}
+	msgAction := ctx.Sender.To(inputPeer).TypingAction().ThreadID(m.TopicID)
+	switch action {
+	case "game":
+		return msgAction.GamePlay(ctx)
+	case "typing":
+		return msgAction.Typing(ctx)
+	case "upload":
+		return msgAction.UploadDocument(ctx, prog)
+	case "upload-photo":
+		return msgAction.UploadPhoto(ctx, prog)
+	case "upload-vid":
+		return msgAction.UploadVideo(ctx, prog)
+	default:
+		return msgAction.Cancel(ctx)
+	}
+}
+
 func EditMessage(id int64, msgID int, text string) error {
-	// peer, _ := GetPeer(id)
 	pText, entities, _ := parser.Parse(text, true)
-	// ParseMarkdown(text, true)
 	_, err := telegram.Context.EditMessage(id, &tg.MessagesEditMessageRequest{
 		ID:      msgID,
 		Message: pText,
-		// Peer:     peer,
 		Entities: entities,
 	},
 	)
@@ -353,3 +422,4 @@ func ForwardMessage(fromChatID, toChatID int64, msgID int) (*Message, error) {
 	}
 	return NewMsgFromGotg(msg, ctx, toChatID, ctx.Self.ID), nil
 }
+

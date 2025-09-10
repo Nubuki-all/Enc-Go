@@ -80,8 +80,7 @@ type Config struct {
 	TelegraphAuthor       string
 	TempDir               string
 	TempUser              string
-	TGDownloadClient      string
-	TGUploadClient        string
+	TgUlTimeout           int
 	Thumb                 string
 	UnfinishedProgressStr string
 	UploadAsVideo         bool
@@ -105,6 +104,7 @@ type RuntimeConfig struct {
 	Started               bool
 	TgpAuthor             string
 	TgpAuthorUrl          string
+	TgUlTimeout           time.Duration
 }
 
 var (
@@ -184,6 +184,7 @@ func LoadConfig() error {
 	viper.SetDefault("TELEGRAPH_API", "https://api.telegra.ph")
 	viper.SetDefault("TEMP_DIR", ".temp")
 	viper.SetDefault("UN_FINISHED_PROGRESS_STR", "🤍")
+	viper.SetDefault("UPLOAD_AS_DOCUMENT", true)
 	viper.SetDefault("USE_ANILIST", true)
 	viper.SetDefault("USE_CAPTION", true)
 	viper.SetDefault("WORKERS", 2)
@@ -258,15 +259,13 @@ func LoadConfig() error {
 		TelegraphAuthor:       viper.GetString("TELEGRAPH_AUTHOR"),
 		TempDir:               viper.GetString("TEMP_DIR"),
 		TempUser:              viper.GetString("TEMP_USERS"),
-		TGDownloadClient:      viper.GetString("TG_DL_CLIENT"),
-		TGUploadClient:        viper.GetString("TG_UL_CLIENT"),
+		TgUlTimeout:           viper.GetInt("TG_UL_TIMEOUT"),
 		Thumb:                 viper.GetString("THUMBNAIL"),
 		UnfinishedProgressStr: viper.GetString("UN_FINISHED_PROGRESS_STR"),
-		UploadAsVideo:         viper.GetBool("UPLOAD_AS_VIDEO"),
+		UploadAsDoc:           viper.GetBool("UPLOAD_AS_DOCUMENT"),
 		UseAniList:            viper.GetBool("USE_ANILIST"),
 		UseCaption:            viper.GetBool("USE_CAPTION"),
 		UVS:                   viper.GetBool("UPLOAD_VIDEO_AS_SPOILER"),
-		Workers:               viper.GetInt("WORKERS"),
 	}
 
 	Rconf = &RuntimeConfig{}
@@ -305,7 +304,7 @@ func LoadConfig() error {
 	Rconf.ProgresUpdateInterval = time.Duration(Conf.ProgresUpdateInterval)
 	Rconf.QBitTimeout = time.Duration(Conf.QBitTimeout)
 	Rconf.QDLTimeout = time.Duration(Conf.QDLTimeout)
-
+	Rconf.TgUlTimeout = time.Duration(Conf.TgUlTimeout)
 	return nil
 }
 

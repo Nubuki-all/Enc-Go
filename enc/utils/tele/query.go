@@ -42,10 +42,24 @@ func (query *CallbackQuery) Answer(msg string, alert bool) error {
 }
 
 func (query *CallbackQuery) GetMessage() *Message {
-	return &Message{
-		Ctx:      query.Ctx,
-		ChatID:   query.ChatID,
-		SenderID: query.SenderID,
-		ID:       query.ID,
+	ids := &tg.InputMessageCallbackQuery{
+		ID:      query.ID,    // message id (int)
+		QueryID: query.Query.QueryId,  // callback query id (int64)
 	}
+	msgs, err := GetMessages(query.ChatID, ids)
+	if err != nil {
+		logger.Warn(err)
+		return &Message{
+			Ctx:      query.Ctx,
+			ChatID:   query.ChatID,
+			SenderID: query.SenderID,
+			ID:       query.ID,
+		}
+	}
+	return NewMsgFromGotg(
+		msgs[0],
+		query.Ctx,
+		query.ChatID,
+		query.SenderID,
+	)
 }
