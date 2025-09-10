@@ -45,7 +45,7 @@ func GetMessages(chatId int64, ids ...tg.InputMessageClass) (msgs []*gp.Message,
 	ctx := telegram.Context
 	peer := ctx.ResolvePeerById(chatId)
 	if peer.ID == 0 {
-		return nil, errors.ErrPeerNotFound
+		return nil, mtp_errors.ErrPeerNotFound
 	}
 	var messages tg.MessagesMessagesClass
 	switch storage.EntityType(peer.Type) {
@@ -57,7 +57,7 @@ func GetMessages(chatId int64, ids ...tg.InputMessageClass) (msgs []*gp.Message,
 		}
 		messages, err = ctx.Raw.ChannelsGetMessages(ctx, &tg.ChannelsGetMessagesRequest{
 			Channel: channel,
-			ID:      Ids,
+			ID:      ids,
 		})
 	default:
 		messages, err = ctx.Raw.MessagesGetMessages(ctx, ids)

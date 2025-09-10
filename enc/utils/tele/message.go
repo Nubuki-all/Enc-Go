@@ -277,6 +277,8 @@ func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
 }
 
 func (m *Message) ReplyMediaDoc(media tg.InputMediaClass, uploadOptions *UploadOptions) (*Message, error) {
+	ctx := m.Ctx
+	var inputRep *tg.InputReplyToMessage
 	if uploadOptions.Quote {
 		inputRep = &tg.InputReplyToMessage{
 			ReplyToMsgID: m.ID,
@@ -290,13 +292,6 @@ func (m *Message) ReplyMediaDoc(media tg.InputMediaClass, uploadOptions *UploadO
 		} else {
 			pCaption, entities, _ = parser.Parse(caption, true)
 		}
-	}
-	media := &tg.InputMediaUploadedDocument{
-		File: file,
-		// set attributes so file has a name
-		Attributes: []tg.DocumentAttributeClass{
-			&tg.DocumentAttributeFilename{FileName: name},
-		},
 	}
 	msg, err := ctx.SendMedia(m.ChatID,
 		&tg.MessagesSendMediaRequest{

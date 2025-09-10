@@ -83,7 +83,7 @@ type Config struct {
 	TgUlTimeout           int
 	Thumb                 string
 	UnfinishedProgressStr string
-	UploadAsVideo         bool
+	UploadAsDoc           bool
 	UseAniList            bool
 	UseCaption            bool
 	UVS                   bool
