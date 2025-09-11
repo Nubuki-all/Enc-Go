@@ -15,12 +15,13 @@ import (
 )
 
 type DynamicThumbResult struct {
-	Downloaded bool
-	Title string 
-	Episode string 
-	Season string 
-	ReleaseGroup string 
+	Downloaded   bool
+	Title        string
+	Episode      string
+	Season       string
+	ReleaseGroup string
 }
+
 // DynamicThumb tries to download a cover image for `name` and save it to `thumb`.
 // Returns (result.Title, episode, result.Season, releaseGroup, err). It mirrors the Python function
 // and swallows most errors (returns nil error unless download explicitly fails).

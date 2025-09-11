@@ -1,5 +1,5 @@
 // Package uploaders handles uploading of files
-package uploaders 
+package uploaders
 
 import (
 	"fmt"

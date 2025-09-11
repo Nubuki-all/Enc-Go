@@ -215,7 +215,6 @@ func (ul *TgUpload) ProgressCallback(start time.Time, upload *uploader.ProgressS
 	msgHead = config.Conf.CapDeco + " **Uploading…**\n" + msgHead
 	txt := msgHead + "\n" + tmp
 	_, _ = ul.msg.EditText(txt)
-
 }
 
 func (ul *TgUpload) Chunk(ctx context.Context, state uploader.ProgressState) error {

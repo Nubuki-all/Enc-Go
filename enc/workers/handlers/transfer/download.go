@@ -202,7 +202,6 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	return nil
 }
 
-
 func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
@@ -211,8 +210,8 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	var err error
 	var pargs map[string]interface{}
 	helpMsg := "Reply to a file/link to download,rename and upload it.\n" +
-	"Either pass the file name as argument or use the below flags;\n" +
-	"Available flags:"
+		"Either pass the file name as argument or use the below flags;\n" +
+		"Available flags:"
 	helpFunc := func(s string) error {
 		_, err := msg.ReplyText(
 			s + "\nNeed help? Send `" +
@@ -362,7 +361,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		}
 		if force {
 			if fileName == "" {
-				_,_ = sMsg.EditText("**Force rename to what exactly?**")
+				_, _ = sMsg.EditText("**Force rename to what exactly?**")
 				return nil
 			}
 			direct = fileName
@@ -401,14 +400,14 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		}
 	}
 	if dlInfo != nil {
-		if dlInfo.Count > 1 && selected == ""{
-			_,_ = sMsg.EditText("**Can not rename multiple files at once, use -s to select a file.**")
+		if dlInfo.Count > 1 && selected == "" {
+			_, _ = sMsg.EditText("**Can not rename multiple files at once, use -s to select a file.**")
 			return nil
 		}
 	}
 	if fileName == "" {
 		if tgFileName == "" {
-			_,_ = sMsg.EditText("__No file name found, cannot proceed.__")
+			_, _ = sMsg.EditText("__No file name found, cannot proceed.__")
 			return nil
 		}
 		fileName = tgFileName
@@ -428,21 +427,21 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		&tele.EditOptions{},
 	)
 	pOptions := &parser.ParseOptions{
-		Direct:         direct,
-		UseAniList:     !nparse,
-		Version:        version,
-		Path:           download.Path,
-		ConOverride:    tfile,
-		Quality:      quality,
+		Direct:      direct,
+		UseAniList:  !nparse,
+		Version:     version,
+		Path:        download.Path,
+		ConOverride: tfile,
+		Quality:     quality,
 	}
 	result, err := parser.ParseName(fileName, pOptions)
 	if err != nil {
-		_,_ = sMsg.ReplyText("**Parsing failed. check logs for more details**")
+		_, _ = sMsg.ReplyText("**Parsing failed. check logs for more details**")
 		logger.Error(err)
 		return nil
 	}
 	if result.FileName != download.FileName {
-		_,_ = sMsg.EditText("Renaming:\n`"+download.FileName+"`\n >>>\n`"+result.FileName+"`…")
+		_, _ = sMsg.EditText("Renaming:\n`" + download.FileName + "`\n >>>\n`" + result.FileName + "`…")
 		newPath := filepath.Join(filepath.Dir(download.Path), result.FileName)
 		os.Rename(download.Path, newPath)
 		download.Path = newPath
@@ -450,9 +449,11 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	var thumbPath string
 	if !nparse && direct == "" {
 		thumb := &utils.TempFile{}
-		defer func() {if err := thumb.Remove(); err != nil {
-			logger.Warn(err)
-		}}()
+		defer func() {
+			if err := thumb.Remove(); err != nil {
+				logger.Warn(err)
+			}
+		}()
 		if err := thumb.Create("jpg"); err != nil {
 			result := parser.DynamicThumb(ctx, fileName, thumb.Name, true, nil)
 			if result.Downloaded {
@@ -474,9 +475,9 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		caption = fileName
 	}
 	upload := &uploaders.Uploader{
-		Msg: sMsg,
-		Caption: caption,
-		ThumbPath: thumbPath,
+		Msg:           sMsg,
+		Caption:       caption,
+		ThumbPath:     thumbPath,
 		ForceDocument: true,
 	}
 	upload.Init(id, download.Path, msg.SenderID)
