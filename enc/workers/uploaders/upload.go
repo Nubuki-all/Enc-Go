@@ -3,7 +3,7 @@ package uploaders
 import (
 	"fmt"
 	"os"
-	//"path/filepath"
+	"path/filepath"
 	"time"
 
 	"github.com/gotd/td/telegram/message/markup"
@@ -59,7 +59,7 @@ func (ul *Uploader) Start() error {
 	if ul.Path != "" {
 		ul.FileName = filepath.Base(ul.Path)
 	}
-	tgUl := NewTgUl(ul.FileName, ul.ThumbPath, ul.ForceDocument, ul.Msg, ul.Reply, ul.TransferInfo)
+	tgUl := NewTgUl(ul.FileName, ul.Caption, ul.ThumbPath, ul.ForceDocument, ul.Msg, ul.Reply, ul.TransferInfo)
 	err = tgUl.Start()
 	if err != nil {
 		ul.err = err

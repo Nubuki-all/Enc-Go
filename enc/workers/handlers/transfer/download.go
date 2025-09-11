@@ -199,3 +199,283 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	}
 	return nil
 }
+
+
+func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+	if !utils.UserIsOwner(msg.SenderID) {
+		return nil
+	}
+	cmd := update.Args()[0]
+	var err error
+	var pargs map[string]interface{}
+	helpMsg := "Reply to a file/link to download,rename and upload it.\n" +
+	"Either pass the file name as argument or use the below flags;\n" +
+	"Available flags:"
+	helpFunc := func(s string) error {
+		_, err := msg.ReplyText(
+			s + "\nNeed help? Send `" +
+				cmd + " --help`",
+		)
+		return err
+	}
+	if strings.HasPrefix(args, "-") {
+		argList, err := utils.SplitQuotedFieldsErr(args)
+		if err != nil {
+			_, _ = msg.ReplyText(err.Error())
+			return nil
+		}
+		arg := argparser.ParseFlags(
+			cmd,
+			helpMsg,
+			argList,
+			argparser.CreateDStringFlag(
+				"file-name",
+				"n",
+				"FileName to parse/rename as.",
+			),
+			argparser.CreateDStringFlag(
+				"quality",
+				"q",
+				"quality in codec.",
+			),
+			argparser.CreateDStringFlag(
+				"emoji",
+				"e",
+				"customize emoji in caption",
+			),
+			argparser.CreateDStringFlag(
+				"tag-caption",
+				"c",
+				"specify caption type tag.",
+			),
+			argparser.CreateDStringFlag(
+				"tag-file",
+				"t",
+				"specify file language tag.",
+			),
+			argparser.CreateDBoolFlag(
+				"force",
+				"f",
+				"force rename a file to a specified filename and file type.",
+			),
+			argparser.CreateDStringFlag(
+				"select",
+				"s",
+				"File id (Specific file to rename) (Only works for links)",
+			),
+			argparser.CreateDStringFlag(
+				"version",
+				"v",
+				"specify a number for versioning.",
+			),
+			argparser.CreateDBoolFlag(
+				"caption",
+				"a",
+				"(To use download with caption instead of filename.)",
+			),
+			argparser.CreateDBoolFlag(
+				"no-parse",
+				"d",
+				"disables anilist parsing."",
+			),
+			argparser.CreateDBoolFlag(
+				"qb",
+				"q",
+				"(To download using qbittorrent instead of aria2.)",
+			),
+		)
+		if out := arg.Output; out != "" {
+			_, _ = msg.Reply(utils.CodeBlock(out, true),
+				&tele.ReplyOptions{HtmlParseMode: true},
+			)
+			return nil
+		} else if err := arg.Err; err != nil {
+			_, _ = msg.ReplyText(err.Error())
+			return nil
+		}
+		pargs = arg.Values
+	}
+	var link string
+	message := update.EffectiveMessage
+	if msg.ReplyToID != 0 {
+		err = message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
+		if err != nil {
+			_, _ = msg.ReplyText(err.Error())
+			return nil
+		}
+	} else {
+		return helpFunc("Reply the media message to rename.")
+	}
+	repMsg := message.ReplyToMessage
+	if repMsg.Media != nil {
+		switch repMsg.Media.(type) {
+		case *tg.MessageMediaWebPage:
+			repMsg.Media = nil
+		}
+	}
+	if repMsg.Media == nil {
+		if link = repMsg.Text; link == "" {
+			return helpFunc("Replied message is not a media/document/link.")
+		}
+		if !utils.IsURL(link) && !utils.IsMagnet(link) {
+			return helpFunc("`Not a valid link`.")
+		}
+	}
+	inputLoc, fInfo, err := utils.GetInputFileLocationAndSize(repMsg.Media)
+	if err != nil {
+		return helpFunc(err.Error())
+	}
+	folder := config.Conf.TempDir
+	var direct, fileName, selected, tgFileName, version string
+	var emoji, quality, tcaption, tfile string
+	var size int64
+	var force, nparse bool
+	if fInfo != nil {
+		size = fInfo.Size
+		tgFileName = fInfo.Name
+	}
+	var download *downloaders.Downloader
+	var dlInfo *utils.DLInfo
+	sMsg, err := msg.ReplyText("...")
+	if err != nil {
+		return err
+	}
+	if strings.HasPrefix(args, "-") && len(pargs) != 0 {
+		fileName = pargs["file-name"].(string)
+		quality = pargs["quality"].(string)
+		emoji = pargs["emoji"].(string)
+		tcaption = pargs["tag-caption"].(string)
+		tfile = pargs["tag-file"].(string)
+		selected = pargs["select"].(string)
+		version = pargs["version"].(string)
+		caption := pargs["caption"].(bool)
+		force = pargs["force"].(bool)
+		nparse = pargs["no-parse"].(bool)
+		qbit := pargs["qb"].(bool)
+		if caption {
+			name := repMsg.Text
+			if name != "" && !strings.Contains(name, "\n") {
+				fileName = name
+			}
+		}
+		if force {
+			if fileName == "" {
+				_,_ = sMsg.EditText("**Force rename to what exactly?**")
+				return nil
+			}
+			direct = fileName
+		}
+		if link != "" {
+			if qbit {
+				dlInfo = downloaders.GetQbitDlInfo(link)
+			} else {
+				dlInfo = downloaders.GetAria2DlInfo(link)
+			}
+		}
+		download = &downloaders.Downloader{
+			Msg:      sMsg,
+			InputLoc: inputLoc,
+			Folder:   folder,
+			FileName: fileName,
+			Size:     size,
+			Selected: selected,
+			Uri:      link,
+			Qbit:     qbit,
+		}
+	} else {
+		if args != "" {
+			folder, fileName = filepath.Split(args)
+		}
+		if link != "" {
+			dlInfo = downloaders.GetAria2DlInfo(link)
+		}
+		download = &downloaders.Downloader{
+			Msg:      sMsg,
+			InputLoc: inputLoc,
+			Folder:   folder,
+			FileName: fileName,
+			Size:     size,
+			Uri:      link,
+		}
+	}
+	if dlInfo != nil {
+		if dlInfo.Count > 1 && selected == ""{
+			_,_ = sMsg.EditText("**Can not rename multiple files at once, use -s to select a file.**")
+			return nil
+		}
+	}
+	if fileName == "" {
+		if tgFileName == "" {
+			_,_ = sMsg.EditText("__No file name found, cannot proceed.__")
+			return
+		}
+		fileName = tgFileName
+	}
+	id := fmt.Sprintf("%d:%d", sMsg.ChatID, sMsg.ID)
+	download.Init(id, msg.SenderID)
+	err = download.Start()
+	if err != nil || download.IsCancelled {
+		_, _ = download.ReportStatus()
+		return
+	}
+	_, _ = sMsg.Edit(
+		fmt.Sprintf(
+			"__Saved to__ `%s` __successfully!__",
+			download.Path,
+		),
+		&tele.EditOptions{},
+	)
+	pOptions := &parser.ParseOptions{
+		Direct:         direct,
+		UseAniList:     !nparse,
+		Version:        version,
+		Path:           download.Path,
+		ConOverride:    tfile,
+		Quality:      quality,
+	}
+	result := parser.ParseName(fileName, pOptions)
+	if result.FileName != download.FileName {
+		_,_ = sMsg.EditText("Renaming:\n`"+download.FileName+"`\n >>>\n`"+result.FileName+"`…")
+		newPath := filepath.Join(filepath.Dir(download.Path), result.FileName)
+		os.Rename(download.Path, newPath)
+		download.Path = newPath
+	}
+	var thumbPath string
+	if !nparsel && direct == "" {
+		thumb := &TempFile{}
+		defer func() {if err := thumb.Remove(); err != nil {
+			logger.Warn(err)
+		}}()
+		if err := thumb.Create("jpg"); err != nil {
+			result := parser.DynamicThumb(ctx, fileName, thumb.Name, true, nil)
+			if result.Downloaded {
+				thumbPath = thumb.Name
+			}
+		}
+	}
+	cOptions := &parser.CustCapOptions{
+		Path:          download.Path,
+		UseAniList:    !nparse,
+		CustType:      tcaption,
+		Ccd:           emoji,
+		Ver:           version,
+		CodecOverride: quality,
+		Direct:        direct,
+	}
+	caption, err := parser.CustCap(fileName, cOptions)
+	if err != nil {
+		caption = fileName
+	}
+	upload := &uploaders.Uploader{
+		Msg: sMsg,
+		Caption: caption,
+		ThumbPath: thumbPath,
+		ForceDocument: true,
+	}
+	upload.Init(id, download.Path, msg.SenderID)
+	err = upload.Start()
+	if err != nil || upload.IsCancelled {
+		_, _ = upload.ReportStatus()
+	}
+	return nil
+}

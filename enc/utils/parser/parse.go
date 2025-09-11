@@ -31,17 +31,39 @@ func slice2String(slice []string) string {
 	return sb.String()
 }
 
-// ParseName applies tanuki + AniList + your filters + codecs to build filenames.
+// ParseOptions holds optional parameters for ParseName.
+// Any zero-value is treated the same as the previous default for that argument.
+type ParseOptions struct {
+	Direct         string
+	UseAniList     bool
+	FilterOverride *types.FilterData
+	Version        string
+	Path           string
+	ConOverride    string
+	Quality        string
+	EncString      string
+	
+}
+
 func ParseName(
 	rawName string,
-	direct string,
-	useAniList bool,
-	filterOverride *types.FilterData,
-	version string,
-	folder string,
-	conOverride string,
-	encString string,
+	opts *ParseOptions,
 ) (ParseResult, error) {
+	// default options if nil
+	if opts == nil {
+		opts = &ParseOptions{}
+	}
+
+	// unpack options to local variables (keeps the original names for minimal changes)
+	direct := opts.Direct
+	useAniList := opts.UseAniList
+	filterOverride := opts.FilterOverride
+	version := opts.Version
+	path := opts.Path
+	conOverride := opts.ConOverride
+	encString := opts.EncString
+	quality := opts.Quality
+
 	// 1) Direct override
 	if direct != "" {
 		return ParseResult{direct, direct}, nil
@@ -59,8 +81,14 @@ func ParseName(
 	// 5) Extract and normalize fields
 	title := p.AnimeTitle
 	orTitle := baseParsed.AnimeTitle
-	epi := p.EpisodeNumber[0]
-	season := p.AnimeSeason[0]
+	epi := ""
+	if len(p.EpisodeNumber) > 0 {
+		epi = p.EpisodeNumber[0]
+	}
+	season := ""
+	if len(p.AnimeSeason) > 0 {
+		season = p.AnimeSeason[0]
+	}
 	relGroup := p.ReleaseGroup
 	relInfo := p.ReleaseInformation
 	year := p.AnimeYear
@@ -80,9 +108,9 @@ func ParseName(
 	}
 
 	// Wrap release info in brackets
-
 	releaseInfo := slice2String(relInfo)
 	source := slice2String(sources)
+
 	if title == "" {
 		return ParseResult{}, fmt.Errorf("parsing failed for %q", rawName)
 	}
@@ -90,21 +118,20 @@ func ParseName(
 		title = fmt.Sprintf("%s %s", title, year)
 	}
 
-	// 6) Build input-file path
-	if !strings.HasSuffix(folder, "/") {
-		folder += "/"
-	}
-	infile := filepath.Join(folder, filteredName)
 
 	// 7) Codecs
-	codec := utils.GetCodec(encString)
+	codec := quality
+	if codec == "" {
+		codec = utils.GetCodec(encString)
+	}
+
 	// 8) AniList lookup, if enabled
 	var (
-		con   string
-		te    string
-		aTag  string
-		useAL = useAniList
+		con  string
+		te   string
+		aTag string
 	)
+	useAL := useAniList
 	if bot.AnilistParse && useAL {
 		media, err := GetAniInfo(title, nil, nil, false)
 		if err != nil {
@@ -139,7 +166,7 @@ func ParseName(
 			aTag = fil2
 		}
 	} else {
-		aTag, _ = GetFileTag(infile, false, false)
+		aTag, _ = GetFileTag(path, false, false)
 		if aTag == "" {
 			aTag = GetCusTag(filteredName, relGroup, false)
 		}
@@ -148,7 +175,7 @@ func ParseName(
 			aTag = con
 		}
 		if aTag == "" {
-			aTag, _ = GetFileTag(infile, false, true)
+			aTag, _ = GetFileTag(path, false, true)
 			if aTag == "?" {
 				aTag = ""
 			}
@@ -220,6 +247,7 @@ func ParseName(
 	if source != "" {
 		sec += source
 	}
+
 	primary.WriteString(".mkv")
 
 	return ParseResult{
@@ -230,20 +258,41 @@ func ParseName(
 
 // CustCap builds a caption for a given source file (mirror of Python custcap).
 // It returns the caption string (or a fallback if an error happens).
+type CustCapOptions struct {
+	Path          string
+	UseAniList    bool
+	CustType      string
+	Ccd           string
+	Ver           string
+	Encoder       string
+	Filter        *types.FilterData
+	CodecOverride string
+	Direct        string
+	EncString     string
+}
+
 func CustCap(
 	name string,
-	fname string,
-	useAniList bool,
-	custType string,
-	folder string,
-	ccd string,
-	ver string,
-	encoder string,
-	filter *types.FilterData,
-	codecOverride string,
-	direct string,
-	encString string,
+	opts *CustCapOptions,
 ) (string, error) {
+	// default options if nil
+	if opts == nil {
+		opts = &CustCapOptions{}
+	}
+
+	// unpack options to local variables for minimal diff with original code
+	path := opts.Path
+	useAniList := opts.UseAniList
+	custType := opts.CustType
+	folder := opts.Folder
+	ccd := opts.Ccd
+	ver := opts.Ver
+	encoder := opts.Encoder
+	filter := opts.Filter
+	codecOverride := opts.CodecOverride
+	direct := opts.Direct
+	encString := opts.EncString
+
 	// Direct override
 	if direct != "" {
 		return fmt.Sprintf("`%s`", direct), nil
@@ -251,19 +300,15 @@ func CustCap(
 
 	// If FL_CAP is true, return just the filename wrapped in code ticks
 	if config.Conf.FlCap {
-		return fmt.Sprintf("`%s`", fname), nil
+		return fmt.Sprintf("`%s`", filepath.Base(path)), nil
 	}
-
-	// If ExtCap is disabled, fallback to simplecap (assumes SimpleCap exists)
-	//if !config.Conf.ExtCap {
-	//	return SimpleCap(name, fname, useAniList, custType, folder, ver, encoder, filter, ccodec, direct, encString)
-	//}
 
 	// Main logic
 	var caption string
 	defer func() {
 		// In Python, exceptions are swallowed and a default caption is returned.
 		// We return caption built so far (or fallback) and nil error unless we explicit return errors.
+		_ = caption
 	}()
 
 	// Apply filters (equivalent to filter_name)
@@ -275,8 +320,15 @@ func CustCap(
 
 	orTitle := baseParsed.AnimeTitle
 	title := parsed.AnimeTitle
-	episode := parsed.EpisodeNumber[0]
-	season := parsed.AnimeSeason[0]
+
+	episode := ""
+	if len(parsed.EpisodeNumber) > 0 {
+		episode = parsed.EpisodeNumber[0]
+	}
+	season := ""
+	if len(parsed.AnimeSeason) > 0 {
+		season = parsed.AnimeSeason[0]
+	}
 	if season != "" {
 		if strings.HasPrefix(season, "0") {
 			if i, errConv := strconv.Atoi(season); errConv == nil {
@@ -287,6 +339,7 @@ func CustCap(
 			season = ""
 		}
 	}
+
 	releaseGroup := parsed.ReleaseGroup
 	relInfo := parsed.ReleaseInformation
 	episodeTitle := parsed.EpisodeTitle
@@ -295,6 +348,7 @@ func CustCap(
 
 	releaseInfo := slice2String(relInfo)
 	source := slice2String(sources)
+
 	// sanitize episode title against not_allowed
 	notAllowed := []string{"END", "MULTi", "WEB", "WEB-DL", "DDP5.1", "DDP2.0", "AAC2"}
 	if episodeTitle != "" {
@@ -307,13 +361,8 @@ func CustCap(
 	}
 
 	if title == "" {
-		om := strings.SplitN(fname, ".", 2)[0]
-		ot := strings.SplitN(om, "@", 2)[0]
-		caption = fmt.Sprintf("**%s**\n**🔗 %s**", ot, config.Conf.CLink)
-		return caption, fmt.Errorf("parsing failed for %q", name)
+		return "", fmt.Errorf("parsing failed for %q", name)
 	}
-
-	outPath := filepath.Join(folder, fname)
 
 	// caption decorator default
 	if ccd == "" {
@@ -343,7 +392,7 @@ func CustCap(
 	} else {
 		capInfo = GetCusTag(fName, releaseGroup, true)
 		if capInfo == "" {
-			capInfo, _ = GetFileTag(outPath, true, false)
+			capInfo, _ = GetFileTag(path, true, false)
 		}
 	}
 
@@ -380,23 +429,22 @@ func CustCap(
 	}
 
 	// Format title (capitalize words)
-	// title = strings.Title(strings.ToLower(title))
 	undCaser := cases.Title(language.Und, cases.NoLower)
 	title = undCaser.String(title)
 
 	// Auto-rename (assumes AutoRename returns (ok bool, out string, err error))
-
 	_, title = utils.AutoRename(title, orTitle, true, false) // caption=true, general=false
+
 	// compute CRC32 and post MediaInfo URL if file exists
 	var crc32s string
 	var miURL string
-	if utils.FileExists(outPath) {
-		if cs, err := utils.CRC32(outPath); err == nil {
+	if utils.FileExists(path) {
+		if cs, err := utils.CRC32(path); err == nil {
 			crc32s = cs
 		} else {
 			logger.WarnW("CRC32 failed", zap.Error(err))
 		}
-		if mi, err := utils.PostMediaInfo(outPath); err == nil {
+		if mi, err := utils.PostMediaInfo(path); err == nil {
 			miURL = mi
 		} else {
 			logger.WarnW("PostMediaInfo failed", zap.Error(err))
@@ -404,8 +452,6 @@ func CustCap(
 	}
 
 	// Build caption
-	// We'll try to emulate cap_info.format(**locals()) by substituting a few common placeholders.
-	// Placeholders supported: {title}, {episode}, {season}, {ver}, {encoder}, {codec}, {crc32s}, {ccd}
 	formatCtx := map[string]string{
 		"title":   title,
 		"episode": episode,
@@ -420,7 +466,6 @@ func CustCap(
 		if s == "" {
 			return s
 		}
-		// simple replacements
 		repl := strings.NewReplacer(
 			"{title}", ctx["title"],
 			"{episode}", ctx["episode"],
@@ -434,7 +479,6 @@ func CustCap(
 		return repl.Replace(s)
 	}
 
-	// Start constructing caption as Python did
 	captionBuilder := strings.Builder{}
 	captionBuilder.WriteString(fmt.Sprintf("**%s Title:** `%s`\n", ccd, title))
 
@@ -482,8 +526,7 @@ func CustCap(
 		captionBuilder.WriteString("\n")
 	}
 	if encoder != "" {
-		encr := encoder
-		encr = strings.TrimPrefix(encr, "@")
+		encr := strings.TrimPrefix(encoder, "@")
 		captionBuilder.WriteString(fmt.Sprintf("**%s Encoder:** `%s`\n", ccd, encr))
 	}
 
@@ -495,17 +538,12 @@ func CustCap(
 	return caption, nil
 }
 
+
 // QParse mirrors `qparse` — it returns the "primary" filename generated by ParseName.
-//
-// name  - original raw name to parse
-// ver   - version string (can be "")
-// fil   - pointer to FilterData (can be nil)
-// rdir  - direct override (if non-empty ParseName will return direct)
-// ani   - whether to use AniList lookups
-func QParse(name, ver string, fil *types.FilterData, rdir string, ani bool) (string, error) {
+func QParse(name, opts *ParseOptions) (string, error) {
 	// ParseName(rawName, direct, useAniList, filterOverride, version, folder)
 	// adjust "downloads/" if you want another default folder
-	res, err := ParseName(name, rdir, ani, fil, ver, "downloads/", "", bot.FFmpegArgs)
+	res, err := ParseName(name, opts)
 	if err != nil {
 		return "", err
 	}
@@ -515,7 +553,12 @@ func QParse(name, ver string, fil *types.FilterData, rdir string, ani bool) (str
 // QParseT mirrors `qparse_t` — it returns a compact title string built from the parsed result.
 // Equivalent to: parsed_title + ( " " + year if year ) + ( " " + season if season ).
 func QParseT(name, ver string, fil *types.FilterData) (string, error) {
-	primary, err := QParse(name, ver, fil, "", true)
+	opts := &ParseOptions{
+		FilterOverride: fil,
+		Version: ver,
+		UseAniList: true,
+	}
+	primary, err := QParse(name, opts)
 	if err != nil {
 		return "", err
 	}

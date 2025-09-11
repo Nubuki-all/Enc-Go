@@ -441,6 +441,9 @@ func (tmp *TempFile) FromBytes(ext string, bytes []byte) (err error) {
 }
 
 func (tmp *TempFile) Remove() (err error) {
+	if tmp.File == nil {
+		return nil
+	}
 	if tmp.KeepOpen {
 		if err = tmp.File.Close(); err != nil {
 			return err
