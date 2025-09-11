@@ -183,7 +183,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		FileName: fileName,
 		Size:     size,
 		Selected: selected,
-		Uri:      link,
+		URI:      link,
 		Qbit:     qbit,
 	}
 	download.Init(id, msg.SenderID)
@@ -380,7 +380,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			FileName: fileName,
 			Size:     size,
 			Selected: selected,
-			Uri:      link,
+			URI:      link,
 			Qbit:     qbit,
 		}
 	} else {
@@ -396,7 +396,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			Folder:   folder,
 			FileName: fileName,
 			Size:     size,
-			Uri:      link,
+			URI:      link,
 		}
 	}
 	if dlInfo != nil {
