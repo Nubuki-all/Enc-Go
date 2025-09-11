@@ -14,8 +14,10 @@ import (
 	"enc/internal/logger"
 	"enc/utils"
 	"enc/utils/argparser"
+	"enc/utils/parser"
 	"enc/utils/tele"
 	"enc/workers/downloaders"
+	"enc/workers/uploaders"
 )
 
 func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
@@ -276,7 +278,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			argparser.CreateDBoolFlag(
 				"no-parse",
 				"d",
-				"disables anilist parsing."",
+				"disables anilist parsing.",
 			),
 			argparser.CreateDBoolFlag(
 				"qb",
@@ -407,7 +409,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	if fileName == "" {
 		if tgFileName == "" {
 			_,_ = sMsg.EditText("__No file name found, cannot proceed.__")
-			return
+			return nil
 		}
 		fileName = tgFileName
 	}
@@ -416,7 +418,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	err = download.Start()
 	if err != nil || download.IsCancelled {
 		_, _ = download.ReportStatus()
-		return
+		return nil
 	}
 	_, _ = sMsg.Edit(
 		fmt.Sprintf(
@@ -433,7 +435,12 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		ConOverride:    tfile,
 		Quality:      quality,
 	}
-	result := parser.ParseName(fileName, pOptions)
+	result, err := parser.ParseName(fileName, pOptions)
+	if err != nil {
+		_,_ = sMsg.ReplyText("**Parsing failed. check logs for more details**")
+		logger.Error(err)
+		return nil
+	}
 	if result.FileName != download.FileName {
 		_,_ = sMsg.EditText("Renaming:\n`"+download.FileName+"`\n >>>\n`"+result.FileName+"`…")
 		newPath := filepath.Join(filepath.Dir(download.Path), result.FileName)
@@ -441,8 +448,8 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		download.Path = newPath
 	}
 	var thumbPath string
-	if !nparsel && direct == "" {
-		thumb := &TempFile{}
+	if !nparse && direct == "" {
+		thumb := &utils.TempFile{}
 		defer func() {if err := thumb.Remove(); err != nil {
 			logger.Warn(err)
 		}}()

@@ -1,4 +1,4 @@
-package downloaders
+package uploaders
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	//"io"
 	"math"
 	"path/filepath"
-	"strconv"
+	//"strconv"
 	"strings"
 	"time"
 
@@ -64,7 +64,7 @@ func (ul *TgUpload) Start() (err error) {
 	_ = ul.upload.WithThreads(4)
 	ul.action = "upload"
 	asDoc := config.Conf.UploadAsDoc
-	if ul.ForceFile {
+	if ul.forceDoc {
 		asDoc = true
 	}
 	spoiler := false
@@ -87,8 +87,8 @@ func (ul *TgUpload) Start() (err error) {
 
 	defer cancel()
 
-	done := make(chan error, 1)
-	ul.pchan = make(chan *uploaders.ProgressState, 1)
+	doneCh := make(chan struct{})
+	ul.pchan = make(chan *uploader.ProgressState, 1)
 	start := time.Now()
 	progressInterval := config.Rconf.ProgresUpdateInterval * time.Second
 
@@ -96,25 +96,24 @@ func (ul *TgUpload) Start() (err error) {
 		ticker := time.NewTicker(progressInterval)
 		defer ticker.Stop()
 
-		var stored *uploaders.ProgressState
+		var stored *uploader.ProgressState
+	Loop:
 		for {
 			select {
 			case <-ctx.Done():
-				done <- fmt.Errorf("upload timed out after %s", utils.TimeFormatter(dlTimeout.Seconds()))
-				return
+				break Loop
 			case ev := <-ul.pchan:
 				ul.ProgressCallback(start, ev)
-				return
+				break Loop
 			case <-doneCh:
-				return
+				break Loop
 			}
 		}
 
 		for {
 			select {
 			case <-ctx.Done():
-				// timeout or external cancel
-				done <- fmt.Errorf("upload timed out after %s", utils.TimeFormatter(dlTimeout.Seconds()))
+				// timeout
 				return
 			case ev := <-ul.pchan:
 				stored = ev
@@ -128,9 +127,9 @@ func (ul *TgUpload) Start() (err error) {
 		}
 	}()
 
-	var dhuration int
+	var duration int
 	var inputFile, thumbFile tg.InputFileClass
-	var mime mimetype.MIME
+	var mime *mimetype.MIME
 	defer func() { _ = ul.msg.Action("", 0) }()
 	if len(ul.bytes) == 0 {
 		mime, _ = mimetype.DetectFile(ul.Path)
@@ -151,7 +150,7 @@ func (ul *TgUpload) Start() (err error) {
 		thumbFile, duration = ul.getThumbWithDuration(ctx, mime.Extension())
 		attributes = append(attributes, &tg.DocumentAttributeVideo{
 			SupportsStreaming: true,
-			Duration:          duration,
+			Duration:          float64(duration),
 		})
 	} else {
 		thumbFile = ul.uploadThumbnail(ctx)
@@ -167,13 +166,12 @@ func (ul *TgUpload) Start() (err error) {
 	return ul.sendMedia(media)
 }
 
-func (ul *TgUpload) ProgressCallback(start time.Time, upload *uploaders.ProgressState) {
+func (ul *TgUpload) ProgressCallback(start time.Time, upload *uploader.ProgressState) {
 	total := upload.Total
 	current := upload.Uploaded
 	remainingSize := total - current
 	diff := time.Since(start).Round(time.Second).Seconds()
-	speed := done / int64(diff)
-	eta := torrent.ETA
+	speed := current / int64(diff)
 	var percentage float64
 	var timeToCompletion string
 
@@ -210,14 +208,14 @@ func (ul *TgUpload) ProgressCallback(start time.Time, upload *uploaders.Progress
 		elapsedTime,
 	)
 	var msgHead string
-	if dl.dir != "" {
-		msgHead = "**From folder:** `" + dl.dir + "`\n"
+	if ul.dir != "" {
+		msgHead = "**From folder:** `" + ul.dir + "`\n"
 	}
 	msgHead += "**File:** `" + upload.Name + "`"
-	msgHead = conf.Config.CapDeco + " **Uploading…**\n" + msgHead
+	msgHead = config.Conf.CapDeco + " **Uploading…**\n" + msgHead
 	txt := msgHead + "\n" + tmp
 	_, _ = ul.msg.EditText(txt)
-	return ok
+
 }
 
 func (ul *TgUpload) Chunk(ctx context.Context, state uploader.ProgressState) error {
@@ -276,7 +274,7 @@ func (ul *TgUpload) getThumbWithDuration(ctx context.Context, ext string) (thumb
 
 func (ul *TgUpload) uploadThumbnail(ctx context.Context) (thumb tg.InputFileClass) {
 	uClient := uploader.NewUploader(ul.msg.Ctx.Raw)
-	thumb, err = uClient.FromPath(ctx, ul.thumb)
+	thumb, err := uClient.FromPath(ctx, ul.thumb)
 	if err != nil {
 		logger.Error("Uploading thumbnail to telegram server failed with: ", err)
 		return thumb

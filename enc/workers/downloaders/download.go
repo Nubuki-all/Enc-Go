@@ -1,3 +1,4 @@
+// Package downloaders downloads files from different sources.
 package downloaders
 
 import (
@@ -36,7 +37,7 @@ type Downloader struct {
 	Folder        string
 	FileName      string
 	Selected      string
-	Uri           string
+	URI           string
 	Size          int64
 	Qbit          bool
 	err           error
@@ -72,16 +73,16 @@ func (dl *Downloader) Start() error {
 	if dl.InputLoc != nil {
 		tgDl := NewTgDl(dl.InputLoc, dl.Size, dl.Msg, dl.TransferInfo)
 		err = tgDl.Start()
-	} else if dl.Qbit && dl.Uri != "" {
+	} else if dl.Qbit && dl.URI != "" {
 		folder, _ := filepath.Abs(dl.Folder)
-		dl.qbitDl = NewQbtitDl(dl.Uri, folder, dl.Selected, dl.Msg, dl.TransferInfo)
+		dl.qbitDl = NewQbtitDl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
 		err = dl.qbitDl.Start()
 		if err == nil {
 			dl.FileName = dl.qbitDl.name
 		}
-	} else if dl.Uri != "" {
+	} else if dl.URI != "" {
 		folder, _ := filepath.Abs(dl.Folder)
-		dl.aria2Dl = NewAria2Dl(dl.Uri, folder, dl.Selected, dl.Msg, dl.TransferInfo)
+		dl.aria2Dl = NewAria2Dl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
 		err = dl.aria2Dl.Start()
 		if err == nil {
 			dl.FileName = dl.aria2Dl.name
