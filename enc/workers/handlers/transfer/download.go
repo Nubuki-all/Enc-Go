@@ -118,6 +118,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		}
 	}
 	inputLoc, fInfo, err := utils.GetInputFileLocationAndSize(repMsg.Media)
+	println("here")
 	if err != nil {
 		return helpFunc(err.Error())
 	}
