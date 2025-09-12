@@ -118,7 +118,6 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		}
 	}
 	inputLoc, fInfo, err := utils.GetInputFileLocationAndSize(repMsg.Media)
-	println("here")
 	if err != nil {
 		return helpFunc(err.Error())
 	}
@@ -189,6 +188,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		Qbit:     qbit,
 	}
 	download.Init(id, msg.SenderID)
+	println("here")
 	err = download.Start()
 	if err != nil || download.IsCancelled {
 		_, _ = download.ReportStatus()
