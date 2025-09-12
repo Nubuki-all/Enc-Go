@@ -28,7 +28,7 @@ require (
 	golang.org/x/time v0.13.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gorm.io/driver/sqlite v1.6.0
-	gorm.io/gorm v1.30.5
+	gorm.io/gorm v1.31.0
 	moul.io/zapgorm2 v1.3.0
 )
 
