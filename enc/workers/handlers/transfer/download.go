@@ -26,7 +26,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	}
 	cmd := update.Args()[0]
 	var err error
-	var pargs map[string]interface{}
+	var pargs map[string]any
 	helpMsg := "Downloads the replied media/link: to a location (specified or the ALT_DOWNLOAD_DIR env var) locally\n" +
 		"Available arguments:\n" +
 		"  Path to download (Non-quoted). End the args with '/' to specify the folder in which to download and let the bot auto detected filename\n" +
@@ -106,6 +106,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		switch repMsg.Media.(type) {
 		case *tg.MessageMediaWebPage:
 			repMsg.Media = nil
+		default:
 		}
 	}
 	if repMsg.Media == nil {
@@ -208,7 +209,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	}
 	cmd := update.Args()[0]
 	var err error
-	var pargs map[string]interface{}
+	var pargs map[string]any
 	helpMsg := "Reply to a file/link to download,rename and upload it.\n" +
 		"Either pass the file name as argument or use the below flags;\n" +
 		"Available flags:"
@@ -312,6 +313,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		switch repMsg.Media.(type) {
 		case *tg.MessageMediaWebPage:
 			repMsg.Media = nil
+		default:
 		}
 	}
 	if repMsg.Media == nil {
@@ -385,7 +387,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		}
 	} else {
 		if args != "" {
-			folder, fileName = filepath.Split(args)
+			fileName = args
 		}
 		if link != "" {
 			dlInfo = downloaders.GetAria2DlInfo(link)
@@ -411,6 +413,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			return nil
 		}
 		fileName = tgFileName
+		download.FileName = tgFileName
 	}
 	id := fmt.Sprintf("%d:%d", sMsg.ChatID, sMsg.ID)
 	download.Init(id, msg.SenderID)
