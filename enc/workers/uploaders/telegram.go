@@ -277,7 +277,7 @@ func (ul *TgUpload) getThumbWithDuration(ctx context.Context, ext string) (thumb
 
 func (ul *TgUpload) uploadThumbnail(ctx context.Context) (thumb tg.InputFileClass) {
 	if ul.thumb == "" {
-		return
+		return thumb
 	}
 	uClient := uploader.NewUploader(ul.msg.Ctx.Raw)
 	thumb, err := uClient.FromPath(ctx, ul.thumb)
