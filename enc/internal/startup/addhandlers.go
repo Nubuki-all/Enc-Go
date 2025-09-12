@@ -83,6 +83,7 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		// Transfer Handlers
 		"download": EventHandlerWithArgs(transfer.Download),
 		"dl":       EventHandlerWithArgs(transfer.Download),
+		"rename": EventHandlerWithArgs(transfer.Rename),
 		"list":     EventHandlerWithArgs(transfer.ListFiles),
 	}
 
