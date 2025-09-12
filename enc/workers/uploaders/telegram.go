@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	//"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gabriel-vasile/mimetype"
@@ -90,8 +91,10 @@ func (ul *TgUpload) Start() (err error) {
 	doneCh := make(chan struct{})
 	ul.pchan = make(chan *uploader.ProgressState, 1)
 	start := time.Now()
+	var wg sync.WaitGroup
 	progressInterval := config.Rconf.ProgresUpdateInterval * time.Second
 
+	wg.Add(1)
 	go func() {
 		ticker := time.NewTicker(progressInterval)
 		defer ticker.Stop()
@@ -140,6 +143,7 @@ func (ul *TgUpload) Start() (err error) {
 		inputFile, err = ul.upload.FromBytes(ctx, ul.name, ul.bytes)
 	}
 	close(doneCh)
+	wg.Wait()
 	if err != nil {
 		return err
 	}
@@ -272,6 +276,9 @@ func (ul *TgUpload) getThumbWithDuration(ctx context.Context, ext string) (thumb
 }
 
 func (ul *TgUpload) uploadThumbnail(ctx context.Context) (thumb tg.InputFileClass) {
+	if ul.thumb == "" {
+		return
+	}
 	uClient := uploader.NewUploader(ul.msg.Ctx.Raw)
 	thumb, err := uClient.FromPath(ctx, ul.thumb)
 	if err != nil {

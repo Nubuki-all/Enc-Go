@@ -1,17 +1,18 @@
+// Package telegram Initializes the telegram Client
 package telegram
 
 import (
-	"context"
+	//"context"
 	"time"
 
 	"github.com/celestix/gotgproto"
 	"github.com/celestix/gotgproto/ext"
 	"github.com/celestix/gotgproto/sessionMaker"
-	"github.com/gotd/contrib/middleware/floodwait"
+	//"github.com/gotd/contrib/middleware/floodwait"
 	"github.com/gotd/contrib/middleware/ratelimit"
 	"github.com/gotd/td/telegram"
 	_ "github.com/mattn/go-sqlite3"
-	"go.uber.org/zap"
+	//"go.uber.org/zap"
 	"golang.org/x/time/rate"
 	"gorm.io/driver/sqlite"
 
@@ -20,6 +21,7 @@ import (
 
 	"enc/config"
 	"enc/internal/logger"
+	"enc/utils/floodwait"
 )
 
 var (
@@ -30,9 +32,7 @@ var (
 func InitClient() {
 	var err error
 	// Initializing flood waiter, which will wait for stated duration if "FLOOD_WAIT" error occurred
-	waiter := floodwait.NewWaiter().WithCallback(func(ctx context.Context, wait floodwait.FloodWait) {
-		logger.WarnW("Waiting for flood,", zap.Int64("duration", int64(wait.Duration)))
-	})
+	waiter := floodwait.NewSimpleWaiter()
 	// Initializing ratelimiter, which will allow at most 30 requests to Telegram in 100ms
 	ratelimiter := ratelimit.New(rate.Every(time.Millisecond*100), 30)
 
@@ -48,11 +48,6 @@ func InitClient() {
 			Logger:      logger.Logger,
 			Session:     sessionMaker.SqlSession(sqlite.Open(".encbot.session")),
 			Middlewares: []telegram.Middleware{waiter, ratelimiter},
-			RunMiddleware: func(origRun func(ctx context.Context, f func(ctx context.Context) error) (err error), ctx context.Context, f func(ctx context.Context) (err error)) (err error) {
-				return origRun(ctx, func(ctx context.Context) error {
-					return waiter.Run(ctx, f)
-				})
-			},
 		},
 	)
 	if err != nil {
