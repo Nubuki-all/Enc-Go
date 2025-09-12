@@ -188,7 +188,6 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		Qbit:     qbit,
 	}
 	download.Init(id, msg.SenderID)
-	println("here")
 	err = download.Start()
 	if err != nil || download.IsCancelled {
 		_, _ = download.ReportStatus()
