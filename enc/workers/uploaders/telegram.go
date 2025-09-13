@@ -3,9 +3,11 @@ package uploaders
 import (
 	"context"
 	"fmt"
+
 	//"io"
 	"math"
 	"path/filepath"
+
 	//"strconv"
 	"strings"
 	"sync"
@@ -29,10 +31,9 @@ type TgUpload struct {
 	reply     *tele.Message
 	upload    *uploader.Uploader
 	pchan     chan *uploader.ProgressState
-	err       error
-	completed bool
+	// err       error
+	// completed bool
 	forceDoc  bool
-	quote     bool
 	ufstr     string
 	fstr      string
 	dir       string
@@ -249,15 +250,27 @@ func (ul *TgUpload) getThumbWithDuration(ctx context.Context, ext string) (thumb
 	var path string
 	if len(ul.bytes) > 0 {
 		tmp := &utils.TempFile{}
-		tmp.FromBytes(ext, ul.bytes)
+		if err := tmp.FromBytes(ext, ul.bytes); err != nil {
+			logger.Error(err)
+		}
 		path = tmp.Name
-		defer tmp.Remove()
+		defer func() {
+			if err := tmp.Remove(); err != nil {
+				logger.Warn(err)
+			}
+		}()
 	} else {
 		path = ul.Path
 	}
 	tmp := &utils.TempFile{}
-	tmp.Create(".jpg")
-	defer tmp.Remove()
+	if err := tmp.Create(".jpg"); err != nil {
+		logger.Error(err)
+	}
+	defer func ()  {
+		if err := tmp.Remove(); err != nil {
+			logger.Warn(err)
+		}
+	}()
 	thumbPath, dur, err := utils.GetVideoThumbnailAndDuration(path, tmp.Name)
 	if err != nil {
 		logger.Error(err)

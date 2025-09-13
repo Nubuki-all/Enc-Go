@@ -422,6 +422,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		_, _ = download.ReportStatus()
 		return nil
 	}
+	defer download.CleanDownload()
 	_, _ = sMsg.Edit(
 		fmt.Sprintf(
 			"__Saved to__ `%s` __successfully!__",
@@ -446,7 +447,10 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	if result.FileName != download.FileName {
 		_, _ = sMsg.EditText("Renaming:\n`" + download.FileName + "`\n >>>\n`" + result.FileName + "`…")
 		newPath := filepath.Join(filepath.Dir(download.Path), result.FileName)
-		os.Rename(download.Path, newPath)
+		if err = os.Rename(download.Path, newPath); err != nil {
+			logger.Warn(err)
+		}
+
 		download.Path = newPath
 	}
 	var thumbPath string
