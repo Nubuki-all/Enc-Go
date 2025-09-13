@@ -27,21 +27,21 @@ import (
 
 type TgUpload struct {
 	*types.TransferInfo
-	msg       *tele.Message
-	reply     *tele.Message
-	upload    *uploader.Uploader
-	pchan     chan *uploader.ProgressState
+	msg    *tele.Message
+	reply  *tele.Message
+	upload *uploader.Uploader
+	pchan  chan *uploader.ProgressState
 	// err       error
 	// completed bool
-	forceDoc  bool
-	ufstr     string
-	fstr      string
-	dir       string
-	name      string
-	caption   string
-	thumb     string
-	action    string
-	bytes     []byte
+	forceDoc bool
+	ufstr    string
+	fstr     string
+	dir      string
+	name     string
+	caption  string
+	thumb    string
+	action   string
+	bytes    []byte
 }
 
 func NewTgUl(name, caption, thumb string, forceDocument bool, msg, reply *tele.Message, tInfo *types.TransferInfo) *TgUpload {
@@ -266,7 +266,7 @@ func (ul *TgUpload) getThumbWithDuration(ctx context.Context, ext string) (thumb
 	if err := tmp.Create(".jpg"); err != nil {
 		logger.Error(err)
 	}
-	defer func ()  {
+	defer func() {
 		if err := tmp.Remove(); err != nil {
 			logger.Warn(err)
 		}
