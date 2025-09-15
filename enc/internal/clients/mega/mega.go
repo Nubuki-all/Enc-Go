@@ -247,27 +247,47 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	if err != nil {
 		return nil, err
 	}
-	// fmt.Println(res[0].F)
 	nodes := make(map[string]FSNode)
 	children := make(map[string][]string)
 	for _, n := range res[0].F {
 		nodes[n.Hash] = n
-		children[n.Parent] = append(children[n.Parent], n.Hash)
+		parent := n.Parent
+		// normalize empty parent -> treat as root handle
+		if parent == "" {
+			parent = folderInfo.ID
+		}
+		children[parent] = append(children[parent], n.Hash)
 	}
+
+	// optional debug
+	logger.Infof("nodes=%d children_keys=%d", len(nodes), len(children))
+
+	// handle explicit /file/... or /folder/... path in URL
 	pathHandle := folderInfo.InnerFolderHandle
 	sFileHandle := folderInfo.InnerFileHandle
+
 	startHandle := folderInfo.ID
 	startKey := folderKeyA32
+
+	// if user passed a file handle in the URL, prune the node set to the ancestor chain
 	if sFileHandle != "" {
 		prunedNodes, prunedChildren, perr := pruneNodesToPath(nodes, sFileHandle, folderInfo.ID)
 		if perr != nil {
-			// decide behaviour: error out or fallback to full-tree behavior
 			return nil, fmt.Errorf("prune path: %w", perr)
 		}
-		// replace nodes & children with pruned versions
 		nodes = prunedNodes
 		children = prunedChildren
-		// now continue — your existing recursive walk (starting at rootHandle) will only see the ancestor chain
+		// Ensure normalized children keys still use folderInfo.ID for root if needed
+		if _, ok := children[folderInfo.ID]; !ok {
+			// try to rebuild a top-level key if necessary
+			if cs, ok2 := children[""]; ok2 {
+				children[folderInfo.ID] = cs
+				delete(children, "")
+			}
+		}
+		// after pruning, the only child chain will be ancestors -> so start at folderInfo.ID
+		startHandle = folderInfo.ID
+		startKey = folderKeyA32
 	}
 	if pathHandle != "" {
 		curKey := folderKeyA32
@@ -283,7 +303,6 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			if derr != nil {
 				return nil, fmt.Errorf("failed to decrypt child folder key for %s: %w", pathHandle, derr)
 			}
-			// advance
 			curKey = childKeyA32
 			curHandle = pathHandle
 		}
