@@ -1,3 +1,4 @@
+// Package mega initiates and contains the mega client
 package mega
 
 import (
@@ -100,7 +101,7 @@ func New() *Mega {
 		config: cfg,
 		/*sn:     bigx.Int64(),
 		FS:     mgfs,*/
-		client: newHttpClient(cfg.timeout),
+		client: newHTTPClient(cfg.timeout),
 	}
 	return m
 }
@@ -127,7 +128,7 @@ func (m *Mega) apiRequest(r []byte, folderID string) (buf []byte, err error) {
 		m.apiMu.Unlock()
 	}()
 
-	url := m.baseurl + "/cs"
+	url := m.baseURL + "/cs"
 	if folderID != "" {
 		url += "?n=" + folderID
 	}
@@ -160,12 +161,12 @@ func (m *Mega) apiRequest(r []byte, folderID string) (buf []byte, err error) {
 
 		// at this point the body is read and closed
 
-		if bytes.HasPrefix(buf, []byte("[")) == false && bytes.HasPrefix(buf, []byte("-")) == false {
+		if !bytes.HasPrefix(buf, []byte("[")) && !bytes.HasPrefix(buf, []byte("-")) {
 			return nil, ErrBadResp
 		}
 
 		if len(buf) < 6 {
-			var emsg [1]ErrorMsg
+			var emsg [1]errorMsg
 			err = json.Unmarshal(buf, &emsg)
 			if err != nil {
 				err = json.Unmarshal(buf, &emsg[0])
@@ -380,7 +381,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			msg[0].Cmd = "g"
 			msg[0].G = 1
 			msg[0].P = node.Hash
-			if m.config.https {
+			if m.https {
 				msg[0].SSL = 2
 			}
 			request, err := json.Marshal(msg)
@@ -423,7 +424,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 
 			// build chunks and download URL
 			downloadURL := res[0].G
-			if m.config.https && strings.HasPrefix(downloadURL, "http://") {
+			if m.https && strings.HasPrefix(downloadURL, "http://") {
 				downloadURL = "https://" + strings.TrimPrefix(downloadURL, "http://")
 			}
 			chunks := getChunkSizes(int64(res[0].Size))
@@ -460,7 +461,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	return downloads, nil
 }
 
-// Create a new Download from link
+// NewDownloadFromLink creates a new Download from link
 //
 // Call Chunks to find out how many chunks there are, then for id =
 // 0..chunks-1 call DownloadChunk.  Finally call Finish() to receive
@@ -503,7 +504,7 @@ func (m *Mega) NewDownloadFromLink(url string) ([]*Download, error) {
 	msg[0].Cmd = "g"
 	msg[0].G = 1
 	msg[0].P = id
-	if m.config.https {
+	if m.https {
 		msg[0].SSL = 2
 	}
 	key := kBytes
@@ -539,9 +540,7 @@ func (m *Mega) NewDownloadFromLink(url string) ([]*Download, error) {
 	}
 
 	macEnc := cipher.NewCBCEncrypter(aesBlock, zeroIV)
-	if err != nil {
-		return nil, err
-	}
+	
 	iv, err := a32ToBytes([]uint32{ivA32[0], ivA32[1], ivA32[0], ivA32[1]})
 	if err != nil {
 		return nil, err
@@ -556,7 +555,7 @@ func (m *Mega) NewDownloadFromLink(url string) ([]*Download, error) {
 		// src:         src,
 		ResourceURL: downloadURL,
 		Name:        attr.Name,
-		Size:        res.Size,
+		Size:        res[0].Size,
 		aesBlock:    aesBlock,
 		iv:          iv,
 		ivA32:       ivA32,
@@ -573,8 +572,8 @@ func (d *Download) Chunks() int {
 	return len(d.chunks)
 }
 
-// Name returns the file name of the the download.
-func (d *Download) Name() string {
+// ChunkLocation returns the file name of the the download.
+/*func (d *Download) Name() string {
 	return d.name
 }
 
@@ -582,7 +581,7 @@ func (d *Download) Name() string {
 func (d *Download) Size() int64 {
 	return int64(d.size)
 }
-
+*/
 // ChunkLocation returns the position in the file and the size of the chunk
 func (d *Download) ChunkLocation(id int) (position int64, size int, err error) {
 	if id < 0 || id >= len(d.chunks) {

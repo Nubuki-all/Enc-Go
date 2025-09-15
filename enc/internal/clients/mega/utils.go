@@ -18,7 +18,7 @@ import (
 	"time"
 )
 
-func newHttpClient(timeout time.Duration) *http.Client {
+func newHTTPClient(timeout time.Duration) *http.Client {
 	// TODO: Need to test this out
 	// Doesn't seem to work as expected
 	c := &http.Client{
@@ -364,7 +364,7 @@ func decryptRSA(m, p, q, d *big.Int) []byte {
 // blockDecrypt decrypts using the block cipher blk in ECB mode.
 func blockDecrypt(blk cipher.Block, dst, src []byte) error {
 	if len(src) > len(dst) || len(src)%blk.BlockSize() != 0 {
-		return errors.New("Block decryption failed")
+		return errors.New("block decryption failed")
 	}
 
 	l := len(src) - blk.BlockSize()
@@ -379,7 +379,7 @@ func blockDecrypt(blk cipher.Block, dst, src []byte) error {
 // blockEncrypt encrypts using the block cipher blk in ECB mode.
 func blockEncrypt(blk cipher.Block, dst, src []byte) error {
 	if len(src) > len(dst) || len(src)%blk.BlockSize() != 0 {
-		return errors.New("Block encryption failed")
+		return errors.New("block encryption failed")
 	}
 
 	l := len(src) - blk.BlockSize()
@@ -393,7 +393,7 @@ func blockEncrypt(blk cipher.Block, dst, src []byte) error {
 
 // decryptSeessionId decrypts the session id using the given private
 // key.
-func decryptSessionId(privk string, csid string, mk []byte) (string, error) {
+func decryptSessionID(privk string, csid string, mk []byte) (string, error) {
 	block, err := aes.NewCipher(mk)
 	if err != nil {
 		return "", err
@@ -448,7 +448,6 @@ func getChunkSizes(size int64) (chunks []chunkSize) {
 var attrMatch = regexp.MustCompile(`{".*"}`)
 
 func decryptAttr(key []byte, data string) (attr FileAttr, err error) {
-	err = EBADATTR
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return attr, err
@@ -477,7 +476,7 @@ func decryptAttr(key []byte, data string) (attr FileAttr, err error) {
 }
 
 func encryptAttr(key []byte, attr FileAttr) (b string, err error) {
-	err = EBADATTR
+	//err = ErrBadAttr
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return "", err
