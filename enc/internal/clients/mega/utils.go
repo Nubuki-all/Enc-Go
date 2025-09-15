@@ -90,23 +90,23 @@ func parseMegaFolderURL(url string) (*urlInfo, error) {
 		return nil, ErrUnsupportedLink
 	}
 	s = strings.Split(s[1], "/")
-	if len(s) < 2 {
+	if len(s) < 3 {
 		return nil, ErrUnsupportedLink
 	}
 	info := &urlInfo{}
-	if strings.EqualFold(s[0], "folder") {
+	if strings.EqualFold(s[1], "folder") {
 		info.Type = 1
-	} else if strings.EqualFold(s[0], "file") {
+	} else if strings.EqualFold(s[1], "file") {
 		info.Type = 0
 	}
-	rest := s[1]
+	rest := s[2]
 	info.ID = strings.SplitN(rest, "#", 2)[0]
 	info.KeyFrag = strings.SplitN(rest, "#", 2)[1]
-	if len(s) == 4 {
-		if strings.EqualFold(s[2], "folder") {
-			info.InnerFolderHandle = s[3]
-		} else if strings.EqualFold(s[2], "file") {
-			info.InnerFileHandle = s[3]
+	if len(s) == 5 {
+		if strings.EqualFold(s[3], "folder") {
+			info.InnerFolderHandle = s[4]
+		} else if strings.EqualFold(s[3], "file") {
+			info.InnerFileHandle = s[4]
 		}
 	}
 	return info, nil
