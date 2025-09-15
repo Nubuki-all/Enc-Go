@@ -4,25 +4,21 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rand"
-	"crypto/sha512"
+	//"crypto/rand"
+	//"crypto/sha512"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"log"
-	"math/big"
-	mrand "math/rand"
+	//"io/ioutil"
 	"net/http"
-	"os"
+	//"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
-	"golang.org/x/crypto/pbkdf2"
-	
+
 	"enc/internal/logger"
 )
 
@@ -100,7 +96,7 @@ func New() *Mega {
 		panic(err) // this should be returned, but this is a public interface
 	}*/
 	cfg := newConfig()
-	mgfs := newMegaFS()
+	//mgfs := newMegaFS()
 	m := &Mega{
 		config: cfg,
 		/*sn:     bigx.Int64(),
@@ -110,13 +106,25 @@ func New() *Mega {
 	return m
 }
 
+// backOffSleep sleeps for the time pointed to then adjusts it by
+// doubling it up to a maximum of maxSleepTime.
+//
+// This produces a truncated exponential backoff sleep
+func backOffSleep(pt *time.Duration) {
+	time.Sleep(*pt)
+	*pt *= 2
+	if *pt > maxSleepTime {
+		*pt = maxSleepTime
+	}
+}
+
 // API request method
 func (m *Mega) apiRequest(r []byte, folderID string) (buf []byte, err error) {
 	var resp *http.Response
 	// serialize the API requests
 	m.apiMu.Lock()
 	defer func() {
-		m.sn++
+		// m.sn++
 		m.apiMu.Unlock()
 	}()
 
@@ -141,7 +149,7 @@ func (m *Mega) apiRequest(r []byte, folderID string) (buf []byte, err error) {
 			_ = resp.Body.Close()
 			continue
 		}
-		buf, err = ioutil.ReadAll(resp.Body)
+		buf, err = io.ReadAll(resp.Body)
 		if err != nil {
 			_ = resp.Body.Close()
 			continue
@@ -205,7 +213,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	if url == "" {
 		return nil, EARGS
 	}
-	folderInfo, err := parseMegaURL(url)
+	folderInfo, err := parseMegaFolderURL(url)
 	if err != nil {
 		return nil, err
 	}
@@ -220,14 +228,12 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	var msg [1]DownloadFolderMsg
 	var res [1]DownloadFolderResp
 
-	m.FS.mutex.Lock()
+
 	msg[0].Cmd = "f"
 	msg[0].C = 1
 	msg[0].CA = 1
 	msg[0].R = 1
 	
-	key := kBytes
-	m.FS.mutex.Unlock()
 	
 	request, err := json.Marshal(msg)
 	if err != nil {
@@ -242,13 +248,11 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	if err != nil {
 		return nil, err
 	}
-	for _, node := range res[0].F {
-		
-	}
+
 	
 	nodes := map[string]FSNode{}
 	children := map[string][]string{}
-	for _, n := range folderResp[0].F {
+	for _, n := range res[0].F {
 		nodes[n.Hash] = n
 		children[n.Parent] = append(children[n.Parent], n.Hash)
 	}
@@ -257,7 +261,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	startHandle := folderInfo.ID
 	startKey := folderKeyA32
 	if sFileHandle != "" {
-	    prunedNodes, prunedChildren, perr := pruneNodesToPath(nodes, sFileHandle, rootHandle)
+	    prunedNodes, prunedChildren, perr := pruneNodesToPath(nodes, sFileHandle, folderInfo.ID)
 	    if perr != nil {
 	        // decide behaviour: error out or fallback to full-tree behavior
 	        return nil, fmt.Errorf("prune path: %w", perr)
@@ -269,21 +273,21 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	}
 	if pathHandle != "" {
 		curKey := folderKeyA32
-		curHandle := rootHandle
+		curHandle := folderInfo.ID
 		if node, ok := nodes[pathHandle]; ok {
 			parts := strings.Split(node.Key, ":")
 			encB64 := parts[len(parts)-1]
 			encA32, derr := base64ToA32(encB64)
 			if derr != nil {
-				return nil, fmt.Errorf("failed to parse child folder key for %s: %w", ph, derr)
+				return nil, fmt.Errorf("failed to parse child folder key for %s: %w", pathHandle, derr)
 			}
 			childKeyA32, derr := decryptKeyA32(encA32, curKey)
 			if derr != nil {
-				return nil, fmt.Errorf("failed to decrypt child folder key for %s: %w", ph, derr)
+				return nil, fmt.Errorf("failed to decrypt child folder key for %s: %w", pathHandle, derr)
 			}
 			// advance
 			curKey = childKeyA32
-			curHandle = ph
+			curHandle = pathHandle
 		}
 		startHandle = curHandle
 		startKey = curKey
@@ -292,7 +296,8 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	zeroIV := make([]byte, 16)
 
 	var downloads []*Download
-	walk := func(curHandle string, curKeyA32 []uint32, relPath string) error {
+	var walk func(curHandle string, curKeyA32 []uint32, relPath string) error
+	walk = func(curHandle string, curKeyA32 []uint32, relPath string) error {
 		for _, child := range children[curHandle] {
 			node, ok := nodes[child]
 			if !ok {
@@ -329,7 +334,11 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 					for i := 0; i < 4; i++ {
 						kA32[i] = decA32[i] ^ decA32[i+4]
 					}
-					kBytes := a32ToBytes(kA32)
+					kBytes, err := a32ToBytes(kA32)
+					if err != nil {
+						logger.Warn(err)
+						continue
+					}
 					if attrs, derr2 := decryptAttr(kBytes, node.Attr); derr2 == nil {
 						if nname := attrs.Name; nname != "" {
 							fName = nname
@@ -352,7 +361,11 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			for i := 0; i < 4; i++ {
 				kA32[i] = decA32[i] ^ decA32[i+4]
 			}
-			keyBytes := a32ToBytes(kA32)
+			keyBytes, err := a32ToBytes(kA32)
+			if err != nil {
+				logger.Warn(err)
+				continue
+			}
 
 			// build AES block and MAC encrypter
 			aesBlock, err := aes.NewCipher(keyBytes)
@@ -362,34 +375,31 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			macEnc := cipher.NewCBCEncrypter(aesBlock, zeroIV)
 
 			// iv for CTR is a32_to_bytes([iv0, iv1, iv0, iv1])
-			ivBytes, err := a32_to_bytes([]uint32{decA32[4], decA32[5], decA32[4], decA32[5]})
+			ivBytes, err := a32ToBytes([]uint32{decA32[4], decA32[5], decA32[4], decA32[5]})
 			if err != nil {
 				return err
 			}
 			var msg [1]DownloadMsg
 			var res [1]DownloadResp
 		
-			m.FS.mutex.Lock()
 			msg[0].Cmd = "g"
 			msg[0].G = 1
 			msg[0].P = node.Hash
 			if m.config.https {
 				msg[0].SSL = 2
 			}
-			m.FS.mutex.Unlock()
-
 			request, err := json.Marshal(msg)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			result, err := m.apiRequest(request, folderInfo.ID)
 			if err != nil {
-				return nil, err
+				return err
 			}
 		
 			err = json.Unmarshal(result, &res)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			if len(res) == 0 {
 				continue
@@ -401,8 +411,8 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 
 			// decrypt attributes from API response if present to get filename
 			fileName := node.Hash + ".bin"
-			if gres[0].Attr != "" {
-				if attrObj, derr := decryptAttr(keyBytes, gres[0].Attr); derr == nil {
+			if res[0].Attr != "" {
+				if attrObj, derr := decryptAttr(keyBytes, res[0].Attr); derr == nil {
 					if attrObj.Name != "" {
 						fileName = attrObj.Name
 					}
@@ -417,11 +427,11 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			}
 
 			// build chunks and download URL
-			downloadUrl := gres[0].G
+			downloadUrl := res[0].G
 			if m.config.https && strings.HasPrefix(downloadUrl, "http://") {
 				downloadUrl = "https://" + strings.TrimPrefix(downloadUrl, "http://")
 			}
-			chunks := getChunkSizes(int64(gres[0].Size))
+			chunks := getChunkSizes(int64(res[0].Size))
 
 			// build Download and set name to include parent path (relPath)
 			relName := fileName
@@ -432,7 +442,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 				m:           m,
 				resourceUrl: downloadUrl,
 				name:        relName,
-				size:        gres[0].Size,
+				size:        res[0].Size,
 				aes_block:   aesBlock,
 				iv:          ivBytes,
 				ivA32:       []uint32{decA32[4], decA32[5]},
@@ -486,11 +496,14 @@ func (m *Mega) NewDownloadFromLink(url string) ([]*Download, error) {
 	ivA32 := fileKeyA32[4:6]
 	metaMacTwo := fileKeyA32[6:8]
 	// k bytes
-	kBytes := a32ToBytes(kA32)
+	kBytes, err := a32ToBytes(kA32)
+	if err != nil {
+		logger.Warn(err)
+		return nil, err
+	}
 	var msg [1]DownloadMsg
 	var res [1]DownloadResp
 
-	m.FS.mutex.Lock()
 	msg[0].Cmd = "g"
 	msg[0].G = 1
 	msg[0].P = id
@@ -498,8 +511,6 @@ func (m *Mega) NewDownloadFromLink(url string) ([]*Download, error) {
 		msg[0].SSL = 2
 	}
 	key := kBytes
-	m.FS.mutex.Unlock()
-
 	request, err := json.Marshal(msg)
 	if err != nil {
 		return nil, err
@@ -532,13 +543,10 @@ func (m *Mega) NewDownloadFromLink(url string) ([]*Download, error) {
 	}
 
 	mac_enc := cipher.NewCBCEncrypter(aes_block, zero_iv)
-	m.FS.mutex.Lock()
-	// t, err := bytes_to_a32(src.meta.iv)
-	m.FS.mutex.Unlock()
 	if err != nil {
 		return nil, err
 	}
-	iv, err := a32_to_bytes([]uint32{ivA32[0], ivA32[1], ivA32[0], ivA32[1]})
+	iv, err := a32ToBytes([]uint32{ivA32[0], ivA32[1], ivA32[0], ivA32[1]})
 	if err != nil {
 		return nil, err
 	}
@@ -552,7 +560,7 @@ func (m *Mega) NewDownloadFromLink(url string) ([]*Download, error) {
 		//src:         src,
 		resourceUrl: downloadUrl,
 		name:        attr.Name,
-		size:        res[0].Size
+		size:        res[0].Size,
 		aes_block:   aes_block,
 		iv:          iv,
 		ivA32:       ivA32,
@@ -623,7 +631,7 @@ func (d *Download) DownloadChunk(id int) (chunk []byte, err error) {
 		return nil, errors.New("retries exceeded")
 	}
 
-	chunk, err = ioutil.ReadAll(resp.Body)
+	chunk, err = io.ReadAll(resp.Body)
 	if err != nil {
 		_ = resp.Body.Close()
 		return nil, err
@@ -655,7 +663,7 @@ func (d *Download) DownloadChunk(id int) (chunk []byte, err error) {
 	enc := cipher.NewCBCEncrypter(d.aes_block, d.iv)
 	i := 0
 	block := make([]byte, 16)
-	paddedChunk := paddnull(chunk, 16)
+	paddedChunk := paddNull(chunk, 16)
 	for i = 0; i < len(paddedChunk); i += 16 {
 		enc.CryptBlocks(block, paddedChunk[i:i+16])
 	}
@@ -696,7 +704,11 @@ func (d *Download) Finish() (err error) {
 	if err != nil {
 		return err
 	}
-	if bytes.Equal(btmac, d.metaMacTwo) == false {
+	metaMacTwo, err := a32ToBytes(d.metaMacTwo)
+	if err != nil {
+		return err
+	}
+	if bytes.Equal(btmac, metaMacTwo) == false {
 		return EMACMISMATCH
 	}
 

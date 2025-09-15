@@ -9,6 +9,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math/big"
 	"net"
 	"net/http"
@@ -71,7 +72,7 @@ func parseMegaURL(u string) (id, keyFrag string, err error) {
 	return "", "", EUNSUPPORTEDLINK
 }
 
-func isFolder (url) bool {
+func isFolder (url string) bool {
 	return strings.Contains(url, "/folder/")
 }
 
@@ -88,7 +89,7 @@ func parseMegaFolderURL(url string) (*urlInfo, error) {
 	if len(s) != 2 {
 		return nil, EUNSUPPORTEDLINK
 	}
-	s = strings.Split(x[1], "/")
+	s = strings.Split(s[1], "/")
 	if len(s) < 2 {
 		return nil, EUNSUPPORTEDLINK
 	}
@@ -185,8 +186,14 @@ func a32ToBytes(a []uint32) ([]byte, error) {
 // decryptKeyA32 decrypts an encrypted 'k' a32 slice using the provided key a32 (folder key).
 // It mirrors mega.py decrypt_key: AES-CBC decrypt each 16-byte block with key = a32_to_bytes(key) and zero IV.
 func decryptKeyA32(encA32 []uint32, keyA32 []uint32) ([]uint32, error) {
-	keyBytes := a32ToBytes(keyA32)
-	encBytes := a32ToBytes(encA32) // converts encA32 to bytes
+	keyBytes, err := a32ToBytes(keyA32)
+	if err != nil {
+		return nil, err
+	}
+	encBytes, err := a32ToBytes(encA32) // converts encA32 to bytes
+	if err != nil {
+		return nil, err
+	}
 	// AES-CBC decrypt with zero IV
 	block, err := aes.NewCipher(keyBytes)
 	if err != nil {
@@ -201,7 +208,7 @@ func decryptKeyA32(encA32 []uint32, keyA32 []uint32) ([]uint32, error) {
 	mode := cipher.NewCBCDecrypter(block, ivZero)
 	dec := make([]byte, len(encBytes))
 	mode.CryptBlocks(dec, encBytes)
-	return bytesToA32(dec), nil
+	return bytesToA32(dec)
 }
 
 // base64urlencode encodes byte slice b using base64 url encoding
