@@ -546,7 +546,7 @@ func (m *Mega) NewDownloadFromLink(url string) ([]*Download, error) {
 		return nil, err
 	}
 	downloadURL := res[0].G
-	if m.config.https && strings.HasPrefix(downloadURL, "http://") {
+	if m.https && strings.HasPrefix(downloadURL, "http://") {
 		downloadURL = "https://" + strings.TrimPrefix(downloadURL, "http://")
 	}
 

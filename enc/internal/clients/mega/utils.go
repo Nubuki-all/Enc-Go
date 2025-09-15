@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
-	"crypto/rand"
+	//"crypto/rand"
 	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math/big"
+	//"math/big"
 	"net"
 	"net/http"
 	"regexp"
@@ -212,10 +212,10 @@ func decryptKeyA32(encA32 []uint32, keyA32 []uint32) ([]uint32, error) {
 
 // base64urlencode encodes byte slice b using base64 url encoding
 // without `=` padding.
-func base64urlencode(b []byte) string {
+/*func base64urlencode(b []byte) string {
 	return base64.RawURLEncoding.EncodeToString(b)
 }
-
+*/
 // base64urldecode decodes the byte slice b using unpadded base64 url
 // decoding. It also allows the characters from standard base64 to be
 // compatible with the mega decoder.
@@ -223,8 +223,8 @@ func base64urldecode(s string) ([]byte, error) {
 	enc := base64.RawURLEncoding
 	// mega base64 decoder accepts the characters from both URLEncoding and StdEncoding
 	// though nearly all strings are URL encoded
-	s = strings.Replace(s, "+", "-", -1)
-	s = strings.Replace(s, "/", "_", -1)
+	s = strings.ReplaceAll(s, "+", "-")
+	s = strings.ReplaceAll(s, "/", "_")
 	return enc.DecodeString(s)
 }
 
@@ -238,14 +238,14 @@ func base64ToA32(s string) ([]uint32, error) {
 }
 
 // a32ToBase64 converts uint32 slice to base64 encoded byte slice.
-func a32ToBase64(a []uint32) (string, error) {
+/*func a32ToBase64(a []uint32) (string, error) {
 	d, err := a32ToBytes(a)
 	if err != nil {
 		return "", err
 	}
 	return base64urlencode(d), nil
 }
-
+*/
 // paddNull pads byte slice b such that the size of resulting byte
 // slice is a multiple of q.
 func paddNull(b []byte, q int) []byte {
@@ -261,7 +261,7 @@ func paddNull(b []byte, q int) []byte {
 }
 
 // passwordKey calculates password hash from the user password.
-func passwordKey(p string) ([]byte, error) {
+/*func passwordKey(p string) ([]byte, error) {
 	a, err := bytesToA32(paddNull([]byte(p), 4))
 	if err != nil {
 		return nil, err
@@ -419,7 +419,7 @@ func decryptSessionID(privk string, csid string, mk []byte) (string, error) {
 
 	return base64urlencode(r[:43]), nil
 }
-
+*/
 // chunkSize describes a size and position of chunk
 type chunkSize struct {
 	position int64
@@ -475,7 +475,7 @@ func decryptAttr(key []byte, data string) (attr FileAttr, err error) {
 	return attr, err
 }
 
-func encryptAttr(key []byte, attr FileAttr) (b string, err error) {
+/*func encryptAttr(key []byte, attr FileAttr) (b string, err error) {
 	// err = ErrBadAttr
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -513,3 +513,4 @@ func randString(l int) (string, error) {
 	d = d[:l]
 	return strings.NewReplacer("/", "A", "+", "B").Replace(string(d)), nil
 }
+*/
