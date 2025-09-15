@@ -269,31 +269,36 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	sFileHandle := folderInfo.InnerFileHandle
 
 	startHandle := folderInfo.ID
+	for id, _ := range children {
+		if _, ok := nodes[id]; !ok {
+			startHandle = id
+		}
+	}
 	startKey := folderKeyA32
 
 	// if user passed a file handle in the URL, prune the node set to the ancestor chain
 	if sFileHandle != "" {
-		prunedNodes, prunedChildren, perr := pruneNodesToPath(nodes, sFileHandle, folderInfo.ID)
+		prunedNodes, prunedChildren, perr := pruneNodesToPath(nodes, sFileHandle, startHandle)
 		if perr != nil {
 			return nil, fmt.Errorf("prune path: %w", perr)
 		}
 		nodes = prunedNodes
 		children = prunedChildren
 		// Ensure normalized children keys still use folderInfo.ID for root if needed
-		if _, ok := children[folderInfo.ID]; !ok {
+		if _, ok := children[startHandle]; !ok {
 			// try to rebuild a top-level key if necessary
 			if cs, ok2 := children[""]; ok2 {
-				children[folderInfo.ID] = cs
+				children[startHandle] = cs
 				delete(children, "")
 			}
 		}
 		// after pruning, the only child chain will be ancestors -> so start at folderInfo.ID
-		startHandle = folderInfo.ID
-		startKey = folderKeyA32
+		// startHandle = 
+		// startKey = folderKeyA32
 	}
 	if pathHandle != "" {
 		curKey := folderKeyA32
-		curHandle := folderInfo.ID
+		curHandle := startHandle
 		if node, ok := nodes[pathHandle]; ok {
 			parts := strings.Split(node.Key, ":")
 			encB64 := parts[len(parts)-1]
@@ -408,7 +413,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 
 			msg[0].Cmd = "g"
 			msg[0].G = 1
-			msg[0].P = node.Hash
+			msg[0].N = node.Hash
 			if m.https {
 				msg[0].SSL = 2
 			}
