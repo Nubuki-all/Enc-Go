@@ -309,11 +309,13 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 		startHandle = curHandle
 		startKey = curKey
 	}
+	logger.Infof("nodes=%d children_keys=%d", len(nodes), len(children))
 
 	var downloads []*Download
 	var walk func(curHandle string, curKeyA32 []uint32, relPath string) error
 	walk = func(curHandle string, curKeyA32 []uint32, relPath string) error {
 		for _, child := range children[curHandle] {
+			fmt.Println("if.")
 			node, ok := nodes[child]
 			if !ok {
 				continue
