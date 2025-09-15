@@ -269,7 +269,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	sFileHandle := folderInfo.InnerFileHandle
 
 	startHandle := folderInfo.ID
-	for id, _ := range children {
+	for id := range children {
 		if _, ok := nodes[id]; !ok {
 			startHandle = id
 		}
@@ -293,7 +293,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			}
 		}
 		// after pruning, the only child chain will be ancestors -> so start at folderInfo.ID
-		// startHandle = 
+		// startHandle =
 		// startKey = folderKeyA32
 	}
 	if pathHandle != "" {
