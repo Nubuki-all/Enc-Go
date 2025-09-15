@@ -20,6 +20,7 @@ import (
 
 	"enc/config"
 	"enc/internal/bot"
+	"enc/internal/logger"
 	"enc/utils"
 )
 
@@ -388,4 +389,31 @@ func CleanAllQbit(ctx context.Context) {
 	}
 	_ = qb.RemoveTagsCtx(ctx, hashes, "")
 	_ = qb.DeleteTorrentsCtx(ctx, hashes, true)
+}
+
+func GetMegaDlInfo(uri string) *utils.DLInfo {
+	dlInfo := &utils.DLInfo{}
+	downloads, err := bot.MegaClient.NewDownloadFromLink(uri)
+	if err != nil {
+		dlInfo.Error = err
+		return dlInfo
+	}
+	if len(downloads) == 0 {
+		dlInfo.Error = fmt.Errorf("no files available to download")
+		return dlInfo
+	}
+	
+	for _, dl := range downloads {
+		dlInfo.Files = append(dlInfo.Files, dl.Name)
+	}
+	dlInfo.Count = len(dlInfo.Files)
+	if dlInfo.Count == 1 {
+		dlInfo.Name = dlInfo.Files[0]
+	} else {
+		dlInfo.Name, err = bot.MegaClient.GetRootFolderName(uri)
+		if err != nil {
+			logger.Warn("Error while fetching mega folder name: ", err)
+		}
+	}
+	return dlInfo
 }

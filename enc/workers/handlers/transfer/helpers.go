@@ -15,7 +15,7 @@ import (
 func ListFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	helpMsg := "List items in a torrent along with their file_ids\n" +
 		"Arguments:\n" +
-		"   torrent/magnetic link (Required)"
+		"   direct/torrent/magnetic link (Required)"
 	if utils.SendHelp(args) {
 		_, _ = msg.Reply("<pre>"+helpMsg+"</pre>",
 			&tele.ReplyOptions{HtmlParseMode: true},
@@ -26,7 +26,12 @@ func ListFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 		_, err := msg.ReplyText("Please pass a valid direct/torrent/magnetic link as argument.")
 		return err
 	}
-	dlInfo := downloaders.GetQbitDlInfo(args)
+	var dlInfo *utils.DLInfo
+	if utils.IsMegaLink(args) {
+		dlInfo = downloaders.GetMegaDlInfo(args)
+	} else {
+		dlInfo = downloaders.GetQbitDlInfo(args)
+	}
 	if dlInfo.Error != nil {
 		_, _ = msg.Reply(
 			fmt.Sprintf("<pre>%v</pre>", dlInfo.Error),

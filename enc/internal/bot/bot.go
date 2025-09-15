@@ -1,3 +1,4 @@
+// Package bot contains runtime variables
 package bot
 
 import (
@@ -6,6 +7,8 @@ import (
 
 	"enc/internal/bot/state"
 	"enc/internal/bot/types"
+	"enc/internal/clients/mega"
+
 	"github.com/siku2/arigo"
 )
 
@@ -48,6 +51,7 @@ var ReleaseVersion string
 
 var (
 	Aria2Client       *arigo.Client
+	MegaClient        = mega.New()
 	ECallbackData     = make(map[string]*types.CallbackInfo)
 	Filters           = &types.FilterData{}
 	Queue             = types.NewQueue()

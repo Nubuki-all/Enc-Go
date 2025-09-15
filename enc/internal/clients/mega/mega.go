@@ -461,6 +461,124 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	return downloads, nil
 }
 
+// GetRootFolderName returns the display name for the root of a public folder share.
+// It prefers folderResp.Sn (if provided by the API). If not present it will try:
+// 1) decrypt the root node's Attr using the folder key, and
+// 2) as a last resort try to decrypt a direct child-folder's Attr (top-level folder name fallback).
+func (m *Mega) GetRootFolderName(folderURL string) (string, error) {
+	if folderURL == "" {
+		return "", ErrArgs
+	}
+
+	// parse top-level handle and folder key fragment from the url
+	folderInfo, err := parseMegaFolderURL(folderURL)
+	if err != nil {
+		return "", err
+	}
+	rootHandle := folderInfo.ID
+	keyFrag := folderInfo.KeyFrag
+
+	// decode the folder key fragment to a32 words
+	rootKeyA32, err := base64ToA32(keyFrag)
+	if err != nil {
+		return "", fmt.Errorf("decode folder key: %w", err)
+	}
+	var msg [1]DownloadFolderMsg
+	var res [1]DownloadFolderResp
+
+	msg[0].Cmd = "f"
+	msg[0].C = 1
+	msg[0].CA = 1
+	msg[0].R = 1
+
+	request, err := json.Marshal(msg)
+	if err != nil {
+		return "", err
+	}
+	result, err := m.apiRequest(request, folderInfo.ID)
+	if err != nil {
+		return "", err
+	}
+
+	err = json.Unmarshal(result, &res)
+	if err != nil {
+		return "", err
+	}
+	
+
+	if len(res) == 0 {
+		return "", fmt.Errorf("empty folder response")
+	}
+	fr := res[0]
+
+	
+	// build handle -> node map for convenient lookups
+	nodes := make(map[string]FSNode, len(fr.F))
+	for _, n := range fr.F {
+		nodes[n.Hash] = n
+	}
+
+	// 2) Try to decrypt a root node attribute (node whose handle == rootHandle)
+	if rootNode, ok := nodes[rootHandle]; ok && rootNode.Attr != "" {
+		// derive short kBytes from the folder key (same derivation used for file/folder attrs)
+		if len(rootKeyA32) >= 8 {
+			kA32 := make([]uint32, 4)
+			for i := 0; i < 4; i++ {
+				kA32[i] = rootKeyA32[i] ^ rootKeyA32[i+4]
+			}
+			kBytes, err := a32ToBytes(kA32)
+			if err != nil {
+				return "", err
+			}
+			if attrs, derr := decryptAttr(kBytes, rootNode.Attr); derr == nil {
+				if attrs.Name != "" {
+					return attrs.Name, nil
+				}
+			}
+			// fall through to next fallback if decrypt fails
+		}
+	}
+
+	// 3) Fallback: try to decrypt a top-level child folder's Attr (parent == rootHandle)
+	for _, node := range fr.F {
+		if node.Parent != rootHandle || node.T != 1 {
+			continue
+		}
+		// node.Key may be like "1:BASE64" or "BASE64"
+		if node.Key == "" {
+			continue
+		}
+		parts := strings.Split(node.Key, ":")
+		encB64 := parts[len(parts)-1]
+		encA32, derr := base64ToA32(encB64)
+		if derr != nil {
+			continue
+		}
+		// decrypt child folder key with root folder key
+		childDecA32, derr := decryptKeyA32(encA32, rootKeyA32)
+		if derr != nil || len(childDecA32) < 8 {
+			continue
+		}
+		// derive kBytes for child and decrypt its attrs
+		kA32 := make([]uint32, 4)
+		for i := 0; i < 4; i++ {
+			kA32[i] = childDecA32[i] ^ childDecA32[i+4]
+		}
+		kBytes, err := a32ToBytes(kA32)
+		if err != nil {
+			return "", err
+		}
+		if node.Attr != "" {
+			if attrs, derr2 := decryptAttr(kBytes, node.Attr); derr2 == nil && attrs.Name != "" {
+				return attrs.Name, nil
+			}
+		}
+	}
+
+	// nothing found
+	return "", fmt.Errorf("root folder name not found")
+}
+
 // NewDownloadFromLink creates a new Download from link
 //
 // Call Chunks to find out how many chunks there are, then for id =

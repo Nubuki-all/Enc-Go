@@ -18,12 +18,12 @@ func BotIsPaused() bool {
 }
 
 // UCancelled returns the list of user cancellations
-func UCancelled() []interface{} {
+func UCancelled() []any {
 	return bot.UCancel
 }
 
 // EnCanceller returns the encode cancellation map
-func EnCanceller() map[string]interface{} {
+func EnCanceller() map[string]any {
 	return bot.ECancel
 }
 
@@ -36,7 +36,7 @@ func IndexToPauseType(i int) (state.PauseType, bool) {
 	return 0, false
 }
 
-// Pause sets or clears a specific pause type
+// PauseByType sets or clears a specific pause type
 func PauseByType(pt state.PauseType, on bool) {
 	bot.Paused.Set(pt, on)
 }
@@ -50,7 +50,7 @@ func Pause(idx int, on bool) error {
 	return nil
 }
 
-// GetPauseStatus returns whether a specific pause type is set
+// GetPauseStatusByType whether a specific pause type is set
 func GetPauseStatusByType(pt state.PauseType) bool {
 	return bot.Paused.Get(pt)
 }
@@ -63,7 +63,7 @@ func GetPauseStatus(idx int) (bool, error) {
 	return GetPauseStatusByType(pt), nil
 }
 
-// RmPause clears the given pause type after duration if still set
+// RmPauseByType clears the given pause type after duration if still set
 func RmPauseByType(pt state.PauseType, duration time.Duration) {
 	if !bot.Paused.Get(pt) {
 		return
@@ -87,12 +87,12 @@ func RmPause(idx int, duration time.Duration) error {
 }
 
 // GetBatchQueue returns the current batch queue
-func GetBatchQueue() map[string]interface{} {
+func GetBatchQueue() map[string]any {
 	return bot.BatchQueue
 }
 
 // GetPreview returns preview batch or list
-func GetPreview(list bool) interface{} {
+func GetPreview(list bool) any {
 	if list {
 		return bot.PreviewList
 	}
@@ -100,7 +100,7 @@ func GetPreview(list bool) interface{} {
 }
 
 // GetPreviewer returns the first preview ing item
-func GetPreviewer() interface{} {
+func GetPreviewer() any {
 	if len(bot.BatchIng) > 0 {
 		return bot.BatchIng[0]
 	}
@@ -113,7 +113,7 @@ func GetQueue() *types.Queue {
 }
 
 // GetVar returns internal variable by name
-func GetVar(name string) interface{} {
+func GetVar(name string) any {
 	switch nameLower := strings.ToLower(name); nameLower {
 	case "groupenc":
 		return bot.GroupEnc
@@ -253,7 +253,7 @@ func RemoveRFilterByIndex(s []*types.RenameFilterData, index int) []*types.Renam
 	return append(ret, s[index+1:]...)
 }
 
-// isPositiveNumber returns true if the string is a valid number greater than zero.
+// IsPositiveNumber returns true if the string is a valid number greater than zero.
 func IsPositiveNumber(s string) bool {
 	f, err := strconv.ParseInt(s, 10, 64)
 

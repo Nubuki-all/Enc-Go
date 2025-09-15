@@ -7,9 +7,11 @@ import (
 	"hash/crc32"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -24,6 +26,32 @@ var (
 	MagnetRegex = regexp.MustCompile(`magnet:\?xt=urn:[a-z0-9]+:[a-zA-Z0-9]{32}`)
 	URLRegex    = regexp.MustCompile(`^(https?://|ftp://)?(www\.)?[^/\s]+\.[^/\s:]+(:\d+)?(/[^?\s]*[\s\S]*)?(\?[^#\s]*[\s\S]*)?(#.*)?$`)
 )
+
+// IsMegaLink checks if a string is a valid mega.nz or mega.co.nz link.
+func IsMegaLink(link string) bool {
+	// Parse the URL string
+	u, err := url.Parse(link)
+	if err != nil {
+		return false // Not a valid URL
+	}
+
+	// Normalize the host to check for both mega.nz and mega.co.nz
+	host := strings.TrimPrefix(u.Host, "www.")
+
+	// Check if the host is a MEGA domain
+	isMegaDomain := host == "mega.nz" || host == "mega.co.nz"
+	if !isMegaDomain {
+		return false
+	}
+
+	// Check the path and fragment for common MEGA link patterns
+	// A file or folder link
+	isFilePath := strings.HasPrefix(u.Path, "/file/") || strings.HasPrefix(u.Path, "/folder/")
+	// An older-style file or folder link using the fragment
+	isFragmentPath := strings.HasPrefix(u.Fragment, "!") || strings.HasPrefix(u.Fragment, "F!")
+
+	return isFilePath || isFragmentPath
+}
 
 // IsMagnet checks if the given link is a magnet URL
 func IsMagnet(link string) bool {
@@ -72,11 +100,6 @@ func CheckCmds(command string, matches ...string) bool {
 	return false
 }
 
-// Gfn returns the fully-qualified name of a function (package path + name)
-func Gfn(fn interface{}) string {
-	// Not directly possible in Go; return placeholder
-	return fmt.Sprintf("%T", fn)
-}
 
 // StringEscape unescapes escaped characters in a string
 func StringEscape(s string) string {
@@ -124,6 +147,7 @@ func TxtToStr(path string) (string, error) {
 }
 
 // File extension checks
+
 func IsAudioFile(name string) bool {
 	exts := []string{".aac", ".mp3", ".m4a", ".flac", ".opus", ".wav"}
 	return hasExt(name, exts)
@@ -179,12 +203,7 @@ func readLines(path string) ([]string, error) {
 
 func hasExt(name string, exts []string) bool {
 	lower := strings.ToLower(filepath.Ext(name))
-	for _, e := range exts {
-		if lower == e {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(exts, lower)
 }
 
 // GetHTML fetches the HTML content of the given link.
@@ -211,7 +230,7 @@ func SplitText(text, sep string, pre bool) []string {
 		current strings.Builder
 		chunks  []string
 	)
-	for _, part := range strings.Split(text, sep) {
+	for part := range strings.SplitSeq(text, sep) {
 		line := part + sep
 		if pre {
 			line = sep + part
@@ -230,7 +249,7 @@ func SplitText(text, sep string, pre bool) []string {
 	return chunks
 }
 
-// Code stores or updates an entry. Without index, it appends and returns its key.
+// StoreCallbackInfo stores or updates an entry. Without index, it appends and returns its key.
 func StoreCallbackInfo(data *types.CallbackInfo, key string) string {
 	bot.ECallbackDataMutex.Lock()
 	defer bot.ECallbackDataMutex.Unlock()
@@ -242,7 +261,7 @@ func StoreCallbackInfo(data *types.CallbackInfo, key string) string {
 	return key
 }
 
-// Decode retrieves (and optionally removes) an entry by key.
+// GetCallbackInfo (and optionally removes) an entry by key.
 func GetCallbackInfo(key string) *types.CallbackInfo {
 	bot.ECallbackDataMutex.Lock()
 	defer bot.ECallbackDataMutex.Unlock()
@@ -263,7 +282,7 @@ func ValueCheck(val string) string {
 	return val
 }
 
-// stdr formats seconds into HH:MM:SS.
+// Stdr formats seconds into HH:MM:SS.
 func Stdr(seconds int) string {
 	d := time.Duration(seconds) * time.Second
 	h := int(d.Hours())
