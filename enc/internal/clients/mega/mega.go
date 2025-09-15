@@ -504,14 +504,12 @@ func (m *Mega) GetRootFolderName(folderURL string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	
 
 	if len(res) == 0 {
 		return "", fmt.Errorf("empty folder response")
 	}
 	fr := res[0]
 
-	
 	// build handle -> node map for convenient lookups
 	nodes := make(map[string]FSNode, len(fr.F))
 	for _, n := range fr.F {

@@ -402,7 +402,7 @@ func GetMegaDlInfo(uri string) *utils.DLInfo {
 		dlInfo.Error = fmt.Errorf("no files available to download")
 		return dlInfo
 	}
-	
+
 	for _, dl := range downloads {
 		dlInfo.Files = append(dlInfo.Files, dl.Name)
 	}

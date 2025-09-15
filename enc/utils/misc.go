@@ -100,7 +100,6 @@ func CheckCmds(command string, matches ...string) bool {
 	return false
 }
 
-
 // StringEscape unescapes escaped characters in a string
 func StringEscape(s string) string {
 	if s == "" {
