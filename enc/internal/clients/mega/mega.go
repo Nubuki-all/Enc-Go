@@ -16,6 +16,7 @@ import (
 	"net/http"
 	//"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -313,8 +314,8 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	logger.Infof("nodes=%d children_keys=%d", len(nodes), len(children))
 	keys1 := maps.Keys(nodes)
 	keys2 := maps.Keys(nodes)
-	fmt.Println(keys1)
-	fmt.Println(keys2)
+	fmt.Println(slices.Sorted(keys1))
+	fmt.Println(slices.Sorted(keys2))
 
 	var downloads []*Download
 	var walk func(curHandle string, curKeyA32 []uint32, relPath string) error
