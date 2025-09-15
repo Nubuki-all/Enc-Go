@@ -299,6 +299,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			if !ok {
 				continue
 			}
+			fmt.Println("f.")
 			// skip if node has no Key - can't decrypt
 			if node.Key == "" {
 				continue
