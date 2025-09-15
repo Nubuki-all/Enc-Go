@@ -247,7 +247,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(res[0].F)
+	// fmt.Println(res[0].F)
 	nodes := make(map[string]FSNode)
 	children := make(map[string][]string)
 	for _, n := range res[0].F {
@@ -397,9 +397,11 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			if err != nil {
 				return err
 			}
+			fmt.Println("h.")
 			if len(res) == 0 {
 				continue
 			}
+			fmt.Println("a.")
 			// DownloadResp has an embedded error in it for some reason
 			if res[0].Err != 0 {
 				logger.Warn(parseError(res[0].Err))
