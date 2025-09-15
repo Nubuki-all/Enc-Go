@@ -24,36 +24,36 @@ import (
 // from https://github.com/t3rm1n4l/go-mega/blob/master/mega.go#L55
 
 const (
-	APIURL              = "https://g.api.mega.co.nz"
-	BaseDownloadURL     = "https://mega.co.nz"
-	Retries              = 10
-	DownloadWorkers     = 3
+	APIURL             = "https://g.api.mega.co.nz"
+	BaseDownloadURL    = "https://mega.co.nz"
+	Retries            = 10
+	DownloadWorkers    = 3
 	MaxDownloadWorkers = 30
-	UploadWorkers       = 1
+	UploadWorkers      = 1
 	MaxUploadWorkers   = 30
-	Timeout          = time.Second * 10
-	HTTPSOnly            = false
-	minSleepTime         = 10 * time.Millisecond // for retries
-	maxSleepTime         = 5 * time.Second       // for retries
+	Timeout            = time.Second * 10
+	HTTPSOnly          = false
+	minSleepTime       = 10 * time.Millisecond // for retries
+	maxSleepTime       = 5 * time.Second       // for retries
 )
 
 type config struct {
-	baseURL    string
-	retries    int
+	baseURL   string
+	retries   int
 	dlWorkers int
 	ulWorkers int
-	timeout    time.Duration
-	https      bool
+	timeout   time.Duration
+	https     bool
 }
 
 func newConfig() config {
 	return config{
-		baseURL:    APIURL,
-		retries:    Retries,
+		baseURL:   APIURL,
+		retries:   Retries,
 		dlWorkers: DownloadWorkers,
 		ulWorkers: UploadWorkers,
-		timeout:    Timeout,
-		https:      HTTPSOnly,
+		timeout:   Timeout,
+		https:     HTTPSOnly,
 	}
 }
 
@@ -187,8 +187,6 @@ func (m *Mega) apiRequest(r []byte, folderID string) (buf []byte, err error) {
 
 	return nil, err
 }
-
-
 
 // Download represents a Mega download operation.
 type Download struct {
