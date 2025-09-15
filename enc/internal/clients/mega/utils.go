@@ -72,15 +72,15 @@ func parseMegaURL(u string) (id, keyFrag string, err error) {
 	return "", "", EUNSUPPORTEDLINK
 }
 
-func isFolder (url string) bool {
+func isFolder(url string) bool {
 	return strings.Contains(url, "/folder/")
 }
 
 type urlInfo struct {
-	ID string
-	KeyFrag string
-	Type int
-	InnerFileHandle string
+	ID                string
+	KeyFrag           string
+	Type              int
+	InnerFileHandle   string
 	InnerFolderHandle string
 }
 
@@ -151,14 +151,13 @@ func pruneNodesToPath(nodes map[string]FSNode, targetHandle, stopAt string) (map
 	return kept, children, nil
 }
 
-
 // bytesToA32 converts the byte slice b to uint32 slice considering
 // the bytes to be in big endian order.
 func bytesToA32(b []byte) ([]uint32, error) {
 	length := len(b) + 3
 	a := make([]uint32, length/4)
 	buf := bytes.NewBuffer(b)
-	for i, _ := range a {
+	for i := range a {
 		err := binary.Read(buf, binary.BigEndian, &a[i])
 		if err != nil {
 			return nil, err
@@ -364,7 +363,6 @@ func decryptRSA(m, p, q, d *big.Int) []byte {
 
 // blockDecrypt decrypts using the block cipher blk in ECB mode.
 func blockDecrypt(blk cipher.Block, dst, src []byte) error {
-
 	if len(src) > len(dst) || len(src)%blk.BlockSize() != 0 {
 		return errors.New("Block decryption failed")
 	}
@@ -380,7 +378,6 @@ func blockDecrypt(blk cipher.Block, dst, src []byte) error {
 
 // blockEncrypt encrypts using the block cipher blk in ECB mode.
 func blockEncrypt(blk cipher.Block, dst, src []byte) error {
-
 	if len(src) > len(dst) || len(src)%blk.BlockSize() != 0 {
 		return errors.New("Block encryption failed")
 	}
@@ -397,7 +394,6 @@ func blockEncrypt(blk cipher.Block, dst, src []byte) error {
 // decryptSeessionId decrypts the session id using the given private
 // key.
 func decryptSessionId(privk string, csid string, mk []byte) (string, error) {
-
 	block, err := aes.NewCipher(mk)
 	if err != nil {
 		return "", err
@@ -422,7 +418,6 @@ func decryptSessionId(privk string, csid string, mk []byte) (string, error) {
 	r := decryptRSA(m, p, q, d)
 
 	return base64urlencode(r[:43]), nil
-
 }
 
 // chunkSize describes a size and position of chunk

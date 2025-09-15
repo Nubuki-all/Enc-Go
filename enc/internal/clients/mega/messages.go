@@ -114,10 +114,10 @@ type GetLinkMsg struct {
 }
 
 type DownloadFolderMsg struct {
-	Cmd   string  `json:"a"`
-	C     int     `json:"c"`
-	CA    int     `json:"ca"`
-	R     int     `json:"r"`
+	Cmd string `json:"a"`
+	C   int    `json:"c"`
+	CA  int    `json:"ca"`
+	R   int    `json:"r"`
 }
 
 type DownloadMsg struct {
@@ -136,9 +136,9 @@ type DownloadResp struct {
 }
 
 type DownloadFolderResp struct {
-	F []FSNode `json:"f"`
-	Sn string `json:"sn"`
-	St string `json:"st"`
+	F  []FSNode `json:"f"`
+	Sn string   `json:"sn"`
+	St string   `json:"st"`
 }
 
 type UploadMsg struct {

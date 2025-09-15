@@ -18,7 +18,6 @@ import (
 	"sync"
 	"time"
 
-
 	"enc/internal/logger"
 )
 
@@ -96,7 +95,7 @@ func New() *Mega {
 		panic(err) // this should be returned, but this is a public interface
 	}*/
 	cfg := newConfig()
-	//mgfs := newMegaFS()
+	// mgfs := newMegaFS()
 	m := &Mega{
 		config: cfg,
 		/*sn:     bigx.Int64(),
@@ -190,8 +189,8 @@ func (m *Mega) apiRequest(r []byte, folderID string) (buf []byte, err error) {
 }
 
 type Download struct {
-	m           *Mega
-	//src         *Node
+	m *Mega
+	// src         *Node
 	resourceUrl string
 	name        string
 	size        uint64
@@ -208,7 +207,6 @@ type Download struct {
 // an all nil IV for mac calculations
 var zero_iv = make([]byte, 16)
 
-
 func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	if url == "" {
 		return nil, EARGS
@@ -217,24 +215,22 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	if err != nil {
 		return nil, err
 	}
-	if folderInfo.Type == 0{
+	if folderInfo.Type == 0 {
 		return nil, fmt.Errorf("not a folder link")
 	}
 	folderKeyA32, err := base64ToA32(folderInfo.KeyFrag)
 	if err != nil {
 		return nil, fmt.Errorf("decode key fragment: %w", err)
 	}
-	
+
 	var msg [1]DownloadFolderMsg
 	var res [1]DownloadFolderResp
-
 
 	msg[0].Cmd = "f"
 	msg[0].C = 1
 	msg[0].CA = 1
 	msg[0].R = 1
-	
-	
+
 	request, err := json.Marshal(msg)
 	if err != nil {
 		return nil, err
@@ -249,7 +245,6 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 		return nil, err
 	}
 
-	
 	nodes := map[string]FSNode{}
 	children := map[string][]string{}
 	for _, n := range res[0].F {
@@ -261,15 +256,15 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	startHandle := folderInfo.ID
 	startKey := folderKeyA32
 	if sFileHandle != "" {
-	    prunedNodes, prunedChildren, perr := pruneNodesToPath(nodes, sFileHandle, folderInfo.ID)
-	    if perr != nil {
-	        // decide behaviour: error out or fallback to full-tree behavior
-	        return nil, fmt.Errorf("prune path: %w", perr)
-	    }
-	    // replace nodes & children with pruned versions
-	    nodes = prunedNodes
-	    children = prunedChildren
-	    // now continue — your existing recursive walk (starting at rootHandle) will only see the ancestor chain
+		prunedNodes, prunedChildren, perr := pruneNodesToPath(nodes, sFileHandle, folderInfo.ID)
+		if perr != nil {
+			// decide behaviour: error out or fallback to full-tree behavior
+			return nil, fmt.Errorf("prune path: %w", perr)
+		}
+		// replace nodes & children with pruned versions
+		nodes = prunedNodes
+		children = prunedChildren
+		// now continue — your existing recursive walk (starting at rootHandle) will only see the ancestor chain
 	}
 	if pathHandle != "" {
 		curKey := folderKeyA32
@@ -292,7 +287,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 		startHandle = curHandle
 		startKey = curKey
 	}
-	
+
 	zeroIV := make([]byte, 16)
 
 	var downloads []*Download
@@ -381,7 +376,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			}
 			var msg [1]DownloadMsg
 			var res [1]DownloadResp
-		
+
 			msg[0].Cmd = "g"
 			msg[0].G = 1
 			msg[0].P = node.Hash
@@ -396,7 +391,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			if err != nil {
 				return err
 			}
-		
+
 			err = json.Unmarshal(result, &res)
 			if err != nil {
 				return err
@@ -464,6 +459,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	}
 	return downloads, nil
 }
+
 // Create a new Download from link
 //
 // Call Chunks to find out how many chunks there are, then for id =
@@ -556,8 +552,8 @@ func (m *Mega) NewDownloadFromLink(url string) ([]*Download, error) {
 	}
 
 	d := &Download{
-		m:           m,
-		//src:         src,
+		m: m,
+		// src:         src,
 		resourceUrl: downloadUrl,
 		name:        attr.Name,
 		size:        res[0].Size,
@@ -714,4 +710,3 @@ func (d *Download) Finish() (err error) {
 
 	return nil
 }
-

@@ -42,7 +42,7 @@ var (
 
 	// Config errors
 	EWORKER_LIMIT_EXCEEDED = errors.New("Maximum worker limit exceeded")
-	
+
 	EUNSUPPORTEDLINK = errors.New("unsupported mega url format")
 )
 
