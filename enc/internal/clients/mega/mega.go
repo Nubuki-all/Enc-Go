@@ -247,7 +247,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf(res[0].F)
+	fmt.Println(res[0].F)
 	nodes := make(map[string]FSNode)
 	children := make(map[string][]string)
 	for _, n := range res[0].F {
