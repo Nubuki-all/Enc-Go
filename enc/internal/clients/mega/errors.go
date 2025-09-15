@@ -7,41 +7,41 @@ import (
 
 var (
 	// General errors
-	EINTERNAL  = errors.New("Internal error occured")
-	EARGS      = errors.New("Invalid arguments")
-	EAGAIN     = errors.New("Try again")
-	ERATELIMIT = errors.New("Rate limit reached")
-	EBADRESP   = errors.New("Bad response from server")
+	EINTERNAL  = errors.New("internal error occured")
+	EARGS      = errors.New("invalid arguments")
+	EAGAIN     = errors.New("try again")
+	ERATELIMIT = errors.New("rate limit reached")
+	EBADRESP   = errors.New("bad response from server")
 
 	// Upload errors
-	EFAILED  = errors.New("The upload failed. Please restart it from scratch")
-	ETOOMANY = errors.New("Too many concurrent IP addresses are accessing this upload target URL")
-	ERANGE   = errors.New("The upload file packet is out of range or not starting and ending on a chunk boundary")
-	EEXPIRED = errors.New("The upload target URL you are trying to access has expired. Please request a fresh one")
+	EFAILED  = errors.New("the upload failed. Please restart it from scratch")
+	ETOOMANY = errors.New("too many concurrent IP addresses are accessing this upload target URL")
+	ERANGE   = errors.New("the upload file packet is out of range or not starting and ending on a chunk boundary")
+	EEXPIRED = errors.New("the upload target URL you are trying to access has expired. Please request a fresh one")
 
 	// Filesystem/Account errors
-	ENOENT              = errors.New("Object (typically, node or user) not found")
-	ECIRCULAR           = errors.New("Circular linkage attempted")
-	EACCESS             = errors.New("Access violation")
-	EEXIST              = errors.New("Trying to create an object that already exists")
-	EINCOMPLETE         = errors.New("Trying to access an incomplete resource")
-	EKEY                = errors.New("A decryption operation failed")
-	ESID                = errors.New("Invalid or expired user session, please relogin")
-	EBLOCKED            = errors.New("User blocked")
-	EOVERQUOTA          = errors.New("Request over quota")
-	ETEMPUNAVAIL        = errors.New("Resource temporarily not available, please try again later")
-	EMACMISMATCH        = errors.New("MAC verification failed")
-	EBADATTR            = errors.New("Bad node attribute")
-	ETOOMANYCONNECTIONS = errors.New("Too many connections on this resource.")
-	EWRITE              = errors.New("File could not be written to (or failed post-write integrity check).")
-	EREAD               = errors.New("File could not be read from (or changed unexpectedly during reading).")
-	EAPPKEY             = errors.New("Invalid or missing application key.")
-	ESSL                = errors.New("SSL verification failed")
-	EGOINGOVERQUOTA     = errors.New("Not enough quota")
-	EMFAREQUIRED        = errors.New("Multi-factor authentication required")
+	ENOENT              = errors.New("object (typically, node or user) not found")
+	ECIRCULAR           = errors.New("circular linkage attempted")
+	EACCESS             = errors.New("access violation")
+	EEXIST              = errors.New("trying to create an object that already exists")
+	EINCOMPLETE         = errors.New("trying to access an incomplete resource")
+	EKEY                = errors.New("a decryption operation failed")
+	ESID                = errors.New("invalid or expired user session, please relogin")
+	EBLOCKED            = errors.New("user blocked")
+	EOVERQUOTA          = errors.New("request over quota")
+	ETEMPUNAVAIL        = errors.New("resource temporarily not available, please try again later")
+	EMACMISMATCH        = errors.New("mac verification failed")
+	EBADATTR            = errors.New("bad node attribute")
+	ETOOMANYCONNECTIONS = errors.New("too many connections on this resource.")
+	EWRITE              = errors.New("file could not be written to (or failed post-write integrity check).")
+	EREAD               = errors.New("file could not be read from (or changed unexpectedly during reading).")
+	EAPPKEY             = errors.New("invalid or missing application key.")
+	ESSL                = errors.New("ssl verification failed")
+	EGOINGOVERQUOTA     = errors.New("not enough quota")
+	EMFAREQUIRED        = errors.New("multi-factor authentication required")
 
 	// Config errors
-	EWORKER_LIMIT_EXCEEDED = errors.New("Maximum worker limit exceeded")
+	EWORKER_LIMIT_EXCEEDED = errors.New("maximum worker limit exceeded")
 
 	EUNSUPPORTEDLINK = errors.New("unsupported mega url format")
 )
@@ -104,5 +104,5 @@ func parseError(errno ErrorMsg) error {
 		return EMFAREQUIRED
 	}
 
-	return fmt.Errorf("Unknown mega error %d", errno)
+	return fmt.Errorf("unknown mega error %d", errno)
 }
