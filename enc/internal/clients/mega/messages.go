@@ -132,7 +132,7 @@ type DownloadResp struct {
 	G    string   `json:"g"`
 	Size uint64   `json:"s"`
 	Attr string   `json:"at"`
-	Err  ErrorMsg `json:"e"`
+	Err  errorMsg `json:"e"`
 }
 
 type DownloadFolderResp struct {

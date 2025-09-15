@@ -5,103 +5,110 @@ import (
 	"fmt"
 )
 
+// The Go convention is to name error variables with the "Err" prefix and use
+// MixedCaps, not all-caps with underscores.
+// The general pattern is `ErrDescription`.
+
 var (
 	// General errors
-	EINTERNAL  = errors.New("internal error occured")
-	EARGS      = errors.New("invalid arguments")
-	EAGAIN     = errors.New("try again")
-	ERATELIMIT = errors.New("rate limit reached")
-	EBADRESP   = errors.New("bad response from server")
+	ErrInternal = errors.New("internal error occurred")
+	ErrArgs     = errors.New("invalid arguments")
+	ErrAgain    = errors.New("try again")
+	ErrRateLimit = errors.New("rate limit reached")
+	ErrBadResp  = errors.New("bad response from server")
 
 	// Upload errors
-	EFAILED  = errors.New("the upload failed. Please restart it from scratch")
-	ETOOMANY = errors.New("too many concurrent IP addresses are accessing this upload target URL")
-	ERANGE   = errors.New("the upload file packet is out of range or not starting and ending on a chunk boundary")
-	EEXPIRED = errors.New("the upload target URL you are trying to access has expired. Please request a fresh one")
+	ErrFailed   = errors.New("the upload failed. Please restart it from scratch")
+	ErrTooMany  = errors.New("too many concurrent IP addresses are accessing this upload target URL")
+	ErrRange    = errors.New("the upload file packet is out of range or not starting and ending on a chunk boundary")
+	ErrExpired  = errors.New("the upload target URL you are trying to access has expired. Please request a fresh one")
 
 	// Filesystem/Account errors
-	ENOENT              = errors.New("object (typically, node or user) not found")
-	ECIRCULAR           = errors.New("circular linkage attempted")
-	EACCESS             = errors.New("access violation")
-	EEXIST              = errors.New("trying to create an object that already exists")
-	EINCOMPLETE         = errors.New("trying to access an incomplete resource")
-	EKEY                = errors.New("a decryption operation failed")
-	ESID                = errors.New("invalid or expired user session, please relogin")
-	EBLOCKED            = errors.New("user blocked")
-	EOVERQUOTA          = errors.New("request over quota")
-	ETEMPUNAVAIL        = errors.New("resource temporarily not available, please try again later")
-	EMACMISMATCH        = errors.New("mac verification failed")
-	EBADATTR            = errors.New("bad node attribute")
-	ETOOMANYCONNECTIONS = errors.New("too many connections on this resource.")
-	EWRITE              = errors.New("file could not be written to (or failed post-write integrity check).")
-	EREAD               = errors.New("file could not be read from (or changed unexpectedly during reading).")
-	EAPPKEY             = errors.New("invalid or missing application key.")
-	ESSL                = errors.New("ssl verification failed")
-	EGOINGOVERQUOTA     = errors.New("not enough quota")
-	EMFAREQUIRED        = errors.New("multi-factor authentication required")
+	ErrNoEnt    = errors.New("object (typically, node or user) not found")
+	ErrCircular = errors.New("circular linkage attempted")
+	ErrAccess   = errors.New("access violation")
+	ErrExist    = errors.New("trying to create an object that already exists")
+	ErrIncomplete = errors.New("trying to access an incomplete resource")
+	ErrKey      = errors.New("a decryption operation failed")
+	ErrSID      = errors.New("invalid or expired user session, please relogin")
+	ErrBlocked  = errors.New("user blocked")
+	ErrOverQuota = errors.New("request over quota")
+	ErrTempUnavail = errors.New("resource temporarily not available, please try again later")
+	ErrMACMismatch = errors.New("mac verification failed")
+	ErrBadAttr  = errors.New("bad node attribute")
+	ErrTooManyConnections = errors.New("too many connections on this resource")
+	ErrWrite    = errors.New("file could not be written to (or failed post-write integrity check)")
+	ErrRead     = errors.New("file could not be read from (or changed unexpectedly during reading)")
+	ErrAppKey   = errors.New("invalid or missing application key")
+	ErrSSL      = errors.New("ssl verification failed")
+	ErrGoingOverQuota = errors.New("not enough quota")
+	ErrMFARequired = errors.New("multi-factor authentication required")
 
 	// Config errors
-	EWORKER_LIMIT_EXCEEDED = errors.New("maximum worker limit exceeded")
+	ErrWorkerLimitExceeded = errors.New("maximum worker limit exceeded")
 
-	EUNSUPPORTEDLINK = errors.New("unsupported mega url format")
+	ErrUnsupportedLink = errors.New("unsupported mega url format")
 )
 
-type ErrorMsg int
+// ErrorMsg is an unexported type, so its name can be lowercase.
+// The Go style is to keep unexported constants and types private to the
+// package by using a lowercase first letter.
+type errorMsg int
 
-func parseError(errno ErrorMsg) error {
-	switch {
-	case errno == 0:
+func parseError(errno errorMsg) error {
+	switch errno {
+	case 0:
 		return nil
-	case errno == -1:
-		return EINTERNAL
-	case errno == -2:
-		return EARGS
-	case errno == -3:
-		return EAGAIN
-	case errno == -4:
-		return ERATELIMIT
-	case errno == -5:
-		return EFAILED
-	case errno == -6:
-		return ETOOMANY
-	case errno == -7:
-		return ERANGE
-	case errno == -8:
-		return EEXPIRED
-	case errno == -9:
-		return ENOENT
-	case errno == -10:
-		return ECIRCULAR
-	case errno == -11:
-		return EACCESS
-	case errno == -12:
-		return EEXIST
-	case errno == -13:
-		return EINCOMPLETE
-	case errno == -14:
-		return EKEY
-	case errno == -15:
-		return ESID
-	case errno == -16:
-		return EBLOCKED
-	case errno == -17:
-		return EOVERQUOTA
-	case errno == -18:
-		return ETEMPUNAVAIL
-	case errno == -19:
-		return ETOOMANYCONNECTIONS
-	case errno == -20:
-		return EWRITE
-	case errno == -21:
-		return EREAD
-	case errno == -22:
-		return EAPPKEY
-	case errno == -23:
-		return ESSL
-	case errno == -24:
-		return EGOINGOVERQUOTA
-	case errno == -26:
-		return EMFAREQUIRED
+	case -1:
+		return ErrInternal
+	case -2:
+		return ErrArgs
+	case -3:
+		return ErrAgain
+	case -4:
+		return ErrRateLimit
+	case -5:
+		return ErrFailed
+	case -6:
+		return ErrTooMany
+	case -7:
+		return ErrRange
+	case -8:
+		return ErrExpired
+	case -9:
+		return ErrNoEnt
+	case -10:
+		return ErrCircular
+	case -11:
+		return ErrAccess
+	case -12:
+		return ErrExist
+	case -13:
+		return ErrIncomplete
+	case -14:
+		return ErrKey
+	case -15:
+		return ErrSID
+	case -16:
+		return ErrBlocked
+	case -17:
+		return ErrOverQuota
+	case -18:
+		return ErrTempUnavail
+	case -19:
+		return ErrTooManyConnections
+	case -20:
+		return ErrWrite
+	case -21:
+		return ErrRead
+	case -22:
+		return ErrAppKey
+	case -23:
+		return ErrSSL
+	case -24:
+		return ErrGoingOverQuota
+	case -26:
+		return ErrMFARequired
 	}
 
 	return fmt.Errorf("unknown mega error %d", errno)

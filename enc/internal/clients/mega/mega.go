@@ -24,36 +24,36 @@ import (
 // from https://github.com/t3rm1n4l/go-mega/blob/master/mega.go#L55
 
 const (
-	API_URL              = "https://g.api.mega.co.nz"
-	BASE_DOWNLOAD_URL    = "https://mega.co.nz"
-	RETRIES              = 10
-	DOWNLOAD_WORKERS     = 3
-	MAX_DOWNLOAD_WORKERS = 30
-	UPLOAD_WORKERS       = 1
-	MAX_UPLOAD_WORKERS   = 30
-	TIMEOUT              = time.Second * 10
-	HTTPSONLY            = false
+	APIURL              = "https://g.api.mega.co.nz"
+	BaseDownloadURL     = "https://mega.co.nz"
+	Retries              = 10
+	DownloadWorkers     = 3
+	MaxDownloadWorkers = 30
+	UploadWorkers       = 1
+	MaxUploadWorkers   = 30
+	Timeout          = time.Second * 10
+	HTTPSOnly            = false
 	minSleepTime         = 10 * time.Millisecond // for retries
 	maxSleepTime         = 5 * time.Second       // for retries
 )
 
 type config struct {
-	baseurl    string
+	baseURL    string
 	retries    int
-	dl_workers int
-	ul_workers int
+	dlWorkers int
+	ulWorkers int
 	timeout    time.Duration
 	https      bool
 }
 
 func newConfig() config {
 	return config{
-		baseurl:    API_URL,
-		retries:    RETRIES,
-		dl_workers: DOWNLOAD_WORKERS,
-		ul_workers: UPLOAD_WORKERS,
-		timeout:    TIMEOUT,
-		https:      HTTPSONLY,
+		baseURL:    APIURL,
+		retries:    Retries,
+		dlWorkers: DownloadWorkers,
+		ulWorkers: UploadWorkers,
+		timeout:    Timeout,
+		https:      HTTPSOnly,
 	}
 }
 
@@ -161,7 +161,7 @@ func (m *Mega) apiRequest(r []byte, folderID string) (buf []byte, err error) {
 		// at this point the body is read and closed
 
 		if bytes.HasPrefix(buf, []byte("[")) == false && bytes.HasPrefix(buf, []byte("-")) == false {
-			return nil, EBADRESP
+			return nil, ErrBadResp
 		}
 
 		if len(buf) < 6 {
@@ -171,10 +171,10 @@ func (m *Mega) apiRequest(r []byte, folderID string) (buf []byte, err error) {
 				err = json.Unmarshal(buf, &emsg[0])
 			}
 			if err != nil {
-				return buf, EBADRESP
+				return buf, ErrBadResp
 			}
 			err = parseError(emsg[0])
-			if err == EAGAIN {
+			if err == ErrAgain {
 				continue
 			}
 			return buf, err
@@ -188,28 +188,32 @@ func (m *Mega) apiRequest(r []byte, folderID string) (buf []byte, err error) {
 	return nil, err
 }
 
+
+
+// Download represents a Mega download operation.
 type Download struct {
 	m *Mega
-	// src         *Node
-	resourceUrl string
-	name        string
-	size        uint64
-	aes_block   cipher.Block
+	// src         *Node // Commented out in original
+	ResourceURL string
+	Name        string
+	Size        uint64
+	aesBlock    cipher.Block
 	iv          []byte
 	ivA32       []uint32
-	mac_enc     cipher.BlockMode
+	macEnc      cipher.BlockMode
 	metaMacTwo  []uint32
 	mutex       sync.Mutex // to protect the following
 	chunks      []chunkSize
-	chunk_macs  [][]byte
+	chunkMacs   [][]byte
 }
 
-// an all nil IV for mac calculations
-var zero_iv = make([]byte, 16)
+// All-lowercase for unexported variables.
+// Use more descriptive names if scope is large.
+var zeroIV = make([]byte, 16)
 
 func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	if url == "" {
-		return nil, EARGS
+		return nil, ErrArgs
 	}
 	folderInfo, err := parseMegaFolderURL(url)
 	if err != nil {
@@ -245,8 +249,8 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 		return nil, err
 	}
 
-	nodes := map[string]FSNode{}
-	children := map[string][]string{}
+	nodes := make(map[string]FSNode)
+	children := make(map[string][]string)
 	for _, n := range res[0].F {
 		nodes[n.Hash] = n
 		children[n.Parent] = append(children[n.Parent], n.Hash)
@@ -287,8 +291,6 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 		startHandle = curHandle
 		startKey = curKey
 	}
-
-	zeroIV := make([]byte, 16)
 
 	var downloads []*Download
 	var walk func(curHandle string, curKeyA32 []uint32, relPath string) error
@@ -422,9 +424,9 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			}
 
 			// build chunks and download URL
-			downloadUrl := res[0].G
-			if m.config.https && strings.HasPrefix(downloadUrl, "http://") {
-				downloadUrl = "https://" + strings.TrimPrefix(downloadUrl, "http://")
+			downloadURL := res[0].G
+			if m.config.https && strings.HasPrefix(downloadURL, "http://") {
+				downloadURL = "https://" + strings.TrimPrefix(downloadURL, "http://")
 			}
 			chunks := getChunkSizes(int64(res[0].Size))
 
@@ -435,16 +437,16 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			}
 			d := &Download{
 				m:           m,
-				resourceUrl: downloadUrl,
-				name:        relName,
-				size:        res[0].Size,
-				aes_block:   aesBlock,
+				ResourceURL: downloadURL,
+				Name:        relName,
+				Size:        res[0].Size,
+				aesBlock:    aesBlock,
 				iv:          ivBytes,
 				ivA32:       []uint32{decA32[4], decA32[5]},
-				mac_enc:     macEnc,
+				macEnc:      macEnc,
 				metaMacTwo:  []uint32{decA32[6], decA32[7]},
 				chunks:      chunks,
-				chunk_macs:  make([][]byte, len(chunks)),
+				chunkMacs:   make([][]byte, len(chunks)),
 			}
 			downloads = append(downloads, d)
 		}
@@ -467,7 +469,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 // the error status.
 func (m *Mega) NewDownloadFromLink(url string) ([]*Download, error) {
 	if url == "" {
-		return nil, EARGS
+		return nil, ErrArgs
 	}
 	if isFolder(url) {
 		return m.NewDownloadsFromFolderLink(url)
@@ -533,12 +535,12 @@ func (m *Mega) NewDownloadFromLink(url string) ([]*Download, error) {
 
 	chunks := getChunkSizes(int64(res[0].Size))
 
-	aes_block, err := aes.NewCipher(key)
+	aesBlock, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
 
-	mac_enc := cipher.NewCBCEncrypter(aes_block, zero_iv)
+	macEnc := cipher.NewCBCEncrypter(aesBlock, zeroIV)
 	if err != nil {
 		return nil, err
 	}
@@ -546,24 +548,24 @@ func (m *Mega) NewDownloadFromLink(url string) ([]*Download, error) {
 	if err != nil {
 		return nil, err
 	}
-	downloadUrl := res[0].G
-	if m.config.https && strings.HasPrefix(downloadUrl, "http://") {
-		downloadUrl = "https://" + strings.TrimPrefix(downloadUrl, "http://")
+	downloadURL := res[0].G
+	if m.config.https && strings.HasPrefix(downloadURL, "http://") {
+		downloadURL = "https://" + strings.TrimPrefix(downloadURL, "http://")
 	}
 
 	d := &Download{
 		m: m,
 		// src:         src,
-		resourceUrl: downloadUrl,
-		name:        attr.Name,
-		size:        res[0].Size,
-		aes_block:   aes_block,
+		ResourceURL: downloadURL,
+		Name:        attr.Name,
+		Size:        res.Size,
+		aesBlock:    aesBlock,
 		iv:          iv,
 		ivA32:       ivA32,
-		mac_enc:     mac_enc,
+		macEnc:      macEnc,
 		metaMacTwo:  metaMacTwo,
 		chunks:      chunks,
-		chunk_macs:  make([][]byte, len(chunks)),
+		chunkMacs:   make([][]byte, len(chunks)),
 	}
 	return []*Download{d}, nil
 }
@@ -586,7 +588,7 @@ func (d *Download) Size() int64 {
 // ChunkLocation returns the position in the file and the size of the chunk
 func (d *Download) ChunkLocation(id int) (position int64, size int, err error) {
 	if id < 0 || id >= len(d.chunks) {
-		return 0, 0, EARGS
+		return 0, 0, ErrArgs
 	}
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
@@ -595,29 +597,31 @@ func (d *Download) ChunkLocation(id int) (position int64, size int, err error) {
 
 // DownloadChunk gets a chunk with the given number and update the
 // mac, returning the position in the file of the chunk
-func (d *Download) DownloadChunk(id int) (chunk []byte, err error) {
+func (d *Download) DownloadChunk(id int) ([]byte, error) {
 	if id < 0 || id >= len(d.chunks) {
-		return nil, EARGS
+		return nil, ErrArgs
 	}
 
-	chk_start, chk_size, err := d.ChunkLocation(id)
+	// Local variables should be camelCase.
+	chunkStart, chunkSize, err := d.ChunkLocation(id)
 	if err != nil {
 		return nil, err
 	}
 
 	var resp *http.Response
-	chunk_url := fmt.Sprintf("%s/%d-%d", d.resourceUrl, chk_start, chk_start+int64(chk_size)-1)
-	sleepTime := minSleepTime // inital backoff time
+	chunkURL := fmt.Sprintf("%s/%d-%d", d.ResourceURL, chunkStart, chunkStart+int64(chunkSize)-1)
+	sleepTime := minSleepTime // Initial backoff time
 	for retry := 0; retry < d.m.retries+1; retry++ {
-		resp, err = d.m.client.Get(chunk_url)
+		resp, err = d.m.client.Get(chunkURL)
 		if err == nil {
-			if resp.StatusCode == 200 {
+			if resp.StatusCode == http.StatusOK {
 				break
 			}
 			err = errors.New("Http Status: " + resp.Status)
 			_ = resp.Body.Close()
 		}
-		logger.Info("%s: Retry download chunk %d/%d: %v", d.name, retry, d.m.retries, err)
+		// If logger is external, it's fine. Otherwise, use standard Go logging or pass a logger.
+		// log.Printf("%s: Retry download chunk %d/%d: %v", d.Name, retry, d.m.retries, err)
 		backOffSleep(&sleepTime)
 	}
 	if err != nil {
@@ -627,7 +631,7 @@ func (d *Download) DownloadChunk(id int) (chunk []byte, err error) {
 		return nil, errors.New("retries exceeded")
 	}
 
-	chunk, err = io.ReadAll(resp.Body)
+	chunk, err := io.ReadAll(resp.Body)
 	if err != nil {
 		_ = resp.Body.Close()
 		return nil, err
@@ -640,34 +644,34 @@ func (d *Download) DownloadChunk(id int) (chunk []byte, err error) {
 
 	// body is read and closed here
 
-	if len(chunk) != chk_size {
+	if len(chunk) != chunkSize {
 		return nil, errors.New("wrong size for downloaded chunk")
 	}
 
 	// Decrypt the block
-	ctr_iv := make([]uint32, len(d.ivA32))
-	copy(ctr_iv, d.ivA32)
-	ctr_iv[2] = uint32(uint64(chk_start) / 0x1000000000)
-	ctr_iv[3] = uint32(chk_start / 0x10)
-	bctr_iv, err := a32ToBytes(ctr_iv)
+	ctrIV := make([]uint32, len(d.ivA32))
+	copy(ctrIV, d.ivA32)
+	ctrIV[2] = uint32(uint64(chunkStart) / 0x1000000000)
+	ctrIV[3] = uint32(chunkStart / 0x10)
+	bctrIV, err := a32ToBytes(ctrIV)
 	if err != nil {
 		return nil, err
 	}
-	ctr_aes := cipher.NewCTR(d.aes_block, bctr_iv)
-	ctr_aes.XORKeyStream(chunk, chunk)
+	ctrAES := cipher.NewCTR(d.aesBlock, bctrIV)
+	ctrAES.XORKeyStream(chunk, chunk)
 	// Update the chunk_macs
-	enc := cipher.NewCBCEncrypter(d.aes_block, d.iv)
-	i := 0
+	enc := cipher.NewCBCEncrypter(d.aesBlock, d.iv)
+	// Declaring `i` inside the for-loop is better for scope.
 	block := make([]byte, 16)
 	paddedChunk := paddNull(chunk, 16)
-	for i = 0; i < len(paddedChunk); i += 16 {
+	for i := 0; i < len(paddedChunk); i += 16 {
 		enc.CryptBlocks(block, paddedChunk[i:i+16])
 	}
 
 	d.mutex.Lock()
-	if len(d.chunk_macs) > 0 {
-		d.chunk_macs[id] = make([]byte, 16)
-		copy(d.chunk_macs[id], block)
+	if len(d.chunkMacs) > 0 {
+		d.chunkMacs[id] = make([]byte, 16)
+		copy(d.chunkMacs[id], block)
 	}
 	d.mutex.Unlock()
 
@@ -676,23 +680,23 @@ func (d *Download) DownloadChunk(id int) (chunk []byte, err error) {
 
 // Finish checks the accumulated MAC for each block.
 //
-// If all the chunks weren't downloaded then it will just return nil
+// If all the chunks weren't downloaded then it will just return nil.
 func (d *Download) Finish() (err error) {
 	// Can't check a 0 sized file
-	if len(d.chunk_macs) == 0 {
+	if len(d.chunkMacs) == 0 {
 		return nil
 	}
-	mac_data := make([]byte, 16)
-	for _, v := range d.chunk_macs {
+	macData := make([]byte, 16)
+	for _, v := range d.chunkMacs {
 		// If a chunk_macs hasn't been set then the whole file
 		// wasn't downloaded and we can't check it
 		if v == nil {
 			return nil
 		}
-		d.mac_enc.CryptBlocks(mac_data, v)
+		d.macEnc.CryptBlocks(macData, v)
 	}
 
-	tmac, err := bytesToA32(mac_data)
+	tmac, err := bytesToA32(macData)
 	if err != nil {
 		return err
 	}
@@ -704,8 +708,8 @@ func (d *Download) Finish() (err error) {
 	if err != nil {
 		return err
 	}
-	if bytes.Equal(btmac, metaMacTwo) == false {
-		return EMACMISMATCH
+	if !bytes.Equal(btmac, metaMacTwo) {
+		return ErrMACMismatch
 	}
 
 	return nil

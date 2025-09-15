@@ -69,7 +69,7 @@ func parseMegaURL(u string) (id, keyFrag string, err error) {
 			return id, keyFrag, nil
 		}
 	}
-	return "", "", EUNSUPPORTEDLINK
+	return "", "", ErrUnsupportedLink
 }
 
 func isFolder(url string) bool {
@@ -87,11 +87,11 @@ type urlInfo struct {
 func parseMegaFolderURL(url string) (*urlInfo, error) {
 	s := strings.Split(url, "mega.nz")
 	if len(s) != 2 {
-		return nil, EUNSUPPORTEDLINK
+		return nil, ErrUnsupportedLink
 	}
 	s = strings.Split(s[1], "/")
 	if len(s) < 2 {
-		return nil, EUNSUPPORTEDLINK
+		return nil, ErrUnsupportedLink
 	}
 	info := &urlInfo{}
 	if strings.EqualFold(s[0], "folder") {
