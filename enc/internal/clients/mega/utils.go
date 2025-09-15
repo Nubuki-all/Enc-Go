@@ -476,7 +476,7 @@ func decryptAttr(key []byte, data string) (attr FileAttr, err error) {
 }
 
 func encryptAttr(key []byte, attr FileAttr) (b string, err error) {
-	//err = ErrBadAttr
+	// err = ErrBadAttr
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return "", err

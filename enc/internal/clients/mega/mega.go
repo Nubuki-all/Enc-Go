@@ -540,7 +540,7 @@ func (m *Mega) NewDownloadFromLink(url string) ([]*Download, error) {
 	}
 
 	macEnc := cipher.NewCBCEncrypter(aesBlock, zeroIV)
-	
+
 	iv, err := a32ToBytes([]uint32{ivA32[0], ivA32[1], ivA32[0], ivA32[1]})
 	if err != nil {
 		return nil, err
