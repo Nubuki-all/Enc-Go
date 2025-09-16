@@ -465,9 +465,9 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 }
 
 type File struct {
-	Hash    string
-	Name    string
-	Parent  string
+	Hash   string
+	Name   string
+	Parent string
 }
 
 func (m *Mega) ListFilesFromFolderLink(url string) ([]File, error) {
@@ -552,7 +552,7 @@ func (m *Mega) ListFilesFromFolderLink(url string) ([]File, error) {
 	defer cancel()
 	g, _ := errgroup.WithContext(ctx)
 	var mu sync.Mutex
-	
+
 	rootNode := nodes[startHandle]
 	parts := strings.Split(rootNode.Key, ":")
 	encB64 := parts[len(parts)-1]
@@ -664,8 +664,8 @@ func (m *Mega) ListFilesFromFolderLink(url string) ([]File, error) {
 				relName = filepath.Join(relPath, fileName)
 			}
 			file := File{
-				Hash: node.Hash,
-				Name: relName,
+				Hash:   node.Hash,
+				Name:   relName,
 				Parent: folderName,
 			}
 			mu.Lock()
@@ -686,7 +686,7 @@ func (m *Mega) ListFilesFromFolderLink(url string) ([]File, error) {
 	if len(files) == 0 {
 		return nil, errors.New("no downloadable files found (or unable to decrypt keys)")
 	}
-		return files, nil
+	return files, nil
 }
 
 // GetRootFolderName returns the display name for the root or subfolder of a public folder share

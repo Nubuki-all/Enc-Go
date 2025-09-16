@@ -2,14 +2,6 @@ package downloaders
 
 import (
 	"context"
-	"enc/config"
-	"enc/internal/bot"
-	"enc/internal/bot/types"
-	"enc/internal/clients/mega"
-	"enc/internal/logger"
-	"enc/utils"
-	"enc/utils/random"
-	"enc/utils/tele"
 	"fmt"
 	"math"
 	"os"
@@ -18,23 +10,32 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"enc/config"
+	"enc/internal/bot"
+	"enc/internal/bot/types"
+	"enc/internal/clients/mega"
+	"enc/internal/logger"
+	"enc/utils"
+	"enc/utils/random"
+	"enc/utils/tele"
 )
 
 type MegaDownload struct {
 	*types.TransferInfo
-	Size      int64
-	msg       *tele.Message
-	client    *mega.Mega
+	Size         int64
+	msg          *tele.Message
+	client       *mega.Mega
 	downloadList []*mega.Download
-	err       error
-	completed bool
+	err          error
+	completed    bool
 	// timeout      bool
-	ufstr        string
-	fstr         string
-	name         string
-	dir          string
-	selected     string
-	uri          string
+	ufstr    string
+	fstr     string
+	name     string
+	dir      string
+	selected string
+	uri      string
 }
 
 func NewMegaDl(uri, dir, selected string, msg *tele.Message, tInfo *types.TransferInfo) *MegaDownload {
@@ -57,8 +58,8 @@ func (dl *MegaDownload) Start() error {
 	}
 	rconf := config.Rconf
 	dlTimeout := rconf.MDLTimeout * time.Second
-	//progressInterval := rconf.ProgresUpdateInterval * time.Second
-	//updateInterval := 1 * time.Second
+	// progressInterval := rconf.ProgresUpdateInterval * time.Second
+	// updateInterval := 1 * time.Second
 
 	var ctx context.Context
 	var cancel context.CancelFunc
@@ -74,7 +75,7 @@ func (dl *MegaDownload) Start() error {
 	if err != nil {
 		return err
 	}
-	if dl.selected != ""{
+	if dl.selected != "" {
 		err := dl.Select(files)
 		if err != nil {
 			return err
@@ -94,18 +95,17 @@ func (dl *MegaDownload) Start() error {
 		if err := dl.downloadFile(ctx, download); err != nil {
 			return err
 		}
-		
 	}
 	return nil
 }
 
 type ProgressState struct {
-	Total  int64
+	Total   int64
 	Current int64
 	Name    string
 }
 
-func(dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) error {
+func (dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) error {
 	path := filepath.Join(dl.dir, d.Name)
 	fileName := filepath.Base(d.Name)
 	_, err := os.Stat(path)
@@ -116,7 +116,7 @@ func(dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) error
 		}
 	}
 
-	outfile, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0600)
+	outfile, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0o600)
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func(dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) error
 			defer wg.Done()
 
 			var stored bool
-			Loop:
+		Loop:
 			for {
 				select {
 				case <-ctx.Done():
@@ -168,31 +168,29 @@ func(dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) error
 					}
 					if stored {
 						dl.ProgressCallback(start, fileName, int64(size), current)
-				}
+					}
 				case <-doneCh:
 					return
 				}
 			}
 		}()
 
-		
-
 		go func() {
 			defer wg.Done()
-			
+
 			// Wait for work blocked on channel
 			for id := range workch {
 				select {
-				case <- ctx.Done():
+				case <-ctx.Done():
 					errch <- ctx.Err()
 					return
 				case <-cancelCh:
-				  return
+					return
 				default:
 				}
 				if err := ctx.Err(); err != nil {
 					errch <- err
-					return 
+					return
 				}
 				chunk, err := d.DownloadChunk(id)
 				if err != nil {
@@ -313,8 +311,6 @@ func (dl *MegaDownload) Select(files []mega.File) error {
 		dl.uri = dl.uri + "/folder/" + fileID
 	}
 	return nil
-
-	
 }
 
 func (dl *MegaDownload) Clean() {
@@ -323,5 +319,4 @@ func (dl *MegaDownload) Clean() {
 		return
 	}
 	_ = os.RemoveAll(dl.Path)
-
 }

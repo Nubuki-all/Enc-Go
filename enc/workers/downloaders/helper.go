@@ -399,7 +399,7 @@ func GetMegaDlInfo(uri string) *utils.DLInfo {
 		return dlInfo
 	}
 
-	for _, file := range files {	
+	for _, file := range files {
 		dlInfo.Files = append(dlInfo.Files, file.Name)
 	}
 	dlInfo.Count = len(dlInfo.Files)
