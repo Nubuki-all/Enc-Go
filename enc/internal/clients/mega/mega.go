@@ -259,7 +259,6 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 		children[parent] = append(children[parent], n.Hash)
 	}
 
-
 	// handle explicit /file/... or /folder/... path in URL
 	pathHandle := folderInfo.InnerFolderHandle
 	sFileHandle := folderInfo.InnerFileHandle
