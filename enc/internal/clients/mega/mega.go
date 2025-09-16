@@ -1022,7 +1022,7 @@ func (d *Download) DownloadChunk(id int) ([]byte, error) {
 	}
 
 	// Decrypt the block
-	ctrIV, err := bytes_to_a32(d.iv)
+	ctrIV, err := bytesToA32(d.iv)
 	if err != nil {
 		return nil, err
 	}
