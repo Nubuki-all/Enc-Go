@@ -393,27 +393,23 @@ func CleanAllQbit(ctx context.Context) {
 
 func GetMegaDlInfo(uri string) *utils.DLInfo {
 	dlInfo := &utils.DLInfo{}
-	downloads, err := bot.MegaClient.NewDownloadFromLink(uri)
+	files, err := bot.MegaClient.ListFilesFromLink(uri)
 	if err != nil {
 		dlInfo.Error = err
 		return dlInfo
 	}
-	if len(downloads) == 0 {
-		dlInfo.Error = fmt.Errorf("no files available to download")
-		return dlInfo
-	}
 
-	for _, dl := range downloads {
-		dlInfo.Files = append(dlInfo.Files, dl.Name)
+	for hash, file := range files {
+		if hash == "0" {
+			continue
+		}
+		dlInfo.Files = append(dlInfo.Files, file)
 	}
 	dlInfo.Count = len(dlInfo.Files)
 	if dlInfo.Count == 1 {
 		dlInfo.Name = dlInfo.Files[0]
 	} else {
-		dlInfo.Name, err = bot.MegaClient.GetRootFolderName(uri)
-		if err != nil {
-			logger.Warn("Error while fetching mega folder name: ", err)
-		}
+		dlInfo.Name = files["0"]
 	}
 	return dlInfo
 }
