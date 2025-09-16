@@ -131,7 +131,7 @@ func (dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) erro
 	size := d.Size
 	start := time.Now()
 	wg := sync.WaitGroup{}
-	
+
 	wg.Add(1)
 	go func() {
 		ticker := time.NewTicker(progressInterval)
@@ -231,7 +231,6 @@ func (dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) erro
 	}
 	close(workch)
 	close(doneCh)
-	
 
 	wg.Wait()
 
