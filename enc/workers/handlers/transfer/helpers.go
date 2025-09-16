@@ -43,7 +43,7 @@ func ListFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	for i, item := range dlInfo.Files {
 		fmt.Fprintf(&sb, "%d. `%s`\n", i, item)
 	}
-	fmt.Fprintf(&sb, "\n**Total files:** %d\n\n__(While selecting with aria2 subtract 1 to get the file id)__", dlInfo.Count)
+	fmt.Fprintf(&sb, "\n**Total files:** %d\n\n__(While selecting with aria2 add 1 to the file id)__", dlInfo.Count)
 	text := sb.String()
 	parts := utils.SplitText(text, "\n", false)
 	prevMsg := msg
