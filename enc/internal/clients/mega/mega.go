@@ -1022,8 +1022,10 @@ func (d *Download) DownloadChunk(id int) ([]byte, error) {
 	}
 
 	// Decrypt the block
-	ctrIV := make([]uint32, len(d.ivA32))
-	copy(ctrIV, d.ivA32)
+	ctrIV, err := bytes_to_a32(d.iv)
+	if err != nil {
+		return nil, err
+	}
 	ctrIV[2] = uint32(uint64(chunkStart) / 0x1000000000)
 	ctrIV[3] = uint32(chunkStart / 0x10)
 	bctrIV, err := a32ToBytes(ctrIV)
