@@ -192,7 +192,10 @@ func decryptKeyA32(encA32 []uint32, parentKeyA32 []uint32) ([]uint32, error) {
 	}
 	// parentKeyA32 may be 8 words (folder key) or 4 words depending on context.
 	// We'll just convert whatever is provided into 16/32/... bytes and use as AES key.
-	keyBytes := a32ToBytes(parentKeyA32)
+	keyBytes, err := a32ToBytes(parentKeyA32)
+	if err != nil {
+		return nil, err
+	}
 	// AES key must be 16, 24 or 32 bytes. Most MEGA folder keys -> 16 bytes (4 words) after XOR derive,
 	// but parentKeyA32 often has 8 words (32 bytes). Many libs pass the full 16-byte key (first 4 words XORed etc).
 	// Accept 16, 24 or 32; otherwise return an error.
@@ -208,7 +211,10 @@ func decryptKeyA32(encA32 []uint32, parentKeyA32 []uint32) ([]uint32, error) {
 	}
 
 	// Build encrypted bytes from encA32 (big-endian)
-	encBytes := a32ToBytes(encA32)
+	encBytes, err := a32ToBytes(encA32)
+	if err != nil {
+		return nil, err
+	}
 
 	// AES-CBC decrypt with zero IV
 	block, err := aes.NewCipher(keyBytes)
