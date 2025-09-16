@@ -632,7 +632,7 @@ func (m *Mega) ListFilesFromFolderLink(url string) (map[string]string, error) {
 				relName = filepath.Join(relPath, fileName)
 			}
 			files[node.Hash] = relName
-			
+
 		}
 		return nil
 	}
