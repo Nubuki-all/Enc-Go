@@ -355,7 +355,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			if node.T == 1 {
 				// try to obtain a friendly folder name from attrs (if present)
 				fName := node.Hash
-				if node.Attr != "" && len(decA32) >= 8 {
+				if node.Attr != "" /*&& len(decA32) >= 8*/ {
 					// derive short kBytes to decrypt attrs like file keys do
 					kA32 := make([]uint32, 4)
 					for i := 0; i < 4; i++ {
