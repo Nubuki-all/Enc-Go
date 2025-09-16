@@ -182,33 +182,54 @@ func a32ToBytes(a []uint32) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-// decryptKeyA32 decrypts an encrypted 'k' a32 slice using the provided key a32 (folder key).
-// It mirrors mega.py decrypt_key: AES-CBC decrypt each 16-byte block with key = a32_to_bytes(key) and zero IV.
-func decryptKeyA32(encA32 []uint32, keyA32 []uint32) ([]uint32, error) {
-	keyBytes, err := a32ToBytes(keyA32)
-	if err != nil {
-		return nil, err
+// decryptKeyA32 decrypts an encrypted key (expressed as a32 words) using the parent folder key (also a32).
+// Implements the same algorithm used by mega.py / qgustavor/mega: AES-CBC decrypt with zero IV
+// on the whole encrypted blob (a32->bytes). Returns decrypted a32 words.
+func decryptKeyA32(encA32 []uint32, parentKeyA32 []uint32) ([]uint32, error) {
+	// sanity checks
+	if len(encA32) == 0 {
+		return nil, errors.New("encA32 empty")
 	}
-	encBytes, err := a32ToBytes(encA32) // converts encA32 to bytes
-	if err != nil {
-		return nil, err
+	// parentKeyA32 may be 8 words (folder key) or 4 words depending on context.
+	// We'll just convert whatever is provided into 16/32/... bytes and use as AES key.
+	keyBytes := a32ToBytes(parentKeyA32)
+	// AES key must be 16, 24 or 32 bytes. Most MEGA folder keys -> 16 bytes (4 words) after XOR derive,
+	// but parentKeyA32 often has 8 words (32 bytes). Many libs pass the full 16-byte key (first 4 words XORed etc).
+	// Accept 16, 24 or 32; otherwise return an error.
+	if len(keyBytes) != 16 && len(keyBytes) != 24 && len(keyBytes) != 32 {
+		// If parentKeyA32 is 8 words (32 bytes) that's fine. If it's 8 words but some libs expect 16 bytes,
+		// this is caller's responsibility. Still try if length valid.
+		// If invalid, try reducing to first 16 bytes as a fallback (common mistake).
+		if len(keyBytes) > 16 {
+			keyBytes = keyBytes[:16] // best-effort fallback (but prefer to pass correct parent key)
+		} else {
+			return nil, errors.New("invalid parent key length for AES")
+		}
 	}
+
+	// Build encrypted bytes from encA32 (big-endian)
+	encBytes := a32ToBytes(encA32)
+
 	// AES-CBC decrypt with zero IV
 	block, err := aes.NewCipher(keyBytes)
 	if err != nil {
 		return nil, err
 	}
 	if len(encBytes)%aes.BlockSize != 0 {
-		// pad (should not usually be needed)
-		pad := aes.BlockSize - (len(encBytes) % aes.BlockSize)
-		encBytes = append(encBytes, bytes.Repeat([]byte{0}, pad)...)
+		// encrypted blob must be multiple of blocksize (16), otherwise key format is wrong
+		return nil, errors.New("encrypted key size not multiple of AES block size")
 	}
-	ivZero := make([]byte, aes.BlockSize)
-	mode := cipher.NewCBCDecrypter(block, ivZero)
-	dec := make([]byte, len(encBytes))
-	mode.CryptBlocks(dec, encBytes)
-	return bytesToA32(dec)
-}
+	iv := make([]byte, aes.BlockSize)
+	mode := cipher.NewCBCDecrypter(block, iv)
+	plain := make([]byte, len(encBytes))
+	mode.CryptBlocks(plain, encBytes)
+
+	// plain -> a32 words
+	out, err := bytesToA32(plain)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 
 // base64urlencode encodes byte slice b using base64 url encoding
 // without `=` padding.
