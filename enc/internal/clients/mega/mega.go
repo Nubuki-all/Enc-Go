@@ -206,7 +206,6 @@ type Download struct {
 	chunkMacs   [][]byte
 }
 
-
 var zeroIV = make([]byte, 16)
 
 func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
@@ -257,7 +256,6 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 		}
 		children[parent] = append(children[parent], n.Hash)
 	}
-
 
 	// handle explicit /file/... or /folder/... path in URL
 	pathHandle := folderInfo.InnerFolderHandle
@@ -497,7 +495,6 @@ func (m *Mega) GetRootFolderName(url string) (string, error) {
 		}
 	}
 
-
 	pathHandle := folderInfo.InnerFolderHandle
 	startHandle := folderID
 
@@ -506,7 +503,7 @@ func (m *Mega) GetRootFolderName(url string) (string, error) {
 			startHandle = pathHandle
 		}
 	}
-	
+
 	rootNode := nodes[startHandle]
 	parts := strings.Split(rootNode.Key, ":")
 	encB64 := parts[len(parts)-1]
