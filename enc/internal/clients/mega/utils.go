@@ -223,7 +223,12 @@ func decryptKeyA32(encA32 []uint32, parentKeyA32 []uint32) ([]uint32, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(encBytes)%aes.BlockSize != 0 {
+	err = blockDecrypt(block, encBytes, encBytes)
+	if err != nil {
+		return nil, err
+	}
+	return bytesToA32(encBytes)
+	/*if len(encBytes)%aes.BlockSize != 0 {
 		// encrypted blob must be multiple of blocksize (16), otherwise key format is wrong
 		return nil, errors.New("encrypted key size not multiple of AES block size")
 	}
@@ -237,7 +242,7 @@ func decryptKeyA32(encA32 []uint32, parentKeyA32 []uint32) ([]uint32, error) {
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	return out, nil*/
 }
 
 // base64urlencode encodes byte slice b using base64 url encoding
@@ -389,7 +394,7 @@ func decryptRSA(m, p, q, d *big.Int) []byte {
 	r.Exp(m, d, n)
 
 	return r.Bytes()
-}
+}*/
 
 // blockDecrypt decrypts using the block cipher blk in ECB mode.
 func blockDecrypt(blk cipher.Block, dst, src []byte) error {
@@ -406,6 +411,7 @@ func blockDecrypt(blk cipher.Block, dst, src []byte) error {
 	return nil
 }
 
+/*
 // blockEncrypt encrypts using the block cipher blk in ECB mode.
 func blockEncrypt(blk cipher.Block, dst, src []byte) error {
 	if len(src) > len(dst) || len(src)%blk.BlockSize() != 0 {
