@@ -446,7 +446,8 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 						fileName = attrObj.Name
 					}
 				}
-			} else if node.Attr != "" && fileName == "" {
+			}
+			if node.Attr != "" && fileName == "" {
 				// try folder-provided attr as fallback
 				if attrObj, derr := decryptAttr(keyBytes, node.Attr); derr == nil {
 					println("fh2")
@@ -454,7 +455,8 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 						fileName = attrObj.Name
 					}
 				}
-			} else {
+			} 
+			if fileName {
 				fileName = node.Hash + ".bin"
 			}
 
