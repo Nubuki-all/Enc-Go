@@ -341,7 +341,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 				}
 				newRel := filepath.Join(relPath, filepath.Base(fName))
 				g.Go(func() error {
-					if err := walk(node.Hash, newRel); err != nil{
+					if err := walk(node.Hash, newRel); err != nil {
 						return err
 					} else {
 						return nil
