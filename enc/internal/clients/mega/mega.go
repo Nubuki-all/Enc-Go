@@ -12,11 +12,9 @@ import (
 	"fmt"
 	"io"
 	//"io/ioutil"
-	"maps"
 	"net/http"
 	//"os"
 	"path/filepath"
-	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -251,29 +249,26 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	}
 	nodes := make(map[string]FSNode)
 	children := make(map[string][]string)
+	var folderID string
 	for _, n := range res[0].F {
 		nodes[n.Hash] = n
 		parent := n.Parent
-		// normalize empty parent -> treat as root handle
-		if parent == "" {
-			parent = folderInfo.ID
+		if x := strings.Split(n.Key, ":"); len(x) > 1 && n.Hash == x[0] {
+			folderID = n.Hash
 		}
 		children[parent] = append(children[parent], n.Hash)
 	}
 
-	// optional debug
-	logger.Infof("nodes=%d children_keys=%d", len(nodes), len(children))
 
 	// handle explicit /file/... or /folder/... path in URL
 	pathHandle := folderInfo.InnerFolderHandle
 	sFileHandle := folderInfo.InnerFileHandle
-
-	startHandle := folderInfo.ID
-	for id := range children {
+	startHandle := folderID
+	/*for id := range children {
 		if _, ok := nodes[id]; !ok {
 			startHandle = id
 		}
-	}
+	}*/
 	startKey := folderKeyA32
 
 	// if user passed a file handle in the URL, prune the node set to the ancestor chain
@@ -316,11 +311,6 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 		startHandle = curHandle
 		startKey = curKey
 	}
-	logger.Infof("nodes=%d children_keys=%d", len(nodes), len(children))
-	keys1 := maps.Keys(nodes)
-	keys2 := maps.Keys(nodes)
-	fmt.Println(slices.Sorted(keys1))
-	fmt.Println(slices.Sorted(keys2))
 
 	var downloads []*Download
 	var walk func(curHandle string, curKeyA32 []uint32, relPath string) error
@@ -345,7 +335,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			}
 
 			// decrypt node key using current folder key
-			decA32, derr := decryptKeyA32(encA32, folderKeyA32)
+			decA32, derr := decryptKeyA32(encA32, curKeyA32)
 			if derr != nil {
 				logger.Warn("skipped 1;  cannot decrypt with current folder key; " + derr.Error())
 				continue
@@ -355,12 +345,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			if node.T == 1 {
 				// try to obtain a friendly folder name from attrs (if present)
 				fName := node.Hash
-				if node.Attr != "" /*&& len(decA32) >= 8*/ {
-					// derive short kBytes to decrypt attrs like file keys do
-					/*kA32 := make([]uint32, 4)
-					for i := 0; i < 4; i++ {
-						kA32[i] = decA32[i] ^ decA32[i+4]
-					}*/
+				if node.Attr != "" {
 					kBytes, err := a32ToBytes(decA32)
 					if err != nil {
 						logger.Warn(err)
@@ -383,7 +368,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			if len(decA32) < 8 {
 				continue
 			}
-			// decA32 = encA32
+
 			// derive file key bytes (k)
 			kA32 := make([]uint32, 4)
 			for i := 0; i < 4; i++ {
@@ -441,16 +426,6 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			var fileName string
 			if res[0].Attr != "" {
 				if attrObj, derr := decryptAttr(keyBytes, res[0].Attr); derr == nil {
-					println("fh")
-					if attrObj.Name != "" {
-						fileName = attrObj.Name
-					}
-				}
-			}
-			if node.Attr != "" && fileName == "" {
-				// try folder-provided attr as fallback
-				if attrObj, derr := decryptAttr(keyBytes, node.Attr); derr == nil {
-					println("fh2")
 					if attrObj.Name != "" {
 						fileName = attrObj.Name
 					}

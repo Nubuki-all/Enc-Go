@@ -16,8 +16,6 @@ import (
 	"regexp"
 	"strings"
 	"time"
-
-	"enc/internal/logger"
 )
 
 func newHTTPClient(timeout time.Duration) *http.Client {
@@ -499,7 +497,6 @@ func decryptAttr(key []byte, data string) (attr FileAttr, err error) {
 		return attr, err
 	}
 	mode.CryptBlocks(buf, ddata)
-	logger.Info(string(buf))
 
 	if string(buf[:4]) == "MEGA" {
 		str := strings.TrimRight(string(buf[4:]), "\x00")
