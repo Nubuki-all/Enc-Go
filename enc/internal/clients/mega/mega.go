@@ -438,7 +438,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			}
 
 			// decrypt attributes from API response if present to get filename
-			fileName := node.Hash + ".bin"
+			var fileName string
 			if res[0].Attr != "" {
 				if attrObj, derr := decryptAttr(keyBytes, res[0].Attr); derr == nil {
 					println("fh")
@@ -446,7 +446,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 						fileName = attrObj.Name
 					}
 				}
-			} else if node.Attr != "" {
+			} else if node.Attr != "" && fileName == "" {
 				// try folder-provided attr as fallback
 				if attrObj, derr := decryptAttr(keyBytes, node.Attr); derr == nil {
 					println("fh2")
@@ -454,6 +454,8 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 						fileName = attrObj.Name
 					}
 				}
+			} else {
+				fileName = node.Hash + ".bin"
 			}
 
 			// build chunks and download URL
