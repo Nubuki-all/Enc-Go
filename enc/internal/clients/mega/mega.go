@@ -611,7 +611,7 @@ func (m *Mega) ListFilesFromFolderLink(url string) (map[string]string, error) {
 			for i := 0; i < 4; i++ {
 				kA32[i] = decA32[i] ^ decA32[i+4]
 			}
-			keyBytes, err := a32ToBytes(kA32)
+			kBytes, err := a32ToBytes(kA32)
 			if err != nil {
 				logger.Warn(err)
 				continue
@@ -632,7 +632,7 @@ func (m *Mega) ListFilesFromFolderLink(url string) (map[string]string, error) {
 				relName = filepath.Join(relPath, fileName)
 			}
 			files[node.Hash] = relName
-			downloads = append(downloads, d)
+			
 		}
 		return nil
 	}
@@ -652,19 +652,19 @@ func (m *Mega) ListFilesFromFolderLink(url string) (map[string]string, error) {
 	encB64 := parts[len(parts)-1]
 	encA32, derr := base64ToA32(encB64)
 	if derr != nil {
-		return "", fmt.Errorf("can't decode key for root node: " + derr.Error())
+		return nil, fmt.Errorf("can't decode key for root node: " + derr.Error())
 	}
 
 	// decrypt node key using current folder key
 	decA32, derr := decryptKeyA32(encA32, folderKeyA32)
 	if derr != nil {
-		return "", fmt.Errorf("cannot decrypt with folder key; " + derr.Error())
+		return nil, fmt.Errorf("cannot decrypt with folder key; " + derr.Error())
 	}
 	fName := rootNode.Hash
 	if rootNode.Attr != "" {
 		kBytes, err := a32ToBytes(decA32)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 		if attrs, derr2 := decryptAttr(kBytes, rootNode.Attr); derr2 == nil {
 			if nname := attrs.Name; nname != "" {
@@ -889,10 +889,6 @@ func (m *Mega) ListFilesFromLink(url string) (map[string]string, error) {
 	for i := 0; i < 4; i++ {
 		kA32[i] = fileKeyA32[i] ^ fileKeyA32[i+4]
 	}
-	// iv a32 parts
-	ivA32 := fileKeyA32[4:6]
-	metaMacTwo := fileKeyA32[6:8]
-	// k bytes
 	kBytes, err := a32ToBytes(kA32)
 	if err != nil {
 		logger.Warn(err)
@@ -931,7 +927,7 @@ func (m *Mega) ListFilesFromLink(url string) (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return map[id]string{attr.Name}, nil
+	return map[string]string{id: attr.Name}, nil
 }
 
 // Chunks returns The number of chunks in the download.
