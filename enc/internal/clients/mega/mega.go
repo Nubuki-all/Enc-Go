@@ -541,7 +541,7 @@ func (m *Mega) ListFilesFromFolderLink(url string) (map[string]string, error) {
 		}
 	}
 
-	var files map[string]string
+	files := make(map[string]string)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	g, _ := errgroup.WithContext(ctx)
