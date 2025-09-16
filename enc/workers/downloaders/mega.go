@@ -131,50 +131,55 @@ func (dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) erro
 	size := d.Size
 	start := time.Now()
 	wg := sync.WaitGroup{}
+	
+	wg.Add(1)
+	go func() {
+		ticker := time.NewTicker(progressInterval)
+		defer ticker.Stop()
+		defer wg.Done()
 
-	for w := 0; w < workers; w++ {
-		wg.Add(2)
-		go func() {
-			ticker := time.NewTicker(progressInterval)
-			defer ticker.Stop()
-			defer wg.Done()
+		var stored bool
+	Loop:
+		for {
+			select {
+			case <-ctx.Done():
+				break Loop
+			case chunk := <-progress:
+				current += chunk
+				dl.ProgressCallback(start, fileName, int64(size), current)
+				break Loop
+			case <-doneCh:
+				break Loop
+			}
+		}
 
-			var stored bool
-		Loop:
-			for {
-				select {
-				case <-ctx.Done():
-					break Loop
-				case chunk := <-progress:
-					current += chunk
+		for {
+			select {
+			case <-ctx.Done():
+				// timeout
+				return
+			case chunk := <-progress:
+				if dl.IsCancelled {
+					close(cancelCh)
+					return
+				}
+				current += chunk
+				stored = true
+			case <-ticker.C:
+				if dl.IsCancelled {
+					close(cancelCh)
+					return
+				}
+				if stored {
 					dl.ProgressCallback(start, fileName, int64(size), current)
-					break Loop
-				case <-doneCh:
-					break Loop
 				}
+			case <-doneCh:
+				return
 			}
-
-			for {
-				select {
-				case <-ctx.Done():
-					// timeout
-					return
-				case chunk := <-progress:
-					current += chunk
-					stored = true
-				case <-ticker.C:
-					if dl.IsCancelled {
-						close(cancelCh)
-					}
-					if stored {
-						dl.ProgressCallback(start, fileName, int64(size), current)
-					}
-				case <-doneCh:
-					return
-				}
-			}
-		}()
-
+		}
+	}()
+	for w := 0; w < workers; w++ {
+		wg.Add(1)
 		go func() {
 			defer wg.Done()
 
@@ -210,9 +215,7 @@ func (dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) erro
 					return
 				}
 
-				if progress != nil {
-					progress <- int64(len(chunk))
-				}
+				progress <- int64(len(chunk))
 			}
 		}()
 	}
@@ -227,6 +230,8 @@ func (dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) erro
 		}
 	}
 	close(workch)
+	close(doneCh)
+	
 
 	wg.Wait()
 
