@@ -616,7 +616,7 @@ func (m *Mega) ListFilesFromFolderLink(url string) (map[string]string, error) {
 				logger.Warn(err)
 				continue
 			}
-			var fileName string 
+			var fileName string
 			if attrs, derr2 := decryptAttr(kBytes, node.Attr); derr2 == nil {
 				if nname := attrs.Name; nname != "" {
 					fileName = nname
