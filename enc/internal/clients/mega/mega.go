@@ -486,7 +486,6 @@ func (m *Mega) GetRootFolderName(url string) (string, error) {
 		return "", err
 	}
 	nodes := make(map[string]FSNode)
-	children := make(map[string][]string)
 	var folderID string
 	for _, n := range res[0].F {
 		nodes[n.Hash] = n
@@ -521,10 +520,9 @@ func (m *Mega) GetRootFolderName(url string) (string, error) {
 	if rootNode.Attr != "" {
 		kBytes, err := a32ToBytes(decA32)
 		if err != nil {
-			logger.Warn(err)
-			continue
+			return "", err
 		}
-		if attrs, derr2 := decryptAttr(kBytes, node.Attr); derr2 == nil {
+		if attrs, derr2 := decryptAttr(kBytes, rootNode.Attr); derr2 == nil {
 			if nname := attrs.Name; nname != "" {
 				fName = nname
 			}
