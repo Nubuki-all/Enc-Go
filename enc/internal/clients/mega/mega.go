@@ -545,7 +545,7 @@ func (m *Mega) ListFilesFromFolderLink(url string) (map[string]string, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	g, _ := errgroup.WithContext(ctx)
-	var mu sync.Mutex
+	var mu    sync.Mutex
 
 	var walk func(curHandle string, relPath string) error
 	walk = func(curHandle string, relPath string) error {
@@ -633,8 +633,8 @@ func (m *Mega) ListFilesFromFolderLink(url string) (map[string]string, error) {
 				relName = filepath.Join(relPath, fileName)
 			}
 			mu.Lock()
-			defer mu.Unlock()
 			files[node.Hash] = relName
+			mu.Unlock()
 
 		}
 		return nil
