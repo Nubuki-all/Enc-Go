@@ -385,11 +385,11 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			}
 			// decA32 = encA32
 			// derive file key bytes (k)
-			/*kA32 := make([]uint32, 4)
+			kA32 := make([]uint32, 4)
 			for i := 0; i < 4; i++ {
 				kA32[i] = decA32[i] ^ decA32[i+4]
-			}*/
-			keyBytes, err := a32ToBytes(decA32)
+			}
+			keyBytes, err := a32ToBytes(kA32)
 			if err != nil {
 				logger.Warn(err)
 				continue
