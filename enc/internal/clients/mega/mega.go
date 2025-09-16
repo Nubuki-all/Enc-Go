@@ -391,12 +391,11 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			for i := 0; i < 4; i++ {
 				kA32[i] = decA32[i] ^ decA32[i+4]
 			}*/
-			keyBytes , err := a32ToBytes(decA32)
+			keyBytes, err := a32ToBytes(decA32)
 			if err != nil {
 				logger.Warn(err)
 				continue
 			}
-			
 
 			// build AES block and MAC encrypter
 			aesBlock, err := aes.NewCipher(keyBytes)
