@@ -357,11 +357,11 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 				fName := node.Hash
 				if node.Attr != "" /*&& len(decA32) >= 8*/ {
 					// derive short kBytes to decrypt attrs like file keys do
-					kA32 := make([]uint32, 4)
+					/*kA32 := make([]uint32, 4)
 					for i := 0; i < 4; i++ {
 						kA32[i] = decA32[i] ^ decA32[i+4]
-					}
-					kBytes, err := a32ToBytes(kA32)
+					}*/
+					kBytes, err := a32ToBytes(decA32)
 					if err != nil {
 						logger.Warn(err)
 						continue
