@@ -399,17 +399,14 @@ func GetMegaDlInfo(uri string) *utils.DLInfo {
 		return dlInfo
 	}
 
-	for hash, file := range files {
-		if hash == "0" {
-			continue
-		}
-		dlInfo.Files = append(dlInfo.Files, file)
+	for _, file := range files {	
+		dlInfo.Files = append(dlInfo.Files, file.Name)
 	}
 	dlInfo.Count = len(dlInfo.Files)
 	if dlInfo.Count == 1 {
 		dlInfo.Name = dlInfo.Files[0]
 	} else {
-		dlInfo.Name = files["0"]
+		dlInfo.Name = files[0].Parent
 	}
 	return dlInfo
 }

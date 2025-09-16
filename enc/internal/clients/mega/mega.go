@@ -464,7 +464,13 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	return downloads, nil
 }
 
-func (m *Mega) ListFilesFromFolderLink(url string) (map[string]string, error) {
+type File struct {
+	Hash    string
+	Name    string
+	Parent  string
+}
+
+func (m *Mega) ListFilesFromFolderLink(url string) ([]File, error) {
 	if url == "" {
 		return nil, ErrArgs
 	}
@@ -541,12 +547,37 @@ func (m *Mega) ListFilesFromFolderLink(url string) (map[string]string, error) {
 		}
 	}
 
-	files := make(map[string]string)
+	files := []File{}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	g, _ := errgroup.WithContext(ctx)
 	var mu sync.Mutex
+	
+	rootNode := nodes[startHandle]
+	parts := strings.Split(rootNode.Key, ":")
+	encB64 := parts[len(parts)-1]
+	encA32, derr := base64ToA32(encB64)
+	if derr != nil {
+		return nil, fmt.Errorf("can't decode key for root node: " + derr.Error())
+	}
 
+	// decrypt node key using current folder key
+	decA32, derr := decryptKeyA32(encA32, folderKeyA32)
+	if derr != nil {
+		return nil, fmt.Errorf("cannot decrypt with folder key; " + derr.Error())
+	}
+	folderName := rootNode.Hash
+	if rootNode.Attr != "" {
+		kBytes, err := a32ToBytes(decA32)
+		if err != nil {
+			return nil, err
+		}
+		if attrs, derr2 := decryptAttr(kBytes, rootNode.Attr); derr2 == nil {
+			if nname := attrs.Name; nname != "" {
+				folderName = nname
+			}
+		}
+	}
 	var walk func(curHandle string, relPath string) error
 	walk = func(curHandle string, relPath string) error {
 		for _, child := range children[curHandle] {
@@ -632,8 +663,13 @@ func (m *Mega) ListFilesFromFolderLink(url string) (map[string]string, error) {
 			if relPath != "" {
 				relName = filepath.Join(relPath, fileName)
 			}
+			file := File{
+				Hash: node.Hash,
+				Name: relName,
+				Parent: folderName,
+			}
 			mu.Lock()
-			files[node.Hash] = relName
+			files = append(files, file)
 			mu.Unlock()
 
 		}
@@ -650,33 +686,7 @@ func (m *Mega) ListFilesFromFolderLink(url string) (map[string]string, error) {
 	if len(files) == 0 {
 		return nil, errors.New("no downloadable files found (or unable to decrypt keys)")
 	}
-	rootNode := nodes[startHandle]
-	parts := strings.Split(rootNode.Key, ":")
-	encB64 := parts[len(parts)-1]
-	encA32, derr := base64ToA32(encB64)
-	if derr != nil {
-		return nil, fmt.Errorf("can't decode key for root node: " + derr.Error())
-	}
-
-	// decrypt node key using current folder key
-	decA32, derr := decryptKeyA32(encA32, folderKeyA32)
-	if derr != nil {
-		return nil, fmt.Errorf("cannot decrypt with folder key; " + derr.Error())
-	}
-	fName := rootNode.Hash
-	if rootNode.Attr != "" {
-		kBytes, err := a32ToBytes(decA32)
-		if err != nil {
-			return nil, err
-		}
-		if attrs, derr2 := decryptAttr(kBytes, rootNode.Attr); derr2 == nil {
-			if nname := attrs.Name; nname != "" {
-				fName = nname
-			}
-		}
-	}
-	files["0"] = fName
-	return files, nil
+		return files, nil
 }
 
 // GetRootFolderName returns the display name for the root or subfolder of a public folder share
@@ -869,7 +879,7 @@ func (m *Mega) NewDownloadFromLink(url string) ([]*Download, error) {
 	return []*Download{d}, nil
 }
 
-func (m *Mega) ListFilesFromLink(url string) (map[string]string, error) {
+func (m *Mega) ListFilesFromLink(url string) ([]File, error) {
 	if url == "" {
 		return nil, ErrArgs
 	}
@@ -930,7 +940,7 @@ func (m *Mega) ListFilesFromLink(url string) (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return map[string]string{id: attr.Name}, nil
+	return []File{{Hash: id, Name: attr.Name}}, nil
 }
 
 // Chunks returns The number of chunks in the download.

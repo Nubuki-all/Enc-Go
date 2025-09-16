@@ -55,6 +55,7 @@ type Config struct {
 	LogChannel            int64
 	LogsInChannel         bool
 	LogFileName           string
+	MDLTimeout            int
 	MediaInfoDir          string
 	MICap                 bool
 	MuxArgs               string
@@ -95,6 +96,7 @@ type RuntimeConfig struct {
 	ADLTimeout            time.Duration
 	BotID                 string
 	Error                 error
+	MDLTimeout            time.Duration
 	Owners                []int64
 	ProgresUpdateInterval time.Duration
 	QBitTimeout           time.Duration
@@ -234,6 +236,7 @@ func LoadConfig() error {
 		LogChannel:            viper.GetInt64("LOG_CHANNEL"),
 		LogsInChannel:         viper.GetBool("LOGS_IN_CHANNEL"),
 		LogFileName:           viper.GetString("LOG_FILE_NAME"),
+		MDLTimeout:            viper.GetInt("MEGA_DL_TIMEOUT"),
 		MediaInfoDir:          viper.GetString("MEDIAINFO_DIR"),
 		MICap:                 viper.GetBool("MI_IN_CAPTION"),
 		MuxArgs:               viper.GetString("MUX_ARGS"),
@@ -301,6 +304,7 @@ func LoadConfig() error {
 		Conf.ProgresUpdateInterval = 2
 	}
 	Rconf.ADLTimeout = time.Duration(Conf.ADLTimeout)
+	Rconf.MDLTimeout = time.Duration(Conf.MDLTimeout)
 	Rconf.ProgresUpdateInterval = time.Duration(Conf.ProgresUpdateInterval)
 	Rconf.QBitTimeout = time.Duration(Conf.QBitTimeout)
 	Rconf.QDLTimeout = time.Duration(Conf.QDLTimeout)

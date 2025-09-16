@@ -32,6 +32,7 @@ type Downloader struct {
 	InputLoc      tg.InputFileLocationClass
 	aria2Dl       *Aria2Download
 	qbitDl        *QbitDownload
+	megaDl        *MegaDownload
 	DlInfo        bool
 	Done          bool
 	Folder        string
@@ -80,6 +81,13 @@ func (dl *Downloader) Start() error {
 		if err == nil {
 			dl.FileName = dl.qbitDl.name
 		}
+	} else if dl.URI != "" && utils.IsMegaLink(dl.URI) {
+		folder, _ := filepath.Abs(dl.Folder)
+		dl.megaDl = NewMegaDl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
+		err = dl.megaDl.Start()
+		if err == nil {
+			dl.FileName = filepath.Base(dl.megaDl.Path)
+		}
 	} else if dl.URI != "" {
 		folder, _ := filepath.Abs(dl.Folder)
 		dl.aria2Dl = NewAria2Dl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
@@ -106,6 +114,10 @@ func (dl *Downloader) CleanDownload() {
 	}
 	if dl.qbitDl != nil {
 		dl.qbitDl.Clean()
+		return
+	}
+	if dl.megaDl != nil {
+		dl.megaDl.Clean()
 		return
 	}
 	err := os.Remove(dl.Path)
