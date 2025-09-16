@@ -456,7 +456,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 					}
 				}
 			} 
-			if fileName {
+			if fileName == "" {
 				fileName = node.Hash + ".bin"
 			}
 
