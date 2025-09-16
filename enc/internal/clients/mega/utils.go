@@ -230,6 +230,7 @@ func decryptKeyA32(encA32 []uint32, parentKeyA32 []uint32) ([]uint32, error) {
 		return nil, err
 	}
 	return out, nil
+}
 
 // base64urlencode encodes byte slice b using base64 url encoding
 // without `=` padding.
