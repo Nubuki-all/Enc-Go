@@ -326,12 +326,10 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	var walk func(curHandle string, curKeyA32 []uint32, relPath string) error
 	walk = func(curHandle string, curKeyA32 []uint32, relPath string) error {
 		for _, child := range children[curHandle] {
-			fmt.Println("if.")
 			node, ok := nodes[child]
 			if !ok {
 				continue
 			}
-			fmt.Println("f.")
 			// skip if node has no Key - can't decrypt
 			if node.Key == "" {
 				continue
@@ -431,11 +429,9 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			if err != nil {
 				return err
 			}
-			fmt.Println("h.")
 			if len(res) == 0 {
 				continue
 			}
-			fmt.Println("a.")
 			// DownloadResp has an embedded error in it for some reason
 			if res[0].Err != 0 {
 				logger.Warn(parseError(res[0].Err))
@@ -445,6 +441,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			fileName := node.Hash + ".bin"
 			if res[0].Attr != "" {
 				if attrObj, derr := decryptAttr(keyBytes, res[0].Attr); derr == nil {
+					println("fh")
 					if attrObj.Name != "" {
 						fileName = attrObj.Name
 					}
@@ -452,6 +449,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			} else if node.Attr != "" {
 				// try folder-provided attr as fallback
 				if attrObj, derr := decryptAttr(keyBytes, node.Attr); derr == nil {
+					println("fh2")
 					if attrObj.Name != "" {
 						fileName = attrObj.Name
 					}
