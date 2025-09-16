@@ -3,14 +3,17 @@ package mega
 
 import (
 	"bytes"
+	"context"
 	"crypto/aes"
 	"crypto/cipher"
+
 	//"crypto/rand"
 	//"crypto/sha512"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+
 	//"io/ioutil"
 	"net/http"
 	//"os"
@@ -20,6 +23,8 @@ import (
 	"time"
 
 	"enc/internal/logger"
+
+	"golang.org/x/sync/errgroup"
 )
 
 // from https://github.com/t3rm1n4l/go-mega/blob/master/mega.go#L55
@@ -286,6 +291,10 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	}
 
 	var downloads []*Download
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	g, _ := errgroup.WithContext(ctx)
+
 	var walk func(curHandle string, relPath string) error
 	walk = func(curHandle string, relPath string) error {
 		for _, child := range children[curHandle] {
@@ -331,9 +340,13 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 					}
 				}
 				newRel := filepath.Join(relPath, filepath.Base(fName))
-				if err := walk(node.Hash, newRel); err != nil {
-					return err
-				}
+				g.Go(func() error {
+					if err := walk(node.Hash, newRel); err != nil{
+						return err
+					} else {
+						return nil
+					}
+				})
 				continue
 			}
 
@@ -439,6 +452,10 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	}
 	// begin walk from the chosen startHandle using startKey (derived above)
 	if err := walk(startHandle, ""); err != nil {
+		cancel()
+		return nil, err
+	}
+	if err := g.Wait(); err != nil {
 		return nil, err
 	}
 	if len(downloads) == 0 {
