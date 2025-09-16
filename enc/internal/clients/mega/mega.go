@@ -385,7 +385,7 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 			if len(decA32) < 8 {
 				continue
 			}
-			//decA32 = encA32
+			// decA32 = encA32
 			// derive file key bytes (k)
 			kA32 := make([]uint32, 4)
 			for i := 0; i < 4; i++ {
