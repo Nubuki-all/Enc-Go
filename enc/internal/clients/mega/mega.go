@@ -18,6 +18,7 @@ import (
 	"net/http"
 	//"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -686,6 +687,9 @@ func (m *Mega) ListFilesFromFolderLink(url string) ([]File, error) {
 	if len(files) == 0 {
 		return nil, errors.New("no downloadable files found (or unable to decrypt keys)")
 	}
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].Name < files[j].Name
+	})
 	return files, nil
 }
 

@@ -30,13 +30,13 @@ type MegaDownload struct {
 	err          error
 	completed    bool
 	// timeout      bool
-	ufstr        string
-	fstr         string
-	dir          string
-	basePath     string
-	selected     string
-	selectedPath string
-	uri          string
+	ufstr    string
+	fstr     string
+	dir      string
+	basePath string
+	selected string
+	selectedName string
+	uri      string
 }
 
 func NewMegaDl(uri, dir, selected string, msg *tele.Message, tInfo *types.TransferInfo) *MegaDownload {
@@ -88,10 +88,10 @@ func (dl *MegaDownload) Start() error {
 	} else {
 		dl.basePath = filepath.Join(dl.dir, files[0].Name)
 	}
-	if dl.selectedPath == "" {
+	if dl.selectedName == "" {
 		dl.Path = dl.basePath
 	} else {
-		dl.Path = dl.selectedPath
+		dl.Path = filepath.Join(dl.dir, selectedName)
 	}
 	dl.downloadList, err = dl.client.NewDownloadFromLink(dl.uri)
 	if err != nil {
@@ -315,7 +315,7 @@ func (dl *MegaDownload) Select(files []mega.File) error {
 	for x, file := range files {
 		if x == sl {
 			fileID = file.Hash
-			dl.selectedPath = filepath.Join(dl.dir, file.Name)
+			dl.selectedName = file.Name
 			break
 		}
 	}
