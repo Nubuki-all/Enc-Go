@@ -30,7 +30,7 @@ type TgUpload struct {
 	msg    *tele.Message
 	reply  *tele.Message
 	upload *uploader.Uploader
-	pchan  chan *uploader.ProgressState
+	pchan  chan uploader.ProgressState
 	// err       error
 	// completed bool
 	forceDoc bool
@@ -90,7 +90,7 @@ func (ul *TgUpload) Start() (err error) {
 	defer cancel()
 
 	doneCh := make(chan struct{})
-	ul.pchan = make(chan *uploader.ProgressState, 1)
+	ul.pchan = make(chan uploader.ProgressState, 1)
 	start := time.Now()
 	var wg sync.WaitGroup
 	progressInterval := config.Rconf.ProgresUpdateInterval * time.Second
@@ -105,14 +105,14 @@ func (ul *TgUpload) Start() (err error) {
 		defer wg.Done()
 
 		var stored *uploader.ProgressState
-		var stored2 *uploader.ProgressState
+		var stored2 uploader.ProgressState
 	Loop:
 		for {
 			select {
 			case <-ctx.Done():
 				break Loop
 			case ev := <-ul.pchan:
-				ul.ProgressCallback(start, ev)
+				ul.ProgressCallback(start, &ev)
 				break Loop
 			case <-doneCh:
 				break Loop
@@ -125,10 +125,10 @@ func (ul *TgUpload) Start() (err error) {
 				// timeout
 				return
 			case ev := <-ul.pchan:
-				stored = ev
-				*stored2 = *ev
+				stored2 = ev
+				stored = &ev
 			case <-aTicker.C:
-				if stored2 != nil {
+				if stored2.Uploaded != 0 {
 					ul.actionCallback(stored2)
 				}
 			case <-ticker.C:
@@ -182,7 +182,7 @@ func (ul *TgUpload) Start() (err error) {
 	return ul.sendMedia(media)
 }
 
-func (ul *TgUpload) actionCallback(upload *uploader.ProgressState) {
+func (ul *TgUpload) actionCallback(upload uploader.ProgressState) {
 	total := upload.Total
 	current := upload.Uploaded
 	var percentage float64
@@ -253,7 +253,7 @@ func (ul *TgUpload) Chunk(ctx context.Context, state uploader.ProgressState) err
 	select {
 	case <-ctx.Done():
 		return fmt.Errorf("upload timed out")
-	case ul.pchan <- &state:
+	case ul.pchan <- state:
 		// sent successfully
 	default:
 		// channel full — drop the old and put the new one so latest wins
@@ -262,7 +262,7 @@ func (ul *TgUpload) Chunk(ctx context.Context, state uploader.ProgressState) err
 		default:
 		}
 		select {
-		case ul.pchan <- &state:
+		case ul.pchan <- state:
 		default:
 			// if still can't send (shouldn't happen), just drop it
 		}
