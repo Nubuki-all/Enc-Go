@@ -61,6 +61,9 @@ var (
 	NameFilters       = []*types.MatchedFilterData{}
 	ReleaseFilters    = []*types.MatchedFilterData{}
 	RenameFilters     = []*types.RenameFilterData{}
+	
+	//wait queues
+	WaitQueueR        = types.NewWaitQueue()
 )
 
 var (

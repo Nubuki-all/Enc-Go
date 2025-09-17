@@ -151,6 +151,9 @@ func (m *Message) EditText(text string) (*Message, error) {
 func (m *Message) Edit(text string, editOptions *EditOptions) (*Message, error) {
 	var pText string
 	var entities []tg.MessageEntityClass
+	if editOptions == nil {
+		editOptions = &EditOptions{}
+	}
 	if editOptions.HtmlParseMode {
 		pText, entities, _ = htmlparser.Parse(text)
 	} else {

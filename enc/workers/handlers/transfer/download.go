@@ -416,6 +416,12 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		download.FileName = tgFileName
 	}
 	id := fmt.Sprintf("%d:%d", sMsg.ChatID, sMsg.ID)
+	waitQueue := bot.WaitQueueR
+	waitQueue.Enqueue(id)
+	if waitQueue.Waiting() {
+		waitQueue.WaitForTurn(ctx, id, sMsg)
+	}
+	defer waitQueue.Remove(id)
 	download.Init(id, msg.SenderID)
 	err = download.Start()
 	if err != nil || download.IsCancelled {
@@ -423,13 +429,6 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		return nil
 	}
 	defer download.CleanDownload()
-	_, _ = sMsg.Edit(
-		fmt.Sprintf(
-			"__Saved to__ `%s` __successfully!__",
-			download.Path,
-		),
-		&tele.EditOptions{},
-	)
 	pOptions := &parser.ParseOptions{
 		Direct:      direct,
 		UseAniList:  !nparse,
@@ -440,12 +439,16 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	}
 	result, err := parser.ParseName(fileName, pOptions)
 	if err != nil {
-		_, _ = sMsg.ReplyText("**Parsing failed. check logs for more details**")
+		_, _ = sMsg.Edit("**Parsing failed. check logs for more details**",
+			nil,
+		)
 		logger.Error(err)
 		return nil
 	}
 	if result.FileName != download.FileName {
-		_, _ = sMsg.EditText("Renaming:\n`" + download.FileName + "`\n >>>\n`" + result.FileName + "`…")
+		_, _ = sMsg.Edit("Renaming:\n`" + download.FileName + "`\n >>>\n`" + result.FileName + "`…",
+			nil,
+		)
 		newPath := filepath.Join(filepath.Dir(download.Path), result.FileName)
 		if err = os.Rename(download.Path, newPath); err != nil {
 			logger.Warn(err)
@@ -470,7 +473,6 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			}
 		}
 	}
-	fmt.Println(thumbPath)
 	cOptions := &parser.CustCapOptions{
 		Path:          download.Path,
 		UseAniList:    !nparse,
