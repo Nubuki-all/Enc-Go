@@ -106,7 +106,7 @@ func AddCBHandlers(dispatch dispatcher.Dispatcher) {
 		// Tranfer Handlers
 		downloaders.CallbackData: CallbackEventHandler(callbacks.CancelDownload),
 		uploaders.CallbackData:   CallbackEventHandler(callbacks.CancelUpload),
-		
+
 		// Turn Handlers
 		"cancel_rturn": CallbackEventHandler(callbacks.CancelRTurn),
 	}

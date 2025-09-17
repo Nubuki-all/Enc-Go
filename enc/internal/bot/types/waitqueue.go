@@ -15,16 +15,16 @@ import (
 // It notifies registered waiters via per-wait channels when the queue changes.
 type WaitQueue struct {
 	callBackData string
-	mu      sync.Mutex
-	items   []string
-	waiters map[string][]chan struct{} // per-turnID list of waiter channels
+	mu           sync.Mutex
+	items        []string
+	waiters      map[string][]chan struct{} // per-turnID list of waiter channels
 }
 
 // New constructs a WaitQueue.
 func NewWaitQueue(cBData string) *WaitQueue {
 	return &WaitQueue{
 		callBackData: cBData,
-		waiters: make(map[string][]chan struct{}),
+		waiters:      make(map[string][]chan struct{}),
 	}
 }
 
