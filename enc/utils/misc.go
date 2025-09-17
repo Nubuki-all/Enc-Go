@@ -422,7 +422,7 @@ func AutoRename(parsedName, originalName string, caption, banner bool) (bool, st
 		break
 	}
 	if filter == nil {
-		return false, originalName
+		return false, parsedName
 	}
 	defaultFunc := func() string {
 		if filter.ReplaceName == "00" {

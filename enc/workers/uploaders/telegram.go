@@ -157,7 +157,11 @@ func (ul *TgUpload) Start() (err error) {
 	close(doneCh)
 	wg.Wait()
 	if err != nil {
-		return err
+		if !ul.IsCancelled {
+			return err
+		} else {
+			return nil
+		}
 	}
 	attributes := []tg.DocumentAttributeClass{
 		&tg.DocumentAttributeFilename{FileName: ul.name},
