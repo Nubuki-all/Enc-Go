@@ -260,7 +260,7 @@ func (dl *MegaDownload) ProgressCallback(start time.Time, name string, total, cu
 	diff := time.Since(start).Round(time.Second).Seconds()
 	var speed int64
 	if diff > 0 {
-		speed = done / int64(diff)
+		speed = current / int64(diff)
 	}
 	var percentage float64
 	var timeToCompletion string
