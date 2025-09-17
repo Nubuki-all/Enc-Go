@@ -30,13 +30,13 @@ type MegaDownload struct {
 	err          error
 	completed    bool
 	// timeout      bool
-	ufstr    string
-	fstr     string
-	dir      string
-	basePath string
-	selected string
+	ufstr        string
+	fstr         string
+	dir          string
+	basePath     string
+	selected     string
 	selectedPath string
-	uri      string
+	uri          string
 }
 
 func NewMegaDl(uri, dir, selected string, msg *tele.Message, tInfo *types.TransferInfo) *MegaDownload {
