@@ -147,7 +147,7 @@ func (q *WaitQueue) WaitForTurn(ctx context.Context, turnID string, msg *tele.Me
 		markup.Row(
 			markup.Callback(
 				"Cancel",
-				[]byte(callBackData+" "+turnID),
+				[]byte(q.callBackData+" "+turnID),
 			),
 		),
 	}
