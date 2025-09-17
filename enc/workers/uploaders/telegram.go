@@ -30,7 +30,7 @@ type TgUpload struct {
 	msg    *tele.Message
 	reply  *tele.Message
 	upload *uploader.Uploader
-	pchan  chan *uploader.ProgressState
+	pchan  chan uploader.ProgressState
 	// err       error
 	// completed bool
 	forceDoc bool
@@ -125,8 +125,8 @@ func (ul *TgUpload) Start() (err error) {
 				// timeout
 				return
 			case ev := <-ul.pchan:
-				stored = ev
-				*stored2 = *ev
+				stored = &ev
+				stored2 = ev
 			case <-aTicker.C:
 				if stored2 != nil {
 					ul.actionCallback(stored)
@@ -182,7 +182,7 @@ func (ul *TgUpload) Start() (err error) {
 	return ul.sendMedia(media)
 }
 
-func (ul *TgUpload) actionCallback(upload *uploader.ProgressState) {
+func (ul *TgUpload) actionCallback(upload uploader.ProgressState) {
 	total := upload.Total
 	current := upload.Uploaded
 	var percentage float64
@@ -253,7 +253,7 @@ func (ul *TgUpload) Chunk(ctx context.Context, state uploader.ProgressState) err
 	select {
 	case <-ctx.Done():
 		return fmt.Errorf("upload timed out")
-	case ul.pchan <- &state:
+	case ul.pchan <- state:
 		// sent successfully
 	default:
 		// channel full — drop the old and put the new one so latest wins
@@ -262,7 +262,7 @@ func (ul *TgUpload) Chunk(ctx context.Context, state uploader.ProgressState) err
 		default:
 		}
 		select {
-		case ul.pchan <- &state:
+		case ul.pchan <- state:
 		default:
 			// if still can't send (shouldn't happen), just drop it
 		}
