@@ -90,7 +90,7 @@ func (ul *TgUpload) Start() (err error) {
 	defer cancel()
 
 	doneCh := make(chan struct{})
-	ul.pchan = make(chan *uploader.ProgressState, 1)
+	ul.pchan = make(chan uploader.ProgressState, 1)
 	start := time.Now()
 	var wg sync.WaitGroup
 	progressInterval := config.Rconf.ProgresUpdateInterval * time.Second
@@ -105,7 +105,7 @@ func (ul *TgUpload) Start() (err error) {
 		defer wg.Done()
 
 		var stored *uploader.ProgressState
-		var stored2 *uploader.ProgressState
+		var stored2 uploader.ProgressState
 	Loop:
 		for {
 			select {
@@ -128,9 +128,7 @@ func (ul *TgUpload) Start() (err error) {
 				stored = &ev
 				stored2 = ev
 			case <-aTicker.C:
-				if stored2 != nil {
-					ul.actionCallback(stored)
-				}
+				ul.actionCallback(stored)
 			case <-ticker.C:
 				if stored != nil {
 					ul.ProgressCallback(start, stored)
