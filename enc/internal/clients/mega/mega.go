@@ -462,6 +462,9 @@ func (m *Mega) NewDownloadsFromFolderLink(url string) ([]*Download, error) {
 	if len(downloads) == 0 {
 		return nil, errors.New("no downloadable files found (or unable to decrypt keys)")
 	}
+	sort.Slice(downloads, func(i, j int) bool {
+		return downloads[i].Name < downloads[j].Name
+	})
 	return downloads, nil
 }
 

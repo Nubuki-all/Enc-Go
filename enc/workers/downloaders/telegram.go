@@ -174,7 +174,10 @@ func (dl *TgDownload) ProgressCallback(start time.Time, done, total int64) {
 	}
 	diff := time.Since(start).Round(time.Second).Seconds()
 	percentage := float64(done * 100 / total)
-	speed := done / int64(diff)
+	var speed int64
+	if diff > 0 {
+		speed = done / int64(diff)
+	}
 	elapsedTime := utils.TimeFormatter(diff)
 	timeToCompletion := utils.TimeFormatter(float64(total-done) / float64(speed))
 	filled := int(math.Floor(percentage / 10.0))
