@@ -14,14 +14,16 @@ import (
 // WaitQueue is a concurrency-safe FIFO queue of turn IDs.
 // It notifies registered waiters via per-wait channels when the queue changes.
 type WaitQueue struct {
+	callBackData string
 	mu      sync.Mutex
 	items   []string
 	waiters map[string][]chan struct{} // per-turnID list of waiter channels
 }
 
 // New constructs a WaitQueue.
-func NewWaitQueue() *WaitQueue {
+func NewWaitQueue(cBData string) *WaitQueue {
 	return &WaitQueue{
+		callBackData: cBData,
 		waiters: make(map[string][]chan struct{}),
 	}
 }
@@ -76,6 +78,12 @@ func (q *WaitQueue) Front() string {
 		return ""
 	}
 	return q.items[0]
+}
+
+func (q *WaitQueue) Contains(id string) bool {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	return q.containsLocked(id)
 }
 
 func (q *WaitQueue) containsLocked(id string) bool {
@@ -139,7 +147,7 @@ func (q *WaitQueue) WaitForTurn(ctx context.Context, turnID string, msg *tele.Me
 		markup.Row(
 			markup.Callback(
 				"Cancel",
-				[]byte("cancel_turn "+turnID),
+				[]byte(callBackData+" "+turnID),
 			),
 		),
 	}

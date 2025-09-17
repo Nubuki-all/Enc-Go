@@ -420,7 +420,9 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	waitQueue := bot.WaitQueueR
 	waitQueue.Enqueue(id)
 	if waitQueue.Waiting() {
-		waitQueue.WaitForTurn(ctx, id, sMsg)
+		if res, _ := waitQueue.WaitForTurn(ctx, id, sMsg); res == 0 {
+			return nil
+		}
 	}
 	defer waitQueue.Remove(id)
 	download.Init(id, msg.SenderID)

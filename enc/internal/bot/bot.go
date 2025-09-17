@@ -63,7 +63,7 @@ var (
 	RenameFilters     = []*types.RenameFilterData{}
 
 	// wait queues
-	WaitQueueR = types.NewWaitQueue()
+	WaitQueueR = types.NewWaitQueue("cancel_rturn")
 )
 
 var (
