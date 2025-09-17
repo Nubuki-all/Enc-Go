@@ -16,12 +16,12 @@ import (
 	"enc/utils/tele"
 	"enc/utils/tele/parser"
 	"enc/workers/downloaders"
-	"enc/workers/uploaders"
 	"enc/workers/handlers"
 	"enc/workers/handlers/callbacks"
 	"enc/workers/handlers/dev"
 	"enc/workers/handlers/manage"
 	"enc/workers/handlers/transfer"
+	"enc/workers/uploaders"
 )
 
 func AddAllHandlers() {

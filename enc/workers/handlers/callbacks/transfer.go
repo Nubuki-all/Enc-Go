@@ -33,7 +33,6 @@ func CancelDownload(ctx *ext.Context, update *ext.Update, query *tele.CallbackQu
 	return nil
 }
 
-
 func CancelUpload(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
 	id := fmt.Sprintf("%d:%d", query.ChatID, query.ID)
 	info := utils.GetCallbackInfo(id)
