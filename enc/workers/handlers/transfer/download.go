@@ -462,6 +462,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			}
 		}()
 		if err := thumb.Create("jpg"); err != nil {
+			fmt.Println("here")
 			result := parser.DynamicThumb(ctx, fileName, thumb.Name, true, nil)
 			if result.Downloaded {
 				thumbPath = thumb.Name
