@@ -340,6 +340,6 @@ func (dl *MegaDownload) Clean() {
 	}
 	_ = os.RemoveAll(dl.basePath)
 	if dir := filepath.Dir(dl.basePath); dl.dir != dir {
-		_ = os.remove(dir)
+		_ = os.Remove(dir)
 	}
 }
