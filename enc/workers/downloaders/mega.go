@@ -32,9 +32,10 @@ type MegaDownload struct {
 	// timeout      bool
 	ufstr    string
 	fstr     string
-	name     string
 	dir      string
+	basePath string
 	selected string
+	selectedPath string
 	uri      string
 }
 
@@ -83,9 +84,14 @@ func (dl *MegaDownload) Start() error {
 	}
 	if len(files) > 1 {
 		dl.dir = filepath.Join(dl.dir, files[0].Parent)
-		dl.Path = dl.dir
+		dl.basePath = dl.dir
 	} else {
-		dl.Path = filepath.Join(dl.dir, files[0].Name)
+		dl.basePath = filepath.Join(dl.dir, files[0].Name)
+	}
+	if dl.selectedPath == "" {
+		dl.Path = dl.basePath
+	} else {
+		dl.Path = dl.selectedPath
 	}
 	dl.downloadList, err = dl.client.NewDownloadFromLink(dl.uri)
 	if err != nil {
@@ -309,6 +315,7 @@ func (dl *MegaDownload) Select(files []mega.File) error {
 	for x, file := range files {
 		if x == sl {
 			fileID = file.Hash
+			dl.selectedPath = filepath.Join(dl.dir, file.Name)
 			break
 		}
 	}
@@ -331,5 +338,8 @@ func (dl *MegaDownload) Clean() {
 		logger.WarnW("Aria2 Dl: Calling Clean on a download that exited early")
 		return
 	}
-	_ = os.RemoveAll(dl.Path)
+	_ = os.RemoveAll(dl.basePath)
+	if dir := filepath.Dir(dl.basePath); dl.dir != dir {
+		_ = os.remove(dir)
+	}
 }
