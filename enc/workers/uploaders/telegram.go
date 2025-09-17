@@ -126,7 +126,7 @@ func (ul *TgUpload) Start() (err error) {
 				return
 			case ev := <-ul.pchan:
 				stored = ev
-				stored2 = ev
+				*stored2 = *ev
 			case <-aTicker.C:
 				if stored2 != nil {
 					ul.actionCallback(stored)
