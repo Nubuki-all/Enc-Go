@@ -468,6 +468,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			}
 		}
 	}
+	fmt.Println(thumbPath)
 	cOptions := &parser.CustCapOptions{
 		Path:          download.Path,
 		UseAniList:    !nparse,
