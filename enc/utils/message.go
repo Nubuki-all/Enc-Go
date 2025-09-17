@@ -3,6 +3,8 @@ package utils
 import (
 	"slices"
 	"strings"
+	
+	"github.com/gotd/td/tg"
 
 	"enc/config"
 	"enc/internal/bot"
