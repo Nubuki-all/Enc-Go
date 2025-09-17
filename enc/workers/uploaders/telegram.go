@@ -94,14 +94,18 @@ func (ul *TgUpload) Start() (err error) {
 	start := time.Now()
 	var wg sync.WaitGroup
 	progressInterval := config.Rconf.ProgresUpdateInterval * time.Second
+	actionInterval := 5 * time.Second
 
 	wg.Add(1)
 	go func() {
 		ticker := time.NewTicker(progressInterval)
+		aTicker := time.NewTicker(actionInterval)
 		defer ticker.Stop()
+		defer aTicker.Stop()
 		defer wg.Done()
 
 		var stored *uploader.ProgressState
+		var stored2 *uploader.ProgressState
 	Loop:
 		for {
 			select {
@@ -122,10 +126,16 @@ func (ul *TgUpload) Start() (err error) {
 				return
 			case ev := <-ul.pchan:
 				stored = ev
+				stored2 = ev
+			case <-aTicker.C:
+				if stored2 != nil {
+					ul.actionCallback(stored)
+				}
 			case <-ticker.C:
 				if stored != nil {
 					ul.ProgressCallback(start, stored)
 				}
+				stored = nil
 			case <-doneCh:
 				return
 			}
@@ -170,6 +180,16 @@ func (ul *TgUpload) Start() (err error) {
 		Attributes: attributes,
 	}
 	return ul.sendMedia(media)
+}
+
+func (ul *TgUpload) actionCallback(upload *uploader.ProgressState) {
+	total := upload.Total
+	current := upload.Uploaded
+	var percentage float64
+	if total > 0 {
+		percentage = float64(current * 100 / total)
+	}
+	_ = ul.msg.Action(ul.action, int(percentage))
 }
 
 func (ul *TgUpload) ProgressCallback(start time.Time, upload *uploader.ProgressState) {
@@ -247,13 +267,6 @@ func (ul *TgUpload) Chunk(ctx context.Context, state uploader.ProgressState) err
 			// if still can't send (shouldn't happen), just drop it
 		}
 	}
-	total := state.Total
-	current := state.Uploaded
-	var percentage float64
-	if total > 0 {
-		percentage = float64(current * 100 / total)
-	}
-	_ = ul.msg.Action(ul.action, int(percentage))
 	return nil
 }
 
