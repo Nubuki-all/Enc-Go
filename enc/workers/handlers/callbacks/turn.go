@@ -1,7 +1,7 @@
 package callbacks
 
 import (
-	"fmt"
+	// "fmt"
 	"strings"
 
 	"github.com/celestix/gotgproto/ext"
@@ -21,7 +21,7 @@ func CancelRTurn(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery
 		return cleanOldMessage(ctx, update, query)
 	}
 	sender := query.SenderID
-	if info.Sender != sender && !utils.UserIsOwner(sender) {
+	if !utils.UserIsOwner(sender) {
 		_ = query.Answer(notAllowed, false)
 		return nil
 	}
