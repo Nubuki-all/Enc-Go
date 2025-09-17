@@ -237,7 +237,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			),
 			argparser.CreateDStringFlag(
 				"quality",
-				"q",
+				"l",
 				"quality in codec.",
 			),
 			argparser.CreateDStringFlag(
