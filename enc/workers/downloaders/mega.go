@@ -131,6 +131,7 @@ func (dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) erro
 	size := d.Size
 	start := time.Now()
 	wg := sync.WaitGroup{}
+	wg2 := sync.WaitGroup{}
 
 	wg.Add(1)
 	go func() {
@@ -180,8 +181,10 @@ func (dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) erro
 	}()
 	for w := 0; w < workers; w++ {
 		wg.Add(1)
+		wg2.Add(1)
 		go func() {
 			defer wg.Done()
+			defer wg2.Done()
 
 			// Wait for work blocked on channel
 			for id := range workch {
@@ -230,7 +233,10 @@ func (dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) erro
 		}
 	}
 	close(workch)
-	close(doneCh)
+	go func() {
+		wg2.Wait()
+		close(doneCh)
+	}()
 
 	wg.Wait()
 
