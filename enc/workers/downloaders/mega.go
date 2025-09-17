@@ -85,7 +85,7 @@ func (dl *MegaDownload) Start() error {
 		dl.dir = filepath.Join(dl.dir, files[0].Parent)
 		dl.Path = dl.dir
 	} else {
-		dl.Path = files[0].Name
+		dl.Path = filepath.Join(dl.dir, files[0].Name)
 	}
 	dl.downloadList, err = dl.client.NewDownloadFromLink(dl.uri)
 	if err != nil {
@@ -107,6 +107,9 @@ type ProgressState struct {
 
 func (dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) error {
 	path := filepath.Join(dl.dir, d.Name)
+	if err := os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
+		return err
+	}
 	fileName := filepath.Base(d.Name)
 	_, err := os.Stat(path)
 	if os.IsExist(err) {
@@ -315,10 +318,10 @@ func (dl *MegaDownload) Select(files []mega.File) error {
 	if len(s) == 5 {
 		index := strings.LastIndex(dl.uri, "/folder/")
 		if index != -1 {
-			dl.uri = dl.uri[:index] + "/folder/" + fileID
+			dl.uri = dl.uri[:index] + "/file/" + fileID
 		}
 	} else {
-		dl.uri = dl.uri + "/folder/" + fileID
+		dl.uri = dl.uri + "/file/" + fileID
 	}
 	return nil
 }
