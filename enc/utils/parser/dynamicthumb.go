@@ -106,6 +106,7 @@ func DynamicThumb(ctx context.Context, name string, thumb string, useAniList boo
 		logger.WarnW("Could not fetch Cover Url for:", zap.String("Title", result.Title))
 		coverURL = ""
 	}
+	println(coverURL)
 
 	// 4) Download cover if URL found
 	if coverURL != "" {
