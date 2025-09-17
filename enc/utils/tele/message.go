@@ -9,7 +9,7 @@ import (
 	"github.com/gotd/td/telegram/uploader"
 	"github.com/gotd/td/tg"
 
-	"enc/config"
+	// "enc/config"
 	"enc/internal/clients/telegram"
 	"enc/internal/logger"
 	"enc/utils/tele/parser"
