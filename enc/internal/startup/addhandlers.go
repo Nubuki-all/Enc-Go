@@ -16,6 +16,7 @@ import (
 	"enc/utils/tele"
 	"enc/utils/tele/parser"
 	"enc/workers/downloaders"
+	"enc/workers/uploaders"
 	"enc/workers/handlers"
 	"enc/workers/handlers/callbacks"
 	"enc/workers/handlers/dev"
@@ -104,6 +105,7 @@ func AddCBHandlers(dispatch dispatcher.Dispatcher) {
 
 		// Tranfer Handlers
 		downloaders.CallbackData: CallbackEventHandler(callbacks.CancelDownload),
+		uploaders.CallbackData:   CallbackEventHandler(callbacks.CancelUpload),
 	}
 	for prefix, handler := range callbackHandlers {
 		dispatch.AddHandler(onevent.NewCallbackQuery(

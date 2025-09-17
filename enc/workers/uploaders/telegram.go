@@ -177,7 +177,10 @@ func (ul *TgUpload) ProgressCallback(start time.Time, upload *uploader.ProgressS
 	current := upload.Uploaded
 	remainingSize := total - current
 	diff := time.Since(start).Round(time.Second).Seconds()
-	speed := current / int64(diff)
+	var speed int64
+	if diff > 0 {
+		speed = current / int64(diff)
+	}
 	var percentage float64
 	var timeToCompletion string
 
@@ -188,7 +191,7 @@ func (ul *TgUpload) ProgressCallback(start time.Time, upload *uploader.ProgressS
 	if total > 0 {
 		percentage = float64(current * 100 / total)
 	}
-	_ = ul.msg.Action(ul.action, int(percentage))
+	//_ = ul.msg.Action(ul.action, int(percentage))
 	filled := int(math.Floor(percentage / 10.0))
 	finStr := ul.fstr
 	unfinStr := ul.ufstr
@@ -244,6 +247,13 @@ func (ul *TgUpload) Chunk(ctx context.Context, state uploader.ProgressState) err
 			// if still can't send (shouldn't happen), just drop it
 		}
 	}
+	total := state.Total
+	current := state.Uploaded
+	var percentage float64
+	if total > 0 {
+		percentage = float64(current * 100 / total)
+	}
+	_ = ul.msg.Action(ul.action, int(percentage))
 	return nil
 }
 
