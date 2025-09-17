@@ -146,7 +146,7 @@ func (q *WaitQueue) WaitForTurn(ctx context.Context, turnID string, msg *tele.Me
 	_, _ = msg.Edit(
 		"`Waiting till previous process gets completed.`",
 		&tele.EditOptions{
-			ReplyMarkup: markup.InlineKeyboard(buttonRows...)
+			ReplyMarkup: markup.InlineKeyboard(buttonRows...),
 		},
 	)
 
