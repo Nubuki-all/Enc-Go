@@ -91,7 +91,7 @@ func (dl *MegaDownload) Start() error {
 	if dl.selectedName == "" {
 		dl.Path = dl.basePath
 	} else {
-		dl.Path = filepath.Join(dl.dir, selectedName)
+		dl.Path = filepath.Join(dl.dir, dl.selectedName)
 	}
 	dl.downloadList, err = dl.client.NewDownloadFromLink(dl.uri)
 	if err != nil {
