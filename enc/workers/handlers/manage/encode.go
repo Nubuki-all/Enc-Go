@@ -477,7 +477,7 @@ func Pause(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string)
 	if err != nil {
 		return err
 	}
-	mList := tele.BcMsg(reply, msg.SenderID, []*tele.Message{nMsg})
+	mList := utils.BcMsg(reply, msg.SenderID, []*tele.Message{nMsg})
 	if i > 0 {
 		entimer.Timer.NewTimer(i, mList)
 	} else {

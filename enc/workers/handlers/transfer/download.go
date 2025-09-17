@@ -11,6 +11,7 @@ import (
 	"github.com/gotd/td/tg"
 
 	"enc/config"
+	"enc/internal/bot"
 	"enc/internal/logger"
 	"enc/utils"
 	"enc/utils/argparser"
