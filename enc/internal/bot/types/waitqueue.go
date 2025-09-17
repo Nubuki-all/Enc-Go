@@ -5,8 +5,8 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/gotd/td/tg"
 	"github.com/gotd/td/telegram/message/markup"
+	"github.com/gotd/td/tg"
 
 	"enc/utils/tele"
 )
@@ -93,9 +93,9 @@ func (q *WaitQueue) Waiting() bool {
 }
 
 // WaitForTurn blocks until one of the following happens:
-//  - turnID reaches the front of the queue -> returns (1, nil)
-//  - turnID is removed from the queue -> returns (0, error)
-//  - ctx is cancelled -> returns (0, ctx.Err())
+//   - turnID reaches the front of the queue -> returns (1, nil)
+//   - turnID is removed from the queue -> returns (0, error)
+//   - ctx is cancelled -> returns (0, ctx.Err())
 //
 // This implementation registers a per-wait buffered channel and waits on it plus ctx.
 // No helper goroutine is created per waiter.
@@ -139,7 +139,7 @@ func (q *WaitQueue) WaitForTurn(ctx context.Context, turnID string, msg *tele.Me
 		markup.Row(
 			markup.Callback(
 				"Cancel",
-				[]byte("cancel_turn " + turnID),
+				[]byte("cancel_turn "+turnID),
 			),
 		),
 	}

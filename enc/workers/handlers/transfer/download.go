@@ -446,7 +446,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		return nil
 	}
 	if result.FileName != download.FileName {
-		_, _ = sMsg.Edit("Renaming:\n`" + download.FileName + "`\n >>>\n`" + result.FileName + "`…",
+		_, _ = sMsg.Edit("Renaming:\n`"+download.FileName+"`\n >>>\n`"+result.FileName+"`…",
 			nil,
 		)
 		newPath := filepath.Join(filepath.Dir(download.Path), result.FileName)

@@ -3,15 +3,15 @@ package utils
 import (
 	"slices"
 	"strings"
-	
+
 	"github.com/gotd/td/tg"
 
 	"enc/config"
 	"enc/internal/bot"
 	"enc/internal/clients/telegram"
 	"enc/internal/logger"
-	"enc/utils/tele/parser"
 	"enc/utils/tele"
+	"enc/utils/tele/parser"
 )
 
 func UserIsAllowed(userID int64) bool {
