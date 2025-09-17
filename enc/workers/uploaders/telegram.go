@@ -99,6 +99,7 @@ func (ul *TgUpload) Start() (err error) {
 	go func() {
 		ticker := time.NewTicker(progressInterval)
 		defer ticker.Stop()
+		defer wg.Done()
 
 		var stored *uploader.ProgressState
 	Loop:
