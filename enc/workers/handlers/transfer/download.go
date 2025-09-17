@@ -455,7 +455,6 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	}
 	var thumbPath string
 	if !nparse && direct == "" {
-		fmt.Println("here")
 		thumb := &utils.TempFile{}
 		defer func() {
 			if err := thumb.Remove(); err != nil {
@@ -463,13 +462,12 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			}
 		}()
 		if err := thumb.Create("jpg"); err != nil {
-			fmt.Println("h")
+			logger.Warn(err)
+		} else {
 			result := parser.DynamicThumb(ctx, fileName, thumb.Name, true, nil)
 			if result.Downloaded {
 				thumbPath = thumb.Name
 			}
-		} else {
-			logger.Warn(err)
 		}
 	}
 	fmt.Println(thumbPath)
