@@ -8,11 +8,11 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	
+
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/telegram/message/markup"
 	"github.com/gotd/td/tg"
-	
+
 	"enc/config"
 	//"enc/internal/bot"
 	//"enc/internal/logger"
@@ -26,19 +26,18 @@ import (
 
 const maxFileSize = 2126000000
 
-
 func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
 	cmd := update.Args()[0]
 	helpMsg := "Uploads a file/files from local directory or direct/torrent link\n" +
-	"Just pass any of the following:\n" +
-	"    - the file (with -f) e.g -f \"something.txt\"\n" +
-	"    - the folder path\n" +
-	"    - direct link\n" +
-	"    - torrent/magnet link\n" +
-	"Or: "
+		"Just pass any of the following:\n" +
+		"    - the file (with -f) e.g -f \"something.txt\"\n" +
+		"    - the folder path\n" +
+		"    - direct link\n" +
+		"    - torrent/magnet link\n" +
+		"Or: "
 	var err error
 	var pargs map[string]any
 	helpFunc := func(s string) error {
@@ -106,7 +105,7 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		pargs = arg.Values
 	}
 
-	// prepare defaults	
+	// prepare defaults
 	var ext, file, link, selected string
 	var clean, qbit bool
 	// var topicID int64
@@ -171,7 +170,7 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			}
 		}
 		defer download.CleanDownload()
-		defer func() {_ = os.RemoveAll(dlFolder)}()
+		defer func() { _ = os.RemoveAll(dlFolder) }()
 		_ = sMsg.Delete()
 		file = download.Path
 	}
@@ -189,14 +188,15 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			),
 		}
 		ctrlMsg, _ := msg.Reply("Folder upload control panel.",
-			&tele.ReplyOptions {
+			&tele.ReplyOptions{
 				ReplyMarkup: markup.InlineKeyboard(buttonRows...),
 			},
 		)
 		ctrlID := fmt.Sprintf("%d:%d", ctrlMsg.ChatID, ctrlMsg.ID)
 		dirUpload := &types.TransferInfo{ID: ctrlID, Sender: msg.SenderID}
 		_ = utils.StoreCallbackInfo(&types.CallbackInfo{
-			TransferInfo: dirUpload}, ctrlID,
+			TransferInfo: dirUpload,
+		}, ctrlID,
 		)
 		defer utils.DelCallbackInfo(ctrlID)
 		defer ctrlMsg.Delete() //nolint:errcheck
@@ -259,7 +259,7 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 					}
 
 					caption := fmt.Sprintf("`%s`", name)
-						ulMsg, err := chainMsg.ReplyText(fmt.Sprintf("**Uploading:-**\n`%s`\n**from 📁:**\n `%s`\n`(%d/%d)`…", name, path, idx, total))
+					ulMsg, err := chainMsg.ReplyText(fmt.Sprintf("**Uploading:-**\n`%s`\n**from 📁:**\n `%s`\n`(%d/%d)`…", name, path, idx, total))
 					if err != nil {
 						return err
 					}
@@ -267,8 +267,8 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 					time.Sleep(10 * time.Second)
 
 					upload := &uploaders.Uploader{
-						Msg:           ulMsg,
-						Caption:       caption,
+						Msg:     ulMsg,
+						Caption: caption,
 					}
 					upload.Init(uID, fullPath, msg.SenderID)
 					uerr := upload.Start()
@@ -327,9 +327,9 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		}
 		caption := "`" + f + "`"
 		upload := &uploaders.Uploader{
-			Msg:           rMsg,
-			FileName:      f,
-			Caption:       caption,
+			Msg:      rMsg,
+			FileName: f,
+			Caption:  caption,
 			// ThumbPath:     thumbPath,
 			ForceDocument: true,
 		}

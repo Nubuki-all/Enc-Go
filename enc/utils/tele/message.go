@@ -94,7 +94,7 @@ func (m *Message) ReplyText(text string) (*Message, error) {
 	}
 	inputRep := &tg.InputReplyToMessage{
 		ReplyToMsgID: m.ID,
-		TopMsgID: topicID,
+		TopMsgID:     topicID,
 	}
 	msg, err := m.Ctx.SendMessage(m.ChatID, &tg.MessagesSendMessageRequest{
 		Message:  pText,
@@ -123,7 +123,7 @@ func (m *Message) Reply(text string, replyOptions *ReplyOptions) (*Message, erro
 	}
 	inputRep := &tg.InputReplyToMessage{
 		ReplyToMsgID: m.ID,
-		TopMsgID: topicID,
+		TopMsgID:     topicID,
 	}
 	msg, err := m.Ctx.SendMessage(m.ChatID, &tg.MessagesSendMessageRequest{
 		Message:     pText,
