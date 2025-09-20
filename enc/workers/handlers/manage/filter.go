@@ -34,7 +34,7 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		"    *Extension is added automatically\n" +
 		"Or send one of the following params:"
 	if args == "" {
-		args += "--help"
+		args = "--help"
 	}
 	notSet := func() error {
 		_, err := msg.ReplyText("`Custom rename format not set!`")
@@ -128,7 +128,7 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		return nil
 	}
 	if args == "" {
-		args += "--help"
+		args = "--help"
 	}
 	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)
@@ -311,7 +311,7 @@ func DelAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 		return nil
 	}
 	if args == "" {
-		args += "--help"
+		args = "--help"
 	}
 	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)
@@ -402,7 +402,7 @@ func Filter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		return nil
 	}
 	if args == "" {
-		args += "--help"
+		args = "--help"
 	}
 	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)
@@ -520,7 +520,7 @@ func MatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 		return nil
 	}
 	if args == "" {
-		args += "--help"
+		args = "--help"
 	}
 	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)
@@ -627,7 +627,7 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 		return nil
 	}
 	if args == "" {
-		args += "--help"
+		args = "--help"
 	}
 	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)
@@ -796,7 +796,7 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		return nil
 	}
 	if args == "" {
-		args += "--help"
+		args = "--help"
 	}
 	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)
@@ -885,7 +885,7 @@ func ManageExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message,
 		return nil
 	}
 	if args == "" {
-		args += "--help"
+		args = "--help"
 	}
 	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)

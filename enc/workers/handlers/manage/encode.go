@@ -316,7 +316,7 @@ func MGlobalPOptions(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 		return nil
 	}
 	if args == "" {
-		args += "--help"
+		args = "--help"
 	}
 	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)

@@ -47,6 +47,9 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		)
 		return err
 	}
+	if args == "" {
+		args = "--help"
+	}
 	if strings.HasPrefix(args, "-") {
 		argList, err := utils.SplitQuotedFieldsErr(args)
 		if err != nil {
