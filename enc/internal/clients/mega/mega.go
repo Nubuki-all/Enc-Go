@@ -562,13 +562,13 @@ func (m *Mega) ListFilesFromFolderLink(url string) ([]File, error) {
 	encB64 := parts[len(parts)-1]
 	encA32, derr := base64ToA32(encB64)
 	if derr != nil {
-		return nil, fmt.Errorf("can't decode key for root node: " + derr.Error())
+		return nil, errors.New("can't decode key for root node: " + derr.Error())
 	}
 
 	// decrypt node key using current folder key
 	decA32, derr := decryptKeyA32(encA32, folderKeyA32)
 	if derr != nil {
-		return nil, fmt.Errorf("cannot decrypt with folder key; " + derr.Error())
+		return nil, errors.New("cannot decrypt with folder key; " + derr.Error())
 	}
 	folderName := rootNode.Hash
 	if rootNode.Attr != "" {
@@ -757,13 +757,13 @@ func (m *Mega) GetRootFolderName(url string) (string, error) {
 	encB64 := parts[len(parts)-1]
 	encA32, derr := base64ToA32(encB64)
 	if derr != nil {
-		return "", fmt.Errorf("can't decode key for root node: " + derr.Error())
+		return "", errors.New("can't decode key for root node: " + derr.Error())
 	}
 
 	// decrypt node key using current folder key
 	decA32, derr := decryptKeyA32(encA32, folderKeyA32)
 	if derr != nil {
-		return "", fmt.Errorf("cannot decrypt with folder key; " + derr.Error())
+		return "", errors.New("cannot decrypt with folder key; " + derr.Error())
 	}
 	fName := rootNode.Hash
 	if rootNode.Attr != "" {

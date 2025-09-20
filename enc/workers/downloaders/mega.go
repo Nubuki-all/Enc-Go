@@ -27,8 +27,8 @@ type MegaDownload struct {
 	msg          *tele.Message
 	client       *mega.Mega
 	downloadList []*mega.Download
-	err          error
-	completed    bool
+	// err          error
+	// completed    bool
 	// timeout      bool
 	ufstr        string
 	fstr         string
