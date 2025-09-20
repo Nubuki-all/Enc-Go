@@ -58,7 +58,7 @@ func (dl *Downloader) Init(id string, sender int64) {
 	dl.Msg, _ = dl.Msg.Edit(
 		"<code>Waiting for download to start…</code>",
 		&tele.EditOptions{
-			HtmlParseMode: true,
+			HTMLParseMode: true,
 			ReplyMarkup:   dl.GenButtons(),
 		},
 	)

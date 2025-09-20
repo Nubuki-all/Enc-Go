@@ -77,7 +77,7 @@ func Bash(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) 
 	}
 	text := fmt.Sprintf("<pre language=\"bash\">%s</pre>\n\n<i>PID:</i>\n<code>%d</code>\n\n<pre language=\"Stderr:\">%s</pre>\n\n<pre language=\"Output:\">%s</pre>", args, pid, stderr, stdout)
 	_, _ = bMsg.Edit(text, &tele.EditOptions{
-		HtmlParseMode: true,
+		HTMLParseMode: true,
 	})
 	return nil
 }

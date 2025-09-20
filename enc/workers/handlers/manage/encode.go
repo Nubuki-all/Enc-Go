@@ -52,7 +52,7 @@ func ChangeEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 	}
 	_, _ = msg.Reply(
 		fmt.Sprintf("<pre language=\"Changed encoding%s CLI parameters to:\">%s</pre>", alt, cmd),
-		&tele.ReplyOptions{HtmlParseMode: true},
+		&tele.ReplyOptions{HTMLParseMode: true},
 	)
 	return nil
 }
@@ -105,7 +105,7 @@ func CheckEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	}
 	_, _ = msg.Reply(
 		fmt.Sprintf("<pre language=\"Current ffmpeg%s CLI parameters:\">%s</pre>", arg, params),
-		&tele.ReplyOptions{HtmlParseMode: true},
+		&tele.ReplyOptions{HTMLParseMode: true},
 	)
 	return nil
 }
@@ -150,7 +150,7 @@ func ResetEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	}
 	_, _ = msg.Reply(
 		fmt.Sprintf("<pre language=\"Reset encoding CLI parameters to:\">%s</pre>", config.Conf.FFmpeg),
-		&tele.ReplyOptions{HtmlParseMode: true},
+		&tele.ReplyOptions{HTMLParseMode: true},
 	)
 	return nil
 }
@@ -195,7 +195,7 @@ func ResetSEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg 
 	} else {
 		_, _ = msg.Reply(
 			fmt.Sprintf("<pre language=\"Reset encoding CLI parameters%s to:\">%s</pre>", arg, defaultEnv),
-			&tele.ReplyOptions{HtmlParseMode: true},
+			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 	}
 	return nil
@@ -240,7 +240,7 @@ func SetMuxArgs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	db.SaveMuxArgs(ctx)
 	_, _ = msg.Reply(
 		fmt.Sprintf("<pre language=\"Changed mux_args to:\">%s</pre>", args),
-		&tele.ReplyOptions{HtmlParseMode: true},
+		&tele.ReplyOptions{HTMLParseMode: true},
 	)
 	return nil
 }
@@ -262,7 +262,7 @@ func GetMuxArgs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	}
 	_, _ = msg.Reply(
 		fmt.Sprintf("<pre language=\"Current mux_args:\">%s</pre>", params),
-		&tele.ReplyOptions{HtmlParseMode: true},
+		&tele.ReplyOptions{HTMLParseMode: true},
 	)
 	return nil
 }
@@ -357,7 +357,7 @@ func MGlobalPOptions(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 	)
 	if out := arg.Output; out != "" {
 		_, _ = msg.Reply(fmt.Sprintf("<pre>%s</pre>", out),
-			&tele.ReplyOptions{HtmlParseMode: true},
+			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
 	} else if err := arg.Err; err != nil {
@@ -414,7 +414,7 @@ func MGlobalPOptions(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 			"\nNeed help? Send <code>"+
 			cmd+
 			" --help</code>.",
-			&tele.ReplyOptions{HtmlParseMode: true},
+			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
 	}
@@ -459,7 +459,7 @@ func Pause(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string)
 			"\nNeed help? Send <code>"+
 			update.Args()[0]+
 			" --help</code>.",
-			&tele.ReplyOptions{HtmlParseMode: true},
+			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
 	}

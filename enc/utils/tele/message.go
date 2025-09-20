@@ -29,19 +29,19 @@ type Message struct {
 }
 
 type EditOptions struct {
-	HtmlParseMode bool
+	HTMLParseMode bool
 	ReplyMarkup   tg.ReplyMarkupClass
 	Media         tg.InputMediaClass
 	// will add more fields as required
 }
 
 type ReplyOptions struct {
-	HtmlParseMode bool
+	HTMLParseMode bool
 	ReplyMarkup   tg.ReplyMarkupClass
 	// will add more fields as required
 }
 type RespondOptions struct {
-	HtmlParseMode bool
+	HTMLParseMode bool
 	ReplyMarkup   tg.ReplyMarkupClass
 	// will add more fields as required
 }
@@ -52,7 +52,7 @@ type UploadOptions struct {
 	Path          string
 	Bytes         []byte
 	Quote         bool
-	HtmlParseMode bool
+	HTMLParseMode bool
 	ReplyMarkup   tg.ReplyMarkupClass
 	// will add more fields as required
 }
@@ -112,7 +112,7 @@ func (m *Message) ReplyText(text string) (*Message, error) {
 func (m *Message) Reply(text string, replyOptions *ReplyOptions) (*Message, error) {
 	var pText string
 	var entities []tg.MessageEntityClass
-	if replyOptions.HtmlParseMode {
+	if replyOptions.HTMLParseMode {
 		pText, entities, _ = htmlparser.Parse(text)
 	} else {
 		pText, entities, _ = parser.Parse(text, true)
@@ -167,7 +167,7 @@ func (m *Message) Respond(text string, opt *RespondOptions) (*Message, error) {
 	if opt == nil {
 		opt = &RespondOptions{}
 	}
-	if opt.HtmlParseMode {
+	if opt.HTMLParseMode {
 		pText, entities, _ = htmlparser.Parse(text)
 	} else {
 		pText, entities, _ = parser.Parse(text, true)
@@ -222,7 +222,7 @@ func (m *Message) Edit(text string, editOptions *EditOptions) (*Message, error) 
 	if editOptions == nil {
 		editOptions = &EditOptions{}
 	}
-	if editOptions.HtmlParseMode {
+	if editOptions.HTMLParseMode {
 		pText, entities, _ = htmlparser.Parse(text)
 	} else {
 		pText, entities, _ = parser.Parse(text, true)
@@ -315,7 +315,7 @@ func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
 	var pCaption string
 	var entities []tg.MessageEntityClass
 	if caption := uploadOptions.Caption; caption != "" {
-		if uploadOptions.HtmlParseMode {
+		if uploadOptions.HTMLParseMode {
 			pCaption, entities, _ = htmlparser.Parse(caption)
 		} else {
 			pCaption, entities, _ = parser.Parse(caption, true)
@@ -358,7 +358,7 @@ func (m *Message) ReplyMediaDoc(media tg.InputMediaClass, uploadOptions *UploadO
 	var pCaption string
 	var entities []tg.MessageEntityClass
 	if caption := uploadOptions.Caption; caption != "" {
-		if uploadOptions.HtmlParseMode {
+		if uploadOptions.HTMLParseMode {
 			pCaption, entities, _ = htmlparser.Parse(caption)
 		} else {
 			pCaption, entities, _ = parser.Parse(caption, true)

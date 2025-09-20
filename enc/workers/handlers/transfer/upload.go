@@ -96,7 +96,7 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		)
 		if out := arg.Output; out != "" {
 			_, _ = msg.Reply(utils.CodeBlock(out, true),
-				&tele.ReplyOptions{HtmlParseMode: true},
+				&tele.ReplyOptions{HTMLParseMode: true},
 			)
 			return nil
 		} else if err := arg.Err; err != nil {

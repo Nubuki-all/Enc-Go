@@ -48,7 +48,7 @@ func (ul *Uploader) Init(id, path string, sender int64) {
 	ul.Msg, _ = ul.Msg.Edit(
 		"<code>Waiting for upload to start…</code>",
 		&tele.EditOptions{
-			HtmlParseMode: true,
+			HTMLParseMode: true,
 			ReplyMarkup:   ul.GenButtons(),
 		},
 	)

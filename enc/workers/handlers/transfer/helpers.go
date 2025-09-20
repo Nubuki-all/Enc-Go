@@ -18,7 +18,7 @@ func ListFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 		"   direct/torrent/magnetic link (Required)"
 	if utils.SendHelp(args) {
 		_, _ = msg.Reply("<pre>"+helpMsg+"</pre>",
-			&tele.ReplyOptions{HtmlParseMode: true},
+			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
 	}
@@ -35,7 +35,7 @@ func ListFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	if dlInfo.Error != nil {
 		_, _ = msg.Reply(
 			fmt.Sprintf("<pre>%v</pre>", dlInfo.Error),
-			&tele.ReplyOptions{HtmlParseMode: true},
+			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
 	}

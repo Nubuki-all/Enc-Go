@@ -73,7 +73,7 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		)
 		if out := arg.Output; out != "" {
 			_, _ = msg.Reply(utils.CodeBlock(out, true),
-				&tele.ReplyOptions{HtmlParseMode: true},
+				&tele.ReplyOptions{HTMLParseMode: true},
 			)
 			return nil
 		} else if err := arg.Err; err != nil {
@@ -111,7 +111,7 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 				"Kindly send "+
 					cmd+
 					" --help",
-				&tele.ReplyOptions{HtmlParseMode: true},
+				&tele.ReplyOptions{HTMLParseMode: true},
 			)
 		}
 		return nil
@@ -186,7 +186,7 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	)
 	if out := arg.Output; out != "" {
 		_, _ = msg.Reply(utils.CodeBlock(out, true),
-			&tele.ReplyOptions{HtmlParseMode: true},
+			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
 	} else if err := arg.Err; err != nil {
@@ -202,7 +202,7 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 				"--rename & --match"+
 				"\nare Required. Do <code>"+
 				cmd+" --help</code> for help.",
-			&tele.ReplyOptions{HtmlParseMode: true},
+			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
 	}
@@ -344,7 +344,7 @@ func DelAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 	)
 	if out := arg.Output; out != "" {
 		_, _ = msg.Reply(utils.CodeBlock(out, true),
-			&tele.ReplyOptions{HtmlParseMode: true},
+			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
 	} else if err := arg.Err; err != nil {
@@ -357,7 +357,7 @@ func DelAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 	if match == "" && id == "" {
 		_, _ = msg.Reply(
 			fmt.Sprintf("Missing required argument.\nNeed help? Send: <code>%s --help</code>", cmd),
-			&tele.ReplyOptions{HtmlParseMode: true},
+			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
 	}
@@ -442,7 +442,7 @@ func Filter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	)
 	if out := arg.Output; out != "" {
 		_, _ = msg.Reply(utils.CodeBlock(out, true),
-			&tele.ReplyOptions{HtmlParseMode: true},
+			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
 	} else if err := arg.Err; err != nil {
@@ -456,7 +456,7 @@ func Filter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	if remove == "" && tagFile == "" && tagCap == "" {
 		_, _ = msg.Reply(
 			fmt.Sprintf("Missing required argument.\nNeed help? Send: <code>%s --help</code>", cmd),
-			&tele.ReplyOptions{HtmlParseMode: true},
+			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
 	}
@@ -572,7 +572,7 @@ func MatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 	)
 	if out := arg.Output; out != "" {
 		_, _ = msg.Reply(utils.CodeBlock(out, true),
-			&tele.ReplyOptions{HtmlParseMode: true},
+			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
 	} else if err := arg.Err; err != nil {
@@ -587,7 +587,7 @@ func MatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 				"--match"+
 				"\nis required. Do <code>"+
 				cmd+" --help</code> for help.",
-			&tele.ReplyOptions{HtmlParseMode: true},
+			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
 	}
@@ -668,7 +668,7 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 	)
 	if out := arg.Output; out != "" {
 		_, _ = msg.Reply(utils.CodeBlock(out, true),
-			&tele.ReplyOptions{HtmlParseMode: true},
+			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
 	} else if err := arg.Err; err != nil {
@@ -708,7 +708,7 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 	if name == "" && iD == "" {
 		_, _ = msg.Reply(
 			"<code>At least one argument excluding --release & --delete is required.</code>",
-			&tele.ReplyOptions{HtmlParseMode: true},
+			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
 	}
@@ -832,7 +832,7 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	)
 	if out := arg.Output; out != "" {
 		_, _ = msg.Reply(utils.CodeBlock(out, true),
-			&tele.ReplyOptions{HtmlParseMode: true},
+			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
 	} else if err := arg.Err; err != nil {
@@ -848,7 +848,7 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 				"--release-group & --filter"+
 				"\nare required. Do <code>"+
 				cmd+" --help</code> for help.",
-			&tele.ReplyOptions{HtmlParseMode: true},
+			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
 	}
@@ -865,7 +865,7 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 			"\nNeed help? Send <code>"+
 			cmd+
 			" --help</code>.",
-			&tele.ReplyOptions{HtmlParseMode: true},
+			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
 	}
@@ -921,7 +921,7 @@ func ManageExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message,
 	)
 	if out := arg.Output; out != "" {
 		_, _ = msg.Reply(utils.CodeBlock(out, true),
-			&tele.ReplyOptions{HtmlParseMode: true},
+			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
 	} else if err := arg.Err; err != nil {
