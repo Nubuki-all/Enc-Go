@@ -101,6 +101,9 @@ func (dl *MegaDownload) Start() error {
 		if err := dl.downloadFile(ctx, download); err != nil {
 			return err
 		}
+		if dl.IsCancelled {
+			return nil
+		}
 	}
 	return nil
 }
@@ -176,6 +179,7 @@ func (dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) erro
 				}
 				if stored {
 					dl.ProgressCallback(start, fileName, int64(size), current)
+					stored = false
 				}
 			case <-doneCh:
 				return
@@ -332,7 +336,7 @@ func (dl *MegaDownload) Select(files []mega.File) error {
 
 func (dl *MegaDownload) Clean() {
 	if len(dl.downloadList) == 0 {
-		logger.WarnW("Aria2 Dl: Calling Clean on a download that exited early")
+		logger.WarnW("Mega Dl: Calling Clean on a download that exited early")
 		return
 	}
 	_ = os.RemoveAll(dl.basePath)
