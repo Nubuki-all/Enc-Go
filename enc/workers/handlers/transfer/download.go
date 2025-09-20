@@ -373,7 +373,11 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			if qbit {
 				dlInfo = downloaders.GetQbitDlInfo(link)
 			} else {
-				dlInfo = downloaders.GetAria2DlInfo(link)
+				if utils.IsMegaLink(link) {
+					dlInfo = downloaders.GetMegaDlInfo(link)
+				} else {
+					dlInfo = downloaders.GetAria2DlInfo(link)
+				}
 			}
 		}
 		download = &downloaders.Downloader{
@@ -391,7 +395,11 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			fileName = args
 		}
 		if link != "" {
-			dlInfo = downloaders.GetAria2DlInfo(link)
+			if utils.IsMegaLink(link) {
+				dlInfo = downloaders.GetMegaDlInfo(link)
+			} else {
+				dlInfo = downloaders.GetAria2DlInfo(link)
+			}
 		}
 		download = &downloaders.Downloader{
 			Msg:      sMsg,
@@ -467,7 +475,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 				logger.Warn(err)
 			}
 		}()
-		if err := thumb.Create("jpg"); err != nil {
+		if err := thumb.Create(".jpg"); err != nil {
 			logger.Warn(err)
 		} else {
 			result := parser.DynamicThumb(ctx, fileName, thumb.Name, true, nil)

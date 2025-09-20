@@ -57,7 +57,7 @@ func (ul *Uploader) Init(id, path string, sender int64) {
 func (ul *Uploader) Start() error {
 	defer ul.UnRegister()
 	var err error
-	if ul.Path != "" {
+	if ul.Path != "" && ul.FileName == "" {
 		ul.FileName = filepath.Base(ul.Path)
 	}
 	tgUl := NewTgUl(ul.FileName, ul.Caption, ul.ThumbPath, ul.ForceDocument, ul.Msg, ul.Reply, ul.TransferInfo)

@@ -40,6 +40,11 @@ type ReplyOptions struct {
 	ReplyMarkup   tg.ReplyMarkupClass
 	// will add more fields as required
 }
+type RespondOptions struct {
+	HtmlParseMode bool
+	ReplyMarkup   tg.ReplyMarkupClass
+	// will add more fields as required
+}
 
 type UploadOptions struct {
 	Name          string
@@ -83,8 +88,13 @@ func (m *Message) RawMessage() *gp.Message {
 
 func (m *Message) ReplyText(text string) (*Message, error) {
 	pText, entities, _ := parser.Parse(text, true)
+	topicID := msg.TopicID
+	if topicID == m.ID || topicID == 1 {
+		topicID = 0
+	}
 	inputRep := &tg.InputReplyToMessage{
 		ReplyToMsgID: m.ID,
+		TopMsgID: topicID,
 	}
 	msg, err := m.Ctx.SendMessage(m.ChatID, &tg.MessagesSendMessageRequest{
 		Message:  pText,
@@ -107,14 +117,73 @@ func (m *Message) Reply(text string, replyOptions *ReplyOptions) (*Message, erro
 	} else {
 		pText, entities, _ = parser.Parse(text, true)
 	}
+	topicID := msg.TopicID
+	if topicID == m.ID || topicID == 1 {
+		topicID = 0
+	}
 	inputRep := &tg.InputReplyToMessage{
 		ReplyToMsgID: m.ID,
+		TopMsgID: topicID,
 	}
 	msg, err := m.Ctx.SendMessage(m.ChatID, &tg.MessagesSendMessageRequest{
 		Message:     pText,
 		Entities:    entities,
 		ReplyTo:     inputRep,
 		ReplyMarkup: replyOptions.ReplyMarkup,
+	},
+	)
+	if err != nil {
+		logger.ErrorW(err.Error())
+		return nil, err
+	}
+	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID), nil
+}
+
+func (m *Message) RespondText(text string) (*Message, error) {
+	pText, entities, _ := parser.Parse(text, true)
+	topicID := msg.TopicID
+	if topicID == 1 {
+		topicID = 0
+	}
+	inputRep := &tg.InputReplyToMessage{
+		ReplyToMsgID: topicID,
+	}
+	msg, err := m.Ctx.SendMessage(m.ChatID, &tg.MessagesSendMessageRequest{
+		Message:  pText,
+		Entities: entities,
+		ReplyTo:  inputRep,
+	},
+	)
+	if err != nil {
+		logger.ErrorW(err.Error())
+		return nil, err
+	}
+	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID), nil
+}
+
+func (m *Message) Respond(text string, opt *RespondOptions) (*Message, error) {
+	var pText string
+	var entities []tg.MessageEntityClass
+	if opt == nil {
+		opt = &RespondOptions{}
+	}
+	if opt.HtmlParseMode {
+		pText, entities, _ = htmlparser.Parse(text)
+	} else {
+		pText, entities, _ = parser.Parse(text, true)
+	}
+	topicID := msg.TopicID
+	if topicID == 1 {
+		topicID = 0
+	}
+	inputRep := &tg.InputReplyToMessage{
+		ReplyToMsgID: topicID,
+	}
+	msg, err := m.Ctx.SendMessage(m.ChatID, &tg.MessagesSendMessageRequest{
+		Message:     pText,
+		Entities:    entities,
+		ReplyTo:     inputRep,
+		ReplyMarkup: opt.ReplyMarkup,
 	},
 	)
 	if err != nil {

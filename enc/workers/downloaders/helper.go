@@ -168,7 +168,7 @@ func DownloadParallel(ctx context.Context, d *downloader.Downloader, client down
 func GetAria2DlInfo(uri string) *utils.DLInfo {
 	aria2 := bot.Aria2Client
 	dlInfo := &utils.DLInfo{}
-	if aria2 != nil {
+	if aria2 == nil {
 		dlInfo.Error = fmt.Errorf("aria2 Client is inactive")
 		return dlInfo
 	}
