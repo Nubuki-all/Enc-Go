@@ -1,4 +1,4 @@
-package uploads
+package transfer
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 	
 	"github.com/celestix/gotgproto/ext"
@@ -13,8 +14,8 @@ import (
 	"github.com/gotd/td/tg"
 	
 	"enc/config"
-	"enc/internal/bot"
-	"enc/internal/logger"
+	//"enc/internal/bot"
+	//"enc/internal/logger"
 	"enc/internal/bot/types"
 	"enc/utils"
 	"enc/utils/argparser"
@@ -31,6 +32,13 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		return nil
 	}
 	cmd := update.Args()[0]
+	helpMsg := "Uploads a file/files from local directory or direct/torrent link\n" +
+	"Just pass any of the following:\n" +
+	"    - the file (with -f) e.g -f \"something.txt\"\n" +
+	"    - the folder path\n" +
+	"    - direct link\n" +
+	"    - torrent/magnet link\n" +
+	"Or: "
 	var err error
 	var pargs map[string]any
 	helpFunc := func(s string) error {
@@ -78,7 +86,7 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			argparser.CreateDBoolFlag(
 				"mkv",
 				"m",
-				"same as --ext but only changes to 'mkv'. It is the same as passing --ext \".mkv"\",
+				"same as --ext but only changes to 'mkv'. It is the same as passing --ext \".mkv\"",
 			),
 			argparser.CreateDBoolFlag(
 				"clean",
@@ -98,11 +106,10 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		pargs = arg.Values
 	}
 
-	// prepare defaults
-	var err error
+	// prepare defaults	
 	var ext, file, link, selected string
 	var clean, qbit bool
-	var topicID int64
+	// var topicID int64
 	uCanMsg := "`Folder upload has been force cancelled`"
 	if len(pargs) != 0 {
 		link = pargs["link"].(string)
@@ -119,7 +126,7 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		}
 		if mkv {
 			ext = ".mkv"
-		} else ext != "" && ext[0] == '.' {
+		} else if ext != "" && ext[0] == '.' {
 			ext += "."
 		}
 	} else {
@@ -141,7 +148,6 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	}
 
 	// resolve file argument
-	var fileArg string
 	if link != "" {
 		dlFolder := filepath.Join(config.Conf.AltDownloadDir, fmt.Sprintf("%d:%d", msg.ChatID, msg.ID))
 		sMsg, err := msg.ReplyText("…")
@@ -253,7 +259,7 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 					}
 
 					caption := fmt.Sprintf("`%s`", name)
-					ulMsg, err := chainMsg.Reply(ctx, fmt.Sprintf("**Uploading:-**\n`%s`\n**from 📁:**\n `%s`\n`(%d/%d)`…", name, path, idx, total))
+						ulMsg, err := chainMsg.ReplyText(fmt.Sprintf("**Uploading:-**\n`%s`\n**from 📁:**\n `%s`\n`(%d/%d)`…", name, path, idx, total))
 					if err != nil {
 						return err
 					}
@@ -309,14 +315,14 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		_, _ = msg.ReplyText("__File or folder not found__")
 	} else {
 		// ---- single file upload ----
-		rMsg, _ := msg.Reply(fmt.Sprintf("`Uploading %s…`", filepath.Base(file)))
+		rMsg, _ := msg.ReplyText(fmt.Sprintf("`Uploading %s…`", filepath.Base(file)))
 		f := filepath.Base(file)
 		uID := fmt.Sprintf("%d:%d", rMsg.ChatID, rMsg.ID)
 
 		// extension override: copy to folder with new name
 		if ext != "" {
 			extension := filepath.Ext(f)
-			baseName := strings.TrimSuffix(caption, extension)
+			baseName := strings.TrimSuffix(f, extension)
 			f = baseName + ext
 		}
 		caption := "`" + f + "`"
@@ -324,11 +330,11 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			Msg:           rMsg,
 			FileName:      f,
 			Caption:       caption,
-			ThumbPath:     thumbPath,
+			// ThumbPath:     thumbPath,
 			ForceDocument: true,
 		}
 		upload.Init(uID, file, msg.SenderID)
-		uerr := upload.Start()
+		err = upload.Start()
 		if err != nil || upload.IsCancelled {
 			if clean {
 				_ = rMsg.Delete()

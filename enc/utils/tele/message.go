@@ -88,7 +88,7 @@ func (m *Message) RawMessage() *gp.Message {
 
 func (m *Message) ReplyText(text string) (*Message, error) {
 	pText, entities, _ := parser.Parse(text, true)
-	topicID := msg.TopicID
+	topicID := m.TopicID
 	if topicID == m.ID || topicID == 1 {
 		topicID = 0
 	}
@@ -117,7 +117,7 @@ func (m *Message) Reply(text string, replyOptions *ReplyOptions) (*Message, erro
 	} else {
 		pText, entities, _ = parser.Parse(text, true)
 	}
-	topicID := msg.TopicID
+	topicID := m.TopicID
 	if topicID == m.ID || topicID == 1 {
 		topicID = 0
 	}
@@ -141,7 +141,7 @@ func (m *Message) Reply(text string, replyOptions *ReplyOptions) (*Message, erro
 
 func (m *Message) RespondText(text string) (*Message, error) {
 	pText, entities, _ := parser.Parse(text, true)
-	topicID := msg.TopicID
+	topicID := m.TopicID
 	if topicID == 1 {
 		topicID = 0
 	}
@@ -172,7 +172,7 @@ func (m *Message) Respond(text string, opt *RespondOptions) (*Message, error) {
 	} else {
 		pText, entities, _ = parser.Parse(text, true)
 	}
-	topicID := msg.TopicID
+	topicID := m.TopicID
 	if topicID == 1 {
 		topicID = 0
 	}
