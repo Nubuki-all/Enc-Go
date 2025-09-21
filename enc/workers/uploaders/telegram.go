@@ -16,6 +16,7 @@ import (
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/gotd/td/telegram/uploader"
 	"github.com/gotd/td/tg"
+	"github.com/gotd/td/tgerr"
 
 	"enc/config"
 	"enc/internal/bot/types"
@@ -34,6 +35,7 @@ type TgUpload struct {
 	// err       error
 	// completed bool
 	forceDoc bool
+	forceFileParts bool
 	ufstr    string
 	fstr     string
 	dir      string
@@ -150,9 +152,18 @@ func (ul *TgUpload) Start() (err error) {
 		mime, _ = mimetype.DetectFile(ul.Path)
 		ul.dir = filepath.Dir(ul.Path)
 		inputFile, err = ul.upload.FromPath(ctx, ul.Path)
+		if ok := tgerr.Is(err, "FILE_PARTS_INVALID"); ok {
+			ul.upload.WithPartSize(524288)
+			inputFile, err = ul.upload.FromPath(ctx, ul.Path)
+		}
+
 	} else {
 		mime = mimetype.Detect(ul.bytes)
 		inputFile, err = ul.upload.FromBytes(ctx, ul.name, ul.bytes)
+		if ok := tgerr.Is(err, "FILE_PARTS_INVALID"); ok {
+			ul.upload.WithPartSize(524288)
+			inputFile, err = ul.upload.FromBytes(ctx, ul.name, ul.bytes)
+		}
 	}
 	close(doneCh)
 	wg.Wait()
