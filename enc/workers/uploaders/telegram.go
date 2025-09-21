@@ -66,6 +66,7 @@ func (ul *TgUpload) Start() (err error) {
 	// configure
 	_ = ul.upload.WithProgress(ul)
 	_ = ul.upload.WithThreads(4)
+	_ = ul.upload.WithPartSize(524288)
 	ul.action = "upload"
 	asDoc := config.Conf.UploadAsDoc
 	if ul.forceDoc {
@@ -152,18 +153,18 @@ func (ul *TgUpload) Start() (err error) {
 		mime, _ = mimetype.DetectFile(ul.Path)
 		ul.dir = filepath.Dir(ul.Path)
 		inputFile, err = ul.upload.FromPath(ctx, ul.Path)
-		if ok := tgerr.Is(err, "FILE_PARTS_INVALID"); ok {
+		/*if ok := tgerr.Is(err, "FILE_PARTS_INVALID"); ok {
 			ul.upload.WithPartSize(524288)
 			inputFile, err = ul.upload.FromPath(ctx, ul.Path)
-		}
+		}*/
 
 	} else {
 		mime = mimetype.Detect(ul.bytes)
 		inputFile, err = ul.upload.FromBytes(ctx, ul.name, ul.bytes)
-		if ok := tgerr.Is(err, "FILE_PARTS_INVALID"); ok {
+		/*if ok := tgerr.Is(err, "FILE_PARTS_INVALID"); ok {
 			ul.upload.WithPartSize(524288)
 			inputFile, err = ul.upload.FromBytes(ctx, ul.name, ul.bytes)
-		}
+		}*/
 	}
 	close(doneCh)
 	wg.Wait()

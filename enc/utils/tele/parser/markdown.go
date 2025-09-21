@@ -415,10 +415,3 @@ func removeSurrogates(s string) string {
 	decoded := utf16.Decode(u16)
 	return string(decoded)
 }
-
-func init() {
-	text, _, _ := Parse("**A bold\n\n Message 😂**", true)
-	fmt.Println(text)
-	pText, _, _ := htmlparser.Parse("**A bold\n\n Message ⚠️**")
-	fmt.Println(pText)
-}
