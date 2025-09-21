@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"embed"
-	"filepath"
+	"path/filepath"
 	"os"
 	"time"
 
