@@ -184,7 +184,7 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			markup.Row(
 				markup.Callback(
 					"Cancel",
-					[]byte("cancel_all_upload"),
+					[]byte("cancel_upload"),
 				),
 			),
 		}
