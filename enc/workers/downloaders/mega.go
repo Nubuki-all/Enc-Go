@@ -242,6 +242,7 @@ func (dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) erro
 	close(workch)
 	go func() {
 		wg2.Wait()
+		close(progress)
 		close(doneCh)
 	}()
 

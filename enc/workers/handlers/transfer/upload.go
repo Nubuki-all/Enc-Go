@@ -166,11 +166,8 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			Qbit:     qbit,
 		}
 		download.Init(dID, msg.SenderID)
-		if err := download.Start(); err != nil {
-			if err != nil || download.IsCancelled {
-				_, _ = download.ReportStatus()
-				return nil
-			}
+		if err := download.Start(); err != nil || download.IsCancelled {
+			_, _ = download.ReportStatus()
 		}
 		defer download.CleanDownload()
 		defer func() { _ = os.RemoveAll(dlFolder) }()
