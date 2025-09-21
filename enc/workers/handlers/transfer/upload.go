@@ -168,6 +168,7 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		download.Init(dID, msg.SenderID)
 		if err := download.Start(); err != nil || download.IsCancelled {
 			_, _ = download.ReportStatus()
+			return nil
 		}
 		defer download.CleanDownload()
 		defer func() { _ = os.RemoveAll(dlFolder) }()
