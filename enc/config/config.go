@@ -61,6 +61,7 @@ type Config struct {
 	MuxArgs               string
 	MuxDir                string
 	NoBanner              bool
+	NoExternalDL          bool
 	NoPM                  bool
 	Ovr                   string
 	Owner                 string
@@ -242,6 +243,7 @@ func LoadConfig() error {
 		MuxArgs:               viper.GetString("MUX_ARGS"),
 		MuxDir:                viper.GetString("MUX_DIR"),
 		NoBanner:              viper.GetBool("NO_BANNER"),
+		NoExternalDL:          viper.GetBool("NO_EXTERNAL_DL_SERVICE"),
 		NoPM:                  viper.GetBool("NO_TEMP_PM"),
 		Ovr:                   viper.GetString("OVR"),
 		Owner:                 viper.GetString("OWNER"),

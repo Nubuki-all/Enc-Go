@@ -32,12 +32,10 @@ import (
 // After wires up background workers, RPC & torrent clients, and hook handlers.
 func Finalize(ctx context.Context) {
 	bot.ID, _ = strconv.ParseInt(config.Rconf.BotID, 10, 64)
-	// 1) Start your RPC (aria2) process and API client
-	go startRPC()
-
-	// 2) Start qbittorrent-nox instances
-	go startQbit()
-
+	if !config.Conf.NoExternalDL { 
+		go startRPC()		
+		go startQbit()
+	}
 	// 3) Kick off your scheduler and auto‐jobs
 	// rss.Scheduler.Start()
 	// go workers.AutoStatus(ctx)
