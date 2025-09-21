@@ -229,7 +229,9 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			sort.Strings(files)
 			if len(files) == 0 {
 				// send "empty" note
-				_, _ = msg.ReplyText(fmt.Sprintf("`📁 %s is empty.`", path))
+				if !clean {
+					_, _ = msg.ReplyText(fmt.Sprintf("`📁 %s is empty.`", path))
+				}
 				return nil
 			}
 			total := len(files)
