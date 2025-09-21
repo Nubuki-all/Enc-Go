@@ -132,7 +132,7 @@ func (dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) erro
 	doneCh := make(chan struct{})
 	cancelCh := make(chan struct{})
 	errch := make(chan error, workers)
-	progress := make(chan int64)
+	progress := make(chan int64, 64)
 	progressInterval := config.Rconf.ProgresUpdateInterval * time.Second
 	size := d.Size
 	start := time.Now()
