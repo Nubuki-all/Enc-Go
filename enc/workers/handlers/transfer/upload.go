@@ -188,17 +188,22 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 				),
 			),
 		}
-		ctrlMsg, _ := msg.Reply("Folder upload control panel.",
+		ctrlMsg, err := msg.Reply("Folder upload control panel.",
 			&tele.ReplyOptions{
 				ReplyMarkup: markup.InlineKeyboard(buttonRows...),
 			},
 		)
+		if err != nil {
+			return err
+		}
 		ctrlID := fmt.Sprintf("%d:%d", ctrlMsg.ChatID, ctrlMsg.ID)
 		dirUpload := &types.TransferInfo{ID: ctrlID, Sender: msg.SenderID}
 		_ = utils.StoreCallbackInfo(&types.CallbackInfo{
 			TransferInfo: dirUpload,
 		}, ctrlID,
 		)
+		_ = ctrlMsg.Pin(true)
+		defer ctrlMsg.Unpin(true)
 		defer utils.DelCallbackInfo(ctrlID)
 		defer ctrlMsg.Delete() //nolint:errcheck
 		fJump := msg

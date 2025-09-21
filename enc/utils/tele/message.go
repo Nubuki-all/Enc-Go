@@ -57,7 +57,7 @@ type UploadOptions struct {
 	// will add more fields as required
 }
 
-// NewFromGotg constructs a wrapper from a concrete *gp.Message.
+// NewMsgFromGotg constructs a wrapper from a concrete *gp.Message.
 func NewMsgFromGotg(m *gp.Message, c *ext.Context, chatID int64, senderID int64) *Message {
 	var replyTo, topicID int
 	if msgHeader, ok := m.ReplyTo.(*tg.MessageReplyHeader); ok {
@@ -280,6 +280,37 @@ func (m *Message) Forward(chatID int64) (*Message, error) {
 		msg = gp.ConstructMessage(m)
 	}
 	return NewMsgFromGotg(msg, m.Ctx, chatID, m.Ctx.Self.ID), nil
+}
+
+func (m *Message) Pin(silent bool) error {
+	ctx := m.Ctx
+	peerID, err := ctx.ResolveInputPeerById(m.ChatID)
+	if err != nil {
+		return err
+	}
+	req := &tg.MessagesUpdatePinnedMessageRequest{
+        Peer:   peerID,
+        ID:     m.ID,
+        Silent: silent, 
+    }
+	_, err = ctx.Raw.MessagesUpdatePinnedMessage(ctx, req)
+	return err
+}
+
+func (m *Message) Unpin(silent bool) error {
+	ctx := m.Ctx
+	peerID, err := ctx.ResolveInputPeerById(m.ChatID)
+	if err != nil {
+		return err
+	}
+	req := &tg.MessagesUpdatePinnedMessageRequest{
+		Peer:   peerID,
+		ID:     m.ID,
+		Silent: silent,
+		Unpin: true,
+	}
+	_, err = ctx.Raw.MessagesUpdatePinnedMessage(ctx, req)
+	return err
 }
 
 func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
