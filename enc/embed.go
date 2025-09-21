@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"embed"
-	"path/filepath"
 	"os"
+	"path/filepath"
 	"time"
 
 	"enc/internal/logger"
