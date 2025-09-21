@@ -32,8 +32,8 @@ import (
 // After wires up background workers, RPC & torrent clients, and hook handlers.
 func Finalize(ctx context.Context) {
 	bot.ID, _ = strconv.ParseInt(config.Rconf.BotID, 10, 64)
-	if !config.Conf.NoExternalDL { 
-		go startRPC()		
+	if !config.Conf.NoExternalDL {
+		go startRPC()
 		go startQbit()
 	}
 	// 3) Kick off your scheduler and auto‐jobs

@@ -3,7 +3,6 @@ package startup
 import (
 	"archive/zip"
 	"context"
-	"enc/config"
 	"errors"
 	"fmt"
 	"io"
@@ -12,6 +11,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"enc/config"
 )
 
 // InstallAria2 downloads the correct aria2 static zip for the current platform,
@@ -19,8 +20,8 @@ import (
 // If a binary already exists at binDir/aria2c (or aria2c.exe on Windows) the function
 // returns nil (no-op).
 func InstallAria2(ctx context.Context, binDir string) (string, error) {
-	if config.Conf.NoExternalDL{
-		return  "", nil
+	if config.Conf.NoExternalDL {
+		return "", nil
 	}
 	// Map platform -> zip filename
 	baseURL := "https://github.com/abcfy2/aria2-static-build/releases/download/1.37.0/"
@@ -283,7 +284,6 @@ func InstallQbittorrentNox(ctx context.Context, binDir string) (string, error) {
 	return destPath, nil
 }
 
-
 // atomicMove tries to rename src -> dst. If rename fails (cross-device), it falls back to copy+remove.
 func atomicMove(src, dst string) error {
 	// ensure target directory exists
@@ -332,4 +332,3 @@ func atomicMove(src, dst string) error {
 	}
 	return nil
 }
-
