@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"embed"
+	"filepath"
 	"os"
 	"time"
 
@@ -18,7 +19,10 @@ func extract() {
 	if err := utils.ExtractEmbedDotPrefix(resources, "resources", ""); err != nil {
 		logger.Critical("extract failed: %v", err)
 	} else {
-		p := ".bin"
+		p, err := filepath.Abs(".bin")
+		if err != nil {
+			logger.Critical("updating path failed: %v", err)
+		}
 		sep := string(os.PathListSeparator) // ":" on Unix, ";" on Windows
 		old := os.Getenv("PATH")
 		newPath := p
