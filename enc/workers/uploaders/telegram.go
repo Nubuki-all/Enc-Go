@@ -16,7 +16,7 @@ import (
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/gotd/td/telegram/uploader"
 	"github.com/gotd/td/tg"
-	"github.com/gotd/td/tgerr"
+	// "github.com/gotd/td/tgerr"
 
 	"enc/config"
 	"enc/internal/bot/types"
