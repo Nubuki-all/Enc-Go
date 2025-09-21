@@ -289,10 +289,10 @@ func (m *Message) Pin(silent bool) error {
 		return err
 	}
 	req := &tg.MessagesUpdatePinnedMessageRequest{
-        Peer:   peerID,
-        ID:     m.ID,
-        Silent: silent, 
-    }
+		Peer:   peerID,
+		ID:     m.ID,
+		Silent: silent,
+	}
 	_, err = ctx.Raw.MessagesUpdatePinnedMessage(ctx, req)
 	return err
 }
@@ -307,7 +307,7 @@ func (m *Message) Unpin(silent bool) error {
 		Peer:   peerID,
 		ID:     m.ID,
 		Silent: silent,
-		Unpin: true,
+		Unpin:  true,
 	}
 	_, err = ctx.Raw.MessagesUpdatePinnedMessage(ctx, req)
 	return err
