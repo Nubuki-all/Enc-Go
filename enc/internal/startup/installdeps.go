@@ -116,7 +116,7 @@ func InstallAria2(ctx context.Context, binDir string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("open zip: %w", err)
 	}
-	defer zr.Close()
+	defer func() {_ = zr.Close()}()
 
 	var found *zip.File
 	// Look for an entry named exactly "aria2c" or "aria2c.exe" or an entry whose base name matches.
