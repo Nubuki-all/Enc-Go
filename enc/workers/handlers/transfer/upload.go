@@ -205,7 +205,7 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			TransferInfo: dirUpload,
 		}, ctrlID,
 		)
-		_ = ctrlMsg.Pin(true)
+		_ = ctrlMsg.Pin(true) //nolint:errcheck
 		defer ctrlMsg.Unpin(true)
 		defer utils.DelCallbackInfo(ctrlID)
 		defer ctrlMsg.Delete() //nolint:errcheck

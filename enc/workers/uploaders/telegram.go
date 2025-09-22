@@ -35,7 +35,6 @@ type TgUpload struct {
 	// err       error
 	// completed bool
 	forceDoc       bool
-	forceFileParts bool
 	ufstr          string
 	fstr           string
 	dir            string

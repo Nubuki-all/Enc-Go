@@ -13,6 +13,7 @@ import (
 	"strings"
 
 	"enc/config"
+	"enc/internal/logger"
 )
 
 // InstallAria2 downloads the correct aria2 static zip for the current platform,
@@ -73,7 +74,7 @@ func InstallAria2(ctx context.Context, binDir string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("remote HEAD failed: %w", err)
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
 		return "", fmt.Errorf("remote file not available: %s (status %d)", fullURL, resp.StatusCode)
 	}
@@ -97,7 +98,7 @@ func InstallAria2(ctx context.Context, binDir string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("download failed: %w", err)
 	}
-	defer resp2.Body.Close()
+	defer func() { _ = resp2.Body.Close()}()
 	if resp2.StatusCode < 200 || resp2.StatusCode >= 300 {
 		return "", fmt.Errorf("download failed: status %d", resp2.StatusCode)
 	}
@@ -146,7 +147,7 @@ func InstallAria2(ctx context.Context, binDir string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("open zip entry: %w", err)
 	}
-	defer rc.Close()
+	defer func() {_ = rc.Close()}()
 
 	tmpBin, err := os.CreateTemp("", "aria2-bin-*")
 	if err != nil {
@@ -235,7 +236,7 @@ func InstallQbittorrentNox(ctx context.Context, binDir string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("remote HEAD failed: %w", err)
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
 		return "", fmt.Errorf("remote file not available: %s (status %d)", fullURL, resp.StatusCode)
 	}
@@ -259,7 +260,7 @@ func InstallQbittorrentNox(ctx context.Context, binDir string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("download failed: %w", err)
 	}
-	defer resp2.Body.Close()
+	defer func() {_ = resp2.Body.Close()}()
 	if resp2.StatusCode < 200 || resp2.StatusCode >= 300 {
 		return "", fmt.Errorf("download failed: status %d", resp2.StatusCode)
 	}
@@ -301,7 +302,7 @@ func atomicMove(src, dst string) error {
 	if err != nil {
 		return fmt.Errorf("open src for copy: %w", err)
 	}
-	defer in.Close()
+	defer func() {_ = in.Close()}()
 
 	out, err := os.Create(dst)
 	if err != nil {
@@ -322,7 +323,7 @@ func atomicMove(src, dst string) error {
 	// preserve exec bit on unix if possible
 	if runtime.GOOS != "windows" {
 		if err := out.Chmod(0o755); err != nil {
-			// ignore chmod failure but log
+			logger.Warn(err)
 		}
 	}
 
