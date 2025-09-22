@@ -153,7 +153,7 @@ func (ul *TgUpload) Start() (err error) {
 		mime, _ = mimetype.DetectFile(ul.Path)
 		ul.dir = filepath.Dir(ul.Path)
 		inputFile, err = ul.upload.FromPath(ctx, ul.Path)
-		if strings.Contains(err.Error(), "broken pipe") {
+		if err != nil && strings.Contains(err.Error(), "broken pipe") {
 			time.Sleep(180 * time.Second)
 			inputFile, err = ul.upload.FromPath(ctx, ul.Path)
 		}
