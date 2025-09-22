@@ -153,6 +153,10 @@ func (ul *TgUpload) Start() (err error) {
 		mime, _ = mimetype.DetectFile(ul.Path)
 		ul.dir = filepath.Dir(ul.Path)
 		inputFile, err = ul.upload.FromPath(ctx, ul.Path)
+		if strings.Contains(err.Error(), "broken pipe") {
+			time.Sleep(180 * time.Second)
+			inputFile, err = ul.upload.FromPath(ctx, ul.Path)
+		}
 		/*if ok := tgerr.Is(err, "FILE_PARTS_INVALID"); ok {
 			ul.upload.WithPartSize(524288)
 			inputFile, err = ul.upload.FromPath(ctx, ul.Path)
