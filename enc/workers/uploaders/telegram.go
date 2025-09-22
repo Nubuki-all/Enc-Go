@@ -34,15 +34,15 @@ type TgUpload struct {
 	pchan  chan uploader.ProgressState
 	// err       error
 	// completed bool
-	forceDoc       bool
-	ufstr          string
-	fstr           string
-	dir            string
-	name           string
-	caption        string
-	thumb          string
-	action         string
-	bytes          []byte
+	forceDoc bool
+	ufstr    string
+	fstr     string
+	dir      string
+	name     string
+	caption  string
+	thumb    string
+	action   string
+	bytes    []byte
 }
 
 func NewTgUl(name, caption, thumb string, forceDocument bool, msg, reply *tele.Message, tInfo *types.TransferInfo) *TgUpload {

@@ -98,7 +98,7 @@ func InstallAria2(ctx context.Context, binDir string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("download failed: %w", err)
 	}
-	defer func() { _ = resp2.Body.Close()}()
+	defer func() { _ = resp2.Body.Close() }()
 	if resp2.StatusCode < 200 || resp2.StatusCode >= 300 {
 		return "", fmt.Errorf("download failed: status %d", resp2.StatusCode)
 	}
@@ -147,7 +147,7 @@ func InstallAria2(ctx context.Context, binDir string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("open zip entry: %w", err)
 	}
-	defer func() {_ = rc.Close()}()
+	defer func() { _ = rc.Close() }()
 
 	tmpBin, err := os.CreateTemp("", "aria2-bin-*")
 	if err != nil {
@@ -260,7 +260,7 @@ func InstallQbittorrentNox(ctx context.Context, binDir string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("download failed: %w", err)
 	}
-	defer func() {_ = resp2.Body.Close()}()
+	defer func() { _ = resp2.Body.Close() }()
 	if resp2.StatusCode < 200 || resp2.StatusCode >= 300 {
 		return "", fmt.Errorf("download failed: status %d", resp2.StatusCode)
 	}
@@ -302,7 +302,7 @@ func atomicMove(src, dst string) error {
 	if err != nil {
 		return fmt.Errorf("open src for copy: %w", err)
 	}
-	defer func() {_ = in.Close()}()
+	defer func() { _ = in.Close() }()
 
 	out, err := os.Create(dst)
 	if err != nil {
