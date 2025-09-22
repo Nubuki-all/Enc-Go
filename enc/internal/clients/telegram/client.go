@@ -35,6 +35,12 @@ func InitClient() {
 	waiter := floodwait.NewSimpleWaiter()
 	// Initializing ratelimiter, which will allow at most 30 requests to Telegram in 100ms
 	ratelimiter := ratelimit.New(rate.Every(time.Millisecond*100), 30)
+	panicHandler := func (_ *ext.Context, _ *ext.Update, err string) {
+		logger.Error("Panic!: " + err)
+	}
+	errHandler := func (_ *ext.Context, _ *ext.Update, _ string) error {
+		return nil
+	}
 
 	Client, err = gotgproto.NewClient(
 		// Get AppID from https://my.telegram.org/apps
@@ -47,6 +53,8 @@ func InitClient() {
 		&gotgproto.ClientOpts{
 			Logger:      logger.Logger,
 			Session:     sessionMaker.SqlSession(sqlite.Open(".encbot.session")),
+			PanicHandler: panicHandler,
+			ErrorHandler: errHandler,
 			Middlewares: []telegram.Middleware{waiter, ratelimiter},
 		},
 	)
@@ -57,3 +65,4 @@ func InitClient() {
 	logger.Infof("client (@%s) has been started...\n", Client.Self.Username)
 	Context = Client.CreateContext()
 }
+

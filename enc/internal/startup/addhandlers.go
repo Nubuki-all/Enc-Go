@@ -25,10 +25,7 @@ import (
 )
 
 func AddAllHandlers() {
-	// dispatcher := telegram.Client.Dispatcher
-	ctx := telegram.Context
-	d := dispatcher.NewNativeDispatcher(false, false, errHandler, panicHandler, ctx.PeerStorage)
-
+	d := telegram.Client.Dispatcher
 	AddCmdHandlers(d)
 	AddCBHandlers(d)
 
@@ -210,12 +207,4 @@ func EventHandlerWithRawArgs(handler func(*ext.Context, *ext.Update, *tele.Messa
 		}
 		return err
 	}
-}
-
-func panicHandler(_ *ext.Context, _ *ext.Update, err string) {
-	logger.Error("Panic!: " + err)
-}
-
-func errHandler(_ *ext.Context, _ *ext.Update, _ string) error {
-	return nil
 }
