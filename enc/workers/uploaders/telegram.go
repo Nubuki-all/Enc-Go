@@ -156,15 +156,15 @@ func (ul *TgUpload) Start() (err error) {
 			logger.Warn(err, "Sleeping for 3 minutes")
 			time.Sleep(180 * time.Second)
 			inputFile, err = ul.upload.FromPath(ctx, ul.Path)
-		}	
+		}
 	} else {
 		mime = mimetype.Detect(ul.bytes)
 		inputFile, err = ul.upload.FromBytes(ctx, ul.name, ul.bytes)
 		if err != nil && strings.Contains(err.Error(), "broken pipe") {
 			logger.Warn(err, "Sleeping for 3 minutes")
 			time.Sleep(180 * time.Second)
-			inputFile, err = ul.upload.FromBytes(ctx, ul.name, ul.bytes	)
-		}	
+			inputFile, err = ul.upload.FromBytes(ctx, ul.name, ul.bytes)
+		}
 	}
 	close(doneCh)
 	wg.Wait()
