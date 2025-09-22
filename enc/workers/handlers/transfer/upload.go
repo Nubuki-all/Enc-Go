@@ -121,6 +121,9 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		clean = pargs["clean"].(bool)
 		selected = pargs["select"].(string)
 		qbit = pargs["qbit"].(bool)
+		if file == "" && link == "" {
+			return helpFunc("`Args -f or -l are required.`")
+		}
 		if link != "" {
 			if !utils.IsURL(link) && !utils.IsMagnet(link) {
 				return helpFunc("'--link': `Value passed is not a valid link.`")
