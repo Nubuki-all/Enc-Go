@@ -1,3 +1,4 @@
+//Package transfer contains that strictly uploads or downloads
 package transfer
 
 import (

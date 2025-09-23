@@ -280,6 +280,8 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 					upload := &uploaders.Uploader{
 						Msg:     ulMsg,
 						Caption: caption,
+						ForceDocument: true,
+						Threads: 1,
 					}
 					upload.Init(uID, fullPath, msg.SenderID)
 					uerr := upload.Start()

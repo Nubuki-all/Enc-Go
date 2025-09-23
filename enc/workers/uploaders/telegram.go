@@ -16,10 +16,12 @@ import (
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/gotd/td/telegram/uploader"
 	"github.com/gotd/td/tg"
+
 	// "github.com/gotd/td/tgerr"
 
 	"enc/config"
 	"enc/internal/bot/types"
+	"enc/internal/clients/telegram"
 	"enc/internal/logger"
 	"enc/utils"
 	"enc/utils/random"
@@ -42,6 +44,7 @@ type TgUpload struct {
 	caption  string
 	thumb    string
 	action   string
+	threads  int
 	bytes    []byte
 }
 
@@ -54,6 +57,7 @@ func NewTgUl(name, caption, thumb string, forceDocument bool, msg, reply *tele.M
 		caption:      caption,
 		reply:        reply,
 		thumb:        thumb,
+		threads:      4,
 		upload:       uploader.NewUploader(msg.Ctx.Raw),
 		forceDoc:     forceDocument,
 		ufstr:        conf.UnfinishedProgressStr,
@@ -64,7 +68,7 @@ func NewTgUl(name, caption, thumb string, forceDocument bool, msg, reply *tele.M
 func (ul *TgUpload) Start() (err error) {
 	// configure
 	_ = ul.upload.WithProgress(ul)
-	_ = ul.upload.WithThreads(4)
+	_ = ul.upload.WithThreads(ul.threads)
 	_ = ul.upload.WithPartSize(524288)
 	ul.action = "upload"
 	asDoc := config.Conf.UploadAsDoc
@@ -151,24 +155,18 @@ func (ul *TgUpload) Start() (err error) {
 	if len(ul.bytes) == 0 {
 		mime, _ = mimetype.DetectFile(ul.Path)
 		ul.dir = filepath.Dir(ul.Path)
-		inputFile, err = ul.upload.FromPath(ctx, ul.Path)
-		if err != nil && strings.Contains(err.Error(), "broken pipe") {
-			logger.Warn(err, "Sleeping for 3 minutes")
-			time.Sleep(180 * time.Second)
-			inputFile, err = ul.upload.FromPath(ctx, ul.Path)
-		}
+		inputFile, err = ul.upload.FromPath(ctx, ul.Path)	
 	} else {
 		mime = mimetype.Detect(ul.bytes)
-		inputFile, err = ul.upload.FromBytes(ctx, ul.name, ul.bytes)
-		if err != nil && strings.Contains(err.Error(), "broken pipe") {
-			logger.Warn(err, "Sleeping for 3 minutes")
-			time.Sleep(180 * time.Second)
-			inputFile, err = ul.upload.FromBytes(ctx, ul.name, ul.bytes)
-		}
+		inputFile, err = ul.upload.FromBytes(ctx, ul.name, ul.bytes)	
 	}
 	close(doneCh)
 	wg.Wait()
 	if err != nil {
+		if strings.Contains(err.Error(), "broken pipe") {
+			ul.waitTillReconnect()
+			return ErrRetry
+		}
 		if !ul.IsCancelled {
 			return err
 		} else {
@@ -355,4 +353,33 @@ func (ul *TgUpload) sendMedia(media *tg.InputMediaUploadedDocument) (err error) 
 		)
 	}
 	return err
+}
+
+func(ul *TgUpload) waitTillReconnect() {
+	timeoutDuration := 20 * time.Minute
+	ctx, cancel := context.WithTimeout(context.Background(), timeoutDuration)
+	defer cancel()
+	retryInterval := 5 * time.Second
+	logger.Info("Attempting to wait till reconnection.")
+	for {
+		err := telegram.Client.Ping(ul.msg.Ctx)
+		if err == nil {
+			fmt.Println("successfully waited for restart.")
+			return // Exit the main function upon success.
+		}
+
+		fmt.Printf("Attempt failed: %v. Retrying in %v...\n", err, retryInterval)
+
+		// Use a select statement to wait for either the next retry interval
+		// or the overall timeout.
+		select {
+		case <-time.After(retryInterval):
+			// The retry interval has passed, so the loop continues to the next attempt.
+			continue
+		case <-ctx.Done():
+			// The context has been canceled due to the timeout.
+			fmt.Printf("Total duration exceeded (%s). Giving up.\n", timeoutDuration)
+			return // Exit the main function.
+		}
+	}
 }

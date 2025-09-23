@@ -2,6 +2,7 @@
 package uploaders
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -28,10 +29,12 @@ type Uploader struct {
 	Caption         string
 	FileName        string
 	ThumbPath       string
+	Threads         int
 	Bytes           []byte
 	CleanOnComplete bool
 	Done            bool
 	ForceDocument   bool
+	retried         bool
 	err             error
 }
 
@@ -61,8 +64,15 @@ func (ul *Uploader) Start() error {
 		ul.FileName = filepath.Base(ul.Path)
 	}
 	tgUl := NewTgUl(ul.FileName, ul.Caption, ul.ThumbPath, ul.ForceDocument, ul.Msg, ul.Reply, ul.TransferInfo)
+	if ul.Threads > 0 {
+		tgUl.threads = ul.Threads
+	}
 	err = tgUl.Start()
 	if err != nil {
+		if errors.Is(err, ErrRetry) && !ul.retried {
+			ul.retried = true
+			return ul.Start()
+		}
 		ul.err = err
 		logger.Error(err)
 	} else if ul.CleanOnComplete {
