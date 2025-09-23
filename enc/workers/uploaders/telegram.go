@@ -155,10 +155,10 @@ func (ul *TgUpload) Start() (err error) {
 	if len(ul.bytes) == 0 {
 		mime, _ = mimetype.DetectFile(ul.Path)
 		ul.dir = filepath.Dir(ul.Path)
-		inputFile, err = ul.upload.FromPath(ctx, ul.Path)	
+		inputFile, err = ul.upload.FromPath(ctx, ul.Path)
 	} else {
 		mime = mimetype.Detect(ul.bytes)
-		inputFile, err = ul.upload.FromBytes(ctx, ul.name, ul.bytes)	
+		inputFile, err = ul.upload.FromBytes(ctx, ul.name, ul.bytes)
 	}
 	close(doneCh)
 	wg.Wait()
@@ -355,7 +355,7 @@ func (ul *TgUpload) sendMedia(media *tg.InputMediaUploadedDocument) (err error) 
 	return err
 }
 
-func(ul *TgUpload) waitTillReconnect() {
+func (ul *TgUpload) waitTillReconnect() {
 	timeoutDuration := 20 * time.Minute
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutDuration)
 	defer cancel()
