@@ -137,7 +137,7 @@ func (dl *Aria2Download) Start() error {
 		defer uTicker.Stop()
 		defer pTicker.Stop()
 
-		curGid := dl.ProgressCallback(start, gid)
+		curGID := dl.ProgressCallback(start, gid)
 		for {
 			select {
 			case <-ctx.Done():
@@ -145,17 +145,17 @@ func (dl *Aria2Download) Start() error {
 				done <- fmt.Errorf("download timed out after %s", utils.TimeFormatter(dlTimeout.Seconds()))
 				return
 			case <-pTicker.C:
-				if curGid == "" {
+				if curGID == "" {
 					done <- nil
 					return
 				}
-				curGid = dl.ProgressCallback(start, curGid)
+				curGID = dl.ProgressCallback(start, curGID)
 			case <-uTicker.C:
-				if curGid == "" {
+				if curGID == "" {
 					done <- nil
 					return
 				}
-				curGid = dl.UpdateCallback(curGid)
+				curGID = dl.UpdateCallback(curGID)
 			}
 			// continue loop
 		}
