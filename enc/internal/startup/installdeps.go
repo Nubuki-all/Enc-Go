@@ -11,7 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"	
+	"strings"
 
 	"github.com/ulikunitz/xz"
 
@@ -33,7 +33,7 @@ func InstallAria2(ctx context.Context, binDir string) (string, error) {
 	goarch := runtime.GOARCH
 
 	var zipName string
-	targetName := "aria2c"// final binary name (aria2c or aria2c.exe)
+	targetName := "aria2c" // final binary name (aria2c or aria2c.exe)
 	switch {
 	case goos == "linux" && goarch == "amd64":
 		zipName = "aria2-x86_64-linux-musl_static.zip"
@@ -184,7 +184,6 @@ func InstallAria2(ctx context.Context, binDir string) (string, error) {
 	return destPath, nil
 }
 
-
 // InstallFFmpeg downloads appropriate FFmpeg archive for the current platform,
 // extracts ffmpeg, ffprobe and ffplay (or the .exe variants on Windows) from the
 // archive's bin/ folder and installs them into binDir (creating it if needed).
@@ -331,7 +330,7 @@ func extractFromZip(zipPath, binDir string, targets []string) error {
 		}
 		if !strings.Contains(f.Name, "/bin/") && !strings.Contains(f.Name, `\bin\`) {
 			// ignore entries not under bin dir
-						continue
+			continue
 		}
 
 		rc, err := f.Open()
@@ -437,8 +436,6 @@ func extractFromTarXz(tarXzPath, binDir string, targets []string) error {
 
 	return nil
 }
-
-
 
 // InstallQbittorrentNox downloads the appropriate static qbittorrent-nox binary for
 // the current platform and installs it into binDir (creating binDir if needed).
