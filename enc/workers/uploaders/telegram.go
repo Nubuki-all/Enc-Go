@@ -57,7 +57,7 @@ func NewTgUl(name, caption, thumb string, forceDocument bool, msg, reply *tele.M
 		caption:      caption,
 		reply:        reply,
 		thumb:        thumb,
-		threads:      4,
+		threads:      3,
 		upload:       uploader.NewUploader(msg.Ctx.Raw),
 		forceDoc:     forceDocument,
 		ufstr:        conf.UnfinishedProgressStr,
