@@ -1,6 +1,7 @@
 package startup
 
 import (
+	"archive/tar"
 	"archive/zip"
 	"context"
 	"errors"
@@ -10,7 +11,9 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
+	"strings"	
+
+	"github.com/ulikunitz/xz"
 
 	"enc/config"
 	"enc/internal/logger"
@@ -30,17 +33,14 @@ func InstallAria2(ctx context.Context, binDir string) (string, error) {
 	goarch := runtime.GOARCH
 
 	var zipName string
-	var targetName string // final binary name (aria2c or aria2c.exe)
+	targetName := "aria2c"// final binary name (aria2c or aria2c.exe)
 	switch {
 	case goos == "linux" && goarch == "amd64":
 		zipName = "aria2-x86_64-linux-musl_static.zip"
-		targetName = "aria2c"
 	case goos == "linux" && goarch == "arm":
 		zipName = "aria2-arm-linux-musleabi_static.zip"
-		targetName = "aria2c"
 	case goos == "linux" && goarch == "arm64":
 		zipName = "aria2-aarch64-linux-musl_static.zip"
-		targetName = "aria2c"
 	case goos == "windows" && goarch == "amd64":
 		zipName = "aria2-x86_64-w64-mingw32_static.zip"
 		targetName = "aria2c.exe"
@@ -183,6 +183,262 @@ func InstallAria2(ctx context.Context, binDir string) (string, error) {
 	// success: remove tmp zip (deferred) and tmp bin (moved already so tmp removed is noop)
 	return destPath, nil
 }
+
+
+// InstallFFmpeg downloads appropriate FFmpeg archive for the current platform,
+// extracts ffmpeg, ffprobe and ffplay (or the .exe variants on Windows) from the
+// archive's bin/ folder and installs them into binDir (creating it if needed).
+//
+// Returns map[string]string with keys "ffmpeg", "ffprobe", "ffplay" mapping to installed paths.
+func InstallFFmpeg(ctx context.Context, binDir string) (map[string]string, error) {
+	// platform -> archive filename + isZip flag
+	goos := runtime.GOOS
+	goarch := runtime.GOARCH
+
+	var archiveName string
+	var isZip bool
+
+	switch {
+	case goos == "linux" && goarch == "amd64":
+		archiveName = "ffmpeg-n8.0-latest-linux64-gpl-8.0.tar.xz"
+	case goos == "linux" && goarch == "arm64":
+		archiveName = "ffmpeg-n8.0-latest-linuxarm64-gpl-8.0.tar.xz"
+	case goos == "windows" && goarch == "arm64":
+		archiveName = "ffmpeg-n8.0-latest-winarm64-gpl-8.0.zip"
+	case goos == "windows" && goarch == "amd64":
+		archiveName = "ffmpeg-n8.0-latest-win64-gpl-8.0.zip"
+	default:
+		return nil, fmt.Errorf("platform not supported: os=%s arch=%s", goos, goarch)
+	}
+
+	baseURL := "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/"
+	fullURL := baseURL + archiveName
+
+	// ensure binDir exists
+	if err := os.MkdirAll(binDir, 0o755); err != nil {
+		return nil, fmt.Errorf("create bin dir: %w", err)
+	}
+
+	// target names
+	exeSuffix := ""
+	if goos == "windows" {
+		isZip = true
+		exeSuffix = ".exe"
+	}
+	targets := []string{"ffmpeg" + exeSuffix, "ffprobe" + exeSuffix, "ffplay" + exeSuffix}
+
+	// if all targets exist, return early
+	allExist := true
+	installed := make(map[string]string)
+	for _, t := range targets {
+		dest := filepath.Join(binDir, t)
+		if fi, err := os.Stat(dest); err == nil && !fi.IsDir() && fi.Size() > 0 {
+			installed[t] = dest
+			continue
+		}
+		allExist = false
+	}
+	if allExist {
+		return installed, nil
+	}
+
+	// HEAD to ensure remote exists
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead, fullURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("build HEAD request: %w", err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("remote HEAD failed: %w", err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("remote file not available: %s (status %d)", fullURL, resp.StatusCode)
+	}
+
+	// Download archive to temp file
+	tmpArchive, err := os.CreateTemp("", "ffmpeg-archive-*")
+	if err != nil {
+		return nil, fmt.Errorf("create temp archive: %w", err)
+	}
+	tmpArchivePath := tmpArchive.Name()
+	defer func() {
+		_ = tmpArchive.Close()
+		_ = os.Remove(tmpArchivePath)
+	}()
+
+	req2, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("build GET request: %w", err)
+	}
+	resp2, err := http.DefaultClient.Do(req2)
+	if err != nil {
+		return nil, fmt.Errorf("download failed: %w", err)
+	}
+	defer resp2.Body.Close()
+	if resp2.StatusCode < 200 || resp2.StatusCode >= 300 {
+		return nil, fmt.Errorf("download failed: status %d", resp2.StatusCode)
+	}
+
+	if _, err := io.Copy(tmpArchive, resp2.Body); err != nil {
+		return nil, fmt.Errorf("save archive: %w", err)
+	}
+	if err := tmpArchive.Close(); err != nil {
+		return nil, fmt.Errorf("close temp archive: %w", err)
+	}
+
+	// extract targets from archive
+	if isZip {
+		if err := extractFromZip(tmpArchivePath, binDir, targets); err != nil {
+			return nil, fmt.Errorf("extract zip: %w", err)
+		}
+	} else {
+		if err := extractFromTarXz(tmpArchivePath, binDir, targets); err != nil {
+			return nil, fmt.Errorf("extract tar.xz: %w", err)
+		}
+	}
+
+	// verify installation and return installed paths
+	for _, t := range targets {
+		dest := filepath.Join(binDir, t)
+		if fi, err := os.Stat(dest); err == nil && !fi.IsDir() && fi.Size() > 0 {
+			installed[t] = dest
+		} else {
+			return nil, fmt.Errorf("binary %s not found after extraction", t)
+		}
+	}
+	return installed, nil
+}
+
+// extractFromZip extracts files whose base name equals any of targets and with '/bin/' in path.
+func extractFromZip(zipPath, binDir string, targets []string) error {
+	r, err := zip.OpenReader(zipPath)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+
+	targetSet := make(map[string]struct{})
+	for _, t := range targets {
+		targetSet[t] = struct{}{}
+	}
+
+	for _, f := range r.File {
+		bn := filepath.Base(f.Name)
+		// require that the entry resides in a bin/ folder somewhere and base matches
+		if _, want := targetSet[bn]; !want {
+			continue
+		}
+		if !strings.Contains(f.Name, "/bin/") && !strings.Contains(f.Name, `\bin\`) {
+			// ignore entries not under bin dir
+						continue
+		}
+
+		rc, err := f.Open()
+		if err != nil {
+			return err
+		}
+		tmpFile, err := os.CreateTemp("", "ffmpeg-bin-*")
+		if err != nil {
+			rc.Close()
+			return err
+		}
+		tmpPath := tmpFile.Name()
+
+		_, err = io.Copy(tmpFile, rc)
+		_ = tmpFile.Close()
+		rc.Close()
+		if err != nil {
+			_ = os.Remove(tmpPath)
+			return err
+		}
+
+		// set exec bit on non-windows
+		if runtime.GOOS != "windows" {
+			if err := os.Chmod(tmpPath, 0o755); err != nil {
+				_ = os.Remove(tmpPath)
+				return err
+			}
+		}
+
+		// atomic move into place
+		dest := filepath.Join(binDir, bn)
+		if err := atomicMove(tmpPath, dest); err != nil {
+			_ = os.Remove(tmpPath)
+			return err
+		}
+	}
+	return nil
+}
+
+// extractFromTarXz extracts files whose base name equals any of targets and with '/bin/' in path.
+func extractFromTarXz(tarXzPath, binDir string, targets []string) error {
+	f, err := os.Open(tarXzPath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	xzr, err := xz.NewReader(f)
+	if err != nil {
+		return fmt.Errorf("xz reader: %w", err)
+	}
+
+	tr := tar.NewReader(xzr)
+	targetSet := make(map[string]struct{})
+	for _, t := range targets {
+		targetSet[t] = struct{}{}
+	}
+
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		// tar headers use forward slashes
+		name := hdr.Name
+		bn := filepath.Base(name)
+		if _, want := targetSet[bn]; !want {
+			continue
+		}
+		if !strings.Contains(name, "/bin/") {
+			continue
+		}
+
+		// create temp file and write
+		tmpFile, err := os.CreateTemp("", "ffmpeg-bin-*")
+		if err != nil {
+			return err
+		}
+		tmpPath := tmpFile.Name()
+		_, err = io.Copy(tmpFile, tr)
+		_ = tmpFile.Close()
+		if err != nil {
+			_ = os.Remove(tmpPath)
+			return err
+		}
+
+		if runtime.GOOS != "windows" {
+			if err := os.Chmod(tmpPath, 0o755); err != nil {
+				_ = os.Remove(tmpPath)
+				return err
+			}
+		}
+
+		dest := filepath.Join(binDir, bn)
+		if err := atomicMove(tmpPath, dest); err != nil {
+			_ = os.Remove(tmpPath)
+			return err
+		}
+	}
+
+	return nil
+}
+
+
 
 // InstallQbittorrentNox downloads the appropriate static qbittorrent-nox binary for
 // the current platform and installs it into binDir (creating binDir if needed).
