@@ -246,7 +246,7 @@ func InstallFFmpeg(ctx context.Context, binDir string) (map[string]string, error
 	}
 	tmpArchivePath := tmpArchive.Name
 	defer func() {
-		_ = tmpArchive.Remove()	
+		_ = tmpArchive.Remove()
 	}()
 
 	if err := utils.DownloadFileWithProgress(ctx, fullURL, tmpArchivePath); err != nil {

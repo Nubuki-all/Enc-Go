@@ -123,12 +123,12 @@ func DownloadFileWithProgress(ctx context.Context, url, destPath string) error {
 			progressbar.OptionThrottle(100),
 			progressbar.OptionFullWidth(),
 			progressbar.OptionSetTheme(progressbar.Theme{
-        Saucer:        "[green]=[reset]",
-        SaucerHead:    "[green]>[reset]",
-        SaucerPadding: " ",
-        BarStart:      "[",
-        BarEnd:        "]",
-    }),
+				Saucer:        "[green]=[reset]",
+				SaucerHead:    "[green]>[reset]",
+				SaucerPadding: " ",
+				BarStart:      "[",
+				BarEnd:        "]",
+			}),
 		)
 	}
 	// Wrap response body so reads update the bar
