@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"	
+	"path/filepath"
 
 	"github.com/schollz/progressbar/v3"
 
@@ -125,7 +125,7 @@ func DownloadFileWithProgress(ctx context.Context, url, destPath string) error {
 		)
 	}
 	// Wrap response body so reads update the bar
-	reader := progressbar.NewReader(req.Body, bar)//bar.(resp.Body)
+	reader := progressbar.NewReader(req.Body, bar) // bar.(resp.Body)
 
 	// Copy to temp file
 	if _, err := io.Copy(file, &reader); err != nil {
