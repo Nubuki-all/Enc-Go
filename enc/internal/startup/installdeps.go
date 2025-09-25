@@ -81,37 +81,19 @@ func InstallAria2(ctx context.Context, binDir string) (string, error) {
 	}
 
 	// Download zip to temp file
-	tmpZip, err := os.CreateTemp("", "aria2-*.zip")
+	tmpZip := &utils.TempFile{}
+	err = tmpZip.Create("-aria2.zip")
 	if err != nil {
 		return "", fmt.Errorf("create temp zip: %w", err)
 	}
-	tmpZipPath := tmpZip.Name()
+	tmpZipPath := tmpZip.Name
 	defer func() {
-		_ = tmpZip.Close()
-		_ = os.Remove(tmpZipPath)
+		_ = tmpZip.Remove()
 	}()
-
-	req2, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL, nil)
-	if err != nil {
-		return "", fmt.Errorf("build GET request: %w", err)
+	if err := utils.DownloadFileWithProgress(ctx, fullURL, tmpZipPath); err != nil {
+		return "", nil
 	}
-	resp2, err := http.DefaultClient.Do(req2)
-	if err != nil {
-		return "", fmt.Errorf("download failed: %w", err)
-	}
-	defer func() { _ = resp2.Body.Close() }()
-	if resp2.StatusCode < 200 || resp2.StatusCode >= 300 {
-		return "", fmt.Errorf("download failed: status %d", resp2.StatusCode)
-	}
-
-	_, err = io.Copy(tmpZip, resp2.Body)
-	if err != nil {
-		return "", fmt.Errorf("save zip: %w", err)
-	}
-	if err := tmpZip.Close(); err != nil {
-		return "", fmt.Errorf("close temp zip: %w", err)
-	}
-
+	logger.Info("Extracting binary from zip")
 	// Open zip and find the aria2c entry
 	zr, err := zip.OpenReader(tmpZipPath)
 	if err != nil {
@@ -257,19 +239,20 @@ func InstallFFmpeg(ctx context.Context, binDir string) (map[string]string, error
 	}
 
 	// Download archive to temp file
-	tmpArchive, err := os.CreateTemp("", "ffmpeg-archive-*")
+	tmpArchive := &utils.TempFile{}
+	err = tmpArchive.Create("-ffmpeg-archive")
 	if err != nil {
 		return nil, fmt.Errorf("create temp archive: %w", err)
 	}
-	tmpArchivePath := tmpArchive.Name()
+	tmpArchivePath := tmpArchive.Name
 	defer func() {
-		_ = tmpArchive.Close()
-		_ = os.Remove(tmpArchivePath)
+		_ = tmpArchive.Remove()	
 	}()
 
 	if err := utils.DownloadFileWithProgress(ctx, fullURL, tmpArchivePath); err != nil {
 		return nil, err
 	}
+	logger.Info("Extracting FFmpeg…")
 
 	// extract targets from archive
 	if isZip {
@@ -480,34 +463,17 @@ func InstallQbittorrentNox(ctx context.Context, binDir string) (string, error) {
 	}
 
 	// Download to temp file
-	tmpFile, err := os.CreateTemp("", "qb-nox-*")
+	tmpFile := &utils.TempFile{}
+	err = tmpFile.Create("qb-nox")
 	if err != nil {
 		return "", fmt.Errorf("create temp file: %w", err)
 	}
-	tmpPath := tmpFile.Name()
+	tmpPath := tmpFile.Name
 	defer func() {
-		_ = tmpFile.Close()
-		_ = os.Remove(tmpPath)
+		_ = tmpFile.Remove()
 	}()
-
-	req2, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL, nil)
-	if err != nil {
-		return "", fmt.Errorf("build GET request: %w", err)
-	}
-	resp2, err := http.DefaultClient.Do(req2)
-	if err != nil {
-		return "", fmt.Errorf("download failed: %w", err)
-	}
-	defer func() { _ = resp2.Body.Close() }()
-	if resp2.StatusCode < 200 || resp2.StatusCode >= 300 {
-		return "", fmt.Errorf("download failed: status %d", resp2.StatusCode)
-	}
-
-	if _, err := io.Copy(tmpFile, resp2.Body); err != nil {
-		return "", fmt.Errorf("save binary: %w", err)
-	}
-	if err := tmpFile.Close(); err != nil {
-		return "", fmt.Errorf("close temp file: %w", err)
+	if err := utils.DownloadFileWithProgress(ctx, fullURL, tmpPath); err != nil {
+		return "", err
 	}
 
 	// make executable
