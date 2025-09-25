@@ -6,15 +6,14 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
-	"runtime"
+	"path/filepath"	
 
 	"github.com/schollz/progressbar/v3"
 
 	"enc/internal/logger"
 )
 
-// downloadToFile downloads the given URL and writes to outPath.
+// DownloadToFile downloads the given URL and writes to outPath.
 // It creates directories as needed. Returns error on failure.
 func DownloadToFile(ctx context.Context, url string, outPath string) error {
 	if url == "" || outPath == "" {
@@ -126,10 +125,10 @@ func DownloadFileWithProgress(ctx context.Context, url, destPath string) error {
 		)
 	}
 	// Wrap response body so reads update the bar
-	reader := bar.NewProxyReader(resp.Body)
+	reader := progressbar.NewReader(req.Body, bar)//bar.(resp.Body)
 
 	// Copy to temp file
-	if _, err := io.Copy(file, reader); err != nil {
+	if _, err := io.Copy(file, &reader); err != nil {
 		return fmt.Errorf("write file: %w", err)
 	}
 
