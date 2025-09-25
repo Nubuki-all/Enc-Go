@@ -270,7 +270,6 @@ func InstallFFmpeg(ctx context.Context, binDir string) (map[string]string, error
 	if err := utils.DownloadFileWithProgress(ctx, fullURL, tmpArchivePath); err != nil {
 		return nil, err
 	}
-	
 
 	// extract targets from archive
 	if isZip {

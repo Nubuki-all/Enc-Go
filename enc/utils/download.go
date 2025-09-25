@@ -93,7 +93,7 @@ func DownloadFileWithProgress(ctx context.Context, url, destPath string) error {
 		return fmt.Errorf("ensure dir: %w", err)
 	}
 
-	file, err := os.OpenFile(destPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(destPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
 	if err != nil {
 		return fmt.Errorf("create file: %w", err)
 	}
@@ -137,8 +137,6 @@ func DownloadFileWithProgress(ctx context.Context, url, destPath string) error {
 	if err := file.Close(); err != nil {
 		return fmt.Errorf("close file: %w", err)
 	}
-
-	
 
 	return nil
 }
