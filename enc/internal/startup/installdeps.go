@@ -3,7 +3,7 @@ package startup
 import (
 	"archive/tar"
 	"archive/zip"
-	"bufio"
+	//"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -350,78 +350,90 @@ func extractFromZip(zipPath, binDir string, targets []string) error {
 }
 
 // extractFromTarXz extracts files whose base name equals any of targets and with '/bin/' in path.
+// extractFromTarXzSimple extracts matching entries from a tar.xz archive in a single pass.
+// It reads the archive once, copies matching files out to temp files inside binDir and atomicMoves them.
 func extractFromTarXz(tarXzPath, binDir string, targets []string) error {
-    f, err := os.Open(tarXzPath)
-    if err != nil {
-        return err
-    }
-    defer f.Close()
+	// ensure dest dir exists
+	if err := os.MkdirAll(binDir, 0o755); err != nil {
+		return fmt.Errorf("mkdir binDir: %w", err)
+	}
 
-    // Use buffered reader
-    xzr, err := xz.NewReader(f)
-    if err != nil {
-        return fmt.Errorf("xz reader: %w", err)
-    }
-    bufReader := bufio.NewReaderSize(xzr, 64*1024)
-    
-    tr := tar.NewReader(bufReader)
-    targetSet := make(map[string]struct{})
-    for _, t := range targets {
-        targetSet[t] = struct{}{}
-    }
+	targetSet := make(map[string]struct{}, len(targets))
+	for _, t := range targets {
+		targetSet[t] = struct{}{}
+	}
 
-    for {
-        hdr, err := tr.Next()
-        if err == io.EOF {
-            break
-        }
-        if err != nil {
-            return err
-        }
+	f, err := os.Open(tarXzPath)
+	if err != nil {
+		return fmt.Errorf("open archive: %w", err)
+	}
+	defer f.Close()
 
-        bn := filepath.Base(hdr.Name)
-        if _, want := targetSet[bn]; !want {
-            continue
-        }
-        if !strings.Contains(hdr.Name, "/bin/") {
-            continue
-        }
+	xzr, err := xz.NewReader(f)
+	if err != nil {
+		return fmt.Errorf("xz reader: %w", err)
+	}
+	tr := tar.NewReader(xzr)
 
-        dest := filepath.Join(binDir, bn)
-        tmpPath := dest + ".tmp"
-        
-        // Create with appropriate flags for atomicity
-        tmpFile, err := os.OpenFile(tmpPath, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0755)
-        if err != nil {
-            return err
-        }
+	buf := make([]byte, 1<<20) // 1 MiB buffer
 
-        // Use buffer for writing too
-        bufWriter := bufio.NewWriterSize(tmpFile, 64*1024)
-        _, err = io.Copy(bufWriter, tr)
-        
-        // Flush buffer before checking errors
-        if flushErr := bufWriter.Flush(); flushErr != nil && err == nil {
-            err = flushErr
-        }
-        if closeErr := tmpFile.Close(); closeErr != nil && err == nil {
-            err = closeErr
-        }
-        
-        if err != nil {
-            _ = os.Remove(tmpPath)
-            return err
-        }
+	for {
+		hdr, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return fmt.Errorf("read tar entry: %w", err)
+		}
+		bn := filepath.Base(hdr.Name)
+		if _, want := targetSet[bn]; !want {
+			// skip content efficiently
+			if hdr.Size > 0 {
+				if _, err := io.CopyBuffer(io.Discard, tr, buf); err != nil {
+					return fmt.Errorf("skip entry %s: %w", hdr.Name, err)
+				}
+			}
+			continue
+		}
+		if !strings.Contains(hdr.Name, "/bin/") {
+			if hdr.Size > 0 {
+				if _, err := io.CopyBuffer(io.Discard, tr, buf); err != nil {
+					return fmt.Errorf("skip non-bin %s: %w", hdr.Name, err)
+				}
+			}
+			continue
+		}
 
-        // Atomic rename
-        if err := os.Rename(tmpPath, dest); err != nil {
-            _ = os.Remove(tmpPath)
-            return err
-        }
-    }
+		// write tmp in binDir to allow rename
+		tmpFile, err := os.CreateTemp(binDir, "extract-*")
+		if err != nil {
+			return fmt.Errorf("create tmp file: %w", err)
+		}
+		tmpPath := tmpFile.Name()
 
-    return nil
+		if _, err := io.CopyBuffer(tmpFile, tr, buf); err != nil {
+			_ = tmpFile.Close()
+			_ = os.Remove(tmpPath)
+			return fmt.Errorf("copy entry %s: %w", hdr.Name, err)
+		}
+		if err := tmpFile.Close(); err != nil {
+			_ = os.Remove(tmpPath)
+			return fmt.Errorf("close tmp: %w", err)
+		}
+		if runtime.GOOS != "windows" {
+			_ = os.Chmod(tmpPath, 0o755)
+		}
+
+		dest := filepath.Join(binDir, bn)
+		if err := atomicMove(tmpPath, dest); err != nil {
+			_ = os.Remove(tmpPath)
+			return fmt.Errorf("atomic move %s -> %s: %w", tmpPath, dest, err)
+		}
+	}
+
+	return nil
 }
+
 func _extractFromTarXz(tarXzPath, binDir string, targets []string) error {
 	f, err := os.Open(tarXzPath)
 	if err != nil {
