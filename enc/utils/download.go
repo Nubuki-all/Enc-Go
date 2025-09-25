@@ -117,7 +117,6 @@ func DownloadFileWithProgress(ctx context.Context, url, destPath string) error {
 				BarStart:      "[",
 				BarEnd:        "]",
 			}),
-
 		)
 	} else {
 		// unknown length - create indeterminate bar
