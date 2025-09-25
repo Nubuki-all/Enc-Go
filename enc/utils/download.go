@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 
 	"github.com/schollz/progressbar/v3"
+	"github.com/k0kubun/go-ansi"
 
 	"enc/internal/logger"
 )
@@ -105,11 +106,13 @@ func DownloadFileWithProgress(ctx context.Context, url, destPath string) error {
 			total,
 			progressbar.OptionSetDescription(filepath.Base(destPath)),
 			progressbar.OptionSetWidth(40),
+			progressbar.OptionSetWriter(ansi.NewAnsiStdout()), //you should install "github.com/k0kubun/go-ansi"
+			progressbar.OptionEnableColorCodes(true),
 			progressbar.OptionSetWriter(os.Stdout),
 			progressbar.OptionShowBytes(true),
-			progressbar.OptionSetRenderBlankState(true),
-			progressbar.OptionThrottle(100),
-			progressbar.OptionFullWidth(),
+			//progressbar.OptionSetRenderBlankState(true),
+			//progressbar.OptionThrottle(100),
+			//progressbar.OptionFullWidth(),
 			progressbar.OptionSetTheme(progressbar.Theme{
 				Saucer:        "[green]=[reset]",
 				SaucerHead:    "[green]>[reset]",
@@ -117,6 +120,7 @@ func DownloadFileWithProgress(ctx context.Context, url, destPath string) error {
 				BarStart:      "[",
 				BarEnd:        "]",
 			}),
+
 		)
 	} else {
 		// unknown length - create indeterminate bar
