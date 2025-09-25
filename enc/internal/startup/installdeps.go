@@ -263,7 +263,6 @@ func InstallFFmpeg(ctx context.Context, binDir string) (map[string]string, error
 	s.Color("yellow")
 	s.Start()
 	defer s.Stop()
-	
 
 	// extract targets from archive
 	if isZip {

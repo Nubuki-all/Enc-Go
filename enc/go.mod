@@ -7,6 +7,7 @@ toolchain go1.24.6
 require (
 	github.com/5rahim/tanuki v0.1.6
 	github.com/autobrr/go-qbittorrent v1.14.0
+	github.com/briandowns/spinner v1.23.2
 	github.com/celestix/gotgproto v1.0.0-beta21.0.20250822161242-dc548ccbc755
 	github.com/celestix/telegraph-go/v2 v2.0.4
 	github.com/dustin/go-humanize v1.0.1
