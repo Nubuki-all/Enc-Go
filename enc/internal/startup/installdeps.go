@@ -3,6 +3,7 @@ package startup
 import (
 	"archive/tar"
 	"archive/zip"
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
@@ -350,6 +351,78 @@ func extractFromZip(zipPath, binDir string, targets []string) error {
 
 // extractFromTarXz extracts files whose base name equals any of targets and with '/bin/' in path.
 func extractFromTarXz(tarXzPath, binDir string, targets []string) error {
+    f, err := os.Open(tarXzPath)
+    if err != nil {
+        return err
+    }
+    defer f.Close()
+
+    // Use buffered reader
+    xzr, err := xz.NewReader(f)
+    if err != nil {
+        return fmt.Errorf("xz reader: %w", err)
+    }
+    bufReader := bufio.NewReaderSize(xzr, 64*1024)
+    
+    tr := tar.NewReader(bufReader)
+    targetSet := make(map[string]struct{})
+    for _, t := range targets {
+        targetSet[t] = struct{}{}
+    }
+
+    for {
+        hdr, err := tr.Next()
+        if err == io.EOF {
+            break
+        }
+        if err != nil {
+            return err
+        }
+
+        bn := filepath.Base(hdr.Name)
+        if _, want := targetSet[bn]; !want {
+            continue
+        }
+        if !strings.Contains(hdr.Name, "/bin/") {
+            continue
+        }
+
+        dest := filepath.Join(binDir, bn)
+        tmpPath := dest + ".tmp"
+        
+        // Create with appropriate flags for atomicity
+        tmpFile, err := os.OpenFile(tmpPath, os.O_CREATE|os.O_WRONLY|os.O_EXCL, 0755)
+        if err != nil {
+            return err
+        }
+
+        // Use buffer for writing too
+        bufWriter := bufio.NewWriterSize(tmpFile, 64*1024)
+        _, err = io.Copy(bufWriter, tr)
+        
+        // Flush buffer before checking errors
+        if flushErr := bufWriter.Flush(); flushErr != nil && err == nil {
+            err = flushErr
+        }
+        if closeErr := tmpFile.Close(); closeErr != nil && err == nil {
+            err = closeErr
+        }
+        
+        if err != nil {
+            _ = os.Remove(tmpPath)
+            return err
+        }
+
+        // Atomic rename
+        if err := os.Rename(tmpPath, dest); err != nil {
+            _ = os.Remove(tmpPath)
+            return err
+        }
+    }
+
+    return nil
+}
+func _extractFromTarXz(tarXzPath, binDir string, targets []string) error {
 	f, err := os.Open(tarXzPath)
 	if err != nil {
 		return err
