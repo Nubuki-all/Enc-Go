@@ -12,7 +12,9 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/ulikunitz/xz"
 
 	"enc/config"
@@ -93,7 +95,11 @@ func InstallAria2(ctx context.Context, binDir string) (string, error) {
 	if err := utils.DownloadFileWithProgress(ctx, fullURL, tmpZipPath); err != nil {
 		return "", nil
 	}
-	logger.Info("Extracting binary from zip")
+	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+	s.Suffix = " Extracting binary from zip..."
+	s.Color("yellow")
+	s.Start()
+	defer s.Stop()
 	// Open zip and find the aria2c entry
 	zr, err := zip.OpenReader(tmpZipPath)
 	if err != nil {
@@ -252,7 +258,12 @@ func InstallFFmpeg(ctx context.Context, binDir string) (map[string]string, error
 	if err := utils.DownloadFileWithProgress(ctx, fullURL, tmpArchivePath); err != nil {
 		return nil, err
 	}
-	logger.Info("Extracting FFmpeg…")
+	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+	s.Suffix = " Extracting ffmpeg binary from archive..."
+	s.Color("yellow")
+	s.Start()
+	defer s.Stop()
+	
 
 	// extract targets from archive
 	if isZip {
@@ -464,7 +475,7 @@ func InstallQbittorrentNox(ctx context.Context, binDir string) (string, error) {
 
 	// Download to temp file
 	tmpFile := &utils.TempFile{}
-	err = tmpFile.Create("qb-nox")
+	err = tmpFile.Create("-qbittorrent-nox")
 	if err != nil {
 		return "", fmt.Errorf("create temp file: %w", err)
 	}
@@ -475,6 +486,12 @@ func InstallQbittorrentNox(ctx context.Context, binDir string) (string, error) {
 	if err := utils.DownloadFileWithProgress(ctx, fullURL, tmpPath); err != nil {
 		return "", err
 	}
+
+	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+	s.Suffix = " Finishing up..."
+	s.Color("yellow")
+	s.Start()
+	defer s.Stop()
 
 	// make executable
 	if err := os.Chmod(tmpPath, 0o755); err != nil {

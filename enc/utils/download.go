@@ -108,7 +108,6 @@ func DownloadFileWithProgress(ctx context.Context, url, destPath string) error {
 			progressbar.OptionSetWidth(40),
 			progressbar.OptionSetWriter(ansi.NewAnsiStdout()), // you should install "github.com/k0kubun/go-ansi"
 			progressbar.OptionEnableColorCodes(true),
-			progressbar.OptionSetWriter(os.Stdout),
 			progressbar.OptionShowBytes(true),
 			// progressbar.OptionSetRenderBlankState(true),
 			// progressbar.OptionThrottle(100),
@@ -146,6 +145,6 @@ func DownloadFileWithProgress(ctx context.Context, url, destPath string) error {
 	if err := file.Close(); err != nil {
 		return fmt.Errorf("close file: %w", err)
 	}
-
+	bar.Finish()
 	return nil
 }
