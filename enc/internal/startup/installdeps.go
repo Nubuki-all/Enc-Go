@@ -17,6 +17,7 @@ import (
 
 	"enc/config"
 	"enc/internal/logger"
+	"enc/utils"
 )
 
 // InstallAria2 downloads the correct aria2 static zip for the current platform,
@@ -266,25 +267,10 @@ func InstallFFmpeg(ctx context.Context, binDir string) (map[string]string, error
 		_ = os.Remove(tmpArchivePath)
 	}()
 
-	req2, err := http.NewRequestWithContext(ctx, http.MethodGet, fullURL, nil)
-	if err != nil {
-		return nil, fmt.Errorf("build GET request: %w", err)
+	if err := utils.DownloadFileWithProgress(ctx, fullURL, tmpArchivePath); err != nil {
+		return nil, err
 	}
-	resp2, err := http.DefaultClient.Do(req2)
-	if err != nil {
-		return nil, fmt.Errorf("download failed: %w", err)
-	}
-	defer resp2.Body.Close()
-	if resp2.StatusCode < 200 || resp2.StatusCode >= 300 {
-		return nil, fmt.Errorf("download failed: status %d", resp2.StatusCode)
-	}
-
-	if _, err := io.Copy(tmpArchive, resp2.Body); err != nil {
-		return nil, fmt.Errorf("save archive: %w", err)
-	}
-	if err := tmpArchive.Close(); err != nil {
-		return nil, fmt.Errorf("close temp archive: %w", err)
-	}
+	
 
 	// extract targets from archive
 	if isZip {
