@@ -110,6 +110,14 @@ func DownloadFileWithProgress(ctx context.Context, url, destPath string) error {
 			progressbar.OptionSetRenderBlankState(true),
 			progressbar.OptionThrottle(100),
 			progressbar.OptionFullWidth(),
+			progressbar.OptionSetTheme(progressbar.Theme{
+				Saucer:        "[green]=[reset]",
+				SaucerHead:    "[green]>[reset]",
+				SaucerPadding: " ",
+				BarStart:      "[",
+				BarEnd:        "]",
+			}),
+
 		)
 	} else {
 		// unknown length - create indeterminate bar
@@ -122,13 +130,6 @@ func DownloadFileWithProgress(ctx context.Context, url, destPath string) error {
 			progressbar.OptionSpinnerType(14),
 			progressbar.OptionThrottle(100),
 			progressbar.OptionFullWidth(),
-			progressbar.OptionSetTheme(progressbar.Theme{
-				Saucer:        "[green]=[reset]",
-				SaucerHead:    "[green]>[reset]",
-				SaucerPadding: " ",
-				BarStart:      "[",
-				BarEnd:        "]",
-			}),
 		)
 	}
 	// Wrap response body so reads update the bar
