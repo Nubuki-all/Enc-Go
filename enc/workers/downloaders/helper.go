@@ -435,9 +435,29 @@ func GetYdlInfo(uri string) *utils.DLInfo {
 	if err != nil {
 		dlInfo.Error = err
 		return dlInfo
+	}	
+
+	if len(infos) == 0 {
+		dlInfo.Error = fmt.Errorf("no videos available to download")
+		return dlInfo
 	}
-	for _, file := range infos {
-		name := file.Title
+	info := infos[0]
+	if info.Title == nil {
+		dlInfo.Error = fmt.Errorf("extractor failed to fetch any videos")
+		return dlInfo
+	}
+	if *info.Title == "" {
+		n := "Unknown Title"
+		info.Title = &n
+	}
+	dlInfo.Name = *info.Title
+	if len(info.Entries) == 0 {
+		dlInfo.Files = append(dlInfo.Files, *info.Title)
+		dlInfo.Count = 1
+		return dlInfo
+	}
+	for _, vid := range info.Entries {
+		name := vid.Title
 		if name == nil {
 			continue
 		}
@@ -448,32 +468,6 @@ func GetYdlInfo(uri string) *utils.DLInfo {
 		dlInfo.Files = append(dlInfo.Files, *name)
 	}
 	dlInfo.Count = len(dlInfo.Files)
-	switch dlInfo.Count {
-	case 1:
-		dlInfo.Name = dlInfo.Files[0]
-	case 0:
-		dlInfo.Error = fmt.Errorf("no videos available to download")
-	default:
-		dlInfo.Name = getPlaylistName(infos[0])
-	}
 	return dlInfo
 }
 
-func getPlaylistName(ExInfo *ytdlp.ExtractedInfo) (name string) {
-	if ExInfo.Series != nil {
-		if name = *ExInfo.Series; name != "" {
-			return name
-		}
-	}
-	if ExInfo.Playlist != nil {
-		if name = *ExInfo.Playlist; name != "" {
-			return name
-		}
-	}
-	if ExInfo.Title != nil {
-		if name = *ExInfo.Title; name != "" {
-			return name
-		}
-	}
-	return "Unknown Playlist"
-}
