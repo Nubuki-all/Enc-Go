@@ -435,7 +435,7 @@ func GetYdlInfo(uri string) *utils.DLInfo {
 	if err != nil {
 		dlInfo.Error = err
 		return dlInfo
-	}	
+	}
 
 	if len(infos) == 0 {
 		dlInfo.Error = fmt.Errorf("no videos available to download")
@@ -470,4 +470,3 @@ func GetYdlInfo(uri string) *utils.DLInfo {
 	dlInfo.Count = len(dlInfo.Files)
 	return dlInfo
 }
-
