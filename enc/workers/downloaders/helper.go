@@ -414,11 +414,11 @@ func GetMegaDlInfo(uri string) *utils.DLInfo {
 
 func GetYdlInfo(uri string) *utils.DLInfo {
 	dlInfo := &utils.DLInfo{}
-	dl := ytdlp.New().Cookies(".cookies.txt").DumpJSON()
+	dl := ytdlp.New().Cookies(".cookies.txt").PrintJSON() //DumpJSON()
 	var ctx context.Context
 	var cancel context.CancelFunc
 
-	timeout := config.Rconf.QBitTimeout * time.Second
+	timeout := config.Rconf.YtdlpTimeout * time.Second
 	if timeout == 0 {
 		ctx, cancel = context.Background(), func() {}
 	} else {

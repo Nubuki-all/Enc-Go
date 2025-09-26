@@ -84,7 +84,7 @@ func (dl *TgDownload) Start() error {
 				// Otherwise, if enough time passed since lastCall -> immediate run.
 				if lastCall.IsZero() || now.Sub(lastCall) >= interval {
 					// Call in goroutine so consumer stays responsive.
-					go dl.ProgressCallback(ev.start, ev.done, ev.total)
+					dl.ProgressCallback(ev.start, ev.done, ev.total)
 					lastCall = now
 				} else {
 					// Store latest event to be executed on next tick (latest wins).
@@ -95,7 +95,7 @@ func (dl *TgDownload) Start() error {
 				// On each tick, if we have a stored event, call it now.
 				if stored != nil {
 					ev := *stored
-					go dl.ProgressCallback(ev.start, ev.done, ev.total)
+					dl.ProgressCallback(ev.start, ev.done, ev.total)
 					lastCall = time.Now()
 					stored = nil
 				}

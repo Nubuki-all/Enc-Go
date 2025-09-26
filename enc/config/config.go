@@ -90,6 +90,8 @@ type Config struct {
 	UseCaption            bool
 	UVS                   bool
 	Workers               int
+	YDLTimeout            int
+	YtdlpTimeout          int
 }
 
 // RuntimeConfig holds runtime state
@@ -108,6 +110,8 @@ type RuntimeConfig struct {
 	TgpAuthor             string
 	TgpAuthorUrl          string
 	TgUlTimeout           time.Duration
+	YDLTimeout            time.Duration
+	YtdlpTimeout          time.Duration
 }
 
 var (
@@ -271,6 +275,8 @@ func LoadConfig() error {
 		UseAniList:            viper.GetBool("USE_ANILIST"),
 		UseCaption:            viper.GetBool("USE_CAPTION"),
 		UVS:                   viper.GetBool("UPLOAD_VIDEO_AS_SPOILER"),
+		YDLTimeout:            viper.GetInt("YT_DL_TIMEOUT"),
+		YtdlpTimeout:          viper.GetInt("YTDLP_TIMEOUT")
 	}
 
 	Rconf = &RuntimeConfig{}
@@ -311,6 +317,8 @@ func LoadConfig() error {
 	Rconf.QBitTimeout = time.Duration(Conf.QBitTimeout)
 	Rconf.QDLTimeout = time.Duration(Conf.QDLTimeout)
 	Rconf.TgUlTimeout = time.Duration(Conf.TgUlTimeout)
+	Rconf.YtdlpTimeout = time.Duration(Conf.YtdlpTimeout)
+	Rconf.YDLTimeout = time.Duration(Conf.YDLTimeout)
 	return nil
 }
 
