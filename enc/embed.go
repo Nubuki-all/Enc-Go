@@ -40,6 +40,9 @@ func extract() {
 		if _, err := startup.InstallQbittorrentNox(ctx, p); err != nil {
 			logger.Error(err)
 		}
+		if _, err := startup.InstallYtdlp(ctx, p); err != nil {
+			logger.Error(err)
+		}
 		if _, err := startup.InstallFFmpeg(ctx, p); err != nil {
 			logger.Error(err)
 		}

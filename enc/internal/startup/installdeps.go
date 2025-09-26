@@ -434,7 +434,7 @@ func extractFromTarXz(tarXzPath, binDir string, targets []string) error {
 	return nil
 }
 
-func _extractFromTarXz(tarXzPath, binDir string, targets []string) error {
+/*func _extractFromTarXz(tarXzPath, binDir string, targets []string) error {
 	f, err := os.Open(tarXzPath)
 	if err != nil {
 		return err
@@ -498,7 +498,7 @@ func _extractFromTarXz(tarXzPath, binDir string, targets []string) error {
 	}
 
 	return nil
-}
+}*/
 
 // InstallQbittorrentNox downloads the appropriate static qbittorrent-nox binary for
 // the current platform and installs it into binDir (creating binDir if needed).
@@ -590,6 +590,101 @@ func InstallQbittorrentNox(ctx context.Context, binDir string) (string, error) {
 	return destPath, nil
 }
 
+// InstallYtdlp downloads the appropriate static qbittorrent-nox binary for
+// the current platform and installs it into binDir (creating binDir if needed).
+// If the target binary already exists (non-empty) this is a no-op.
+func InstallYtdlp(ctx context.Context, binDir string) (string, error) {
+	if config.Conf.NoExternalDL {
+		return "", nil
+	}
+	baseURL := "https://github.com/yt-dlp/yt-dlp/releases/download/2025.09.23/"
+
+	goos := runtime.GOOS
+	goarch := runtime.GOARCH
+
+	var fileName string
+	targetName := "yt-dlp"
+
+	// map platform -> filename (as provided)
+	switch {
+	case goos == "linux" && goarch == "amd64":
+		fileName = "yt-dlp_linux"
+	case goos == "linux" && goarch == "arm64":
+		fileName = "yt-dlp_linux_aarch64"
+	case goos == "windows" && goarch == "arm64":
+		fileName = "yt-dlp_arm64.exe"
+	case goos == "windows" && goarch == "amd64":
+		fileName = "yt-dlp_x86.exe"
+
+	default:
+		return "", fmt.Errorf("install yt-dlp: platform not supported: os=%s arch=%s", goos, goarch)
+	}
+	if goos == "windows" {
+		targetName += ".exe"
+	}
+
+	destPath := filepath.Join(binDir, targetName)
+
+	// If file already exists and seems valid, do nothing.
+	if fi, err := os.Stat(destPath); err == nil {
+		if !fi.IsDir() && fi.Size() > 0 {
+			return destPath, nil
+		}
+	}
+
+	// Ensure binDir exists
+	if err := os.MkdirAll(binDir, 0o755); err != nil {
+		return "", fmt.Errorf("create bin dir: %w", err)
+	}
+
+	fullURL := baseURL + fileName
+
+	// HEAD to ensure remote exists
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead, fullURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("build HEAD request: %w", err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("remote HEAD failed: %w", err)
+	}
+	_ = resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
+		return "", fmt.Errorf("remote file not available: %s (status %d)", fullURL, resp.StatusCode)
+	}
+
+	// Download to temp file
+	tmpFile := &utils.TempFile{}
+	err = tmpFile.Create("-"+fileName)
+	if err != nil {
+		return "", fmt.Errorf("create temp file: %w", err)
+	}
+	tmpPath := tmpFile.Name
+	defer func() {
+		_ = tmpFile.Remove()
+	}()
+	if err := utils.DownloadFileWithProgress(ctx, fullURL, tmpPath); err != nil {
+		return "", err
+	}
+
+	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+	s.Suffix = " Finishing up..."
+	s.Color("yellow")
+	s.Start()
+	defer s.Stop()
+
+	// make executable
+	if err := os.Chmod(tmpPath, 0o755); err != nil {
+		return "", fmt.Errorf("chmod temp file: %w", err)
+	}
+
+	// atomic move into place (reuses atomicMove helper)
+	if err := atomicMove(tmpPath, destPath); err != nil {
+		return "", fmt.Errorf("install binary: %w", err)
+	}
+
+	return destPath, nil
+}
 // atomicMove tries to rename src -> dst. If rename fails (cross-device), it falls back to copy+remove.
 func atomicMove(src, dst string) error {
 	// ensure target directory exists
