@@ -16,6 +16,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gotd/td/telegram/downloader"
 	"github.com/gotd/td/tg"
+	"github.com/lrstanley/go-ytdlp"
 	"github.com/siku2/arigo"
 
 	"enc/config"
@@ -409,4 +410,69 @@ func GetMegaDlInfo(uri string) *utils.DLInfo {
 		dlInfo.Name = files[0].Parent
 	}
 	return dlInfo
+}
+
+func GetYdlInfo(uri string) *utils.DLInfo {
+	dlInfo := &utils.DLInfo{}
+	dl := ytdlp.New().DumpJSON()
+	var ctx context.Context
+	var cancel context.CancelFunc
+
+	timeout := config.Rconf.QBitTimeout * time.Second
+	if timeout == 0 {
+		ctx, cancel = context.Background(), func() {}
+	} else {
+		ctx, cancel = context.WithTimeout(context.Background(), timeout)
+	}
+	defer cancel()
+
+	res, err := dl.Run(ctx, uri)
+	if err != nil {
+		dlInfo.Error = err
+		return dlInfo
+	}
+	infos, err := res.GetExtractedInfo()
+	if err != nil {
+		dlInfo.Error = err
+		return dlInfo
+	}
+	for _, file := range infos {
+		name := file.Title
+		if name == nil {
+			continue
+		}
+		if *name == "" {
+			n := "Unknown Title"; name = &n
+		}
+		dlInfo.Files = append(dlInfo.Files, *name)
+	}
+	dlInfo.Count = len(dlInfo.Files)
+	switch dlInfo.Count {
+	case 1:
+		dlInfo.Name = dlInfo.Files[0]
+	case 0: 
+		dlInfo.Error = fmt.Errorf("no videos available to download")
+	default:
+		dlInfo.Name = getPlaylistName(infos[0])
+	}
+	return dlInfo
+}
+
+func getPlaylistName(ExInfo *ytdlp.ExtractedInfo) (name string) {
+	if ExInfo.Series != nil {
+		if name = *ExInfo.Series; name != "" {
+			return
+		}
+	}
+	if ExInfo.Playlist != nil {
+		if name = *ExInfo.Playlist; name != "" {
+			return
+		}
+	}
+	if ExInfo.Title != nil {
+		if name = *ExInfo.Title; name != ""{
+			return
+		}
+	}
+	return "Unknown Playlist"
 }
