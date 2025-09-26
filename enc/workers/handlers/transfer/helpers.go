@@ -53,3 +53,40 @@ func ListFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	}
 	return nil
 }
+
+func ListYtdlFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+	helpMsg := "List videos yt-dlp\n" +
+		"Arguments:\n" +
+		"   link to video (Required)"
+	if utils.SendHelp(args) {
+		_, _ = msg.Reply("<pre>"+helpMsg+"</pre>",
+			&tele.ReplyOptions{HTMLParseMode: true},
+		)
+		return nil
+	}
+	if !utils.IsURL(args) && !utils.IsMagnet(args) {
+		_, err := msg.ReplyText("Please pass a valid link as argument.")
+		return err
+	}
+	dlInfo := downloaders.GetYdlInfo(args)
+	if dlInfo.Error != nil {
+		_, _ = msg.Reply(
+			fmt.Sprintf("<pre>%v</pre>", dlInfo.Error),
+			&tele.ReplyOptions{HTMLParseMode: true},
+		)
+		return nil
+	}
+	var sb strings.Builder
+	for i, item := range dlInfo.Files {
+		fmt.Fprintf(&sb, "%d. `%s`\n", i, item)
+	}
+	fmt.Fprintf(&sb, "\n**Total files:** %d", dlInfo.Count)
+	text := sb.String()
+	parts := utils.SplitText(text, "\n", false)
+	prevMsg := msg
+	for _, part := range parts {
+		prevMsg, _ = prevMsg.ReplyText(part)
+		time.Sleep(1 * time.Second)
+	}
+	return nil
+}
