@@ -416,7 +416,7 @@ func GetMegaDlInfo(uri string) *utils.DLInfo {
 
 func GetYdlInfo(uri string) *utils.DLInfo {
 	dlInfo := &utils.DLInfo{}
-	dl := ytdlp.New().Cookies(".cookies.txt").DumpSingleJSON().Print("title") //.DumpJSON()
+	dl := ytdlp.New().Cookies(".cookies.txt").DumpSingleJSON().FlatPlaylist() //.DumpJSON()
 	var ctx context.Context
 	var cancel context.CancelFunc
 
