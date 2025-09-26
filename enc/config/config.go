@@ -276,7 +276,7 @@ func LoadConfig() error {
 		UseCaption:            viper.GetBool("USE_CAPTION"),
 		UVS:                   viper.GetBool("UPLOAD_VIDEO_AS_SPOILER"),
 		YDLTimeout:            viper.GetInt("YT_DL_TIMEOUT"),
-		YtdlpTimeout:          viper.GetInt("YTDLP_TIMEOUT")
+		YtdlpTimeout:          viper.GetInt("YTDLP_TIMEOUT"),
 	}
 
 	Rconf = &RuntimeConfig{}
