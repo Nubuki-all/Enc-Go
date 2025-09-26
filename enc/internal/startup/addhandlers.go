@@ -88,8 +88,8 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		"list":     EventHandlerWithArgs(transfer.ListFiles),
 		"listv":    EventHandlerWithArgs(transfer.ListYtdlFiles),
 
-		"upload":   EventHandlerWithArgs(transfer.Upload),
-		"ul":       EventHandlerWithArgs(transfer.Upload),
+		"upload": EventHandlerWithArgs(transfer.Upload),
+		"ul":     EventHandlerWithArgs(transfer.Upload),
 	}
 
 	for cmd, handler := range cmdHandlers {
