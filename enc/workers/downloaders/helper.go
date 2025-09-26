@@ -21,6 +21,8 @@ import (
 
 	"enc/config"
 	"enc/internal/bot"
+	"enc/internal/logger"
+
 	// "enc/internal/logger"
 	"enc/utils"
 )
@@ -441,6 +443,7 @@ func GetYdlInfo(uri string) *utils.DLInfo {
 		dlInfo.Error = fmt.Errorf("no videos available to download")
 		return dlInfo
 	}
+	logger.Info(len(infos))
 	info := infos[0]
 	if info.Title == nil {
 		dlInfo.Error = fmt.Errorf("extractor failed to fetch any videos")
@@ -452,6 +455,7 @@ func GetYdlInfo(uri string) *utils.DLInfo {
 	}
 	dlInfo.Name = *info.Title
 	if len(info.Entries) == 0 {
+		logger.Info("single file…")
 		dlInfo.Files = append(dlInfo.Files, *info.Title)
 		dlInfo.Count = 1
 		return dlInfo
