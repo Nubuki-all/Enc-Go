@@ -655,7 +655,7 @@ func InstallYtdlp(ctx context.Context, binDir string) (string, error) {
 
 	// Download to temp file
 	tmpFile := &utils.TempFile{}
-	err = tmpFile.Create("-"+fileName)
+	err = tmpFile.Create("-" + fileName)
 	if err != nil {
 		return "", fmt.Errorf("create temp file: %w", err)
 	}
@@ -685,6 +685,7 @@ func InstallYtdlp(ctx context.Context, binDir string) (string, error) {
 
 	return destPath, nil
 }
+
 // atomicMove tries to rename src -> dst. If rename fails (cross-device), it falls back to copy+remove.
 func atomicMove(src, dst string) error {
 	// ensure target directory exists
