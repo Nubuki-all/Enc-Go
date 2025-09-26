@@ -16,6 +16,7 @@ require (
 	github.com/gotd/contrib v0.21.1
 	github.com/gotd/td v0.131.0
 	github.com/k0kubun/go-ansi v0.0.0-20180517002512-3bf9e2903213
+	github.com/lrstanley/go-ytdlp v1.2.4
 	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/schollz/progressbar/v3 v3.18.0
@@ -46,12 +47,14 @@ replace github.com/cenkalti/rpc2 => github.com/Nubuki-all/rpc2 v0.0.0-2025090315
 require (
 	github.com/AnimeKaizoku/cacher v1.0.3 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
+	github.com/ProtonMail/go-crypto v1.3.0 // indirect
 	github.com/PuerkitoBio/goquery v1.10.3 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/avast/retry-go v3.0.0+incompatible // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cenkalti/hub v1.0.2 // indirect
 	github.com/cenkalti/rpc2 v1.0.4 // indirect
+	github.com/cloudflare/circl v1.6.1 // indirect
 	github.com/coder/websocket v1.8.14 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
 	github.com/fatih/color v1.18.0 // indirect
