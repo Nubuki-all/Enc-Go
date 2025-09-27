@@ -6,8 +6,8 @@ import (
 	"math"
 	"os"
 	"path/filepath"
-	"strings"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/lrstanley/go-ytdlp"
