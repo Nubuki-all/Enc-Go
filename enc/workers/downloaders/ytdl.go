@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"strconv"
 	"time"
 
 	"github.com/lrstanley/go-ytdlp"
@@ -73,7 +74,7 @@ func (dl *YtdlDownload) Start() (err error) {
 		return err
 	}
 	dl.name = dlInfo.Name
-	dl.basePath = filepath.Join(dl.Path, dlInfo.Name)
+	dl.basePath = filepath.Join(dl.dir, dlInfo.Name)
 	dl.Path = dl.basePath
 	ytdl := ytdlp.New().Cookies(".cookies.txt").SubLangs("all").EmbedSubs().EmbedThumbnail().
 		FFmpegLocation(p).
@@ -81,8 +82,15 @@ func (dl *YtdlDownload) Start() (err error) {
 		EmbedChapters().
 		Quiet().
 		Output(dl.Path + "%(title)s.mkv")
-	if dlInfo.Count > 0 && dl.selected != "" {
-		ytdl = ytdl.PlaylistItems(dl.selected)
+	if dlInfo.Count > 0 {
+		if dl.selected != "" {
+			s, _ := strconv.Atoi(dl.selected)
+			if s == 0 || s > len(files) {
+				return fmt.Errorf("ytdl: file_id not found")
+			}
+			ytdl = ytdl.PlaylistItems(dl.selected)
+			dl.Path = filepath.Join(dl.Path, dl.Files[s-1]+".mkv")
+		}
 	} else {
 		dl.Path = filepath.Join(dl.Path, dlInfo.Name+".mkv")
 	}
