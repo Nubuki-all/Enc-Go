@@ -82,7 +82,7 @@ func DownloadFileWithProgress(ctx context.Context, url, destPath string) error {
 	if err != nil {
 		return fmt.Errorf("download request: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close()}()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("download failed: status %s", resp.Status)
@@ -145,6 +145,6 @@ func DownloadFileWithProgress(ctx context.Context, url, destPath string) error {
 	if err := file.Close(); err != nil {
 		return fmt.Errorf("close file: %w", err)
 	}
-	bar.Finish()
+	_ = bar.Finish()
 	return nil
 }

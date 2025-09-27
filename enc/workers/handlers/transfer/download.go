@@ -80,7 +80,12 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 				"q",
 				"(To download using qbittorrent instead of aria2.)",
 			),
-		)
+			argparser.CreateDBoolFlag(
+				"ytdl",
+				"y",
+				"(To download using yt-dlp instead of aria2.)",
+			),
+	)
 		if out := arg.Output; out != "" {
 			_, _ = msg.Reply(utils.CodeBlock(out, true),
 				&tele.ReplyOptions{HTMLParseMode: true},
@@ -124,7 +129,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		return helpFunc(err.Error())
 	}
 	var folder, fileName, selected, tgFileName string
-	var qbit bool
+	var qbit, ytdl bool
 	var size int64
 
 	if fInfo != nil {
@@ -138,6 +143,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		caption := pargs["caption"].(bool)
 		selected = pargs["select"].(string)
 		qbit = pargs["qb"].(bool)
+		ytdl = pargs["ytdl"].(bool)
 		if dir != "" {
 			folder = dir
 		} else if home {
@@ -188,6 +194,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		Selected: selected,
 		URI:      link,
 		Qbit:     qbit,
+		Ytdl:     ytdl,
 	}
 	download.Init(id, msg.SenderID)
 	err = download.Start()
@@ -287,6 +294,12 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 				"q",
 				"(To download using qbittorrent instead of aria2.)",
 			),
+			argparser.CreateDBoolFlag(
+				"ytdl",
+				"y",
+				"(To download using yt-dlp instead of aria2.)",
+			),
+
 		)
 		if out := arg.Output; out != "" {
 			_, _ = msg.Reply(utils.CodeBlock(out, true),
@@ -357,6 +370,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		force = pargs["force"].(bool)
 		nparse = pargs["no-parse"].(bool)
 		qbit := pargs["qb"].(bool)
+		ytdl := pargs["ytdl"].(bool)
 		if caption {
 			name := repMsg.Text
 			if name != "" && !strings.Contains(name, "\n") {
@@ -373,6 +387,8 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		if link != "" {
 			if qbit {
 				dlInfo = downloaders.GetQbitDlInfo(link)
+			} else if ytdl {
+				dlInfo = downloaders.GetYdlInfo(link)
 			} else {
 				if utils.IsMegaLink(link) {
 					dlInfo = downloaders.GetMegaDlInfo(link)
@@ -390,6 +406,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			Selected: selected,
 			URI:      link,
 			Qbit:     qbit,
+			Ytdl:     ytdl,
 		}
 	} else {
 		if args != "" {

@@ -33,6 +33,7 @@ type Downloader struct {
 	aria2Dl       *Aria2Download
 	qbitDl        *QbitDownload
 	megaDl        *MegaDownload
+	ytDl          *YtdlDownload
 	DlInfo        bool
 	Done          bool
 	Folder        string
@@ -41,6 +42,7 @@ type Downloader struct {
 	URI           string
 	Size          int64
 	Qbit          bool
+	Ytdl          bool
 	err           error
 	pauseOnDLInfo bool
 }
@@ -81,6 +83,14 @@ func (dl *Downloader) Start() error {
 		if err == nil {
 			dl.FileName = dl.qbitDl.name
 		}
+	} else if dl.Ytdl && dl.URI != "" {
+		folder, _ := filepath.Abs(dl.Folder)
+		dl.ytDl = NewYTDl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
+		err = dl.ytDl.Start()
+		if err == nil {
+			dl.FileName = dl.ytDl.name
+		}
+
 	} else if dl.URI != "" && utils.IsMegaLink(dl.URI) {
 		folder, _ := filepath.Abs(dl.Folder)
 		dl.megaDl = NewMegaDl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)

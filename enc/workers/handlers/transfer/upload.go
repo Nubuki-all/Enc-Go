@@ -86,6 +86,11 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 				"To download using qbittorrent instead of aria2.",
 			),
 			argparser.CreateDBoolFlag(
+				"ytdl",
+				"y",
+				"To download using yt-dlp instead of aria2.",
+			),
+			argparser.CreateDBoolFlag(
 				"mkv",
 				"m",
 				"same as --ext but only changes to 'mkv'. It is the same as passing --ext \".mkv\"",
@@ -110,7 +115,7 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 
 	// prepare defaults
 	var ext, file, link, selected string
-	var clean, qbit bool
+	var clean, qbit, ytdl bool
 	// var topicID int64
 	uCanMsg := "`Folder upload has been force cancelled`"
 	if len(pargs) != 0 {
@@ -121,6 +126,7 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		clean = pargs["clean"].(bool)
 		selected = pargs["select"].(string)
 		qbit = pargs["qbit"].(bool)
+		ytdl = pargs["ytdl"].(bool)
 		if file == "" && link == "" {
 			return helpFunc("`Args -f or -l are required.`")
 		}
@@ -167,6 +173,7 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			Selected: selected,
 			URI:      link,
 			Qbit:     qbit,
+			Ytdl:     ytdl,
 		}
 		download.Init(dID, msg.SenderID)
 		if err := download.Start(); err != nil || download.IsCancelled {

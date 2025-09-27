@@ -98,7 +98,7 @@ func InstallAria2(ctx context.Context, binDir string) (string, error) {
 	}
 	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
 	s.Suffix = " Extracting binary from zip..."
-	s.Color("yellow")
+	_ = s.Color("yellow")
 	s.Start()
 	defer s.Stop()
 	// Open zip and find the aria2c entry
@@ -240,7 +240,7 @@ func InstallFFmpeg(ctx context.Context, binDir string) (map[string]string, error
 	if err != nil {
 		return nil, fmt.Errorf("remote HEAD failed: %w", err)
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
 		return nil, fmt.Errorf("remote file not available: %s (status %d)", fullURL, resp.StatusCode)
 	}
@@ -261,7 +261,7 @@ func InstallFFmpeg(ctx context.Context, binDir string) (map[string]string, error
 	}
 	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
 	s.Suffix = " Extracting ffmpeg binary from archive..."
-	s.Color("yellow")
+	_ = s.Color("yellow")
 	s.Start()
 	defer s.Stop()
 
@@ -294,7 +294,7 @@ func extractFromZip(zipPath, binDir string, targets []string) error {
 	if err != nil {
 		return err
 	}
-	defer r.Close()
+	defer func() {_ = r.Close()}()
 
 	targetSet := make(map[string]struct{})
 	for _, t := range targets {
@@ -318,14 +318,14 @@ func extractFromZip(zipPath, binDir string, targets []string) error {
 		}
 		tmpFile, err := os.CreateTemp("", "ffmpeg-bin-*")
 		if err != nil {
-			rc.Close()
+			_ = rc.Close()
 			return err
 		}
 		tmpPath := tmpFile.Name()
 
 		_, err = io.Copy(tmpFile, rc)
 		_ = tmpFile.Close()
-		rc.Close()
+		_ = rc.Close()
 		if err != nil {
 			_ = os.Remove(tmpPath)
 			return err
@@ -367,7 +367,7 @@ func extractFromTarXz(tarXzPath, binDir string, targets []string) error {
 	if err != nil {
 		return fmt.Errorf("open archive: %w", err)
 	}
-	defer f.Close()
+	defer func() {_ = f.Close()}()
 
 	xzr, err := xz.NewReader(f)
 	if err != nil {
@@ -573,7 +573,7 @@ func InstallQbittorrentNox(ctx context.Context, binDir string) (string, error) {
 
 	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
 	s.Suffix = " Finishing up..."
-	s.Color("yellow")
+	_ = s.Color("yellow")
 	s.Start()
 	defer s.Stop()
 
@@ -669,7 +669,7 @@ func InstallYtdlp(ctx context.Context, binDir string) (string, error) {
 
 	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
 	s.Suffix = " Finishing up..."
-	s.Color("yellow")
+	_ = s.Color("yellow")
 	s.Start()
 	defer s.Stop()
 
