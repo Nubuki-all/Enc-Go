@@ -85,11 +85,11 @@ func (dl *YtdlDownload) Start() (err error) {
 	if dlInfo.Count > 0 {
 		if dl.selected != "" {
 			s, _ := strconv.Atoi(dl.selected)
-			if s == 0 || s > len(files) {
+			if s == 0 || s > len(dlInfo.Files) {
 				return fmt.Errorf("ytdl: file_id not found")
 			}
 			ytdl = ytdl.PlaylistItems(dl.selected)
-			dl.Path = filepath.Join(dl.Path, dl.Files[s-1]+".mkv")
+			dl.Path = filepath.Join(dl.Path, dlInfo.Files[s-1]+".mkv")
 		}
 	} else {
 		dl.Path = filepath.Join(dl.Path, dlInfo.Name+".mkv")
