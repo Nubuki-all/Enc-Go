@@ -64,7 +64,7 @@ func ListYtdlFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 		)
 		return nil
 	}
-	if !utils.IsURL(args) && !utils.IsMagnet(args) {
+	if !utils.IsURL(args) {
 		_, err := msg.ReplyText("Please pass a valid link as argument.")
 		return err
 	}
@@ -77,8 +77,11 @@ func ListYtdlFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 		return nil
 	}
 	var sb strings.Builder
+	if dlInfo.Count > 0 {
+		fmt.Fprintf(&sb, "**Playlist Name:**\n`%s`\n\n", dlInfo.Name)
+	}
 	for i, item := range dlInfo.Files {
-		fmt.Fprintf(&sb, "%d. `%s`\n", i, item)
+		fmt.Fprintf(&sb, "%d. `%s`\n", i+1, item)
 	}
 	fmt.Fprintf(&sb, "\n**Total files:** %d", dlInfo.Count)
 	text := sb.String()
