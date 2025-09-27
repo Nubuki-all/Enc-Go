@@ -444,22 +444,46 @@ func GetYdlInfo(uri string) *utils.DLInfo {
 		return dlInfo
 	}
 	logger.Info(len(infos))
-	info := infos[0]
-	if info.Title == nil {
+	for _, info := range infos {
+		if info.Title == nil {
+			continue
+		}
+		if *info.Title == "" {
+			n := "Unknown Title"
+			info.Title = &n
+		}
+		if len(info.Entries) == 0 {
+			dlInfo.Files = append(dlInfo.Files, *info.Title)
+			continue
+		}
+		getInnerPlaylist(info, dlInfo)
+
+	}
+	dlInfo.Count = len(dlInfo.Files)
+	if dlInfo.Count == 0 {
 		dlInfo.Error = fmt.Errorf("extractor failed to fetch any videos")
 		return dlInfo
 	}
-	if *info.Title == "" {
-		n := "Unknown Title"
-		info.Title = &n
-	}
-	dlInfo.Name = *info.Title
-	if len(info.Entries) == 0 {
+	info := infos[0]
+	if info.PlaylistTitle == nil {	
+		if *info.Title == "" {
+			n := "Unknown Title"
+			info.Title = &n
+		}
+		dlInfo.Name = *info.Title
 		logger.Info("single file…")
-		dlInfo.Files = append(dlInfo.Files, *info.Title)
-		dlInfo.Count = 1
 		return dlInfo
 	}
+	if *info.PlaylistTitle == "" {
+			n := "Unknown Title"
+			info.PlaylistTitle = &n
+		}
+		dlInfo.Name = *info.PlaylistTitle
+
+	return dlInfo
+}
+
+func getInnerPlaylist(info *ytdlp.ExtractedInfo, dlInfo *utils.DLInfo) {
 	for _, vid := range info.Entries {
 		name := vid.Title
 		if name == nil {
@@ -471,6 +495,4 @@ func GetYdlInfo(uri string) *utils.DLInfo {
 		}
 		dlInfo.Files = append(dlInfo.Files, *name)
 	}
-	dlInfo.Count = len(dlInfo.Files)
-	return dlInfo
 }
