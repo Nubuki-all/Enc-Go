@@ -3,9 +3,8 @@ package downloaders
 import (
 	"context"
 	"fmt"
-	"os"
-
 	"math"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -22,18 +21,18 @@ import (
 
 type YtdlDownload struct {
 	*types.TransferInfo
-	Size      int64
-	msg       *tele.Message
-	err       error
+	Size int64
+	msg  *tele.Message
+	err  error
 	done bool
 	// timeout      bool
-	ufstr        string
-	fstr         string
-	basePath     string
-	name         string
-	selected     string
-	dir          string
-	uri          string
+	ufstr    string
+	fstr     string
+	basePath string
+	name     string
+	selected string
+	dir      string
+	uri      string
 }
 
 func NewYTDl(uri, dir, selected string, msg *tele.Message, tInfo *types.TransferInfo) *YtdlDownload {
@@ -49,7 +48,7 @@ func NewYTDl(uri, dir, selected string, msg *tele.Message, tInfo *types.Transfer
 	}
 }
 
-func (dl *YtdlDownload) Start() (err error) {	
+func (dl *YtdlDownload) Start() (err error) {
 	rconf := config.Rconf
 	dlTimeout := rconf.YDLTimeout * time.Second
 	progressInterval := rconf.ProgresUpdateInterval * time.Second
@@ -86,7 +85,7 @@ func (dl *YtdlDownload) Start() (err error) {
 	if dlInfo.Count > 0 && dl.selected != "" {
 		ytdl = ytdl.PlaylistItems(dl.selected)
 	} else {
-		dl.Path = filepath.Join(dl.Path, dlInfo.Name +".mkv")
+		dl.Path = filepath.Join(dl.Path, dlInfo.Name+".mkv")
 	}
 	go func() {
 		uTicker := time.NewTicker(updateInterval)
@@ -95,7 +94,7 @@ func (dl *YtdlDownload) Start() (err error) {
 			select {
 			case <-ctx.Done():
 				return
-			case <-uTicker.C:	
+			case <-uTicker.C:
 				if dl.IsCancelled {
 					cancel()
 					return
@@ -117,8 +116,8 @@ func (dl *YtdlDownload) Start() (err error) {
 
 func (dl *YtdlDownload) ProgressCallback(update ytdlp.ProgressUpdate) {
 	if dl.PauseProgress {
-		return 
-	}	
+		return
+	}
 
 	total := int64(update.TotalBytes)
 	current := int64(update.DownloadedBytes)
@@ -128,7 +127,7 @@ func (dl *YtdlDownload) ProgressCallback(update ytdlp.ProgressUpdate) {
 	if diff > 0 {
 		speed = current / int64(diff)
 	}
-	
+
 	var percentage float64
 	var timeToCompletion string
 	if speed > 0 {

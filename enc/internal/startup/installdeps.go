@@ -294,7 +294,7 @@ func extractFromZip(zipPath, binDir string, targets []string) error {
 	if err != nil {
 		return err
 	}
-	defer func() {_ = r.Close()}()
+	defer func() { _ = r.Close() }()
 
 	targetSet := make(map[string]struct{})
 	for _, t := range targets {
@@ -367,7 +367,7 @@ func extractFromTarXz(tarXzPath, binDir string, targets []string) error {
 	if err != nil {
 		return fmt.Errorf("open archive: %w", err)
 	}
-	defer func() {_ = f.Close()}()
+	defer func() { _ = f.Close() }()
 
 	xzr, err := xz.NewReader(f)
 	if err != nil {

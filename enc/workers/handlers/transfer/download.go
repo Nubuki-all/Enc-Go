@@ -85,7 +85,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 				"y",
 				"(To download using yt-dlp instead of aria2.)",
 			),
-	)
+		)
 		if out := arg.Output; out != "" {
 			_, _ = msg.Reply(utils.CodeBlock(out, true),
 				&tele.ReplyOptions{HTMLParseMode: true},
@@ -299,7 +299,6 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 				"y",
 				"(To download using yt-dlp instead of aria2.)",
 			),
-
 		)
 		if out := arg.Output; out != "" {
 			_, _ = msg.Reply(utils.CodeBlock(out, true),
