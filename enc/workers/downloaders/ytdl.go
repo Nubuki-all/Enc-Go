@@ -81,7 +81,7 @@ func (dl *YtdlDownload) Start() (err error) {
 		EmbedMetadata().
 		EmbedChapters().
 		Quiet().
-		Output(dl.Path + "%(title)s.mkv")
+		Output(filepath.Join(dl.Path, "%(title)s.mkv"))
 	if dlInfo.Count > 0 {
 		if dl.selected != "" {
 			s, _ := strconv.Atoi(dl.selected)
@@ -103,7 +103,7 @@ func (dl *YtdlDownload) Start() (err error) {
 				return
 			case <-uTicker.C:
 				if dl.IsCancelled {
-					logger.Info("cancelling…")
+					logger.Info("cancelling")
 					cancel()
 					return
 				} else if dl.done {
