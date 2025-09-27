@@ -103,6 +103,7 @@ func (dl *YtdlDownload) Start() (err error) {
 				return
 			case <-uTicker.C:
 				if dl.IsCancelled {
+					logger.Info("cancelling…")
 					cancel()
 					return
 				} else if dl.done {
