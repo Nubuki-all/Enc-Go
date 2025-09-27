@@ -23,7 +23,6 @@ type YtdlDownload struct {
 	*types.TransferInfo
 	Size int64
 	msg  *tele.Message
-	err  error
 	done bool
 	// timeout      bool
 	ufstr    string
