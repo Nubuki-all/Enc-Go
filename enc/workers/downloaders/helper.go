@@ -465,7 +465,7 @@ func GetYdlInfo(uri string) *utils.DLInfo {
 		return dlInfo
 	}
 	info := infos[0]
-	if info.PlaylistTitle == nil {	
+	if info.PlaylistTitle == nil {
 		if *info.Title == "" {
 			n := "Unknown Title"
 			info.Title = &n
@@ -475,10 +475,10 @@ func GetYdlInfo(uri string) *utils.DLInfo {
 		return dlInfo
 	}
 	if *info.PlaylistTitle == "" {
-			n := "Unknown Title"
-			info.PlaylistTitle = &n
-		}
-		dlInfo.Name = *info.PlaylistTitle
+		n := "Unknown Title"
+		info.PlaylistTitle = &n
+	}
+	dlInfo.Name = *info.PlaylistTitle
 
 	return dlInfo
 }
