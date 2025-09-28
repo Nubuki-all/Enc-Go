@@ -44,7 +44,7 @@ replace github.com/siku2/arigo => github.com/Nubuki-all/arigo v0.0.0-20250904201
 
 replace github.com/cenkalti/rpc2 => github.com/Nubuki-all/rpc2 v0.0.0-20250903152609-4270a8aef277
 
-replace github.com/lrstanley/go-ytdlp => github.com/Nubuki-all/go-ytdlp v0.0.0-20250928203124-199d08aa0ae2
+replace github.com/lrstanley/go-ytdlp => github.com/Nubuki-all/go-ytdlp cancel-fix
 
 require (
 	github.com/AnimeKaizoku/cacher v1.0.3 // indirect

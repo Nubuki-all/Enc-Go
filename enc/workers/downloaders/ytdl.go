@@ -87,7 +87,7 @@ func (dl *YtdlDownload) Start() (err error) {
 		Quiet().
 		SetSeparateProcessGroup(true).
 		Output(filepath.Join(dl.Path, "%(title)s.mkv"))
-	if dlInfo.Count > 0 {
+	if dlInfo.Count > 1 {
 		if dl.selected != "" {
 			s, _ := strconv.Atoi(dl.selected)
 			if s == 0 || s > len(dlInfo.Files) {
