@@ -130,6 +130,10 @@ func (dl *Downloader) CleanDownload() {
 		dl.megaDl.Clean()
 		return
 	}
+	if dl.ytDl != nil {
+		dl.ytDl.Clean()
+		return
+	}
 	err := os.Remove(dl.Path)
 	if err != nil {
 		logger.Error(err)
