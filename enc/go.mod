@@ -16,7 +16,7 @@ require (
 	github.com/gotd/contrib v0.21.1
 	github.com/gotd/td v0.131.0
 	github.com/k0kubun/go-ansi v0.0.0-20180517002512-3bf9e2903213
-	github.com/lrstanley/go-ytdlp v1.2.5
+	github.com/lrstanley/go-ytdlp v1.2.4
 	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/schollz/progressbar/v3 v3.18.0
@@ -44,7 +44,7 @@ replace github.com/siku2/arigo => github.com/Nubuki-all/arigo v0.0.0-20250904201
 
 replace github.com/cenkalti/rpc2 => github.com/Nubuki-all/rpc2 v0.0.0-20250903152609-4270a8aef277
 
-replace github.com/lrstanley/go-ytdlp => github.com/Nubuki-all/go-ytdlp v0.0.0-20250928203124-199d08aa0ae2
+replace github.com/lrstanley/go-ytdlp => github.com/Nubuki-all/go-ytdlp v0.0.0-20250928204720-2a8a73ea7af7
 
 require (
 	github.com/AnimeKaizoku/cacher v1.0.3 // indirect
