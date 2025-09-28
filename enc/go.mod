@@ -16,7 +16,7 @@ require (
 	github.com/gotd/contrib v0.21.1
 	github.com/gotd/td v0.131.0
 	github.com/k0kubun/go-ansi v0.0.0-20180517002512-3bf9e2903213
-	github.com/lrstanley/go-ytdlp v1.2.4
+	github.com/lrstanley/go-ytdlp v1.2.5
 	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/schollz/progressbar/v3 v3.18.0
