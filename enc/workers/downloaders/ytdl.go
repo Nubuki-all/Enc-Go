@@ -76,11 +76,16 @@ func (dl *YtdlDownload) Start() (err error) {
 	dl.name = dlInfo.Name
 	dl.basePath = filepath.Join(dl.dir, dlInfo.Name)
 	dl.Path = dl.basePath
-	ytdl := ytdlp.New().Cookies(".cookies.txt").SubLangs("all").EmbedSubs().EmbedThumbnail().
+	ytdl := ytdlp.New().
+		Cookies(".cookies.txt").
+		SubLangs("all").
+		EmbedSubs().
+		EmbedThumbnail().
 		FFmpegLocation(p).
 		EmbedMetadata().
 		EmbedChapters().
 		Quiet().
+		SetSeparateProcessGroup(true).
 		Output(filepath.Join(dl.Path, "%(title)s.mkv"))
 	if dlInfo.Count > 0 {
 		if dl.selected != "" {
