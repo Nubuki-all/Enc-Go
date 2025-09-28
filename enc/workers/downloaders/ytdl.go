@@ -85,7 +85,7 @@ func (dl *YtdlDownload) Start() (err error) {
 		EmbedMetadata().
 		EmbedChapters().
 		Quiet().
-		SetSeparateProcessGroup(true).
+		SetSeparateProcessGroup(false).
 		Output(filepath.Join(dl.Path, "%(title)s.mkv"))
 	if dlInfo.Count > 0 {
 		if dl.selected != "" {
