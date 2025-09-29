@@ -5,6 +5,6 @@ import "os"
 type CallbackInfo struct {
 	*TransferInfo
 	Process *os.Process
-	DlName  string
-	OutName string
+	DlPath  string
+	OutPath string
 }
