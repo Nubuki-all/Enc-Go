@@ -101,7 +101,7 @@ func GetMessageFromLink(url string) *Message {
 	if len(tokens) < 4 {
 		return nil
 	}
-	chatIDStr := tokens[len(tokens) -2]
+	chatIDStr := tokens[len(tokens)-2]
 	if !strings.HasPrefix(chatIDStr, "-100") {
 		chatIDStr = "-100" + chatIDStr
 	}
@@ -122,5 +122,4 @@ func GetMessageFromLink(url string) *Message {
 		userID = userPeer.UserID
 	}
 	return NewMsgFromGotg(msgs[0], telegram.Context, chatID, userID)
-
 }

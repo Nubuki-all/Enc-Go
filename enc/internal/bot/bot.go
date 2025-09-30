@@ -65,7 +65,6 @@ var (
 	// wait queues
 	WaitQueueR = types.NewWaitQueue("cancel_rturn")
 	WaitQueueM = types.NewWaitQueue("cancel_mturn")
-
 )
 
 var (

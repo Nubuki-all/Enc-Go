@@ -122,7 +122,6 @@ func ParseFlags(cmdName, helpMsg string, tokens []string, defs ...[]string) Pars
 				fs.Int64(name, defInt, usage)
 			}
 
-
 		case "string_slice":
 			defSlice := []string{}
 			if defVal != "" {

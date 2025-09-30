@@ -499,4 +499,4 @@ func RemoveExt(fileName string) string {
 		return ""
 	}
 	return fileName[:len(fileName)-len(filepath.Ext(fileName))]
-	}
+}

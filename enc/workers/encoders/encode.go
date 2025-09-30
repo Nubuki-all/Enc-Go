@@ -128,7 +128,7 @@ func (e *Encoder) Callback(dlPath, enPath, text string) {
 		fmt.Sprintf(text, random.Enmoji(), out, addMsg),
 		&tele.EditOptions{ReplyMarkup: markup.InlineKeyboard(buttonRows...)},
 	)
-	if e.LMsg != nil && e.Sender != 0 {	
+	if e.LMsg != nil && e.Sender != 0 {
 		_ = utils.StoreCallbackInfo(cInfo, e.LogID)
 		sender := "Unknown"
 		if user, err := tele.GetUser(e.Sender); err != nil {
@@ -251,9 +251,11 @@ func (e *Encoder) ReportStatus(action string) (err error) {
 			var fmsg *tele.Message
 			out := "Stderr:\n" + e.stderr + "\n\nStdout:\n" + e.stdout
 			if len(out) > 4095 {
-				fmsg, err = e.Msg.UploadDoc(&tele.UploadOptions{Bytes: []byte(out),
-				Name: e.exe + "_error.txt",
-				Quote: true,})
+				fmsg, err = e.Msg.UploadDoc(&tele.UploadOptions{
+					Bytes: []byte(out),
+					Name:  e.exe + "_error.txt",
+					Quote: true,
+				})
 			} else {
 				fmsg, err = e.Msg.ReplyText(out)
 			}

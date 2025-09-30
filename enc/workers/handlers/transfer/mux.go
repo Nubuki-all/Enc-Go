@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-
 	"time"
 
 	"github.com/celestix/gotgproto/ext"
@@ -118,7 +117,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 				"default-subtitle",
 				"S",
 				"iso3 of the subtitle language to default. if there are multiple matching languages the first is selected.",
-			),	
+			),
 			argparser.CreateDStringFlag(
 				"select",
 				"s",
@@ -257,7 +256,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 			}
 		}
 		if clean {
-			defer func() {_ = msg.Delete()} ()
+			defer func() { _ = msg.Delete() }()
 		}
 		if input2 != "" && (utils.IsURL(input2) || utils.IsMagnet(input2)) {
 			var inputLoc tg.InputFileLocationClass
@@ -320,7 +319,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 				}
 				if s >= 0 {
 					if s > dlInfo.Count-1 {
-						_, _ = sMsg.EditText("-I: **Invalid fileID**\n`Total files in folder` :- `" + strconv.Itoa(dlInfo.Count) +"`")
+						_, _ = sMsg.EditText("-I: **Invalid fileID**\n`Total files in folder` :- `" + strconv.Itoa(dlInfo.Count) + "`")
 						return nil
 					}
 					if !utils.IsSupportedFile(dlInfo.Files[s]) {
@@ -335,8 +334,8 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 					}
 					iFileName = dlInfo.Name
 				} else {
-						_, _ = sMsg.EditText("-i: **Link has multiple files, kindly select one with -I**\n`Total files in folder` :- `" + strconv.Itoa(dlInfo.Count) +"`")
-						return nil
+					_, _ = sMsg.EditText("-i: **Link has multiple files, kindly select one with -I**\n`Total files in folder` :- `" + strconv.Itoa(dlInfo.Count) + "`")
+					return nil
 				}
 			}
 			downloadInput = &downloaders.Downloader{
@@ -351,7 +350,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 				Ytdl:     iYtdl,
 			}
 		}
-	}	
+	}
 	if link != "" {
 		s := -1
 		if selected != "" {
@@ -377,7 +376,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 		}
 		if s >= 0 {
 			if s > dlInfo.Count-1 {
-				_, _ = sMsg.EditText("-s: **Invalid fileID**\n`Total files in folder` :- `" + strconv.Itoa(dlInfo.Count) +"`")
+				_, _ = sMsg.EditText("-s: **Invalid fileID**\n`Total files in folder` :- `" + strconv.Itoa(dlInfo.Count) + "`")
 				return nil
 			}
 			if !utils.IsSupportedFile(dlInfo.Files[s]) {
@@ -392,8 +391,8 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 			}
 			// iFileName = dlInfo.Name
 		} else {
-				_, _ = sMsg.EditText("**Link has multiple files, kindly select one with -s**\n`Total files in folder` :- `" + strconv.Itoa(dlInfo.Count) +"`")
-				return nil
+			_, _ = sMsg.EditText("**Link has multiple files, kindly select one with -s**\n`Total files in folder` :- `" + strconv.Itoa(dlInfo.Count) + "`")
+			return nil
 		}
 	}
 	download := &downloaders.Downloader{
@@ -403,7 +402,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 		FileName: fileName,
 		Size:     size,
 		URI:      link,
-	}	
+	}
 	if fileName == "" {
 		if tgFileName == "" {
 			_, _ = sMsg.EditText("__No file name found, cannot proceed.__")
@@ -444,19 +443,19 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 	tFile := folder + utils.RemoveExt(baseName)
 	tFile2 := " [Metadata]" + ext
 	tFile += " [Temp]" + ext
-	
+
 	if downloadInput != nil {
 		ffmpegArgs = `-i """` + downloadInput.Path + `""" ` + ffmpegArgs
 	}
 	ffCmd := fmt.Sprintf(`ffmpeg -i """%s""" %s """%s""" -y`, download.Path, ffmpegArgs, tFile)
 	encode := &encoders.Encoder{
-		Msg: sMsg,
-		STime: time.Now(),
+		Msg:    sMsg,
+		STime:  time.Now(),
 		Sender: msg.SenderID,
-		ID: id,
+		ID:     id,
 	}
 	if err := encode.Start(ffCmd); err != nil {
-		_, _ = sMsg.Edit("Error while muxing: "+ err.Error(), nil)
+		_, _ = sMsg.Edit("Error while muxing: "+err.Error(), nil)
 		return nil
 	}
 	encode.Callback(download.Path, tFile, "%s **Currently Muxing:**\n└`%s`\n\n`using provided parameters…`")
@@ -472,7 +471,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 	}
 	defer utils.SRemove(false, tFile)
 	if !utils.IsVideoFile(tFile) || forcedFileName != "" {
-		nparse = true //disable anilist on non video file or forcedFileName
+		nparse = true // disable anilist on non video file or forcedFileName
 	}
 	pOptions := &parser.ParseOptions{
 		Direct:      forcedFileName,
@@ -527,8 +526,8 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 	if strings.Contains(args2, "Fileinfo") {
 		args2 = strings.ReplaceAll(args2, "Fileinfo", result.MediaInfoName)
 	}
-	if defaultAudio != ""  || defaultSubtitle != "" {
-		aPosInStm, sPosInStm := utils.PosInStream(tFile, defaultAudio, "",  "")
+	if defaultAudio != "" || defaultSubtitle != "" {
+		aPosInStm, sPosInStm := utils.PosInStream(tFile, defaultAudio, "", "")
 		if defaultAudio != "" {
 			args2 += " -disposition:a 0"
 			if aPosInStm >= 0 {
@@ -545,13 +544,13 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 	}
 	ffCmd = fmt.Sprintf(`ffmpeg -i """%s""" -map 0:v? -map 0:a? -map 0:s? -map 0:t? %s -codec copy """%s""" -y`, tFile, args2, tFile2)
 	encode = &encoders.Encoder{
-		Msg: sMsg,
-		STime: time.Now(),
+		Msg:    sMsg,
+		STime:  time.Now(),
 		Sender: msg.SenderID,
-		ID: id,
+		ID:     id,
 	}
 	if err := encode.Start(ffCmd); err != nil {
-		_, _ = sMsg.Edit("Error while editing metadata: "+ err.Error(), nil)
+		_, _ = sMsg.Edit("Error while editing metadata: "+err.Error(), nil)
 		return nil
 	}
 	_ = encode.AwaitCompletion()
@@ -578,7 +577,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 		Msg:           sMsg,
 		Caption:       caption,
 		ThumbPath:     thumbPath,
-		FileName: result.FileName,
+		FileName:      result.FileName,
 		ForceDocument: true,
 	}
 	upload.Init(id, download.Path, msg.SenderID)
@@ -588,7 +587,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 		return nil
 	}
 	if ChatID != 0 {
-		_, _ =sMsg.Forward(ChatID)
+		_, _ = sMsg.Forward(ChatID)
 	}
 	return nil
 }
