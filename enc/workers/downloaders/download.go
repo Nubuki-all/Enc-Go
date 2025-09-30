@@ -44,6 +44,7 @@ type Downloader struct {
 	Qbit          bool
 	Ytdl          bool
 	err           error
+	cleaned       bool
 	pauseOnDLInfo bool
 }
 
@@ -118,6 +119,10 @@ func (dl *Downloader) Start() error {
 }
 
 func (dl *Downloader) CleanDownload() {
+	if dl.cleaned {
+		return
+	}
+	dl.cleaned = true
 	if dl.aria2Dl != nil {
 		dl.aria2Dl.Clean()
 		return

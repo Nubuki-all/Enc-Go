@@ -43,6 +43,7 @@ type ParseOptions struct {
 	ConOverride    string
 	Quality        string
 	EncString      string
+	Ext            string
 }
 
 func ParseName(
@@ -247,7 +248,13 @@ func ParseName(
 		sec += source
 	}
 
-	primary.WriteString(".mkv")
+	ext := ".mkv"
+	if opts.Ext == "" {
+		ext = filepath.Ext(path)
+	} else {
+		ext = opts.Ext
+	}
+	primary.WriteString(ext)
 
 	return ParseResult{
 		FileName:      primary.String(),

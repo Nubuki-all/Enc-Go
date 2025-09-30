@@ -492,3 +492,11 @@ func TextFilter() (nameFilter, releaseFilter, captionFilter string, err error) {
 	}
 	return nameFilter, releaseFilter, captionFilter, nil
 }
+
+// RemoveExt removes the extension from file names.
+func RemoveExt(fileName string) string {
+	if fileName == "" {
+		return ""
+	}
+	return fileName[:len(fileName)-len(filepath.Ext(fileName))]
+	}

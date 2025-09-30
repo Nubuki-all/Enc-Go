@@ -109,6 +109,20 @@ func ParseFlags(cmdName, helpMsg string, tokens []string, defs ...[]string) Pars
 			} else {
 				fs.Int(name, defInt, usage)
 			}
+		case "int64":
+			var defInt int64
+			if defVal != "" {
+				if v, err := strconv.ParseInt(defVal, 10, 64); err == nil {
+					defInt = v
+				}
+			}
+			if short != "" {
+				fs.Int64P(name, short, defInt, usage)
+			} else {
+				fs.Int64(name, defInt, usage)
+			}
+
+
 		case "string_slice":
 			defSlice := []string{}
 			if defVal != "" {
@@ -134,7 +148,7 @@ func ParseFlags(cmdName, helpMsg string, tokens []string, defs ...[]string) Pars
 	err := fs.Parse(tokens)
 
 	// Collect typed values
-	values := make(map[string]interface{}, len(recs))
+	values := make(map[string]any, len(recs))
 	for _, r := range recs {
 		switch r.typ {
 		case "bool":
@@ -142,6 +156,9 @@ func ParseFlags(cmdName, helpMsg string, tokens []string, defs ...[]string) Pars
 			values[r.name] = v
 		case "int":
 			v, _ := fs.GetInt(r.name)
+			values[r.name] = v
+		case "int64":
+			v, _ := fs.GetInt64(r.name)
 			values[r.name] = v
 		case "string_slice":
 			v, _ := fs.GetStringArray(r.name)
@@ -173,6 +190,10 @@ func CreateDStringFlag(name, sName, helpMsg string) []string {
 
 func CreateDIntFlag(name, sName, helpMsg string) []string {
 	return []string{name, sName, "int", "", helpMsg}
+}
+
+func CreateDInt64Flag(name, sName, helpMsg string) []string {
+	return []string{name, sName, "int64", "", helpMsg}
 }
 
 func CreateDStringSliceFlag(name, sName, helpMsg string) []string {

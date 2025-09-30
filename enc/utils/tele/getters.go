@@ -2,6 +2,9 @@ package tele
 
 import (
 	"fmt"
+	"strconv"
+	"strings"
+
 	//"strconv"
 	//"strings"
 
@@ -87,4 +90,37 @@ func GetMessages(chatId int64, ids ...tg.InputMessageClass) (msgs []*gp.Message,
 		err = fmt.Errorf("no messages was found")
 	}
 	return msgs, err
+}
+
+func GetMessageFromLink(url string) *Message {
+	if url == "" {
+		return nil
+	}
+	var chatID int64
+	tokens := strings.Split(url, "/")
+	if len(tokens) < 4 {
+		return nil
+	}
+	chatIDStr := tokens[len(tokens) -2]
+	if !strings.HasPrefix(chatIDStr, "-100") {
+		chatIDStr = "-100" + chatIDStr
+	}
+	chatID, err := strconv.ParseInt(chatIDStr, 10, 64)
+	if err != nil {
+		return nil
+	}
+	ID, err := strconv.Atoi(tokens[len(tokens)-1])
+	if err != nil {
+		return nil
+	}
+	msgs, err := GetMessages(chatID, &tg.InputMessageID{ID: ID})
+	if err != nil {
+		return nil
+	}
+	var userID int64
+	if userPeer, ok := msgs[0].FromID.(*tg.PeerUser); ok {
+		userID = userPeer.UserID
+	}
+	return NewMsgFromGotg(msgs[0], telegram.Context, chatID, userID)
+
 }
