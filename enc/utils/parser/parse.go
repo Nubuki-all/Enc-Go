@@ -248,11 +248,14 @@ func ParseName(
 		sec += source
 	}
 
-	ext := ".mkv"
+var ext string
 	if opts.Ext == "" {
 		ext = filepath.Ext(path)
 	} else {
 		ext = opts.Ext
+	}
+	if ext == "" {
+		ext = ".mkv"
 	}
 	primary.WriteString(ext)
 
