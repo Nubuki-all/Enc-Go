@@ -9,7 +9,7 @@ on:
 
 env:
   BINARY: enc             # change to your binary name
-  PACKAGE: ./enc       # package to build (or '.' for module main)
+  PACKAGE: enc       # package to build (or '.' for module main)
   GO_VERSION: 1.24.7         # change to desired Go version
 
 jobs:
@@ -45,9 +45,10 @@ jobs:
           GOOS: "linux"
           GOARCH: "amd64"
         run: |
+          cd ${PACKAGE}
           set -euo pipefail
           mkdir -p dist
-          /usr/local/go/bin/go build ${PACKAGE} -a -installsuffix cgo -tags netgo \
+          /usr/local/go/bin/go build -a -installsuffix cgo -tags netgo \
             -ldflags "-s -w -linkmode external -extldflags '-static'" \
             -o dist/${BINARY}-linux-amd64-musl
           file dist/${BINARY}-linux-amd64-musl || true
@@ -57,7 +58,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${BINARY}-linux-amd64-musl
-          path: dist/${BINARY}-linux-amd64-musl
+          path: ${PACKAGE}/dist/${BINARY}-linux-amd64-musl
 
   # 2) arm64 musl via dockcross
   build-arm64-musl:
@@ -85,13 +86,14 @@ jobs:
           CC: aarch64-linux-musl-gcc
         run: |
           set -euo pipefail
+          cd ${PACKAGE}
           ./dockcross-arm64 bash -lc "\
             set -euo pipefail; \
             GO_TARBALL=\"https://go.dev/dl/go${GO_VERSION}.linux-arm64.tar.gz\"; \
             curl -fsSL \"${GO_TARBALL}\" -o /tmp/go.tgz; tar -C /tmp -xzf /tmp/go.tgz; export PATH=/tmp/go/bin:\$PATH; \
             go version; mkdir -p /work/dist; \
             export CGO_ENABLED=1; export CC=aarch64-linux-musl-gcc; export GOOS=linux; export GOARCH=arm64; \
-            go build -a -installsuffix cgo -tags netgo -ldflags \"-s -w -linkmode external -extldflags '-static'\" -o /work/dist/${BINARY}-linux-arm64-musl ${PACKAGE}; \
+            go build -a -installsuffix cgo -tags netgo -ldflags \"-s -w -linkmode external -extldflags '-static'\" -o /work/dist/${BINARY}-linux-arm64-musl; \
             echo built /work/dist/${BINARY}-linux-arm64-musl; \
           "
 
@@ -128,6 +130,7 @@ jobs:
           GOARM: "7"
           POSSIBLE_CCS: "armv7l-linux-musleabihf-gcc arm-linux-musleabihf-gcc armv7-linux-musleabihf-gcc"
         run: |
+          cd ${PACKAGE}
           set -euo pipefail
 
           # quick check that the wrapper script works
@@ -160,4 +163,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${BINARY}-linux-armv7-musl
-          path: dist/${BINARY}-linux-armv7-musl
+          path: ${PACKAGE}/dist/${BINARY}-linux-armv7-musl
