@@ -47,9 +47,9 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          /usr/local/go/bin/go build -a -installsuffix cgo -tags netgo \
+          /usr/local/go/bin/go build ${PACKAGE} -a -installsuffix cgo -tags netgo \
             -ldflags "-s -w -linkmode external -extldflags '-static'" \
-            -o dist/${BINARY}-linux-amd64-musl ${PACKAGE}
+            -o dist/${BINARY}-linux-amd64-musl
           file dist/${BINARY}-linux-amd64-musl || true
           ls -l dist/
 
