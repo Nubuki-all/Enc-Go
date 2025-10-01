@@ -1,91 +1,163 @@
-name: Build (musl cross) amd64 & arm64
+name: Build (musl) amd64, arm64, armv7
 
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 env:
-  # set these to your repo's binary name and package path
-  BINARY: enc
-  PACKAGE: ./enc # change to the package to build (or '.' for main module)
-  GO_VERSION: 1.24 # change to desired Go version
+  BINARY: enc             # change to your binary name
+  PACKAGE: ./enc       # package to build (or '.' for module main)
+  GO_VERSION: 1.24         # change to desired Go version
 
 jobs:
-  build-musl:
+  # 1) Native amd64 musl (runner musl-tools)
+  build-amd64-musl:
+    name: Build linux/amd64 (musl, native)
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - name: amd64
-            dockcross_image: dockcross/linux-x64-musl
-            go_pkg: linux-amd64
-            goarch: amd64
-            cc: x86_64-linux-musl-gcc
-          - name: arm64
-            dockcross_image: dockcross/linux-arm64-musl
-            go_pkg: linux-arm64
-            goarch: arm64
-            cc: aarch64-linux-musl-gcc
-
+    outputs:
+      artifact: dist/${{ env.BINARY }}-linux-amd64-musl
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Ensure Docker & QEMU binfmt are available
-        # registers QEMU so non-native images can run
+      - name: Install musl toolchain and deps
         run: |
-          # install qemu user emulation helpers so docker can run arm images on amd64 runners
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends build-essential musl-tools curl ca-certificates pkg-config || true
+
+      - name: Download Go (amd64) locally
+        run: |
+          set -euo pipefail
+          GO_PKG="linux-amd64"
+          GO_TARBALL="https://go.dev/dl/go${GO_VERSION}.${GO_PKG}.tar.gz"
+          curl -fsSL "${GO_TARBALL}" -o /tmp/go.tgz
+          sudo rm -rf /usr/local/go
+          sudo tar -C /usr/local -xzf /tmp/go.tgz
+          /usr/local/go/bin/go version
+
+      - name: Build (amd64 musl)
+        env:
+          CGO_ENABLED: "1"
+          CC: "musl-gcc"
+          GOOS: "linux"
+          GOARCH: "amd64"
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          /usr/local/go/bin/go build -a -installsuffix cgo -tags netgo \
+            -ldflags "-s -w -linkmode external -extldflags '-static'" \
+            -o dist/${BINARY}-linux-amd64-musl ${PACKAGE}
+          file dist/${BINARY}-linux-amd64-musl || true
+          ls -l dist/
+
+      - name: Upload artifact (amd64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${BINARY}-linux-amd64-musl
+          path: dist/${BINARY}-linux-amd64-musl
+
+  # 2) arm64 musl via dockcross
+  build-arm64-musl:
+    name: Build linux/arm64 (musl via dockcross)
+    runs-on: ubuntu-latest
+    needs: build-amd64-musl
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure QEMU and register binfmt
+        run: |
           docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 
-      - name: Pull dockcross helper script
+      - name: Pull dockcross helper script (arm64 musl)
         run: |
-          # generate dockcross wrapper for the image (script runs the container for you)
-          docker run --rm ${{ matrix.dockcross_image }} > ./dockcross-${{ matrix.name }}
-          chmod +x ./dockcross-${{ matrix.name }}
+          docker run --rm dockcross/linux-arm64-musl > ./dockcross-arm64
+          chmod +x ./dockcross-arm64
 
-      - name: Build inside dockcross (${{
-          matrix.name }})
+      - name: Build inside dockcross (arm64)
         env:
           GO_VERSION: ${{ env.GO_VERSION }}
-          GO_PKG: ${{ matrix.go_pkg }}
-          GOARCH: ${{ matrix.goarch }}
-          CC: ${{ matrix.cc }}
+          GO_PKG: linux-arm64
+          GOARCH: arm64
+          CC: aarch64-linux-musl-gcc
+        run: |
+          set -euo pipefail
+          ./dockcross-arm64 bash -lc "\
+            set -euo pipefail; \
+            GO_TARBALL=\"https://go.dev/dl/go${GO_VERSION}.linux-arm64.tar.gz\"; \
+            curl -fsSL \"${GO_TARBALL}\" -o /tmp/go.tgz; tar -C /tmp -xzf /tmp/go.tgz; export PATH=/tmp/go/bin:\$PATH; \
+            go version; mkdir -p /work/dist; \
+            export CGO_ENABLED=1; export CC=aarch64-linux-musl-gcc; export GOOS=linux; export GOARCH=arm64; \
+            go build -a -installsuffix cgo -tags netgo -ldflags \"-s -w -linkmode external -extldflags '-static'\" -o /work/dist/${BINARY}-linux-arm64-musl ${PACKAGE}; \
+            echo built /work/dist/${BINARY}-linux-arm64-musl; \
+          "
+
+      - name: Upload artifact (arm64)
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${BINARY}-linux-arm64-musl
+          path: dist/${BINARY}-linux-arm64-musl
+
+  # 3) armv7 (armhf) musl via dockcross linux-armv7l-musl
+  build-armv7-musl:
+    name: Build linux/arm (armv7/armhf musl via dockcross)
+    runs-on: ubuntu-latest
+    needs: build-amd64-musl
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure QEMU and register binfmt (for running arm container)
+        run: |
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
+      - name: Pull dockcross helper script (armv7l musl)
+        run: |
+          docker run --rm dockcross/linux-armv7l-musl > ./dockcross-armv7
+          chmod +x ./dockcross-armv7
+
+      - name: Build inside dockcross (armv7)
+        # GO tarball: we use linux-armv6l tarball but build with GOARCH=arm, GOARM=7
+        env:
+          GO_VERSION: ${{ env.GO_VERSION }}
+          GO_PKG: linux-armv6l
+          GOARCH: arm
+          GOARM: "7"
+          POSSIBLE_CCS: "armv7l-linux-musleabihf-gcc arm-linux-musleabihf-gcc armv7-linux-musleabihf-gcc"
         run: |
           set -euo pipefail
 
-          # optional: verify the helper works
-          ./dockcross-${{ matrix.name }} bash -lc "echo 'running inside: ' && uname -a && which $CC || true"
+          # quick check that the wrapper script works
+          ./dockcross-armv7 bash -lc "uname -a; echo 'checking compilers...'; which armv7l-linux-musleabihf-gcc || which arm-linux-musleabihf-gcc || which armv7l-linux-musleabihf-gcc || true"
 
-          # choose go tarball appropriate for the container arch (inside container)
-          # we download into /tmp and extract into /tmp/go to avoid permission issues
-          GO_TARBALL="https://go.dev/dl/go${GO_VERSION}.${GO_PKG}.tar.gz"
+          GO_TARBALL="https://go.dev/dl/go${GO_VERSION}.linux-armv6l.tar.gz"
 
-          ./dockcross-${{ matrix.name }} bash -lc "\
+          # Inside the container: download go tarball (arm tarball), set PATH, detect a suitable musl cross-compiler,
+          # set CC to the first candidate found, then build with GOARM=7.
+          ./dockcross-armv7 bash -lc "\
             set -euo pipefail; \
-            mkdir -p /tmp/gotools; \
-            echo 'Downloading Go:' ${GO_TARBALL}; \
-            curl -fsSL ${GO_TARBALL} -o /tmp/go.tgz; \
-            tar -C /tmp -xzf /tmp/go.tgz; \
-            export PATH=/tmp/go/bin:\$PATH; \
-            go version; \
-            # ensure target dir exists on host (dist will be created inside container and appear in repo workspace)
-            mkdir -p /work/dist; \
-            # build: enable cgo, set CC to musl cross-compiler, force external linking to get static musl binary
-            export CGO_ENABLED=1; \
-            export CC=${CC}; \
-            export GOOS=linux; \
-            export GOARCH=${GOARCH}; \
-            # rebuild everything and use -linkmode external + -extldflags "-static" to link musl statically
-            go build -a -installsuffix cgo -tags netgo -ldflags \"-s -w -linkmode external -extldflags '-static'\" -o /work/dist/${BINARY}-linux-${GOARCH}-musl ${PACKAGE}; \
-            echo 'built: /work/dist/${BINARY}-linux-${GOARCH}-musl'; \
+            curl -fsSL ${GO_TARBALL} -o /tmp/go.tgz; tar -C /tmp -xzf /tmp/go.tgz; export PATH=/tmp/go/bin:\$PATH; \
+            go version; mkdir -p /work/dist; \
+            # detect available musl arm compiler (try several common prefixes) \
+            CC_CANDIDATES=(armv7l-linux-musleabihf-gcc arm-linux-musleabihf-gcc armv7-linux-musleabihf-gcc); \
+            SELECTED_CC=''; \
+            for c in \"\${CC_CANDIDATES[@]}\"; do \
+              if command -v \"${c}\" >/dev/null 2>&1; then SELECTED_CC=${c}; break; fi; \
+            done; \
+            if [ -z \"${SELECTED_CC}\" ]; then \
+              echo 'No musl arm cross-compiler found in container. You may need an image that provides arm musl cross toolchain or build one.'; exit 2; \
+            fi; \
+            echo 'Using cross-compiler:' ${SELECTED_CC}; \
+            export CGO_ENABLED=1; export CC=${SELECTED_CC}; export GOOS=linux; export GOARCH=arm; export GOARM=7; \
+            go build -a -installsuffix cgo -tags netgo -ldflags \"-s -w -linkmode external -extldflags '-static'\" -o /work/dist/${BINARY}-linux-armv7-musl ${PACKAGE}; \
+            echo built /work/dist/${BINARY}-linux-armv7-musl; \
           "
 
-      - name: Upload artifact (musl ${{
-          matrix.name }})
+      - name: Upload artifact (armv7)
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.BINARY }}-linux-${{ matrix.goarch }}-musl
-          path: dist/${{ env.BINARY }}-linux-${{ matrix.goarch }}-musl
+          name: ${BINARY}-linux-armv7-musl
+          path: dist/${BINARY}-linux-armv7-musl
