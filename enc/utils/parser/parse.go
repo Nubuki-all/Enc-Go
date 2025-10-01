@@ -248,7 +248,7 @@ func ParseName(
 		sec += source
 	}
 
-var ext string
+	var ext string
 	if opts.Ext == "" {
 		ext = filepath.Ext(path)
 	} else {
