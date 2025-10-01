@@ -1,74 +1,91 @@
-on: [push, pull_request, workflow_dispatch]
+name: Build (musl cross) amd64 & arm64
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+
+env:
+  # set these to your repo's binary name and package path
+  BINARY: enc
+  PACKAGE: ./enc # change to the package to build (or '.' for main module)
+  GO_VERSION: 1.24 # change to desired Go version
 
 jobs:
-  build_job:
-    # The host should always be linux
-    runs-on: ubuntu-24.04
-    name: Build on ${{ matrix.platform }}
-    # Run steps on a matrix of 4 arch/distro combinations
+  build-musl:
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
-          - arch: none
-            distro: none
-            platform: amd64
-            base_image: --platform=linux/amd64 golang:1.25-alpine
-          - arch: none
-            distro: none
-            platform: arm64
-            base_image: --platform=linux/arm64/v8 golang:1.25-alpine
-          - arch: none
-            distro: none
-            platform: armv7
-            base_image: --platform=linux/arm/v7 golang:1.25-alpine
+          - name: amd64
+            dockcross_image: dockcross/linux-x64-musl
+            go_pkg: linux-amd64
+            goarch: amd64
+            cc: x86_64-linux-musl-gcc
+          - name: arm64
+            dockcross_image: dockcross/linux-arm64-musl
+            go_pkg: linux-arm64
+            goarch: arm64
+            cc: aarch64-linux-musl-gcc
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: uraimo/run-on-arch-action@v3
-        name: Build artifact
-        id: build
-        with:
-          arch: ${{ matrix.arch }}
-          distro: ${{ matrix.distro }}
-          base_image: ${{ matrix.base_image }}
+      - name: Checkout
+        uses: actions/checkout@v4
 
-          # Not required, but speeds up builds
-          githubToken: ${{ github.token }}
-
-          # Create an artifacts directory
-          setup: |
-            mkdir -p "${PWD}/artifacts"
-
-          # Mount the artifacts directory as /artifacts in the container
-          dockerRunArgs: |
-            --volume "${PWD}:/work"
-            
-
-          # Pass some environment variables to the container
-          env: | # YAML, but pipe character is necessary
-            artifact_name: enc-${{ matrix.distro }}_${{ matrix.arch }}
-
-          # The shell to run commands with in the container
-          shell: /bin/sh
-
-          # Install some dependencies in the container. This speeds up builds if
-          # you are also using githubToken. Any dependencies installed here will
-          # be part of the container image that gets cached, so subsequent
-          # builds don't have to re-install them. The image layer is cached
-          # publicly in your project's package repository, so it is vital that
-          # no secrets are present in the container state or logs.
-          install: |
-            apk add --no-cache musl-dev build-base git gcc
-
-          # Produce a binary artifact and place it in the mounted volume
-          run: |
-            rm -rf .git
-            cd /work/enc
-            CGO_ENABLED=1 CC=gcc \
-            go build -ldflags="-linkmode external -extldflags '-static'" enc
-            cp enc "../artifacts/${artifact_name}"
-
-      - name: Show the artifact
-        # Items placed in /artifacts in the container will be in
-        # ${PWD}/artifacts on the host.
+      - name: Ensure Docker & QEMU binfmt are available
+        # registers QEMU so non-native images can run
         run: |
-          ls -al "${PWD}/artifacts"
+          # install qemu user emulation helpers so docker can run arm images on amd64 runners
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+
+      - name: Pull dockcross helper script
+        run: |
+          # generate dockcross wrapper for the image (script runs the container for you)
+          docker run --rm ${{ matrix.dockcross_image }} > ./dockcross-${{ matrix.name }}
+          chmod +x ./dockcross-${{ matrix.name }}
+
+      - name: Build inside dockcross (${{
+          matrix.name }})
+        env:
+          GO_VERSION: ${{ env.GO_VERSION }}
+          GO_PKG: ${{ matrix.go_pkg }}
+          GOARCH: ${{ matrix.goarch }}
+          CC: ${{ matrix.cc }}
+        run: |
+          set -euo pipefail
+
+          # optional: verify the helper works
+          ./dockcross-${{ matrix.name }} bash -lc "echo 'running inside: ' && uname -a && which $CC || true"
+
+          # choose go tarball appropriate for the container arch (inside container)
+          # we download into /tmp and extract into /tmp/go to avoid permission issues
+          GO_TARBALL="https://go.dev/dl/go${GO_VERSION}.${GO_PKG}.tar.gz"
+
+          ./dockcross-${{ matrix.name }} bash -lc "\
+            set -euo pipefail; \
+            mkdir -p /tmp/gotools; \
+            echo 'Downloading Go:' ${GO_TARBALL}; \
+            curl -fsSL ${GO_TARBALL} -o /tmp/go.tgz; \
+            tar -C /tmp -xzf /tmp/go.tgz; \
+            export PATH=/tmp/go/bin:\$PATH; \
+            go version; \
+            # ensure target dir exists on host (dist will be created inside container and appear in repo workspace)
+            mkdir -p /work/dist; \
+            # build: enable cgo, set CC to musl cross-compiler, force external linking to get static musl binary
+            export CGO_ENABLED=1; \
+            export CC=${CC}; \
+            export GOOS=linux; \
+            export GOARCH=${GOARCH}; \
+            # rebuild everything and use -linkmode external + -extldflags "-static" to link musl statically
+            go build -a -installsuffix cgo -tags netgo -ldflags \"-s -w -linkmode external -extldflags '-static'\" -o /work/dist/${BINARY}-linux-${GOARCH}-musl ${PACKAGE}; \
+            echo 'built: /work/dist/${BINARY}-linux-${GOARCH}-musl'; \
+          "
+
+      - name: Upload artifact (musl ${{
+          matrix.name }})
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BINARY }}-linux-${{ matrix.goarch }}-musl
+          path: dist/${{ env.BINARY }}-linux-${{ matrix.goarch }}-musl
