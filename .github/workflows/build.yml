@@ -59,6 +59,7 @@ jobs:
 
           # Produce a binary artifact and place it in the mounted volume
           run: |
+            rm -rf .git
             cd /work/enc
             CGO_ENABLED=1 CC=musl-gcc \
             go build -ldflags="-linkmode external -extldflags '-static'" enc
