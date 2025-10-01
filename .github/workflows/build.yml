@@ -10,7 +10,7 @@ on:
 env:
   BINARY: enc             # change to your binary name
   PACKAGE: ./enc       # package to build (or '.' for module main)
-  GO_VERSION: 1.24         # change to desired Go version
+  GO_VERSION: 1.24.7         # change to desired Go version
 
 jobs:
   # 1) Native amd64 musl (runner musl-tools)
