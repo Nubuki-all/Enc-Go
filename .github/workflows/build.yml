@@ -148,7 +148,7 @@ jobs:
             CC_CANDIDATES=(armv7l-linux-musleabihf-gcc arm-linux-musleabihf-gcc armv7-linux-musleabihf-gcc); \
             SELECTED_CC=''; \
             for c in ${CC_CANDIDATES[@]}; do \
-              if command -v $c >/dev/null 2>&1; then SELECTED_CC=${c}; break; fi; \
+              if command -v $c >/dev/null 2>&1; then SELECTED_CC=$c; break; fi; \
             done; \
             if [ -z ${SELECTED_CC} ]; then \
               echo 'No musl arm cross-compiler found in container. You may need an image that provides arm musl cross toolchain or build one.'; exit 2; \
