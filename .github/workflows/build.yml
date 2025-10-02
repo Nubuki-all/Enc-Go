@@ -60,17 +60,6 @@ jobs:
           file "dist/${BINARY}-linux-amd64-musl" || true
           ls -l dist/
 
-      - name: Upload to x0.at and echo URL (amd64)
-        run: |
-          BPATH="${PACKAGE}/dist/${BINARY}-linux-amd64-musl"
-          if [ -f "$BPATH" ]; then
-            echo "Uploading $BPATH to x0.at ..."
-            RESP=$(curl -s -F "file=@${BPATH}" https://x0.at/)
-            echo "x0.at response: $RESP"
-          else
-            echo "Binary not found: $BPATH"
-            exit 1
-          fi
 
       - name: Upload artifact (amd64)
         uses: actions/upload-artifact@v4
@@ -185,17 +174,6 @@ jobs:
           echo "Artifacts inside repo:"
           ls -la "${PACKAGE}/dist" || true
 
-      - name: Upload to x0.at and echo URL (matrix)
-        run: |
-          BPATH="${PACKAGE}/dist/${BINARY}-${{ matrix.output_suffix }}"
-          if [ -f "$BPATH" ]; then
-            echo "Uploading $BPATH to x0.at ..."
-            RESP=$(curl -s -F "file=@${BPATH}" https://x0.at/)
-            echo "x0.at response: $RESP"
-          else
-            echo "Binary not found: $BPATH"
-            exit 1
-          fi
 
       - name: Upload artifact (matrix)
         uses: actions/upload-artifact@v4
