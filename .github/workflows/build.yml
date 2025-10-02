@@ -23,20 +23,25 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Cache Go modules & build cache (amd64)
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/.cache/go-mod
+            ~/.cache/go  # optional local cache in workspace
+            //~ (note: home paths are per-runner)
+          key: go-mod-cache-${{ env.GO_VERSION }}-${{ hashFiles('**/go.sum') }}
+
+      - name: Setup Go on runner (amd64)
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
       - name: Install musl toolchain and deps
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends build-essential musl-tools curl ca-certificates pkg-config || true
-
-      - name: Download Go (amd64) locally
-        run: |
-          set -euo pipefail
-          GO_PKG="linux-amd64"
-          GO_TARBALL="https://go.dev/dl/go${GO_VERSION}.${GO_PKG}.tar.gz"
-          curl -fsSL "${GO_TARBALL}" -o /tmp/go.tgz
-          sudo rm -rf /usr/local/go
-          sudo tar -C /usr/local -xzf /tmp/go.tgz
-          /usr/local/go/bin/go version
 
       - name: Build (amd64 musl)
         env:
@@ -48,11 +53,24 @@ jobs:
           set -euo pipefail
           cd "${PACKAGE}"
           mkdir -p dist
-          /usr/local/go/bin/go build -a -installsuffix cgo -tags netgo \
+          # build into package/dist so artifacts are predictable
+          go build -a -installsuffix cgo -tags netgo \
             -ldflags "-s -w -linkmode external -extldflags '-static'" \
             -o "dist/${BINARY}-linux-amd64-musl" .
           file "dist/${BINARY}-linux-amd64-musl" || true
           ls -l dist/
+
+      - name: Upload to x0.at and echo URL (amd64)
+        run: |
+          BPATH="${PACKAGE}/dist/${BINARY}-linux-amd64-musl"
+          if [ -f "$BPATH" ]; then
+            echo "Uploading $BPATH to x0.at ..."
+            RESP=$(curl -s -F "file=@${BPATH}" https://x0.at/)
+            echo "x0.at response: $RESP"
+          else
+            echo "Binary not found: $BPATH"
+            exit 1
+          fi
 
       - name: Upload artifact (amd64)
         uses: actions/upload-artifact@v4
@@ -64,33 +82,54 @@ jobs:
   build-arm-matrix:
     name: Build linux/arm (matrix)
     runs-on: ubuntu-latest
-    # needs: build-amd64-musl
     strategy:
       matrix:
         include:
           - name: arm64
             dockcross_image: dockcross/linux-arm64-musl
-            go_pkg: linux-arm64
-            goarch: arm64
             go_tarball_suffix: linux-arm64
             output_suffix: linux-arm64-musl
+            goarch: arm64
           - name: armv7
             dockcross_image: dockcross/linux-armv7l-musl
-            go_pkg: linux-armv6l
-            goarch: arm
             go_tarball_suffix: linux-armv6l
             output_suffix: linux-armv7-musl
+            goarch: arm
+            goarm: "7"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      #- name: Ensure QEMU and register binfmt (for non-native container)
-      #  run: |
-      #    docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+      - name: Restore cached Go tarball (matrix)
+        uses: actions/cache@v4
+        id: cache-go-tar
+        with:
+          path: ./.cache/go.tgz
+          key: go-tarball-${{ env.GO_VERSION }}-${{ matrix.name }}
+
+      - name: Ensure Go tarball exists (download if cache miss)
+        run: |
+          mkdir -p ./.cache
+          if [ ! -f ./.cache/go.tgz ]; then
+            echo "Go tarball not cached. Downloading..."
+            # use the amd64 tarball; we extract it inside the container (dockcross) and it will work
+            curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz" -o ./.cache/go.tgz
+          else
+            echo "Using cached go tarball"
+          fi
+        shell: bash
+
+      - name: Restore module/build cache (workspace-scoped cache)
+        uses: actions/cache@v4
+        with:
+          path: ./.cache/go
+          key: go-mod-workspace-${{ env.GO_VERSION }}-${{ hashFiles('**/go.sum') }}-${{ matrix.name }}
+          restore-keys: |
+            go-mod-workspace-${{ env.GO_VERSION }}-${{ matrix.name }}-
 
       - name: Pull dockcross helper script
         run: |
-          # Create dockcross helper in repo root so we can call it from subfolders
+          # create dockcross helper in repo root
           docker run --rm ${{ matrix.dockcross_image }} > ./dockcross-${{ matrix.name }}
           chmod +x ./dockcross-${{ matrix.name }}
 
@@ -102,50 +141,83 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Build variables for this matrix row
           DOCKCROSS=./dockcross-${{ matrix.name }}
-          TAR_SUFFIX=${{ matrix.go_tarball_suffix }}
-          OUTPUT="${PACKAGE}/dist/${BINARY}-${{ matrix.output_suffix }}"
-          GO_TARBALL=https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz
-          mkdir -p "${PACKAGE}/dist"
+          TAR_PATH="/work/.cache/go.tgz"
+          OUTPUT_PATH="/work/${PACKAGE}/dist/${BINARY}-${{ matrix.output_suffix }}"
 
-          # Run the build inside the container. Note:
-          # - /work inside dockcross is the repository root mounted from runner
-          # - We construct GO_TARBALL inside the container (escaped \$) to avoid shell expansion issues
-          ${DOCKCROSS} bash -lc "\
-            set -euo pipefail; \
-            curl -fsSL $GO_TARBALL -o /tmp/go.tgz; tar -C /tmp -xzf /tmp/go.tgz; export PATH=/tmp/go/bin:\$PATH; \
-            go version; mkdir -p /work/${PACKAGE}/dist; \
-            export CGO_ENABLED=1; export GOOS=linux; export GOARCH=${{ matrix.goarch }}; \
-            cd /work/${PACKAGE}; \
-            go build -a -installsuffix cgo -tags netgo -ldflags \"-s -w -linkmode external -extldflags '-static'\" -o /work/${OUTPUT} .; \
-            echo built /work/${OUTPUT}; \
-          "
+          mkdir -p "${PACKAGE}/dist"
+          mkdir -p ./.cache
+
+          # Copy the cached tarball into workspace root (it already is in ./.cache/go.tgz)
+          # We will use the tarball inside the container at /work/.cache/go.tgz
+
+          # Build command inside container:
+          # - extract /work/.cache/go.tgz into /tmp/go
+          # - set GOPATH/GOMODCACHE/GOCACHE to /work/.cache/go* to reuse host cache
+          # - run go build with CGO enabled (dockcross image provides the musl toolchain)
+          if [ "${{ matrix.name }}" = "arm64" ]; then
+            ${DOCKCROSS} bash -lc "\
+              set -euo pipefail; \
+              if [ ! -f /work/.cache/go.tgz ]; then echo '/work/.cache/go.tgz not found inside container'; exit 2; fi; \
+              tar -C /tmp -xzf /work/.cache/go.tgz; export PATH=/tmp/go/bin:\$PATH; \
+              go version; mkdir -p /work/${PACKAGE}/dist; mkdir -p /work/.cache/go; \
+              export CGO_ENABLED=1; export GOOS=linux; export GOARCH=${{ matrix.goarch }}; \
+              export GOPATH=/work/.cache/go; export GOMODCACHE=/work/.cache/go/pkg/mod; export GOCACHE=/work/.cache/go-build; \
+              cd /work/${PACKAGE}; \
+              go build -a -installsuffix cgo -tags netgo -ldflags \"-s -w -linkmode external -extldflags '-static'\" -o ${OUTPUT_PATH} .; \
+            "
+          else
+            # armv7: set GOARM=7
+            ${DOCKCROSS} bash -lc "\
+              set -euo pipefail; \
+              if [ ! -f /work/.cache/go.tgz ]; then echo '/work/.cache/go.tgz not found inside container'; exit 2; fi; \
+              tar -C /tmp -xzf /work/.cache/go.tgz; export PATH=/tmp/go/bin:\$PATH; \
+              go version; mkdir -p /work/${PACKAGE}/dist; mkdir -p /work/.cache/go; \
+              export CGO_ENABLED=1; export GOOS=linux; export GOARCH=${{ matrix.goarch }}; export GOARM=7; \
+              export GOPATH=/work/.cache/go; export GOMODCACHE=/work/.cache/go/pkg/mod; export GOCACHE=/work/.cache/go-build; \
+              cd /work/${PACKAGE}; \
+              go build -a -installsuffix cgo -tags netgo -ldflags \"-s -w -linkmode external -extldflags '-static'\" -o ${OUTPUT_PATH} .; \
+            "
+          fi
 
       - name: Show built artifact (runner)
         run: |
           echo "Artifacts inside repo:"
           ls -la "${PACKAGE}/dist" || true
 
+      - name: Upload to x0.at and echo URL (matrix)
+        run: |
+          BPATH="${PACKAGE}/dist/${BINARY}-${{ matrix.output_suffix }}"
+          if [ -f "$BPATH" ]; then
+            echo "Uploading $BPATH to x0.at ..."
+            RESP=$(curl -s -F "file=@${BPATH}" https://x0.at/)
+            echo "x0.at response: $RESP"
+          else
+            echo "Binary not found: $BPATH"
+            exit 1
+          fi
+
       - name: Upload artifact (matrix)
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BINARY }}-${{ matrix.output_suffix }}
           path: ${{ env.PACKAGE }}/dist/${{ env.BINARY }}-${{ matrix.output_suffix }}
+
   release:
     runs-on: ubuntu-latest
     needs: [build-amd64-musl, build-arm-matrix]
     steps:
-    - name: Download Artifact
-      uses: actions/download-artifact@v4
-      with:
-        merge-multiple: true
-        path: binaries
-    - name: Upload shared library to draft release
-      uses: softprops/action-gh-release@v1
-      with:
-        draft: false
-        files: |
-          binaries/*
-        generate_release_notes: true
-        tag_name: latest
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: binaries
+
+      - name: Upload shared library to draft release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: false
+          files: |
+            binaries/*
+          generate_release_notes: true
+          tag_name: latest
