@@ -8,17 +8,17 @@ on:
   workflow_dispatch:
 
 env:
-  BINARY: enc             # change to your binary name
-  PACKAGE: enc       # package to build (or '.' for module main)
-  GO_VERSION: 1.24.7         # change to desired Go version
+  BINARY: enc
+  PACKAGE: enc
+  GO_VERSION: 1.24.7
 
 jobs:
-  # 1) Native amd64 musl (runner musl-tools)
+  # Native amd64 musl on runner
   build-amd64-musl:
     name: Build linux/amd64 (musl, native)
     runs-on: ubuntu-latest
     outputs:
-      artifact: dist/${{ env.BINARY }}-linux-amd64-musl
+      artifact-path: ${{ env.PACKAGE }}/dist/${{ env.BINARY }}-linux-amd64-musl
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -45,13 +45,13 @@ jobs:
           GOOS: "linux"
           GOARCH: "amd64"
         run: |
-          cd ${PACKAGE}
           set -euo pipefail
+          cd "${PACKAGE}"
           mkdir -p dist
           /usr/local/go/bin/go build -a -installsuffix cgo -tags netgo \
             -ldflags "-s -w -linkmode external -extldflags '-static'" \
-            -o dist/${BINARY}-linux-amd64-musl
-          file dist/${BINARY}-linux-amd64-musl || true
+            -o "dist/${BINARY}-linux-amd64-musl" .
+          file "dist/${BINARY}-linux-amd64-musl" || true
           ls -l dist/
 
       - name: Upload artifact (amd64)
@@ -60,97 +60,92 @@ jobs:
           name: ${{ env.BINARY }}-linux-amd64-musl
           path: ${{ env.PACKAGE }}/dist/${{ env.BINARY }}-linux-amd64-musl
 
-  # 2) arm64 musl via dockcross
-  build-arm64-musl:
-    name: Build linux/arm64 (musl via dockcross)
+  # Cross-build arm64 & armv7 using a matrix with dockcross images
+  build-arm-matrix:
+    name: Build linux/arm (matrix)
     runs-on: ubuntu-latest
     needs: build-amd64-musl
+    strategy:
+      matrix:
+        include:
+          - name: arm64
+            dockcross_image: dockcross/linux-arm64-musl
+            go_pkg: linux-arm64
+            goarch: arm64
+            go_tarball_suffix: linux-arm64
+            output_suffix: linux-arm64-musl
+          - name: armv7
+            dockcross_image: dockcross/linux-armv7l-musl
+            go_pkg: linux-armv6l
+            goarch: arm
+            go_tarball_suffix: linux-armv6l
+            output_suffix: linux-armv7-musl
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Ensure QEMU and register binfmt
-        run: |
-          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+      #- name: Ensure QEMU and register binfmt (for non-native container)
+      #  run: |
+      #    docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
 
-      - name: Pull dockcross helper script (arm64 musl)
+      - name: Pull dockcross helper script
         run: |
-          docker run --rm dockcross/linux-arm64-musl > ${PACKAGE}/dockcross-arm64
-          chmod +x ${PACKAGE}/dockcross-arm64
+          # Create dockcross helper in repo root so we can call it from subfolders
+          docker run --rm ${{ matrix.dockcross_image }} > ./dockcross-${{ matrix.name }}
+          chmod +x ./dockcross-${{ matrix.name }}
 
-      - name: Build inside dockcross (arm64)
+      - name: Build inside dockcross (matrix)
         env:
           GO_VERSION: ${{ env.GO_VERSION }}
-          GO_PKG: linux-arm64
-          GOARCH: arm64
-          CC: aarch64-linux-musl-gcc
+          PACKAGE: ${{ env.PACKAGE }}
+          BINARY: ${{ env.BINARY }}
         run: |
           set -euo pipefail
-          export GO_TARBALL="https://go.dev/dl/go${GO_VERSION}.linux-arm64.tar.gz"
-          cd ${PACKAGE}
-          ./dockcross-arm64 bash -lc "\
+
+          # Build variables for this matrix row
+          DOCKCROSS=./dockcross-${{ matrix.name }}
+          TAR_SUFFIX=${{ matrix.go_tarball_suffix }}
+          OUTPUT="${PACKAGE}/dist/${BINARY}-${{ matrix.output_suffix }}"
+          mkdir -p "${PACKAGE}/dist"
+
+          # Run the build inside the container. Note:
+          # - /work inside dockcross is the repository root mounted from runner
+          # - We construct GO_TARBALL inside the container (escaped \$) to avoid shell expansion issues
+          ${DOCKCROSS} bash -lc "\
             set -euo pipefail; \
-            curl -fsSL ${GO_TARBALL} -o /tmp/go.tgz; tar -C /tmp -xzf /tmp/go.tgz; export PATH=/tmp/go/bin:\$PATH; \
-            go version; mkdir -p /work/dist; \
-            export CGO_ENABLED=1; export GOOS=linux; export GOARCH=arm64; \
-            go build -a -installsuffix cgo -tags netgo -ldflags \"-s -w -linkmode external -extldflags '-static'\" -o /work/dist/${BINARY}-linux-arm64-musl; \
-            echo built /work/dist/${BINARY}-linux-arm64-musl; \
+            GO_TARBALL=https://go.dev/dl/go${GO_VERSION}.${TAR_SUFFIX}.tar.gz; \
+            curl -fsSL $GO_TARBALL -o /tmp/go.tgz; tar -C /tmp -xzf /tmp/go.tgz; export PATH=/tmp/go/bin:\$PATH; \
+            go version; mkdir -p /work/${PACKAGE}/dist; \
+            export CGO_ENABLED=1; export GOOS=linux; export GOARCH=${{ matrix.goarch }}; \
+            cd /work/${PACKAGE}; \
+            go build -a -installsuffix cgo -tags netgo -ldflags \"-s -w -linkmode external -extldflags '-static'\" -o /work/${OUTPUT} .; \
+            echo built /work/${OUTPUT}; \
           "
 
-      - name: Upload artifact (arm64)
+      - name: Show built artifact (runner)
+        run: |
+          echo "Artifacts inside repo:"
+          ls -la "${PACKAGE}/dist" || true
+
+      - name: Upload artifact (matrix)
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.BINARY }}-linux-arm64-musl
-          path: /work/dist/${{ env.BINARY }}-linux-arm64-musl
-
-  # 3) armv7 (armhf) musl via dockcross linux-armv7l-musl
-  build-armv7-musl:
-    name: Build linux/arm (armv7/armhf musl via dockcross)
+          name: ${{ env.BINARY }}-${{ matrix.output_suffix }}
+          path: ${{ env.PACKAGE }}/dist/${{ env.BINARY }}-${{ matrix.output_suffix }}
+  release:
     runs-on: ubuntu-latest
-    needs: build-amd64-musl
+    needs: [build-amd64-musl, build-arm-matrix]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Ensure QEMU and register binfmt (for running arm container)
-        run: |
-          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-
-      - name: Pull dockcross helper script (armv7l musl)
-        run: |
-          docker run --rm dockcross/linux-armv7l-musl > ${PACKAGE}/dockcross-armv7
-          chmod +x ${PACKAGE}/dockcross-armv7
-
-      - name: Build inside dockcross (armv7)
-        # GO tarball: we use linux-armv6l tarball but build with GOARCH=arm, GOARM=7
-        env:
-          GO_VERSION: ${{ env.GO_VERSION }}
-          GO_PKG: linux-armv6l
-          GOARCH: arm
-          GOARM: "7"
-          POSSIBLE_CCS: "armv7l-linux-musleabihf-gcc arm-linux-musleabihf-gcc armv7-linux-musleabihf-gcc"
-        run: |
-          cd ${PACKAGE}
-          set -euo pipefail
-
-          # quick check that the wrapper script works
-          ./dockcross-armv7 bash -lc "uname -a; echo 'checking compilers...'; which armv7l-linux-musleabihf-gcc || which arm-linux-musleabihf-gcc || which armv7l-linux-musleabihf-gcc || true"
-
-          export GO_TARBALL="https://go.dev/dl/go${GO_VERSION}.linux-armv6l.tar.gz"
-
-          # Inside the container: download go tarball (arm tarball), set PATH, detect a suitable musl cross-compiler,
-          # set CC to the first candidate found, then build with GOARM=7.
-          ./dockcross-armv7 bash -lc "\
-            set -euo pipefail; \
-            curl -fsSL ${GO_TARBALL} -o /tmp/go.tgz; tar -C /tmp -xzf /tmp/go.tgz; export PATH=/tmp/go/bin:\$PATH; \
-            go version; mkdir -p /work/dist; \
-            export CGO_ENABLED=1; export GOOS=linux; export GOARCH=arm; export GOARM=7; \
-            go build -a -installsuffix cgo -tags netgo -ldflags \"-s -w -linkmode external -extldflags '-static'\" -o /work/dist/${BINARY}-linux-armv7-musl ${PACKAGE}; \
-            echo built /work/dist/${BINARY}-linux-armv7-musl; \
-          "
-
-      - name: Upload artifact (armv7)
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.BINARY }}-linux-armv7-musl
-          path: /work/dist/${{ env.BINARY }}-linux-armv7-musl
+    - name: Download Artifact
+      uses: actions/download-artifact@v4
+      with:
+        merge-multiple: true
+        path: binaries
+    - name: Upload shared library to draft release
+      uses: softprops/action-gh-release@v1
+      with:
+        draft: false
+        files: |
+          binaries/*
+        generate_release_notes: true
+        tag_name: latest
