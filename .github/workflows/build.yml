@@ -106,7 +106,7 @@ jobs:
           DOCKCROSS=./dockcross-${{ matrix.name }}
           TAR_SUFFIX=${{ matrix.go_tarball_suffix }}
           OUTPUT="${PACKAGE}/dist/${BINARY}-${{ matrix.output_suffix }}"
-          GO_TARBALL=https://go.dev/dl/go${GO_VERSION}.${TAR_SUFFIX}.tar.gz
+          GO_TARBALL=https://go.dev/dl/go${GO_VERSION}.linux-amd64.tar.gz
           mkdir -p "${PACKAGE}/dist"
 
           # Run the build inside the container. Note:
