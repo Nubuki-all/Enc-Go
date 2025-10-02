@@ -92,7 +92,7 @@ jobs:
             set -euo pipefail; \
             curl -fsSL ${GO_TARBALL} -o /tmp/go.tgz; tar -C /tmp -xzf /tmp/go.tgz; export PATH=/tmp/go/bin:\$PATH; \
             go version; mkdir -p /work/dist; \
-            export CGO_ENABLED=1; export CC=aarch64-linux-musl-gcc; export GOOS=linux; export GOARCH=arm64; \
+            export CGO_ENABLED=1; export GOOS=linux; export GOARCH=arm64; \
             go build -a -installsuffix cgo -tags netgo -ldflags \"-s -w -linkmode external -extldflags '-static'\" -o /work/dist/${BINARY}-linux-arm64-musl; \
             echo built /work/dist/${BINARY}-linux-arm64-musl; \
           "
@@ -144,17 +144,7 @@ jobs:
             set -euo pipefail; \
             curl -fsSL ${GO_TARBALL} -o /tmp/go.tgz; tar -C /tmp -xzf /tmp/go.tgz; export PATH=/tmp/go/bin:\$PATH; \
             go version; mkdir -p /work/dist; \
-            # detect available musl arm compiler (try several common prefixes) \
-            CC_CANDIDATES=(armv7l-linux-musleabihf-gcc arm-linux-musleabihf-gcc armv7-linux-musleabihf-gcc); \
-            SELECTED_CC=''; \
-            for c in ${CC_CANDIDATES[@]}; do \
-              if command -v $c >/dev/null 2>&1; then SELECTED_CC=$c; break; fi; \
-            done; \
-            if [ -z ${SELECTED_CC} ]; then \
-              echo 'No musl arm cross-compiler found in container. You may need an image that provides arm musl cross toolchain or build one.'; exit 2; \
-            fi; \
-            echo 'Using cross-compiler:' ${SELECTED_CC}; \
-            export CGO_ENABLED=1; export CC=${SELECTED_CC}; export GOOS=linux; export GOARCH=arm; export GOARM=7; \
+            export CGO_ENABLED=1; export GOOS=linux; export GOARCH=arm; export GOARM=7; \
             go build -a -installsuffix cgo -tags netgo -ldflags \"-s -w -linkmode external -extldflags '-static'\" -o /work/dist/${BINARY}-linux-armv7-musl ${PACKAGE}; \
             echo built /work/dist/${BINARY}-linux-armv7-musl; \
           "
