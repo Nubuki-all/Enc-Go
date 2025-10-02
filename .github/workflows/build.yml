@@ -57,8 +57,8 @@ jobs:
       - name: Upload artifact (amd64)
         uses: actions/upload-artifact@v4
         with:
-          name: ${BINARY}-linux-amd64-musl
-          path: ${PACKAGE}/dist/${BINARY}-linux-amd64-musl
+          name: ${{ env.BINARY }}-linux-amd64-musl
+          path: ${{ env.PACKAGE }}/dist/${{ env.BINARY }}-linux-amd64-musl
 
   # 2) arm64 musl via dockcross
   build-arm64-musl:
@@ -75,8 +75,8 @@ jobs:
 
       - name: Pull dockcross helper script (arm64 musl)
         run: |
-          docker run --rm dockcross/linux-arm64-musl > ./dockcross-arm64
-          chmod +x ./dockcross-arm64
+          docker run --rm dockcross/linux-arm64-musl > ${PACKAGE}/dockcross-arm64
+          chmod +x ${PACKAGE}/dockcross-arm64
 
       - name: Build inside dockcross (arm64)
         env:
@@ -86,10 +86,10 @@ jobs:
           CC: aarch64-linux-musl-gcc
         run: |
           set -euo pipefail
+          export GO_TARBALL= "https://go.dev/dl/go${GO_VERSION}.linux-arm64.tar.gz"
           cd ${PACKAGE}
           ./dockcross-arm64 bash -lc "\
             set -euo pipefail; \
-            GO_TARBALL=\"https://go.dev/dl/go${GO_VERSION}.linux-arm64.tar.gz\"; \
             curl -fsSL \"${GO_TARBALL}\" -o /tmp/go.tgz; tar -C /tmp -xzf /tmp/go.tgz; export PATH=/tmp/go/bin:\$PATH; \
             go version; mkdir -p /work/dist; \
             export CGO_ENABLED=1; export CC=aarch64-linux-musl-gcc; export GOOS=linux; export GOARCH=arm64; \
@@ -100,8 +100,8 @@ jobs:
       - name: Upload artifact (arm64)
         uses: actions/upload-artifact@v4
         with:
-          name: ${BINARY}-linux-arm64-musl
-          path: dist/${BINARY}-linux-arm64-musl
+          name: ${{ env.BINARY }}-linux-arm64-musl
+          path: /work/dist/${{ env.BINARY }}-linux-arm64-musl
 
   # 3) armv7 (armhf) musl via dockcross linux-armv7l-musl
   build-armv7-musl:
@@ -118,8 +118,8 @@ jobs:
 
       - name: Pull dockcross helper script (armv7l musl)
         run: |
-          docker run --rm dockcross/linux-armv7l-musl > ./dockcross-armv7
-          chmod +x ./dockcross-armv7
+          docker run --rm dockcross/linux-armv7l-musl > ${PACKAGE}/dockcross-armv7
+          chmod +x ${PACKAGE}/dockcross-armv7
 
       - name: Build inside dockcross (armv7)
         # GO tarball: we use linux-armv6l tarball but build with GOARCH=arm, GOARM=7
@@ -136,7 +136,7 @@ jobs:
           # quick check that the wrapper script works
           ./dockcross-armv7 bash -lc "uname -a; echo 'checking compilers...'; which armv7l-linux-musleabihf-gcc || which arm-linux-musleabihf-gcc || which armv7l-linux-musleabihf-gcc || true"
 
-          GO_TARBALL="https://go.dev/dl/go${GO_VERSION}.linux-armv6l.tar.gz"
+          export GO_TARBALL="https://go.dev/dl/go${GO_VERSION}.linux-armv6l.tar.gz"
 
           # Inside the container: download go tarball (arm tarball), set PATH, detect a suitable musl cross-compiler,
           # set CC to the first candidate found, then build with GOARM=7.
@@ -162,5 +162,5 @@ jobs:
       - name: Upload artifact (armv7)
         uses: actions/upload-artifact@v4
         with:
-          name: ${BINARY}-linux-armv7-musl
-          path: ${PACKAGE}/dist/${BINARY}-linux-armv7-musl
+          name: ${{ env.BINARY }}-linux-armv7-musl
+          path: /work/dist/${{ env.BINARY }}-linux-armv7-musl
