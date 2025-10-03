@@ -67,8 +67,7 @@ func DynamicThumb(ctx context.Context, name string, thumb string, useAniList boo
 	}
 
 	// If parsing is turned off or global config disables AniList, stop here
-	if !bot.AnilistParse && !useAniList {
-		println(true)
+	if !bot.AnilistParse || !useAniList {
 		return result
 	}
 

@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	//"io"
 	"os"
 	"os/exec"
@@ -13,11 +14,13 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+
 	//"sync"
 	"syscall"
 	"time"
 
 	"enc/config"
+	"enc/internal/logger"
 )
 
 // Enshell runs a shell command and returns the output and error
@@ -35,25 +38,6 @@ const (
 	maxHTMLSize = 65536
 )
 
-// ChooseMediaInfoBinary decides which mediainfo binary to call.
-//
-// It prefers, in order:
-//  1. env var MEDIATOOL (if set)
-//  2. .bin/<os>-<arch>/mediainfo
-//  3. .bin/mediainfo
-func ChooseMediaInfoBinary() string {
-	if v := os.Getenv("MEDIAINFOPATH"); v != "" {
-		return v
-	}
-	// prefer per-platform folder, e.g. .bin/linux-amd64/mediainfo
-	perPlatform := filepath.Join(".bin", runtime.GOOS+"-"+runtime.GOARCH, "mediainfo")
-	if _, err := os.Stat(perPlatform); err == nil {
-		return perPlatform
-	}
-	// fallback to .bin/mediainfo
-	fallback := filepath.Join(".bin", "mediainfo")
-	return fallback
-}
 
 // MediaInfoHTML runs mediainfo and returns HTML output.
 //
@@ -61,12 +45,6 @@ func ChooseMediaInfoBinary() string {
 // file: path to the media file
 // full: whether to request full output (adds --Full / -f)
 func MediaInfoHTML(ctx context.Context, file string, full bool) (string, error) {
-	bin := ChooseMediaInfoBinary()
-
-	// ensure binary exists
-	if info, err := os.Stat(bin); err != nil || info.IsDir() {
-		return "", fmt.Errorf("mediainfo binary not found at %s", bin)
-	}
 
 	// build args
 	args := []string{"--Output=HTML"}
@@ -87,9 +65,10 @@ func MediaInfoHTML(ctx context.Context, file string, full bool) (string, error) 
 	}
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, bin, args...)
+	cmd := exec.CommandContext(ctx, "mediainfo", args...)
 	out, err := cmd.CombinedOutput()
 	output := string(out)
+	logger.Info(output)
 
 	// If process failed but produced output, return both
 	if err != nil {

@@ -440,7 +440,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 		ext = filepath.Ext(download.Path)
 	}
 	baseName := filepath.Base(download.Path)
-	tFile := folder + utils.RemoveExt(baseName)
+	tFile := filepath.Join(folder, utils.RemoveExt(baseName))
 	tFile2 := " [Metadata]" + ext
 	tFile += " [Temp]" + ext
 
