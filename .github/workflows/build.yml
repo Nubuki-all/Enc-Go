@@ -1,10 +1,10 @@
 name: Build (musl) amd64, arm64, armv7
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+  #push:
+  #  branches: [ main ]
+  #pull_request:
+  #  branches: [ main ]
   workflow_dispatch:
 
 env:

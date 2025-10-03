@@ -85,7 +85,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 			),
 			argparser.CreateDStringFlag(
 				"quality",
-				"q",
+				"k",
 				"Custom codec & quality",
 			),
 			argparser.CreateDStringFlag(
