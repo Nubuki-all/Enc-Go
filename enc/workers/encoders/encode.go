@@ -76,6 +76,7 @@ func (e *Encoder) Callback(dlPath, enPath, text string) {
 		Sender: e.Sender,
 		Time:   e.STime,
 		ID:     e.ID,
+		ExtraFlags: e.ExtraFlags,
 	}
 	cInfo := &types.CallbackInfo{
 		TransferInfo: e.TransferInfo,

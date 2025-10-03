@@ -30,3 +30,21 @@ func CancelRTurn(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery
 	_ = query.GetMessage().Delete()
 	return nil
 }
+
+
+func CancelMTurn(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
+	// id := fmt.Sprintf("%d:%d", query.ChatID, query.ID)
+	_, turnID, _ := strings.Cut(string(query.Query.Data), " ")
+	if !bot.WaitQueueM.Contains(turnID) {
+		return cleanOldMessage(ctx, update, query)
+	}
+	sender := query.SenderID
+	if !utils.UserIsOwner(sender) {
+		_ = query.Answer(notAllowed, false)
+		return nil
+	}
+	_ = query.Answer("Cancelling…", false)
+	_ = bot.WaitQueueM.Remove(turnID)
+	_ = query.GetMessage().Delete()
+	return nil
+}

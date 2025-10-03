@@ -57,7 +57,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 		arg := argparser.ParseFlags(
 			cmd,
 			helpMsg,
-			argList,
+		argList,
 			argparser.CreateDStringFlag(
 				"input",
 				"i",
@@ -458,7 +458,9 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 		_, _ = sMsg.Edit("Error while muxing: "+err.Error(), nil)
 		return nil
 	}
-	encode.Callback(download.Path, tFile, "%s **Currently Muxing:**\n└`%s`\n\n`using provided parameters…`")
+
+	encode.ExtraFlags = "mux"
+	encode.Callback(download.Path, tFile, "%s **Currently Muxing:**\n└`%s`\n\n`using provided parameters…`%s")	
 	_ = encode.AwaitCompletion()
 	_ = encode.ReportStatus("Muxing")
 	if !encode.Process.Success() {
@@ -580,7 +582,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 		FileName:      result.FileName,
 		ForceDocument: true,
 	}
-	upload.Init(id, download.Path, msg.SenderID)
+	upload.Init(id, tFile2, msg.SenderID)
 	err = upload.Start()
 	if err != nil || upload.IsCancelled {
 		_, _ = upload.ReportStatus()

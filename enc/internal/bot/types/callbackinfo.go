@@ -1,3 +1,4 @@
+// Package types contain bot specific inteenal types
 package types
 
 import "os"

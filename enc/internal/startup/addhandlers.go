@@ -8,6 +8,7 @@ import (
 	onevent "github.com/celestix/gotgproto/dispatcher/handlers"
 	"github.com/celestix/gotgproto/dispatcher/handlers/filters"
 	"github.com/celestix/gotgproto/ext"
+
 	//"github.com/gotd/td/tg"
 
 	"enc/config"
@@ -16,6 +17,7 @@ import (
 	"enc/utils/tele"
 	"enc/utils/tele/parser"
 	"enc/workers/downloaders"
+	"enc/workers/encoders"
 	"enc/workers/handlers"
 	"enc/workers/handlers/callbacks"
 	"enc/workers/handlers/dev"
@@ -112,9 +114,11 @@ func AddCBHandlers(dispatch dispatcher.Dispatcher) {
 		// Tranfer Handlers
 		downloaders.CallbackData: CallbackEventHandler(callbacks.CancelDownload),
 		uploaders.CallbackData:   CallbackEventHandler(callbacks.CancelUpload),
+		encoders.CallbackData:    CallbackEventHandler(callbacks.EncodeInfo),
 
 		// Turn Handlers
 		"cancel_rturn": CallbackEventHandler(callbacks.CancelRTurn),
+		"cancel_mturn": CallbackEventHandler(callbacks.CancelMTurn),
 	}
 	for prefix, handler := range callbackHandlers {
 		dispatch.AddHandler(onevent.NewCallbackQuery(
