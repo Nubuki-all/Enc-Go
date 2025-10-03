@@ -70,7 +70,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 			),
 			argparser.CreateDStringFlag(
 				"force",
-				"D",
+				"F",
 				"To force output file-name.",
 			),
 			argparser.CreateDInt64Flag(
@@ -95,7 +95,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 			),
 			argparser.CreateDStringFlag(
 				"ext",
-				"e",
+				"E",
 				"force change extension",
 			),
 			argparser.CreateDStringFlag(
