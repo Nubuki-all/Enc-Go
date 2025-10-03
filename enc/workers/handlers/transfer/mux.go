@@ -75,7 +75,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 			),
 			argparser.CreateDInt64Flag(
 				"chat",
-				"c",
+				"D",
 				"id of chat to dump the resulting file.",
 			),
 			argparser.CreateDBoolFlag(
