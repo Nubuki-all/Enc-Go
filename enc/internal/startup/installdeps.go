@@ -518,7 +518,7 @@ func InstallMediaInfo(ctx context.Context, binDir string) (string, error) {
 	var fileName string
 	targetName := "mediainfo"
 
-	// map platform -> filename (as provided)	
+	// map platform -> filename (as provided)
 	switch {
 	case goos == "linux" && goarch == "amd64":
 		fileName = "mediainfo-linux-amd64"
@@ -529,10 +529,10 @@ func InstallMediaInfo(ctx context.Context, binDir string) (string, error) {
 	case goos == "windows" && goarch == "arm64":
 		fileName = "Windows_x64.zip"
 		targetName += ".exe"
-	case goos == "windows" && goarch== "amd64":
+	case goos == "windows" && goarch == "amd64":
 		fileName = "Windows_ARM64.zip"
 		targetName += ".exe"
-		
+
 	default:
 		return "", fmt.Errorf("install mediainfo: platform not supported: os=%s arch=%s", goos, goarch)
 	}
@@ -572,7 +572,7 @@ func InstallMediaInfo(ctx context.Context, binDir string) (string, error) {
 	}
 
 	// Download to temp file
-	tmpFile := &utils.TempFile{}	
+	tmpFile := &utils.TempFile{}
 	err = tmpFile.Create(dlPrefix)
 	if err != nil {
 		return "", fmt.Errorf("create temp file: %w", err)
@@ -599,7 +599,7 @@ func InstallMediaInfo(ctx context.Context, binDir string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		defer func() { _ = r.Close() }()	
+		defer func() { _ = r.Close() }()
 
 		for _, f := range r.File {
 			bn := filepath.Base(f.Name)
@@ -624,7 +624,7 @@ func InstallMediaInfo(ctx context.Context, binDir string) (string, error) {
 			if err != nil {
 				_ = os.Remove(tmpPath)
 				return "", err
-			}	
+			}
 
 			// atomic move into place
 			if bn == "MediaInfo.exe" {
