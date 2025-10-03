@@ -9,6 +9,7 @@ import (
 
 	"enc/config"
 	tgph "enc/internal/clients/telegraph"
+	"enc/internal/logger"
 	// tele "enc/internal/clients/telegram"
 )
 
@@ -31,6 +32,7 @@ func PostToTelegraph(title, text string) (*telegraph.Page, error) {
 	}
 
 	var lastErr error
+	logger.Info(text)
 	// Use the Account object directly to create pages
 	for i := 0; i < 5; i++ {
 		page, err := tgph.Account.CreatePage(
