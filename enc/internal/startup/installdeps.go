@@ -3,6 +3,8 @@ package startup
 import (
 	"archive/tar"
 	"archive/zip"
+	"slices"
+
 	//"bufio"
 	"context"
 	"errors"
@@ -500,6 +502,155 @@ func extractFromTarXz(tarXzPath, binDir string, targets []string) error {
 	return nil
 }*/
 
+// InstallMediaInfo downloads the appropriate static mediainfo  binary for
+// the current platform and installs it into binDir (creating binDir if needed).
+// If the target binary already exists (non-empty) this is a no-op.
+func InstallMediaInfo(ctx context.Context, binDir string) (string, error) {
+	if config.Conf.NoExternalDL {
+		return "", nil
+	}
+	baseURL := "https://github.com/Nubuki-all/MediainfoCli-Static/releases/download/latest/"
+	baseURLW := "https://mediaarea.net/download/binary/mediainfo/25.09/MediaInfo_CLI_25.09_"
+
+	goos := runtime.GOOS
+	goarch := runtime.GOARCH
+
+	var fileName string
+	targetName := "mediainfo"
+
+	// map platform -> filename (as provided)	
+	switch {
+	case goos == "linux" && goarch == "amd64":
+		fileName = "mediainfo-linux-amd64"
+	case goos == "linux" && goarch == "arm":
+		fileName = "mediainfo-linux-armv7"
+	case goos == "linux" && goarch == "arm64":
+		fileName = "mediainfo-linux-arm64"
+	case goos == "windows" && goarch == "arm64":
+		fileName = "Windows_x64.zip"
+		targetName += ".exe"
+	case goos == "windows" && goarch== "amd64":
+		fileName = "Windows_ARM64.zip"
+		targetName += ".exe"
+		
+	default:
+		return "", fmt.Errorf("install mediainfo: platform not supported: os=%s arch=%s", goos, goarch)
+	}
+
+	destPath := filepath.Join(binDir, targetName)
+
+	// If file already exists and seems valid, do nothing.
+	if fi, err := os.Stat(destPath); err == nil {
+		if !fi.IsDir() && fi.Size() > 0 {
+			return destPath, nil
+		}
+	}
+
+	// Ensure binDir exists
+	if err := os.MkdirAll(binDir, 0o755); err != nil {
+		return "", fmt.Errorf("create bin dir: %w", err)
+	}
+	dlPrefix := "-mediainfo"
+	fullURL := baseURL + fileName
+	if goos == "windows" {
+		fullURL = baseURLW + fileName
+		dlPrefix = "-mediainfo.zip"
+	}
+
+	// HEAD to ensure remote exists
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead, fullURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("build HEAD request: %w", err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("remote HEAD failed: %w", err)
+	}
+	_ = resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
+		return "", fmt.Errorf("remote file not available: %s (status %d)", fullURL, resp.StatusCode)
+	}
+
+	// Download to temp file
+	tmpFile := &utils.TempFile{}	
+	err = tmpFile.Create(dlPrefix)
+	if err != nil {
+		return "", fmt.Errorf("create temp file: %w", err)
+	}
+	tmpPath := tmpFile.Name
+	defer func() {
+		_ = tmpFile.Remove()
+	}()
+	if err := utils.DownloadFileWithProgress(ctx, fullURL, tmpPath); err != nil {
+		return "", err
+	}
+
+	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+	s.Suffix = " Finishing up..."
+	if goos == "windows" {
+		s.Suffix = "Extracting MediaInfo_CLI..."
+	}
+	_ = s.Color("yellow")
+	s.Start()
+	defer s.Stop()
+
+	if goos == "windows" {
+		r, err := zip.OpenReader(tmpPath)
+		if err != nil {
+			return "", err
+		}
+		defer func() { _ = r.Close() }()	
+
+		for _, f := range r.File {
+			bn := filepath.Base(f.Name)
+			if !slices.Contains([]string{"MediaInfo.exe", "LIBCURL.DLL"}, f.Name) {
+				continue
+			}
+
+			rc, err := f.Open()
+			if err != nil {
+				return "", err
+			}
+			tmpFile, err := os.CreateTemp("", "mediainfo-*")
+			if err != nil {
+				_ = rc.Close()
+				return "", err
+			}
+			tmpPath := tmpFile.Name()
+
+			_, err = io.Copy(tmpFile, rc)
+			_ = tmpFile.Close()
+			_ = rc.Close()
+			if err != nil {
+				_ = os.Remove(tmpPath)
+				return "", err
+			}	
+
+			// atomic move into place
+			if bn == "MediaInfo.exe" {
+				bn = "mediainfo.exe"
+			}
+			dest := filepath.Join(binDir, bn)
+			if err := atomicMove(tmpPath, dest); err != nil {
+				_ = os.Remove(tmpPath)
+				return "", err
+			}
+			return dest, nil
+		}
+	}
+	// make executable
+	if err := os.Chmod(tmpPath, 0o755); err != nil {
+		return "", fmt.Errorf("chmod temp file: %w", err)
+	}
+
+	// atomic move into place (reuses atomicMove helper)
+	if err := atomicMove(tmpPath, destPath); err != nil {
+		return "", fmt.Errorf("install binary: %w", err)
+	}
+
+	return destPath, nil
+}
+
 // InstallQbittorrentNox downloads the appropriate static qbittorrent-nox binary for
 // the current platform and installs it into binDir (creating binDir if needed).
 // If the target binary already exists (non-empty) this is a no-op.
@@ -590,7 +741,7 @@ func InstallQbittorrentNox(ctx context.Context, binDir string) (string, error) {
 	return destPath, nil
 }
 
-// InstallYtdlp downloads the appropriate static qbittorrent-nox binary for
+// InstallYtdlp downloads the appropriate yt-dlp binary for
 // the current platform and installs it into binDir (creating binDir if needed).
 // If the target binary already exists (non-empty) this is a no-op.
 func InstallYtdlp(ctx context.Context, binDir string) (string, error) {

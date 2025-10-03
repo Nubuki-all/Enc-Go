@@ -37,6 +37,9 @@ func extract() {
 		if _, err := startup.InstallAria2(ctx, p); err != nil {
 			logger.Error(err)
 		}
+		if _, err := startup.InstallMediaInfo(ctx, p); err != nil {
+			logger.Error(err)
+		}
 		if _, err := startup.InstallQbittorrentNox(ctx, p); err != nil {
 			logger.Error(err)
 		}

@@ -32,6 +32,4 @@ func main() {
 	if err != nil {
 		logger.Error(err)
 	}
-
-	// … rest of your app …
 }
