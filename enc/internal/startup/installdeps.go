@@ -505,10 +505,7 @@ func extractFromTarXz(tarXzPath, binDir string, targets []string) error {
 // InstallMediaInfo downloads the appropriate static mediainfo  binary for
 // the current platform and installs it into binDir (creating binDir if needed).
 // If the target binary already exists (non-empty) this is a no-op.
-func InstallMediaInfo(ctx context.Context, binDir string) (string, error) {
-	if config.Conf.NoExternalDL {
-		return "", nil
-	}
+func InstallMediaInfo(ctx context.Context, binDir string) (string, error) {	
 	baseURL := "https://github.com/Nubuki-all/MediainfoCli-Static/releases/download/latest/"
 	baseURLW := "https://mediaarea.net/download/binary/mediainfo/25.09/MediaInfo_CLI_25.09_"
 
