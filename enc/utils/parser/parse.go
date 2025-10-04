@@ -460,7 +460,9 @@ func CustCap(
 			logger.WarnW("PostMediaInfo failed", zap.Error(err))
 		}
 	}
-
+	if capInfo == "" && miURL != "" {
+		capInfo = "[None]"
+	}
 	// Build caption
 	formatCtx := map[string]string{
 		"title":   title,
