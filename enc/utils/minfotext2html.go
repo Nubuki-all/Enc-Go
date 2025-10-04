@@ -122,12 +122,12 @@ func ParseMediaInfoTextToHTML(input string) string {
 				if strings.TrimSpace(kv.Key) == "" && strings.TrimSpace(kv.Val) == "" {
 					continue
 				}
-				buf.WriteString("<i>")
+				buf.WriteString("<p><i>")
 				buf.WriteString(html.EscapeString(kv.Key))
 				// user requested "key : value" spacing
 				buf.WriteString(" :</i> ")
 				buf.WriteString(html.EscapeString(kv.Val))
-				buf.WriteString("<br>\n")
+				buf.WriteString("</p>")
 			}
 		}
 		continue
