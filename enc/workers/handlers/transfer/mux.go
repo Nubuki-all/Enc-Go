@@ -403,7 +403,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 		Size:     size,
 		URI:      link,
 	}
-	if fileName == "" {
+	if fileName == "" && link == "" {
 		if tgFileName == "" {
 			_, _ = sMsg.EditText("__No file name found, cannot proceed.__")
 			return nil
