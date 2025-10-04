@@ -156,4 +156,3 @@ func writeKeyValues(buf *bytes.Buffer, m map[string]string) {
 		buf.WriteString("</div>\n")
 	}
 }
-

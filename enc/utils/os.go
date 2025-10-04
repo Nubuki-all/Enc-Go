@@ -78,7 +78,7 @@ func MediaInfoHTML(ctx context.Context, file string, full bool) (string, error) 
 	if len(output) > maxHTMLSize {
 		// keep ~65430 bytes plus truncation notice (matches original).
 		cut := 65430
-		cut = min(cut, len(output))	
+		cut = min(cut, len(output))
 		output = output[:cut] + "<strong>...<strong><br><br><strong>(TRUNCATED DUE TO CONTENT EXCEEDING MAX LENGTH)<strong>"
 	}
 
