@@ -3,12 +3,14 @@ package utils
 import (
 	//"bufio"
 	//"errors"
+	"encoding/json"
 	"fmt"
 	"hash/crc32"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"slices"
@@ -500,3 +502,133 @@ func RemoveExt(fileName string) string {
 	}
 	return fileName[:len(fileName)-len(filepath.Ext(fileName))]
 }
+
+// ProbeQualityCodec runs ffprobe on path and returns a string like "[480p] [AV1]".
+// On any error or when no video stream is found it returns an empty string.
+func ProbeQualityCodec(path string) string {
+	// ffprobe JSON: ask only for the first video stream's width/height/codec_name
+	cmd := exec.Command(
+		"ffprobe",
+		"-v", "error",
+		"-select_streams", "v:0",
+		"-show_entries", "stream=width,height,codec_name",
+		"-of", "json",
+		path,
+	)
+
+	out, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+
+	// minimal struct for ffprobe's output
+	var data struct {
+		Streams []struct {
+			Width     int    `json:"width"`
+			Height    int    `json:"height"`
+			CodecName string `json:"codec_name"`
+		} `json:"streams"`
+	}
+	if err := json.Unmarshal(out, &data); err != nil {
+		return ""
+	}
+	if len(data.Streams) == 0 {
+		return ""
+	}
+
+	s := data.Streams[0]
+
+	// map height to a common "p" label
+	resLabel := resolutionLabel(s.Height)
+	if resLabel == "" {
+		// if width/height missing, try to guess from width (fallback)
+		resLabel = resolutionLabelFromWidth(s.Width)
+	}
+	if resLabel == "" {
+		return ""
+	}
+
+	codec := niceCodecName(s.CodecName)
+	if codec == "" {
+		return ""
+	}
+
+	return fmt.Sprintf("[%s] [%s]", resLabel, codec)
+}
+
+func resolutionLabel(h int) string {
+	switch {
+	case h <= 0:
+		return ""
+	case h <= 240:
+		return "240p"
+	case h <= 360:
+		return "360p"
+	case h <= 480:
+		return "480p"
+	case h <= 720:
+		return "720p"
+	case h <= 1080:
+		return "1080p"
+	case h <= 1440:
+		return "1440p"
+	case h <= 2160:
+		return "2160p"
+	default:
+		return fmt.Sprintf("%dp", h) // unusual heights — return literal
+	}
+}
+
+func resolutionLabelFromWidth(w int) string {
+	// rough fallback mapping if only width is known
+	switch {
+	case w <= 0:
+		return ""
+	case w <= 426:
+		return "240p"
+	case w <= 640:
+		return "360p"
+	case w <= 854:
+		return "480p"
+	case w <= 1280:
+		return "720p"
+	case w <= 1920:
+		return "1080p"
+	case w <= 2560:
+		return "1440p"
+	case w <= 3840:
+		return "2160p"
+	default:
+		return ""
+	}
+}
+
+func niceCodecName(raw string) string {
+	if raw == "" {
+		return ""
+	}
+	r := strings.ToLower(raw)
+	switch r {
+	case "av1":
+		return "AV1"
+	case "vp9":
+		return "VP9"
+	case "vp8":
+		return "VP8"
+	case "h264", "libx264":
+		return "H.264"
+	case "hevc", "h265":
+		return "HEVC"
+	case "mpeg4":
+		return "MPEG-4"
+	case "mjpeg":
+		return "MJPEG"
+	case "prores":
+		return "ProRes"
+	default:
+		// fallback: uppercase the token (remove weird chars)
+		return strings.ToUpper(raw)
+	}
+}
+
+

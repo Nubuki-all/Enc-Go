@@ -383,6 +383,8 @@ func CustCap(
 	var codec string
 	if codecOverride != "" {
 		codec = codecOverride
+	} else if encString == "" {
+		codec = utils.ProbeQualityCodec(path)
 	} else {
 		codec = utils.GetCodec(encString)
 	}
