@@ -188,9 +188,8 @@ func ParseMediaInfoTextToHTML(input string) string {
 			buf.WriteString(html.EscapeString(kv.Val))
 			buf.WriteString("</div>\n")
 			buf.WriteString("<hr>\n")
-		}	
+		}
 	}
 
 	return buf.String()
 }
-
