@@ -115,7 +115,7 @@ func ParseMediaInfoTextToHTML(input string) string {
 
 		buf.WriteString("<h4>")
 		buf.WriteString(html.EscapeString(section))
-		buf.WriteString("</h4><br>")
+		buf.WriteString("</h4>\n")
 
 		for _, t := range tracks {
 			for _, kv := range t.Pairs {
@@ -125,9 +125,9 @@ func ParseMediaInfoTextToHTML(input string) string {
 				buf.WriteString("<i>")
 				buf.WriteString(html.EscapeString(kv.Key))
 				// user requested "key : value" spacing
-				buf.WriteString("</i> : ")
+				buf.WriteString(" :</i>" )
 				buf.WriteString(html.EscapeString(kv.Val))
-				buf.WriteString("<br>")
+				buf.WriteString("\n\n")
 			}
 		}
 		continue
