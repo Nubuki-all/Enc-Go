@@ -108,15 +108,14 @@ func ParseMediaInfoTextToHTML(input string) string {
 	}
 
 	// Render HTML
-	var buf bytes.Buffer	
+	var buf bytes.Buffer
 
 	for _, section := range order {
 		tracks := typeTracks[section]
 
-		
 		buf.WriteString("<h4>")
 		buf.WriteString(html.EscapeString(section))
-		buf.WriteString("</h4><br>")	
+		buf.WriteString("</h4><br>")
 
 		for _, t := range tracks {
 			for _, kv := range t.Pairs {
