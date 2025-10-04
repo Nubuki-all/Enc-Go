@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"html"
 	"strings"
-	"fmt"
+	//"fmt"
 )
 
 // KV preserves insertion order for a key/value pair.
@@ -122,27 +122,25 @@ func ParseMediaInfoTextToHTML(input string) string {
 
 		// Section heading larger: use <h2> for important sections
 		if important[section] {
-			buf.WriteString("<h2 style=\"margin:8px 0\">")
-			buf.WriteString(html.EscapeString(section))
-			buf.WriteString("</h2>\n")
-		} else {
-			buf.WriteString("<h3 style=\"margin:6px 0\">")
+			buf.WriteString("<h3 style=\"margin:8px 0\">")
 			buf.WriteString(html.EscapeString(section))
 			buf.WriteString("</h3>\n")
+		} else {
+			buf.WriteString("<h4 style=\"margin:6px 0\">")
+			buf.WriteString(html.EscapeString(section))
+			buf.WriteString("</h34>\n")
 		}
+		buf.WriteString("\n<hr>\n")
 
-		// Special handling:
-		// - Keep {Video}/{Audio}/{Text} labels (with #n if multiple)
-		// - DO NOT add {Menu} labels; Menu should just show key:value lines
 		if section == "Video" || section == "Audio" || section == "Text" {
-			for i, t := range tracks {
-				label := section
+			for _, t := range tracks {
+				/*label := section
 				if len(tracks) > 1 {
 					label = fmt.Sprintf("%s #%d", section, i+1)
 				}
 				buf.WriteString("<div>{")
 				buf.WriteString(html.EscapeString(label))
-				buf.WriteString("}</div>\n")
+				buf.WriteString("}</div>\n")*/
 
 				// write key/values in original order; add spacing after each entry
 				for _, kv := range t.Pairs {
@@ -155,6 +153,7 @@ func ParseMediaInfoTextToHTML(input string) string {
 					buf.WriteString("</em> : ")
 					buf.WriteString(html.EscapeString(kv.Val))
 					buf.WriteString("</div>\n")
+					buf.WriteString("<hr>\n")
 				}
 			}
 			continue
@@ -172,44 +171,24 @@ func ParseMediaInfoTextToHTML(input string) string {
 					buf.WriteString("</em> : ")
 					buf.WriteString(html.EscapeString(kv.Val))
 					buf.WriteString("</div>\n")
+					buf.WriteString("<hr>\n")
 				}
 			}
 			continue
 		}
 
 		// For other sections: if multiple tracks, label them (but skip labeling Menu)
-		if len(tracks) == 1 {
-			for _, kv := range tracks[0].Pairs {
-				if strings.TrimSpace(kv.Key) == "" && strings.TrimSpace(kv.Val) == "" {
-					continue
-				}
-				buf.WriteString("<div style=\"margin-bottom:8px\"><em>")
-				buf.WriteString(html.EscapeString(kv.Key))
-				buf.WriteString("</em> : ")
-				buf.WriteString(html.EscapeString(kv.Val))
-				buf.WriteString("</div>\n")
+		for _, kv := range tracks[0].Pairs {
+			if strings.TrimSpace(kv.Key) == "" && strings.TrimSpace(kv.Val) == "" {
+				continue
 			}
-		} else {
-			for i, t := range tracks {
-				// label multi-track sections (only if more than 1 track present)
-				if len(tracks) > 1 {
-					label := fmt.Sprintf("%s #%d", section, i+1)
-					buf.WriteString("<div>{")
-					buf.WriteString(html.EscapeString(label))
-					buf.WriteString("}</div>\n")
-				}
-				for _, kv := range t.Pairs {
-					if strings.TrimSpace(kv.Key) == "" && strings.TrimSpace(kv.Val) == "" {
-						continue
-					}
-					buf.WriteString("<div style=\"margin-bottom:8px\"><em>")
-					buf.WriteString(html.EscapeString(kv.Key))
-					buf.WriteString("</em> : ")
-					buf.WriteString(html.EscapeString(kv.Val))
-					buf.WriteString("</div>\n")
-				}
-			}
-		}
+			buf.WriteString("<div style=\"margin-bottom:8px\"><em>")
+			buf.WriteString(html.EscapeString(kv.Key))
+			buf.WriteString("</em> : ")
+			buf.WriteString(html.EscapeString(kv.Val))
+			buf.WriteString("</div>\n")
+			buf.WriteString("<hr>\n")
+		}	
 	}
 
 	return buf.String()

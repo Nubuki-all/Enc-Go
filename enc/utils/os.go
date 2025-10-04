@@ -86,7 +86,7 @@ func MediaInfoHTML(ctx context.Context, file string, full bool) (string, error) 
 }
 
 func PostMediaInfo(path string) (string, error) {
-	mInfo, err := MediaInfoHTML(context.Background(), path, true)
+	mInfo, err := MediaInfoHTML(context.Background(), path, false)
 	if err != nil {
 		return "", err
 	}
