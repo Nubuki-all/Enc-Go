@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"html"
 	"strings"
-	//"fmt"
 )
 
 // KV preserves insertion order for a key/value pair.
@@ -33,83 +32,81 @@ func ParseMediaInfoTextToHTML(input string) string {
 	typeTracks := map[string][]Track{}
 	order := []string{} // keep section order of first appearance
 
-	ensureSection := func(section string) {
-		if _, ok := typeTracks[section]; !ok {
-			typeTracks[section] = nil
-			order = append(order, section)
-		}
-		// If no track exists yet for this section, create the first one
-		if len(typeTracks[section]) == 0 {
-			typeTracks[section] = append(typeTracks[section], Track{Pairs: []KV{}})
-		}
-	}
-
 	currentSection := ""
+
+	// Pointers to optimize append operations.
+	var currentTrack *Track
+
 	for _, raw := range lines {
 		line := raw
 		trimmed := strings.TrimSpace(line)
 		if trimmed == "" {
-			// blank line = separator
+			// A blank line can serve as a separator between tracks, but only
+			// if we have finished parsing the previous track's data.
+			// This logic is implicitly handled by starting a new track only on
+			// section headers, which correctly separates tracks in MediaInfo output.
 			continue
 		}
 
-		// If there's no ":" at all treat as a section header
+		// If there's no ":" at all, treat it as a section header.
 		if !strings.Contains(line, ":") {
 			currentSection = strings.TrimSpace(line)
-			ensureSection(currentSection)
-			// start a new track under this header (so repeated header => new track)
-			typeTracks[currentSection] = append(typeTracks[currentSection], Track{Pairs: []KV{}})
+			// Check if this is the first time we've seen this section.
+			if _, ok := typeTracks[currentSection]; !ok {
+				order = append(order, currentSection)
+			}
+			
+			// Always start a new track for a new section header.
+			newTrack := Track{Pairs: []KV{}}
+			typeTracks[currentSection] = append(typeTracks[currentSection], newTrack)
+			currentTrack = &typeTracks[currentSection][len(typeTracks[currentSection])-1]
 			continue
 		}
 
-		// Choose splitting strategy:
-		// - For Menu: split on LAST ":" (so timecodes at start become the key)
-		// - For other sections: split on FIRST ":" (so keys like "Duration" remain)
-		var key, val string
-		if strings.EqualFold(strings.TrimSpace(currentSection), "Menu") {
-			// last colon
-			lastColon := strings.LastIndex(line, ":")
-			if lastColon == -1 {
-				// fallback - treat whole line as key
-				key = strings.TrimSpace(line)
-				val = ""
-			} else {
-				key = strings.TrimSpace(line[:lastColon])
-				val = strings.TrimSpace(line[lastColon+1:])
-			}
-		} else {
-			// first colon
-			firstColon := strings.Index(line, ":")
-			if firstColon == -1 {
-				// fallback - treat whole line as key
-				key = strings.TrimSpace(line)
-				val = ""
-			} else {
-				key = strings.TrimSpace(line[:firstColon])
-				val = strings.TrimSpace(line[firstColon+1:])
-			}
-		}
-
-		// If we haven't seen a section yet, treat as General
+		// If we haven't seen a section yet, assign it to a "General" section.
 		if currentSection == "" {
 			currentSection = "General"
-			ensureSection(currentSection)
+			// Ensure "General" is in the order.
+			if _, ok := typeTracks[currentSection]; !ok {
+				order = append(order, currentSection)
+			}
+			// Create the first track for the "General" section.
+			newTrack := Track{Pairs: []KV{}}
+			typeTracks[currentSection] = append(typeTracks[currentSection], newTrack)
+			currentTrack = &typeTracks[currentSection][0]
+		}
+		
+		// Choose splitting strategy:
+		var key, val string
+		if strings.EqualFold(strings.TrimSpace(currentSection), "Menu") {
+			// Split on LAST ":" for Menu sections.
+			lastColon := strings.LastIndex(line, ":")
+			if lastColon == -1 {
+				key, val = strings.TrimSpace(line), ""
+			} else {
+				key, val = strings.TrimSpace(line[:lastColon]), strings.TrimSpace(line[lastColon+1:])
+			}
 		} else {
-			ensureSection(currentSection)
+			// Split on FIRST ":" for all other sections.
+			firstColon := strings.Index(line, ":")
+			if firstColon == -1 {
+				key, val = strings.TrimSpace(line), ""
+			} else {
+				key, val = strings.TrimSpace(line[:firstColon]), strings.TrimSpace(line[firstColon+1:])
+			}
 		}
-
-		// append KV to the last track of current section
-		lastIdx := len(typeTracks[currentSection]) - 1
-		if lastIdx < 0 {
-			typeTracks[currentSection] = append(typeTracks[currentSection], Track{Pairs: []KV{}})
-			lastIdx = len(typeTracks[currentSection]) - 1
+		
+		// Append KV to the current track.
+		// If currentTrack is nil (which should not happen with the logic above, but is a good safeguard),
+		// it means we encountered a key-value pair without a preceding section header.
+		// In a valid MediaInfo text, the first section is "General".
+		if currentTrack != nil {
+			currentTrack.Pairs = append(currentTrack.Pairs, KV{Key: key, Val: val})
 		}
-		typeTracks[currentSection][lastIdx].Pairs = append(typeTracks[currentSection][lastIdx].Pairs, KV{Key: key, Val: val})
 	}
 
 	// Render HTML
 	var buf bytes.Buffer
-
 	for _, section := range order {
 		tracks := typeTracks[section]
 
@@ -124,14 +121,11 @@ func ParseMediaInfoTextToHTML(input string) string {
 				}
 				buf.WriteString("<p><i>")
 				buf.WriteString(html.EscapeString(kv.Key))
-				// user requested "key : value" spacing
 				buf.WriteString(" :</i> ")
 				buf.WriteString(html.EscapeString(kv.Val))
 				buf.WriteString("</p>")
 			}
 		}
-		continue
-
 	}
 
 	return buf.String()
