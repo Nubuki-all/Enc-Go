@@ -132,7 +132,6 @@ func ParseMediaInfoTextToHTML(input string) string {
 		}
 		buf.WriteString("\n<hr>\n")
 
-		
 		for _, t := range tracks {
 			for _, kv := range t.Pairs {
 				if strings.TrimSpace(kv.Key) == "" && strings.TrimSpace(kv.Val) == "" {
@@ -148,7 +147,7 @@ func ParseMediaInfoTextToHTML(input string) string {
 			}
 		}
 		continue
-		
+
 	}
 
 	return buf.String()
