@@ -1,7 +1,7 @@
 package callbacks
 
 import (
-	"fmt"	
+	"fmt"
 	//"strings"
 
 	"github.com/celestix/gotgproto/ext"

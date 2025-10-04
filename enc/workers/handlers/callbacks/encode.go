@@ -22,8 +22,6 @@ import (
 	"enc/utils/tele"
 )
 
-
-
 func EncodeInfo(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
 	id := fmt.Sprintf("%d:%d", query.ChatID, query.ID)
 	info := utils.GetCallbackInfo(id)
@@ -43,7 +41,7 @@ func EncodeStats(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery
 		return cleanOldMessage(ctx, update, query)
 	}
 	args := string(query.Query.Data)
-	argL :=	max(1, len(args))
+	argL := max(1, len(args))
 	data := args[argL:]
 	outSize := utils.SizeOf(info.OutPath)
 	dlSize := utils.SizeOf(info.DlPath)
@@ -55,7 +53,7 @@ func EncodeStats(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery
 	elapsed := time.Since(info.Time).Round(time.Second).Seconds()
 	uptime := time.Since(bot.BotStartTime).Round(time.Second).Seconds()
 	var cpuUsage float64
-	if c, err := cpu.Percent(500 * time.Millisecond, false); err == nil {
+	if c, err := cpu.Percent(500*time.Millisecond, false); err == nil {
 		cpuUsage = c[0]
 	}
 	var ans string
@@ -87,7 +85,7 @@ func CancelEncode(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuer
 	if info.ExtraFlags == "mux" {
 		action = "muxing"
 	}
-	_ = query.Answer("Cancelling " + action+" please wait…", false)
+	_ = query.Answer("Cancelling "+action+" please wait…", false)
 	if err := info.Process.Kill(); err != nil {
 		logger.Warn(err)
 	}
