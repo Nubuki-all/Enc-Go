@@ -72,10 +72,10 @@ func (e *Encoder) Callback(dlPath, enPath, text string) {
 	e.clean = true
 	e.outPath = enPath
 	e.TransferInfo = &types.TransferInfo{
-		Path:   dlPath,
-		Sender: e.Sender,
-		Time:   e.STime,
-		ID:     e.ID,
+		Path:       dlPath,
+		Sender:     e.Sender,
+		Time:       e.STime,
+		ID:         e.ID,
 		ExtraFlags: e.ExtraFlags,
 	}
 	cInfo := &types.CallbackInfo{

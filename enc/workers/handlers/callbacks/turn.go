@@ -31,7 +31,6 @@ func CancelRTurn(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery
 	return nil
 }
 
-
 func CancelMTurn(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
 	// id := fmt.Sprintf("%d:%d", query.ChatID, query.ID)
 	_, turnID, _ := strings.Cut(string(query.Query.Data), " ")

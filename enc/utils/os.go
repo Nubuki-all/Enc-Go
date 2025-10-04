@@ -22,7 +22,7 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 
 	"enc/config"
-)	
+)
 
 // Enshell runs a shell command and returns the output and error
 func Enshell(cmd string) (stdout string, stderr string, err error) {
@@ -39,14 +39,12 @@ const (
 	maxHTMLSize = 65536
 )
 
-
 // MediaInfoHTML runs mediainfo and returns HTML output.
 //
 // ctx: caller's context (used for timeout/cancel)
 // file: path to the media file
 // full: whether to request full output (adds --Full / -f)
 func MediaInfoHTML(ctx context.Context, file string, full bool) (string, error) {
-
 	// build args
 	args := []string{"--Output=HTML"}
 	if full {
@@ -68,7 +66,7 @@ func MediaInfoHTML(ctx context.Context, file string, full bool) (string, error) 
 
 	cmd := exec.CommandContext(ctx, "mediainfo", args...)
 	out, err := cmd.CombinedOutput()
-	output := string(out)	
+	output := string(out)
 
 	// If process failed but produced output, return both
 	if err != nil {
@@ -100,7 +98,6 @@ func cleanMediainfoHTML(htmlInput string) string {
 
 	return sanitizedHTML
 }
-
 
 func PostMediaInfo(path string) (string, error) {
 	mInfo, err := MediaInfoHTML(context.Background(), path, true)

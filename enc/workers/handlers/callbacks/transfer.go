@@ -58,7 +58,7 @@ func EncodeInfo(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery)
 		return cleanOldMessage(ctx, update, query)
 	}
 	if info.ExtraFlags == "mux" {
-		return query.Answer("Muxing:\n" + filepath.Base(info.OutPath), true)
+		return query.Answer("Muxing:\n"+filepath.Base(info.OutPath), true)
 	}
-	return  nil
+	return nil
 }

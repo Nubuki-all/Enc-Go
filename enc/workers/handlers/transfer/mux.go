@@ -57,7 +57,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 		arg := argparser.ParseFlags(
 			cmd,
 			helpMsg,
-		argList,
+			argList,
 			argparser.CreateDStringFlag(
 				"input",
 				"i",
@@ -460,7 +460,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 	}
 
 	encode.ExtraFlags = "mux"
-	encode.Callback(download.Path, tFile, "%s **Currently Muxing:**\n└`%s`\n\n`using provided parameters…`%s")	
+	encode.Callback(download.Path, tFile, "%s **Currently Muxing:**\n└`%s`\n\n`using provided parameters…`%s")
 	_ = encode.AwaitCompletion()
 	_ = encode.ReportStatus("Muxing")
 	if !encode.Process.Success() {
