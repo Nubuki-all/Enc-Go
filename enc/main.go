@@ -22,8 +22,8 @@ func main() {
 		logger.Criticalf("Failed to load config: %v", config.Rconf.Error)
 	}
 	bot.Version = Version
-	extract()
 	startup.Initialize()
+	extract()
 	telegraph.Init()
 	telegram.InitClient()
 	startup.Finalize(telegram.Context)
