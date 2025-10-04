@@ -19,9 +19,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/microcosm-cc/bluemonday"
+
 	"enc/config"
-	"enc/internal/logger"
-)
+)	
 
 // Enshell runs a shell command and returns the output and error
 func Enshell(cmd string) (stdout string, stderr string, err error) {
@@ -67,8 +68,7 @@ func MediaInfoHTML(ctx context.Context, file string, full bool) (string, error) 
 
 	cmd := exec.CommandContext(ctx, "mediainfo", args...)
 	out, err := cmd.CombinedOutput()
-	output := string(out)
-	logger.Info(output)
+	output := string(out)	
 
 	// If process failed but produced output, return both
 	if err != nil {
@@ -91,12 +91,23 @@ func MediaInfoHTML(ctx context.Context, file string, full bool) (string, error) 
 	return output, nil
 }
 
+func cleanMediainfoHTML(htmlInput string) string {
+	p := bluemonday.UGCPolicy()
+
+	p.AllowElements("b", "i", "u", "strong", "em")
+
+	sanitizedHTML := p.Sanitize(htmlInput)
+
+	return sanitizedHTML
+}
+
+
 func PostMediaInfo(path string) (string, error) {
 	mInfo, err := MediaInfoHTML(context.Background(), path, true)
 	if err != nil {
 		return "", err
 	}
-	page, err2 := PostToTelegraph("MediaInfo", mInfo)
+	page, err2 := PostToTelegraph("MediaInfo", cleanMediainfoHTML(mInfo))
 	if err2 != nil {
 		return "", err2
 	}
