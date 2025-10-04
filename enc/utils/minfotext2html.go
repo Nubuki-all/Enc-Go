@@ -122,28 +122,27 @@ func ParseMediaInfoTextToHTML(input string) string {
 
 		// Section heading larger: use <h2> for important sections
 		if important[section] {
-			buf.WriteString("<h3 style=\"margin:8px 0\">")
+			buf.WriteString("<h3>")
 			buf.WriteString(html.EscapeString(section))
-			buf.WriteString("</h3>\n")
+			buf.WriteString("</h3><br>")
 		} else {
 			buf.WriteString("<h4 style=\"margin:6px 0\">")
 			buf.WriteString(html.EscapeString(section))
-			buf.WriteString("</h34>\n")
+			buf.WriteString("</h34><br>")
 		}
-		buf.WriteString("\n<hr>\n")
+		buf.WriteString("<br>")
 
 		for _, t := range tracks {
 			for _, kv := range t.Pairs {
 				if strings.TrimSpace(kv.Key) == "" && strings.TrimSpace(kv.Val) == "" {
 					continue
 				}
-				buf.WriteString("<div style=\"margin-bottom:8px\"><em>")
+				buf.WriteString("<i>")
 				buf.WriteString(html.EscapeString(kv.Key))
 				// user requested "key : value" spacing
-				buf.WriteString("</em> : ")
+				buf.WriteString("</i> : ")
 				buf.WriteString(html.EscapeString(kv.Val))
-				buf.WriteString("</div>\n")
-				buf.WriteString("\n")
+				buf.WriteString("<br><br>")
 			}
 		}
 		continue
