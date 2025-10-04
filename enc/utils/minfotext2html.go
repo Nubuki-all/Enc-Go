@@ -108,29 +108,15 @@ func ParseMediaInfoTextToHTML(input string) string {
 	}
 
 	// Render HTML
-	var buf bytes.Buffer
-	important := map[string]bool{
-		"General": true,
-		"Menu":    true,
-		"Video":   true,
-		"Audio":   true,
-		"Text":    true,
-	}
+	var buf bytes.Buffer	
 
 	for _, section := range order {
 		tracks := typeTracks[section]
 
-		// Section heading larger: use <h2> for important sections
-		if important[section] {
-			buf.WriteString("<h3>")
-			buf.WriteString(html.EscapeString(section))
-			buf.WriteString("</h3><br>")
-		} else {
-			buf.WriteString("<h4 style=\"margin:6px 0\">")
-			buf.WriteString(html.EscapeString(section))
-			buf.WriteString("</h34><br>")
-		}
-		buf.WriteString("<br>")
+		
+		buf.WriteString("<h4>")
+		buf.WriteString(html.EscapeString(section))
+		buf.WriteString("</h4><br>")	
 
 		for _, t := range tracks {
 			for _, kv := range t.Pairs {
@@ -142,7 +128,7 @@ func ParseMediaInfoTextToHTML(input string) string {
 				// user requested "key : value" spacing
 				buf.WriteString("</i> : ")
 				buf.WriteString(html.EscapeString(kv.Val))
-				buf.WriteString("<br><br>")
+				buf.WriteString("<br>")
 			}
 		}
 		continue
