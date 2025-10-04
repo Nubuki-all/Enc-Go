@@ -630,5 +630,3 @@ func niceCodecName(raw string) string {
 		return strings.ToUpper(raw)
 	}
 }
-
-
