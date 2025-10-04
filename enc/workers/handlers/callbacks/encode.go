@@ -44,8 +44,8 @@ func EncodeStats(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery
 	argL := max(1, len(args))
 	data := args[argL-1:]
 	outSize := utils.SizeOf(info.OutPath)
-	dlSize := utils.SizeOf(info.DlPath)
-	name := filepath.Base(info.DlPath)
+	dlSize := utils.SizeOf(info.Path)
+	name := filepath.Base(info.Path)
 	if len(name) > 45 {
 		name = name[:45] + "…"
 	}
@@ -59,11 +59,34 @@ func EncodeStats(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery
 	var ans string
 	switch data {
 	case "0":
-		ans = fmt.Sprintf("Downloaded:\n%s\n\nFileName:\n%s\n\nEncoded:\n%s\n\nElapsed time:\n%s", utils.HBS(dlSize), name, utils.HBS(outSize), utils.TimeFormatter(elapsed))
+		ans = fmt.Sprintf(
+			"Downloaded:\n%s\n\nFileName:\n%s\n\nEncoded:\n%s\n\nElapsed time:\n%s",
+			utils.HBS(dlSize),
+			name,
+			utils.HBS(outSize),
+			utils.TimeFormatter(elapsed),
+		)
 	case "1":
-		ans = fmt.Sprintf("CPU: %.2f%%\n\nTotal Disk Space:\n%s\n\nBot Uptime:\n%s\n\nUsed: %s  Free: %s", cpuUsage, utils.GetReadableFileSize(int64(du.Total)), utils.TimeFormatter(uptime), utils.GetReadableFileSize(int64(du.Used)), utils.GetReadableFileSize(int64(du.Free)))
+		ans = fmt.Sprintf(
+			"CPU: %.2f%%\n\nTotal Disk Space:\n%s\n\nBot Uptime:\n%s\n\nUsed: %s  Free: %s",
+			cpuUsage,
+			utils.GetReadableFileSize(int64(du.Total)),
+			utils.TimeFormatter(uptime),
+			utils.GetReadableFileSize(int64(du.Used)),
+			utils.GetReadableFileSize(int64(du.Free)),
+		)
 	case "2":
-		ans = fmt.Sprintf("CPU: %.2f%%\n\nTotal Disk Space:\n%s\n\nDownloaded:\n%s\n\nEncoded:\n%s\n\nElapsed:\n%s\n\nBot Uptime:\n%s\n\nUsed: %s  Free: %s", cpuUsage, utils.GetReadableFileSize(int64(du.Total)), utils.HBS(dlSize), utils.HBS(outSize), utils.TimeFormatter(elapsed), utils.TimeFormatter(uptime), utils.GetReadableFileSize(int64(du.Used)), utils.GetReadableFileSize(int64(du.Free)))
+		ans = fmt.Sprintf(
+			"CPU: %.2f%%\n\nTotal Disk Space:\n%s\n\nDownloaded:\n%s\n\nEncoded:\n%s\n\nElapsed:\n%s\n\nBot Uptime:\n%s\n\nUsed: %s  Free: %s",
+			cpuUsage,
+			utils.GetReadableFileSize(int64(du.Total)),
+			utils.HBS(dlSize),
+			utils.HBS(outSize),
+			utils.TimeFormatter(elapsed),
+			utils.TimeFormatter(uptime),
+			utils.GetReadableFileSize(int64(du.Used)),
+			utils.GetReadableFileSize(int64(du.Free)),
+		)
 	default:
 		ans = "Malformed Query!"
 	}
