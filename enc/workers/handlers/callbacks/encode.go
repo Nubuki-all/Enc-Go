@@ -42,7 +42,7 @@ func EncodeStats(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery
 	}
 	args := string(query.Query.Data)
 	argL := max(1, len(args))
-	data := args[argL:]
+	data := args[argL-1:]
 	outSize := utils.SizeOf(info.OutPath)
 	dlSize := utils.SizeOf(info.DlPath)
 	name := filepath.Base(info.DlPath)
