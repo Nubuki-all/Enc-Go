@@ -9,7 +9,7 @@ import (
 
 	"enc/config"
 	"enc/internal/clients/telegram"
-	tgph "enc/internal/clients/telegraph"	
+	tgph "enc/internal/clients/telegraph"
 )
 
 // PostToTelegraph publishes a acct, retrying on network errors.

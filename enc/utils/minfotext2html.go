@@ -125,7 +125,7 @@ func ParseMediaInfoTextToHTML(input string) string {
 				buf.WriteString("<i>")
 				buf.WriteString(html.EscapeString(kv.Key))
 				// user requested "key : value" spacing
-				buf.WriteString(" :</i> " )
+				buf.WriteString(" :</i> ")
 				buf.WriteString(html.EscapeString(kv.Val))
 				buf.WriteString("\n\n")
 			}
