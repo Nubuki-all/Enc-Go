@@ -55,7 +55,7 @@ func ParseMediaInfoTextToHTML(input string) string {
 			if _, ok := typeTracks[currentSection]; !ok {
 				order = append(order, currentSection)
 			}
-			
+
 			// Always start a new track for a new section header.
 			newTrack := Track{Pairs: []KV{}}
 			typeTracks[currentSection] = append(typeTracks[currentSection], newTrack)
@@ -75,7 +75,7 @@ func ParseMediaInfoTextToHTML(input string) string {
 			typeTracks[currentSection] = append(typeTracks[currentSection], newTrack)
 			currentTrack = &typeTracks[currentSection][0]
 		}
-		
+
 		// Choose splitting strategy:
 		var key, val string
 		if strings.EqualFold(strings.TrimSpace(currentSection), "Menu") {
@@ -95,7 +95,7 @@ func ParseMediaInfoTextToHTML(input string) string {
 				key, val = strings.TrimSpace(line[:firstColon]), strings.TrimSpace(line[firstColon+1:])
 			}
 		}
-		
+
 		// Append KV to the current track.
 		// If currentTrack is nil (which should not happen with the logic above, but is a good safeguard),
 		// it means we encountered a key-value pair without a preceding section header.
