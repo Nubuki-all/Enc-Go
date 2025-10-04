@@ -19,8 +19,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/microcosm-cc/bluemonday"
-
 	"enc/config"
 )
 
@@ -46,7 +44,7 @@ const (
 // full: whether to request full output (adds --Full / -f)
 func MediaInfoHTML(ctx context.Context, file string, full bool) (string, error) {
 	// build args
-	args := []string{"--Output=HTML"}
+	var args []string
 	if full {
 		// mediainfo supports -f/--Full; some builds accept "--Full" as well.
 		// use the long form to be explicit:
@@ -80,23 +78,11 @@ func MediaInfoHTML(ctx context.Context, file string, full bool) (string, error) 
 	if len(output) > maxHTMLSize {
 		// keep ~65430 bytes plus truncation notice (matches original).
 		cut := 65430
-		if cut > len(output) {
-			cut = len(output)
-		}
+		cut = min(cut, len(output))	
 		output = output[:cut] + "<strong>...<strong><br><br><strong>(TRUNCATED DUE TO CONTENT EXCEEDING MAX LENGTH)<strong>"
 	}
 
 	return output, nil
-}
-
-func cleanMediainfoHTML(htmlInput string) string {
-	p := bluemonday.UGCPolicy()
-
-	p.AllowElements("b", "i", "u", "strong", "em")
-
-	sanitizedHTML := p.Sanitize(htmlInput)
-
-	return sanitizedHTML
 }
 
 func PostMediaInfo(path string) (string, error) {
@@ -104,7 +90,7 @@ func PostMediaInfo(path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	page, err2 := PostToTelegraph("MediaInfo", cleanMediainfoHTML(mInfo))
+	page, err2 := PostToTelegraph("MediaInfo", ParseMediaInfoTextToHTML(mInfo))
 	if err2 != nil {
 		return "", err2
 	}
@@ -249,7 +235,7 @@ func GetStreamDuration(file string) int {
 	return int(f)
 }
 
-// GetVideoThumbnail captures a thumbnail from a video file
+// GetVideoThumbnailAndDuration captures a thumbnail from a video file
 func GetVideoThumbnailAndDuration(file, output string) (string, int, error) {
 	duration := GetStreamDuration(file)
 	if duration <= 0 {
@@ -275,7 +261,7 @@ func GetStreamInfo(file string) (audioLang, subLang string, err error) {
 		return "", "", err
 	}
 	var data struct {
-		Streams []map[string]interface{} `json:"streams"`
+		Streams []map[string]any `json:"streams"`
 	}
 	if err := json.Unmarshal([]byte(out), &data); err != nil {
 		return "", "", err
@@ -287,7 +273,7 @@ func GetStreamInfo(file string) (audioLang, subLang string, err error) {
 		if !ok {
 			continue
 		}
-		tags, _ := stream["tags"].(map[string]interface{})
+		tags, _ := stream["tags"].(map[string]any)
 		lang := "?"
 		if tags != nil {
 			if l, ok := tags["language"].(string); ok {
@@ -338,7 +324,7 @@ func PosInStream(file, lang1, lang2, mode string) (aPos, sPos int) {
 	return aPos, sPos
 }
 
-// Replace current process with new executable at same path
+// Restart current process with new executable at same path
 // returns only on error
 func Restart(chatID int64, msgID int) error {
 	err := RestartDetached(chatID, msgID)
