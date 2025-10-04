@@ -1,8 +1,7 @@
 package callbacks
 
 import (
-	"fmt"
-	"path/filepath"
+	"fmt"	
 	//"strings"
 
 	"github.com/celestix/gotgproto/ext"
@@ -48,17 +47,5 @@ func CancelUpload(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuer
 	_ = query.Answer("Cancelling upload please wait…", false)
 	info.IsCancelled = true
 	info.Canceller = sender
-	return nil
-}
-
-func EncodeInfo(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
-	id := fmt.Sprintf("%d:%d", query.ChatID, query.ID)
-	info := utils.GetCallbackInfo(id)
-	if info == nil {
-		return cleanOldMessage(ctx, update, query)
-	}
-	if info.ExtraFlags == "mux" {
-		return query.Answer("Muxing:\n"+filepath.Base(info.OutPath), true)
-	}
 	return nil
 }

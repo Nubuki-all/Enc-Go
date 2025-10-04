@@ -114,7 +114,11 @@ func AddCBHandlers(dispatch dispatcher.Dispatcher) {
 		// Tranfer Handlers
 		downloaders.CallbackData: CallbackEventHandler(callbacks.CancelDownload),
 		uploaders.CallbackData:   CallbackEventHandler(callbacks.CancelUpload),
+
+		// Encode Handlers
 		encoders.CallbackData:    CallbackEventHandler(callbacks.EncodeInfo),
+		encoders.SCallbackData:   CallbackEventHandler(callbacks.EncodeStats),
+		encoders.CancelCallbackData: CallbackEventHandler(callbacks.CancelDownload),
 
 		// Turn Handlers
 		"cancel_rturn": CallbackEventHandler(callbacks.CancelRTurn),
