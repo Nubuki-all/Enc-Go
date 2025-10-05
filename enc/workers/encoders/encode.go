@@ -48,6 +48,8 @@ type Encoder struct {
 	outPath string
 	stderr  string
 	stdout  string
+	errBuf *bytes.Buffer
+	outBuf *bytes.Buffer
 }
 
 func (e *Encoder) Start(cmdline string) error {
@@ -57,6 +59,10 @@ func (e *Encoder) Start(cmdline string) error {
 	} else {
 		cmd = exec.Command("sh", "-c", cmdline)
 	}
+	e.outBuf = &bytes.Buffer{}
+	e.errBuf = &bytes.Buffer{}
+	cmd.Stdout = e.outBuf
+	cmd.Stderr = e.errBuf
 	err := cmd.Start()
 	if err != nil {
 		return err
@@ -175,8 +181,6 @@ func (e *Encoder) Callback(dlPath, enPath, text string) {
 func (e *Encoder) AwaitCompletion() (err error) {
 	ch := make(chan struct{})
 	var outBuf, errBuf bytes.Buffer
-	e.cmd.Stderr = &errBuf
-	e.cmd.Stdout = &outBuf
 	if config.Conf.AllowAction {
 		actionInterval := 5 * time.Second
 		go func() {
@@ -186,6 +190,7 @@ func (e *Encoder) AwaitCompletion() (err error) {
 			for {
 				select {
 				case <-ch:
+					_ = e.Msg.Action("", 0)
 					return
 				case <-aTicker.C:
 					_ = e.Msg.Action("game", 0)
