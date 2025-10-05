@@ -14,8 +14,6 @@ import (
 	//"github.com/gotd/td/telegram/message/markup"
 	//"github.com/gotd/td/tg"
 
-	//"enc/internal/bot"
-	//"enc/internal/logger"
 	"enc/internal/bot"
 	"enc/internal/logger"
 	"enc/utils"
