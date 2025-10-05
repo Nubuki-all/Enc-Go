@@ -87,7 +87,7 @@ func (dl *YtdlDownload) Start() (err error) {
 		Quiet().
 		Print("after_move:filepath").
 		SetSeparateProcessGroup(true).
-		Output(filepath.Join(dl.Path, "%(title)s.mkv"))
+		Output(filepath.Join(dl.Path, "%(title)s.%(ext)s"))
 	if dlInfo.Count > 1 {
 		if dl.selected != "" {
 			s, _ := strconv.Atoi(dl.selected)
@@ -127,7 +127,7 @@ func (dl *YtdlDownload) Start() (err error) {
 	}
 	if result.Stdout != "" {
 		if dlInfo.Count == 1 || dl.selected != "" {
-			dl.Path = result.Stdout
+			dl.Path = strings.TrimSpace(result.Stdout)
 		}
 	}
 	logger.Info(result.Stdout)
