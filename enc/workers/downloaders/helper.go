@@ -462,7 +462,7 @@ func GetYdlInfo(uri string) *utils.DLInfo {
 			info.Title = &n
 		}
 		if len(info.Entries) == 0 {
-			dlInfo.Files = append(dlInfo.Files, *info.Title + ".mkv")
+			dlInfo.Files = append(dlInfo.Files, *info.Title+".mkv")
 			continue
 		}
 		getInnerPlaylist(info, dlInfo)
