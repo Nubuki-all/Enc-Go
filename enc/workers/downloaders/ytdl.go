@@ -94,10 +94,10 @@ func (dl *YtdlDownload) Start() (err error) {
 				return fmt.Errorf("ytdl: file_id not found")
 			}
 			ytdl = ytdl.PlaylistItems(dl.selected)
-			dl.Path = filepath.Join(dl.Path, dlInfo.Files[s-1]+".mkv")
+			dl.Path = filepath.Join(dl.Path, dlInfo.Files[s-1])
 		}
 	} else {
-		dl.Path = filepath.Join(dl.Path, dlInfo.Name+".mkv")
+		dl.Path = filepath.Join(dl.Path, dlInfo.Name)
 	}
 	go func() {
 		uTicker := time.NewTicker(updateInterval)
