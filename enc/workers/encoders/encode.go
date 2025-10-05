@@ -48,8 +48,8 @@ type Encoder struct {
 	outPath string
 	stderr  string
 	stdout  string
-	errBuf *bytes.Buffer
-	outBuf *bytes.Buffer
+	errBuf  *bytes.Buffer
+	outBuf  *bytes.Buffer
 }
 
 func (e *Encoder) Start(cmdline string) error {
