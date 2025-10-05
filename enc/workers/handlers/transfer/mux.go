@@ -322,13 +322,13 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 						_, _ = sMsg.EditText("-I: **Invalid fileID**\n`Total files in folder` :- `" + strconv.Itoa(dlInfo.Count) + "`")
 						return nil
 					}
-					if !utils.IsSupportedFile(dlInfo.Files[s]) {
+					if !iYtdl && !utils.IsSupportedFile(dlInfo.Files[s]) {
 						_, _ = sMsg.EditText("-I: " + "File is not in the list of supported files")
 						return nil
 					}
 					iFileName = dlInfo.Files[s]
 				} else if dlInfo.Count == 1 {
-					if !utils.IsSupportedFile(dlInfo.Name) {
+					if !iYtdl && !utils.IsSupportedFile(dlInfo.Name) {
 						_, _ = sMsg.EditText("-i: File is either not a supported file or it is a folder with a single file. List the link and if it is the latter, select the file with -I.")
 						return nil
 					}
@@ -379,14 +379,14 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 				_, _ = sMsg.EditText("-s: **Invalid fileID**\n`Total files in folder` :- `" + strconv.Itoa(dlInfo.Count) + "`")
 				return nil
 			}
-			if !utils.IsSupportedFile(dlInfo.Files[s]) {
+			if !ytdl && !utils.IsSupportedFile(dlInfo.Files[s]) {
 				_, _ = sMsg.EditText("-s: " + "File is not in the list of supported files")
 				return nil
 			}
 			fileName = dlInfo.Files[s]
 			// iFileName = dlInfo.Files[s]
 		} else if dlInfo.Count == 1 {
-			if !utils.IsSupportedFile(dlInfo.Name) {
+			if !ytdl && !utils.IsSupportedFile(dlInfo.Name) {
 				_, _ = sMsg.EditText("File is either not a supported file or it is a folder with a single file. List the link and if it is the latter, select the file with -s.")
 				return nil
 			}

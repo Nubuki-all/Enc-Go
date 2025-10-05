@@ -85,6 +85,7 @@ func (dl *YtdlDownload) Start() (err error) {
 		EmbedMetadata().
 		EmbedChapters().
 		Quiet().
+		Print("after_move:filepath").
 		SetSeparateProcessGroup(true).
 		Output(filepath.Join(dl.Path, "%(title)s.mkv"))
 	if dlInfo.Count > 1 {
@@ -119,11 +120,17 @@ func (dl *YtdlDownload) Start() (err error) {
 		}
 	}()
 	ytdl = ytdl.ProgressFunc(progressInterval, dl.ProgressCallback)
-	_, err = ytdl.Run(ctx, dl.uri)
+	result, err := ytdl.Run(ctx, dl.uri)
 	dl.done = true
 	if err != nil && !dl.IsCancelled {
 		return err
 	}
+	if result.Stdout != ""  {
+		if dlInfo.Count == 1 || dl.selected != "" {
+			dl.Path = result.Stdout
+		}
+	}
+	logger.Info(result.Stdout)
 	return nil
 }
 
@@ -175,7 +182,6 @@ func (dl *YtdlDownload) ProgressCallback(update ytdlp.ProgressUpdate) {
 		elapsedTime,
 	)
 	var msgHead string
-	logger.Info(update.Filename)
 	switch update.Status {
 	case ytdlp.ProgressStatusStarting:
 		msgHead = "`Starting Download...`"

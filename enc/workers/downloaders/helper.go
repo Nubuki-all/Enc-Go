@@ -462,7 +462,7 @@ func GetYdlInfo(uri string) *utils.DLInfo {
 			info.Title = &n
 		}
 		if len(info.Entries) == 0 {
-			dlInfo.Files = append(dlInfo.Files, *info.Title+".mkv")
+			dlInfo.Files = append(dlInfo.Files, *info.Title)
 			continue
 		}
 		getInnerPlaylist(info, dlInfo)
@@ -479,7 +479,7 @@ func GetYdlInfo(uri string) *utils.DLInfo {
 			n := "Unknown Title"
 			info.Title = &n
 		}
-		dlInfo.Name = *info.Title + ".mkv"
+		dlInfo.Name = *info.Title
 		logger.Info("single file…")
 		return dlInfo
 	}
@@ -502,6 +502,6 @@ func getInnerPlaylist(info *ytdlp.ExtractedInfo, dlInfo *utils.DLInfo) {
 			n := "Unknown Title"
 			name = &n
 		}
-		dlInfo.Files = append(dlInfo.Files, *name+".mkv")
+		dlInfo.Files = append(dlInfo.Files, *name)
 	}
 }
