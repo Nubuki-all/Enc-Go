@@ -180,7 +180,6 @@ func (e *Encoder) Callback(dlPath, enPath, text string) {
 
 func (e *Encoder) AwaitCompletion() (err error) {
 	ch := make(chan struct{})
-	var outBuf, errBuf bytes.Buffer
 	if config.Conf.AllowAction {
 		actionInterval := 5 * time.Second
 		go func() {
@@ -201,8 +200,8 @@ func (e *Encoder) AwaitCompletion() (err error) {
 	err = e.cmd.Wait()
 	e.Process = e.cmd.ProcessState
 	e.done = true
-	e.stderr = errBuf.String()
-	e.stdout = outBuf.String()
+	e.stderr = e.errBuf.String()
+	e.stdout = e.outBuf.String()
 	close(ch)
 	return err
 }
