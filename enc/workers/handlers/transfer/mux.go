@@ -43,7 +43,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 		)
 		return err
 	}
-	if args == "" {
+	if args == "" || utils.SendHelp(args) {
 		args = "\n--help"
 	}
 	var ffmpegArgs string
@@ -371,7 +371,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 			dlInfo = downloaders.GetAria2DlInfo(link)
 		}
 		if dlInfo.Error != nil {
-			_, _ = sMsg.EditText("-i: **Error:** " + dlInfo.Error.Error())
+			_, _ = sMsg.EditText("**Error:** " + dlInfo.Error.Error())
 			return nil
 		}
 		if s >= 0 {
@@ -383,13 +383,14 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 				_, _ = sMsg.EditText("-s: " + "File is not in the list of supported files")
 				return nil
 			}
+			fileName = dlInfo.Files[s]
 			// iFileName = dlInfo.Files[s]
 		} else if dlInfo.Count == 1 {
 			if !utils.IsSupportedFile(dlInfo.Name) {
 				_, _ = sMsg.EditText("File is either not a supported file or it is a folder with a single file. List the link and if it is the latter, select the file with -s.")
 				return nil
 			}
-			// iFileName = dlInfo.Name
+			fileName = dlInfo.Name
 		} else {
 			_, _ = sMsg.EditText("**Link has multiple files, kindly select one with -s**\n`Total files in folder` :- `" + strconv.Itoa(dlInfo.Count) + "`")
 			return nil
@@ -402,8 +403,10 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 		FileName: fileName,
 		Size:     size,
 		URI:      link,
+		Qbit:     qbit,
+		Ytdl:     ytdl,
 	}
-	if fileName == "" && link == "" {
+	if fileName == "" {
 		if tgFileName == "" {
 			_, _ = sMsg.EditText("__No file name found, cannot proceed.__")
 			return nil

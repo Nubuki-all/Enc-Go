@@ -240,6 +240,15 @@ func GetAria2DlInfo(uri string) *utils.DLInfo {
 		dlInfo.Count = len(dlInfo.Files)
 		dlInfo.Name = name
 	}
+	var statuses []arigo.Status
+	for _, gid := range status.FollowedBy {
+		status, err := aria2.TellStatus(gid)
+		if err == nil {
+			statuses = append(statuses, status)
+		}
+	}
+	statuses = append(statuses, status)
+	aria2.DeleteDownloads(statuses, true, true, true)
 	return dlInfo
 }
 
