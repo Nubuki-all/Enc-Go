@@ -175,6 +175,7 @@ func (dl *YtdlDownload) ProgressCallback(update ytdlp.ProgressUpdate) {
 		elapsedTime,
 	)
 	var msgHead string
+	logger.Info(update.Filename)
 	switch update.Status {
 	case ytdlp.ProgressStatusStarting:
 		msgHead = "`Starting Download...`"
