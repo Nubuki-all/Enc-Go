@@ -125,7 +125,7 @@ func (dl *YtdlDownload) Start() (err error) {
 	if err != nil && !dl.IsCancelled {
 		return err
 	}
-	if result.Stdout != ""  {
+	if result.Stdout != "" {
 		if dlInfo.Count == 1 || dl.selected != "" {
 			dl.Path = result.Stdout
 		}
