@@ -74,7 +74,7 @@ func (dl *YtdlDownload) Start() (err error) {
 		return err
 	}
 	dl.name = dlInfo.Name
-	dl.basePath = filepath.Join(dl.dir, dlInfo.Name)
+	dl.basePath = filepath.Join(dl.dir, strings.TrimRight(dlInfo.Name, ".mkv"))
 	dl.Path = dl.basePath
 	ytdl := ytdlp.New().
 		Cookies(".cookies.txt").
