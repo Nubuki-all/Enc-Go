@@ -124,7 +124,7 @@ func ParseMediaInfoTextToHTML(input string) string {
 				buf.WriteString(" :</i> ")
 				buf.WriteString(html.EscapeString(kv.Val))
 				buf.WriteString("</p>")
-			}	
+			}
 		}
 		if buf.Len() > maxHTMLSize {
 			output := buf.String()

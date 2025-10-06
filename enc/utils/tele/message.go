@@ -348,8 +348,8 @@ func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
 	}
 	if uploadOptions.Edit {
 		return m.Edit(uploadOptions.Caption, &EditOptions{
-			Media: media,
-			ReplyMarkup: uploadOptions.ReplyMarkup,
+			Media:         media,
+			ReplyMarkup:   uploadOptions.ReplyMarkup,
 			HTMLParseMode: uploadOptions.HTMLParseMode,
 		})
 	}
@@ -367,7 +367,7 @@ func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
 			pCaption, entities, _ = parser.Parse(caption, true)
 		}
 	}
-	
+
 	msg, err := ctx.SendMedia(m.ChatID,
 		&tg.MessagesSendMediaRequest{
 			Media:       media,

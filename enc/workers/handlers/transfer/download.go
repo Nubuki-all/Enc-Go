@@ -527,6 +527,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	}
 	return nil
 }
+
 func MediaInfo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
@@ -633,7 +634,7 @@ func MediaInfo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	if len(pargs) != 0 {
 		selected = pargs["select"].(string)
 		asFile = pargs["txt"].(bool)
-		full = pargs["full"].(bool)	
+		full = pargs["full"].(bool)
 		qbit = pargs["qb"].(bool)
 		ytdl = pargs["ytdl"].(bool)
 	}
@@ -643,7 +644,7 @@ func MediaInfo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 		}
 	} else {
 		fileName = link
-	}	
+	}
 	sMsg, err := msg.ReplyText("...")
 	if err != nil {
 		return nil
@@ -668,7 +669,7 @@ func MediaInfo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	defer download.CleanDownload()
 	mInfo, err := utils.MediaInfoText(ctx, download.Path, full)
 	if err != nil {
-		_, _ = sMsg.Edit("Error: " + err.Error(), nil)
+		_, _ = sMsg.Edit("Error: "+err.Error(), nil)
 		return nil
 	}
 	if asFile {
@@ -676,13 +677,13 @@ func MediaInfo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 			Bytes:   []byte(mInfo),
 			Name:    "mediainfo.txt",
 			Caption: "MediaInfo for " + download.FileName,
-			Edit:   true,
+			Edit:    true,
 		})
 		return nil
 	}
 	page, err := utils.PostToTelegraph("MediaInfo", utils.ParseMediaInfoTextToHTML(mInfo))
 	if err != nil {
-		_, _ = sMsg.Edit("Error: " + err.Error(), nil)
+		_, _ = sMsg.Edit("Error: "+err.Error(), nil)
 		return nil
 	}
 	_, _ = sMsg.EditText(fmt.Sprintf("Mediainfo for: **[%s](%s)**", download.FileName, page.Url))

@@ -39,7 +39,7 @@ const (
 
 // MediaInfoText runs mediainfo and returns text output.
 //
-// ctx: caller's context 
+// ctx: caller's context
 // file: path to the media file
 // full: whether to request full output
 func MediaInfoText(ctx context.Context, file string, full bool) (string, error) {
@@ -72,7 +72,7 @@ func MediaInfoText(ctx context.Context, file string, full bool) (string, error) 
 		if len(output) == 0 {
 			return "", fmt.Errorf("mediainfo failed: %w", err)
 		}
-	}	
+	}
 	return output, nil
 }
 
