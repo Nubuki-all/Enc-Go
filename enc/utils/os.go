@@ -37,12 +37,12 @@ const (
 	maxHTMLSize = 65536
 )
 
-// MediaInfoHTML runs mediainfo and returns HTML output.
+// MediaInfoText runs mediainfo and returns text output.
 //
-// ctx: caller's context (used for timeout/cancel)
+// ctx: caller's context 
 // file: path to the media file
-// full: whether to request full output (adds --Full / -f)
-func MediaInfoHTML(ctx context.Context, file string, full bool) (string, error) {
+// full: whether to request full output
+func MediaInfoText(ctx context.Context, file string, full bool) (string, error) {
 	// build args
 	var args []string
 	if full {
@@ -72,21 +72,12 @@ func MediaInfoHTML(ctx context.Context, file string, full bool) (string, error) 
 		if len(output) == 0 {
 			return "", fmt.Errorf("mediainfo failed: %w", err)
 		}
-	}
-
-	// Truncate to avoid huge payloads
-	if len(output) > maxHTMLSize {
-		// keep ~65430 bytes plus truncation notice (matches original).
-		cut := 65430
-		cut = min(cut, len(output))
-		output = output[:cut] + "<strong>...<strong><br><br><strong>(TRUNCATED DUE TO CONTENT EXCEEDING MAX LENGTH)<strong>"
-	}
-
+	}	
 	return output, nil
 }
 
 func PostMediaInfo(path string) (string, error) {
-	mInfo, err := MediaInfoHTML(context.Background(), path, false)
+	mInfo, err := MediaInfoText(context.Background(), path, false)
 	if err != nil {
 		return "", err
 	}

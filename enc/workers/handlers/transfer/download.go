@@ -527,3 +527,164 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	}
 	return nil
 }
+func MediaInfo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+	if !utils.UserIsAllowed(msg.SenderID) {
+		return nil
+	}
+	cmd := update.Args()[0]
+	var err error
+	var pargs map[string]any
+	helpMsg := "Downloads the replied message and gets its media info.\n" +
+		"Available arguments:\n"
+	helpFunc := func(s string) error {
+		_, err := msg.ReplyText(
+			s + "\nNeed help? Send `" +
+				cmd + " --help`",
+		)
+		return err
+	}
+	if strings.HasPrefix(args, "-") {
+		argList, err := utils.SplitQuotedFieldsErr(args)
+		if err != nil {
+			_, _ = msg.ReplyText(err.Error())
+			return nil
+		}
+		arg := argparser.ParseFlags(
+			cmd,
+			helpMsg,
+			argList,
+			argparser.CreateDStringFlag(
+				"select",
+				"s",
+				"File id (Specific file to download) (Only works for links)",
+			),
+			argparser.CreateDBoolFlag(
+				"txt",
+				"t",
+				"Sends mediainfo as txt file",
+			),
+			argparser.CreateDBoolFlag(
+				"full",
+				"f",
+				"To get a more verbose media info",
+			),
+			argparser.CreateDBoolFlag(
+				"qb",
+				"q",
+				"To download a link using qbittorrent instead of aria2.",
+			),
+			argparser.CreateDBoolFlag(
+				"ytdl",
+				"y",
+				"To download a link using yt-dlp instead of aria2.",
+			),
+		)
+		if out := arg.Output; out != "" {
+			_, _ = msg.Reply(utils.CodeBlock(out, true),
+				&tele.ReplyOptions{HTMLParseMode: true},
+			)
+			return nil
+		} else if err := arg.Err; err != nil {
+			_, _ = msg.ReplyText(err.Error())
+			return nil
+		}
+		pargs = arg.Values
+	}
+	var link string
+	message := update.EffectiveMessage
+	if msg.ReplyToID != 0 {
+		err = message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
+		if err != nil {
+			_, _ = msg.ReplyText(err.Error())
+			return nil
+		}
+	} else {
+		return helpFunc("Reply the media message to download.")
+	}
+	repMsg := message.ReplyToMessage
+	if repMsg.Media != nil {
+		switch repMsg.Media.(type) {
+		case *tg.MessageMediaWebPage:
+			repMsg.Media = nil
+		default:
+		}
+	}
+	if repMsg.Media == nil {
+		if link = repMsg.Text; link == "" {
+			return helpFunc("Replied message is not a media/document/link.")
+		}
+		if !utils.IsURL(link) && !utils.IsMagnet(link) {
+			return helpFunc("`Not a valid link`.")
+		}
+	}
+	inputLoc, fInfo, err := utils.GetInputFileLocationAndSize(repMsg.Media)
+	if err != nil {
+		return helpFunc(err.Error())
+	}
+	folder := config.Conf.MediaInfoDir
+	var fileName, selected string
+	var asFile, full, qbit, ytdl bool
+	var size int64
+
+	if fInfo != nil {
+		size = fInfo.Size
+		fileName = fInfo.Name
+	}
+	if len(pargs) != 0 {
+		selected = pargs["select"].(string)
+		asFile = pargs["txt"].(bool)
+		full = pargs["full"].(bool)	
+		qbit = pargs["qb"].(bool)
+		ytdl = pargs["ytdl"].(bool)
+	}
+	if link == "" {
+		if fileName == "" {
+			fileName = "image" + time.Now().Format("2006-01-02_15-04-05") + ".jpg"
+		}
+	} else {
+		fileName = link
+	}	
+	sMsg, err := msg.ReplyText("...")
+	if err != nil {
+		return nil
+	}
+	id := fmt.Sprintf("%d:%d", sMsg.ChatID, sMsg.ID)
+	download := &downloaders.Downloader{
+		Msg:      sMsg,
+		InputLoc: inputLoc,
+		Folder:   folder,
+		FileName: fileName,
+		Size:     size,
+		Selected: selected,
+		URI:      link,
+		Qbit:     qbit,
+		Ytdl:     ytdl,
+	}
+	download.Init(id, msg.SenderID)
+	err = download.Start()
+	if err != nil || download.IsCancelled {
+		_, _ = download.ReportStatus()
+	}
+	defer download.CleanDownload()
+	mInfo, err := utils.MediaInfoText(ctx, download.Path, full)
+	if err != nil {
+		_, _ = sMsg.Edit("Error: " + err.Error(), nil)
+		return nil
+	}
+	if asFile {
+		_, _ = sMsg.UploadDoc(&tele.UploadOptions{
+			Bytes:   []byte(mInfo),
+			Name:    "mediainfo.txt",
+			Caption: "MediaInfo for " + download.FileName,
+			Edit:   true,
+		})
+		return nil
+	}
+	page, err := utils.PostToTelegraph("MediaInfo", utils.ParseMediaInfoTextToHTML(mInfo))
+	if err != nil {
+		_, _ = sMsg.Edit("Error: " + err.Error(), nil)
+		return nil
+	}
+	_, _ = sMsg.EditText(fmt.Sprintf("Mediainfo for: **[%s](%s)**", download.FileName, page.Url))
+	return nil
+}

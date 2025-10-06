@@ -124,7 +124,14 @@ func ParseMediaInfoTextToHTML(input string) string {
 				buf.WriteString(" :</i> ")
 				buf.WriteString(html.EscapeString(kv.Val))
 				buf.WriteString("</p>")
-			}
+			}	
+		}
+		if buf.Len() > maxHTMLSize {
+			output := buf.String()
+			// keep ~65430 bytes plus truncation notice (matches original).
+			cut := 65430
+			cut = min(cut, len(output))
+			return output[:cut] + "<strong>...<strong><br><br><strong>(TRUNCATED DUE TO CONTENT EXCEEDING MAX LENGTH)<strong>"
 		}
 	}
 

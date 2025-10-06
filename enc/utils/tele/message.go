@@ -1,3 +1,4 @@
+// Package tele contains telegram helpers
 package tele
 
 import (
@@ -51,6 +52,7 @@ type UploadOptions struct {
 	Caption       string
 	Path          string
 	Bytes         []byte
+	Edit          bool
 	Quote         bool
 	HTMLParseMode bool
 	ReplyMarkup   tg.ReplyMarkupClass
@@ -337,7 +339,20 @@ func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
 		logger.Error(err)
 		return nil, err
 	}
-
+	media := &tg.InputMediaUploadedDocument{
+		File: file,
+		// set attributes so file has a name
+		Attributes: []tg.DocumentAttributeClass{
+			&tg.DocumentAttributeFilename{FileName: name},
+		},
+	}
+	if uploadOptions.Edit {
+		return m.Edit(uploadOptions.Caption, &EditOptions{
+			Media: media,
+			ReplyMarkup: uploadOptions.ReplyMarkup,
+			HTMLParseMode: uploadOptions.HTMLParseMode,
+		})
+	}
 	if uploadOptions.Quote {
 		inputRep = &tg.InputReplyToMessage{
 			ReplyToMsgID: m.ID,
@@ -352,13 +367,7 @@ func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
 			pCaption, entities, _ = parser.Parse(caption, true)
 		}
 	}
-	media := &tg.InputMediaUploadedDocument{
-		File: file,
-		// set attributes so file has a name
-		Attributes: []tg.DocumentAttributeClass{
-			&tg.DocumentAttributeFilename{FileName: name},
-		},
-	}
+	
 	msg, err := ctx.SendMedia(m.ChatID,
 		&tg.MessagesSendMediaRequest{
 			Media:       media,
