@@ -637,6 +637,10 @@ func MediaInfo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 		full = pargs["full"].(bool)
 		qbit = pargs["qb"].(bool)
 		ytdl = pargs["ytdl"].(bool)
+		if selected != "" && !utils.IsNumber(selected) {
+			_, _ = msg.ReplyText("Parameter '-s' requires digits <int> as argument.")
+			return nil
+		}
 	}
 	if link == "" {
 		if fileName == "" {
@@ -667,6 +671,7 @@ func MediaInfo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 		_, _ = download.ReportStatus()
 	}
 	defer download.CleanDownload()
+	_, _ = sMsg.Edit("__Generating media info for__ `"+download.FileName+"` __...__", nil)
 	mInfo, err := utils.MediaInfoText(ctx, download.Path, full)
 	if err != nil {
 		_, _ = sMsg.Edit("Error: "+err.Error(), nil)
