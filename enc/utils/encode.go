@@ -22,6 +22,7 @@ type DLInfo struct {
 	Files []string
 	Error error
 	Name  string
+	Hash  string
 }
 
 // String implements fmt.Stringer

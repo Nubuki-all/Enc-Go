@@ -30,6 +30,7 @@ func GetBotCommands() string {
 		fmt.Sprintf("ql%s - add torrent link to queue", cmdSuffix),
 		fmt.Sprintf("s%s - select files from torrent to encode", cmdSuffix),
 		fmt.Sprintf("queue%s - list queue", cmdSuffix),
+		fmt.Sprintf("editq%s - edit queue", cmdSuffix),
 		fmt.Sprintf("batch%s - preview batches", cmdSuffix),
 		fmt.Sprintf("list%s - list all files in a link/torrent", cmdSuffix),
 		fmt.Sprintf("listv%s - list all videos in a link (yt-dlp)", cmdSuffix),
