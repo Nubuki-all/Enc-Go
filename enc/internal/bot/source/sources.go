@@ -1,4 +1,4 @@
-//Package source contains enum like properties for queue
+// Package source contains enum like properties for queue
 package source
 
 import (
@@ -17,7 +17,6 @@ const (
 	Ytdl     QueueSourceType = "Ytdl"
 	Telegram QueueSourceType = "Telegram"
 )
-
 
 func (qst *QueueSourceType) UnmarshalJSON(data []byte) error {
 	var s string

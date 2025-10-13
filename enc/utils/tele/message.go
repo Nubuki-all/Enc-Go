@@ -39,7 +39,7 @@ type EditOptions struct {
 
 type ReplyOptions struct {
 	HTMLParseMode bool
-	SleepDelete  int
+	SleepDelete   int
 	ReplyMarkup   tg.ReplyMarkupClass
 	// will add more fields as required
 }

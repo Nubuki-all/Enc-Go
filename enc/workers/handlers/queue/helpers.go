@@ -2,6 +2,11 @@ package queue
 
 import (
 	"cmp"
+	"fmt"
+	"slices"
+	"strconv"
+	"strings"
+
 	"enc/internal/bot"
 	"enc/internal/bot/types"
 	"enc/internal/db"
@@ -11,14 +16,9 @@ import (
 	"enc/utils/parser"
 	queueutils "enc/utils/queue"
 	"enc/utils/tele"
-	"fmt"
-	"slices"
-	"strconv"
-	"strings"
 
 	"github.com/celestix/gotgproto/ext"
 )
-
 
 func Select(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
@@ -40,9 +40,9 @@ func Select(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		p := batchutils.GetBatchCallbackInfo(id)
 		if p == nil {
 			_, _ = msg.Reply(
-				"Replied message is not an active batch preview\nFor help send " + cmd + " --help",
+				"Replied message is not an active batch preview\nFor help send "+cmd+" --help",
 				&tele.ReplyOptions{HTMLParseMode: true},
-				)
+			)
 			return nil
 		}
 		preview = p.BatchPreview
@@ -53,8 +53,8 @@ func Select(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		return nil
 	}
 	helpMsg := "Select files in a batch to encode or skip\n" +
-	"Used by replying to an active batch preview\n" +
-	"Arguments:"
+		"Used by replying to an active batch preview\n" +
+		"Arguments:"
 	arg := argparser.ParseFlags(
 		cmd,
 		helpMsg,
@@ -68,7 +68,7 @@ func Select(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			"disable",
 			"d",
 			"with a list of file_ids to skip",
-		),	
+		),
 		argparser.CreateDBoolFlag(
 			"enable-all",
 			"E",
@@ -89,7 +89,7 @@ func Select(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		_, _ = msg.ReplyText(err.Error())
 		return nil
 	}
-	pargs := arg.Values	
+	pargs := arg.Values
 	disable := pargs["disable"].(string)
 	enable := pargs["enable"].(string)
 	disableAll := pargs["disable-all"].(bool)
@@ -99,7 +99,7 @@ func Select(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		s := 1
 		if disableAll {
 			txt = "`Unselected all files.`"
-      s = 0
+			s = 0
 		}
 		preview.Mutex.Lock()
 		defer preview.Mutex.Unlock()
@@ -117,7 +117,7 @@ func Select(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	}
 	if enable == "" && disable == "" {
 		_, _ = msg.Reply(
-			"Please Supply a Valid argument\nFor help send " + cmd + " --help",
+			"Please Supply a Valid argument\nFor help send "+cmd+" --help",
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
@@ -155,7 +155,7 @@ func Select(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 				fmt.Fprintf(&errs, "%s - \"%s\" is not a video. Cannot Select.\n", item.ID, item.FileName)
 			} else {
 				fmt.Fprintf(&msg, "%s - `%s`\n    **Changed from:** '%s'\n\n", item.ID, item.FileName, batchutils.StatusMap[item.Status])
-				item.Status = 1	
+				item.Status = 1
 			}
 			items = append(items, item)
 		}
@@ -192,7 +192,7 @@ func Select(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 				fmt.Fprintf(&errs, "%s - \"%s\" is not a video. Cannot Select.\n", item.ID, item.FileName)
 			} else {
 				fmt.Fprintf(&msg, "%s - `%s`\n    **Changed from:** '%s'\n\n", item.ID, item.FileName, batchutils.StatusMap[item.Status])
-				item.Status = 1	
+				item.Status = 1
 			}
 			items = append(items, item)
 		}
@@ -216,7 +216,7 @@ func Select(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 }
 
 func previewQueue(msg *tele.Message, deletable bool) error {
-	emptyQueueMsg := "`I'm as free as a bird 🦅`" 
+	emptyQueueMsg := "`I'm as free as a bird 🦅`"
 	noQueuedMsg := "`Nothing Here, yet! 💖`"
 	total := bot.Queue.Len()
 	switch total {
@@ -240,11 +240,11 @@ func previewQueue(msg *tele.Message, deletable bool) error {
 func listQueueP(msg *tele.Message, args string) error {
 	total := bot.Queue.Len()
 	if total == 0 {
-		_, _  = msg.Reply("`Nothing In Queue`", &tele.ReplyOptions{SleepDelete: 5})
-		return  msg.Delete()
+		_, _ = msg.Reply("`Nothing In Queue`", &tele.ReplyOptions{SleepDelete: 5})
+		return msg.Delete()
 	}
 	if i, err := strconv.Atoi(args); err == nil {
-		if i > (total -1) {
+		if i > (total - 1) {
 			_, _ = msg.ReplyText("Supply a Valid queue id/index")
 			return nil
 		}
@@ -252,10 +252,10 @@ func listQueueP(msg *tele.Message, args string) error {
 		var pName string
 		if len(entry.Batch) == 0 {
 			pName, _ = parser.QParse(entry.Name, &parser.ParseOptions{
-				UseAniList: entry.AniList,
+				UseAniList:     entry.AniList,
 				FilterOverride: entry.Filter,
-				Version: entry.Version,
-				Direct: entry.ForceName,
+				Version:        entry.Version,
+				Direct:         entry.ForceName,
 			})
 		} else {
 			pName = "[Batch]: " + entry.Name
@@ -267,7 +267,7 @@ func listQueueP(msg *tele.Message, args string) error {
 	if len(ids) == 0 {
 		_, _ = msg.ReplyText("Send a range of number (i.e 1-5) (max 10 items) or the index number of item in queue to be parsed.")
 	}
-	if ids[len(ids)-1] > (total-1) {
+	if ids[len(ids)-1] > (total - 1) {
 		_, _ = msg.ReplyText("Range out of bounds")
 		return nil
 	}
@@ -277,10 +277,10 @@ func listQueueP(msg *tele.Message, args string) error {
 		var pName string
 		if len(entry.Batch) == 0 {
 			pName, _ = parser.QParse(entry.Name, &parser.ParseOptions{
-				UseAniList: entry.AniList,
+				UseAniList:     entry.AniList,
 				FilterOverride: entry.Filter,
-				Version: entry.Version,
-				Direct: entry.ForceName,
+				Version:        entry.Version,
+				Direct:         entry.ForceName,
 			})
 		} else {
 			pName = "[Batch]: " + entry.Name
@@ -291,22 +291,21 @@ func listQueueP(msg *tele.Message, args string) error {
 		_, _ = msg.ReplyText("**Parsed Queue Result(s):**\n" + sb.String())
 	}
 	return nil
-
 }
 
 func ListQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}
-	cmd := update.Args()[0]	
+	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
 		_, _ = msg.ReplyText(err.Error())
 		return nil
 	}
 	helpMsg := "List items in queue in paged format\n" +
-	"with 10 items per page.\n" +
-	"Or:"
+		"with 10 items per page.\n" +
+		"Or:"
 	arg := argparser.ParseFlags(
 		cmd,
 		helpMsg,
@@ -315,7 +314,7 @@ func ListQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 			"parse",
 			"p",
 			"<int>, range (x-y): Get the auto generated FileName for an item/items in queue",
-		),	
+		),
 	)
 	if out := arg.Output; out != "" {
 		_, _ = msg.Reply(utils.CodeBlock(out, true),
@@ -326,7 +325,7 @@ func ListQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 		_, _ = msg.ReplyText(err.Error())
 		return nil
 	}
-	pargs := arg.Values	
+	pargs := arg.Values
 	parse := pargs["parse"].(string)
 	if parse != "" {
 		return listQueueP(msg, parse)
@@ -337,14 +336,14 @@ func ListQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 func EditBatch(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	cmd := update.Args()[0]
 	helpMsg := "Command for viewing queued batches;\n" +
-	"Queue ID of the batch, enables live preview for the batch."
+		"Queue ID of the batch, enables live preview for the batch."
 	if args == "" || utils.SendHelp(args) {
 		_, _ = msg.Reply(utils.CodeBlock(helpMsg, true), &tele.ReplyOptions{HTMLParseMode: true})
 		return nil
 	}
 	helpFunc := func(h string) error {
 		_, _ = msg.Reply(
-			h +"; Need help? Send <code>"+cmd+" --help</code>",
+			h+"; Need help? Send <code>"+cmd+" --help</code>",
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
@@ -352,9 +351,9 @@ func EditBatch(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	var id int
 	var err error
 	if id, err = strconv.Atoi(args); err != nil {
-		return  helpFunc("Supplied queue id is not a number.")
+		return helpFunc("Supplied queue id is not a number.")
 	}
-	if id > bot.Queue.Len() -1 {
+	if id > bot.Queue.Len()-1 {
 		return helpFunc("Invalid queue id")
 	}
 	entry := bot.Queue.AsSlice()[id]
@@ -367,21 +366,21 @@ func EditBatch(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 		return nil
 	}
 	previewBatch := batchutils.BatchPreview{
-		Bmsg: msg,
-		Version: entry.Version,
-		Filter: entry.Filter,
-		Items: entry.Batch,
+		Bmsg:      msg,
+		Version:   entry.Version,
+		Filter:    entry.Filter,
+		Items:     entry.Batch,
 		Previewer: msg.SenderID,
 	}
 	items, err := previewBatch.Start(true)
 	if err != nil {
-		_, _ = msg.ReplyText("Error: "+err.Error())
+		_, _ = msg.ReplyText("Error: " + err.Error())
 		return nil
 	}
 	if len(items) == 0 {
 		return msg.Delete()
 	} else {
-		_, _ = msg.ReplyText("Edited batch:- `"+entry.Name+"` successfully!")
+		_, _ = msg.ReplyText("Edited batch:- `" + entry.Name + "` successfully!")
 		db.SaveQueue(ctx)
 		return nil
 	}
@@ -391,15 +390,15 @@ func EditQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}
-	cmd := update.Args()[0]	
+	cmd := update.Args()[0]
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
 		_, _ = msg.ReplyText(err.Error())
 		return nil
 	}
 	helpMsg := "Edit configuration of items already in queue:\n" +
-	"Be aware that this operation is quite slow\n" +
-	"Arguments:"
+		"Be aware that this operation is quite slow\n" +
+		"Arguments:"
 	arg := argparser.ParseFlags(
 		cmd,
 		helpMsg,
@@ -471,7 +470,7 @@ func EditQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	}
 	helpFunc := func(h string) error {
 		_, _ = msg.Reply(
-			h +"; Need help? Send <code>"+cmd+" --help</code>",
+			h+"; Need help? Send <code>"+cmd+" --help</code>",
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
@@ -493,7 +492,7 @@ func EditQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	} else {
 		id = i
 	}
-	if id > bot.Queue.Len() -1 {
+	if id > bot.Queue.Len()-1 {
 		return helpFunc("Invalid queue id")
 	}
 	entry := bot.Queue.AsSlice()[id]
@@ -548,10 +547,10 @@ func EditQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 
 func ClearQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	helpMsg := "Clears an item or all items from queue\n" +
-	"Arguments:\n" +
-	"-  A number or a range of numbers (queue ids) to remove\n" +
-	"-  'all' (not case sensitive) to 'pending' queue items\n" +
-	"-  '0' Remove the topmost queued item (QID 0) (not recommended)"
+		"Arguments:\n" +
+		"-  A number or a range of numbers (queue ids) to remove\n" +
+		"-  'all' (not case sensitive) to 'pending' queue items\n" +
+		"-  '0' Remove the topmost queued item (QID 0) (not recommended)"
 	cmd := update.Args()[0]
 	if args == "" || utils.SendHelp(args) {
 		_, _ = msg.Reply(utils.CodeBlock(helpMsg, true), &tele.ReplyOptions{HTMLParseMode: true})
@@ -559,7 +558,7 @@ func ClearQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	}
 	helpFunc := func(h string) error {
 		_, _ = msg.Reply(
-			h +"; Need help? Send <code>"+cmd+" --help</code>",
+			h+"; Need help? Send <code>"+cmd+" --help</code>",
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
@@ -568,7 +567,7 @@ func ClearQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	var id int
 	var err error
 	if id, err = strconv.Atoi(args); err == nil {
-		if id > bot.Queue.Len() -1 {
+		if id > bot.Queue.Len()-1 {
 			return helpFunc("Invalid queue id")
 		}
 		entry := bot.Queue.AsSlice()[id]
@@ -577,7 +576,7 @@ func ClearQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 			return nil
 		}
 		bot.Queue.Remove(id)
-		_, _ = msg.ReplyText("`"+entry.Name+"` has been removed from queue")
+		_, _ = msg.ReplyText("`" + entry.Name + "` has been removed from queue")
 		return nil
 	}
 	if strings.EqualFold(args, "all") {
@@ -598,7 +597,7 @@ func ClearQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		if len(txt) == 0 {
 			_, _ = msg.ReplyText("`Nothing was cleared.`")
 		} else {
-			_, _ = msg.ReplyText(btchClrMsg+txt)
+			_, _ = msg.ReplyText(btchClrMsg + txt)
 			db.SaveQueue(ctx)
 		}
 		return nil
@@ -608,7 +607,7 @@ func ClearQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	if len(indexes) == 0 {
 		return helpFunc("`Pass a number/range/all for an item/items on queue to be removed")
 	}
-	if indexes[len(indexes)-1] > (total-1) {
+	if indexes[len(indexes)-1] > (total - 1) {
 		return helpFunc("Range out of bounds")
 	}
 	sender := msg.SenderID
@@ -619,8 +618,8 @@ func ClearQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	if len(txt) == 0 {
 		_, _ = msg.ReplyText("`Nothing was cleared.`")
 	} else {
-		_, _ = msg.ReplyText(btchClrMsg+txt)
+		_, _ = msg.ReplyText(btchClrMsg + txt)
 		db.SaveQueue(ctx)
 	}
-	return nil	
+	return nil
 }

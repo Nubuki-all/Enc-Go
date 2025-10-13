@@ -42,7 +42,7 @@ func EncodeInfo(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery)
 	if info.DlPath != "" {
 		ans = "Anilist thumbnail:\nYes"
 	}
-	length := total -1
+	length := total - 1
 	var next1, next2 string
 	if len(entry.Batch) > 0 {
 		next, left := batchutils.GetPendingItems(
@@ -62,7 +62,9 @@ func EncodeInfo(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery)
 		default:
 			next1, next2 = next[0], next[1]
 			next1 += "\n"
-			if left != 0 {next2 += fmt.Sprintf(" (+%d)", left)}
+			if left != 0 {
+				next2 += fmt.Sprintf(" (+%d)", left)
+			}
 		}
 	} else {
 		next1, next2 = getNext()
@@ -167,4 +169,4 @@ func cancelEncode(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuer
 	info.IsCancelled = true
 	info.Canceller = sender
 	return nil
-}	
+}

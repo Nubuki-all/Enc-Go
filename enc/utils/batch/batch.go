@@ -2,18 +2,19 @@
 package batchutils
 
 import (
-	"enc/config"
-	"enc/internal/bot/types"
-	"enc/internal/logger"
-	"enc/utils"
-	"enc/utils/parser"
-	"enc/utils/tele"
 	"fmt"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"enc/config"
+	"enc/internal/bot/types"
+	"enc/internal/logger"
+	"enc/utils"
+	"enc/utils/parser"
+	"enc/utils/tele"
 
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/telegram/message/markup"
@@ -22,7 +23,6 @@ import (
 )
 
 const CallbackData = "preview"
-
 
 func GetBatches(files []string, zeroID bool) (items []types.BatchItem) {
 	id := 0
@@ -37,17 +37,17 @@ func GetBatches(files []string, zeroID bool) (items []types.BatchItem) {
 		items = append(items, item)
 		id += 1
 	}
-	return
+	return items
 }
 
 func GetYtdlBatches(files []string) (items []types.BatchItem) {
 	id := 1
 	for _, name := range files {
-		item := types.BatchItem{FileName: filepath.Base(name), ID: strconv.Itoa(id)}	
+		item := types.BatchItem{FileName: filepath.Base(name), ID: strconv.Itoa(id)}
 		items = append(items, item)
 		id += 1
 	}
-	return
+	return items
 }
 
 func GetPendingItems(items []types.BatchItem, limit int, anilist bool, version string, filter *types.FilterData, truncate bool) ([]string, int) {
@@ -64,11 +64,13 @@ func GetPendingItems(items []types.BatchItem, limit int, anilist bool, version s
 	list := make([]string, limit)
 	for _, n := range pending[:limit] {
 		q, e := parser.QParse(n, &parser.ParseOptions{
-			UseAniList: anilist,
+			UseAniList:     anilist,
 			FilterOverride: filter,
-			Version: version,
+			Version:        version,
 		})
-		if e != nil {q=n}
+		if e != nil {
+			q = n
+		}
 		if truncate && len(q) > 45 {
 			q = q[:45] + "…"
 		}
@@ -78,38 +80,39 @@ func GetPendingItems(items []types.BatchItem, limit int, anilist bool, version s
 }
 
 var StatusMap = map[int]string{
-		3: "Not a video.",
-		2: "DONE!",
-		1: "✅",
-		0: "⬜",	
+	3: "Not a video.",
+	2: "DONE!",
+	1: "✅",
+	0: "⬜",
 }
 
 type BatchPreview struct {
-	msg *tele.Message
-	Bmsg *tele.Message
-	Version string
-	Filter *types.FilterData
-	Items []types.BatchItem
-	Previewer int64
-	Mutex sync.Mutex
-	items []types.BatchItem
+	msg         *tele.Message
+	Bmsg        *tele.Message
+	Version     string
+	Filter      *types.FilterData
+	Items       []types.BatchItem
+	Previewer   int64
+	Mutex       sync.Mutex
+	items       []types.BatchItem
 	isCancelled bool
-	done bool
-	previewed chan struct{}
-	start  int
-	limit  int
-	pageNo int
-	pages  int
-	parse  bool
-	prevMsg string
+	done        bool
+	previewed   chan struct{}
+	start       int
+	limit       int
+	pageNo      int
+	pages       int
+	parse       bool
+	prevMsg     string
 }
+
 func (bp *BatchPreview) Start(emptyOnCancel bool) (_ []types.BatchItem, err error) {
 	if len(bp.Items) == 0 {
 		return nil, nil
 	}
 	// set defaultw
-	bp.pageNo =1
-	bp.pages =1
+	bp.pageNo = 1
+	bp.pages = 1
 	bp.limit = 12
 	if !emptyOnCancel {
 		copy(bp.items, bp.Items)
@@ -124,32 +127,32 @@ func (bp *BatchPreview) Start(emptyOnCancel bool) (_ []types.BatchItem, err erro
 	}
 	id := fmt.Sprintf("%d:%d", bp.msg.ChatID, bp.msg.ID)
 	_ = storeBatchCallbackInfo(&batchCallBackInfo{bp}, id)
-	Out:
-	for  {
+Out:
+	for {
 		select {
 		case <-bp.previewed:
 			break Out
 		default:
-			time.Sleep(1*time.Second)
-		}	
+			time.Sleep(1 * time.Second)
+		}
 	}
 	delBatchCallbackInfo(id)
 	_ = bp.msg.Delete()
 	return bp.Items, nil
 }
 
-func (bp *BatchPreview) Update () (err error) {
+func (bp *BatchPreview) Update() (err error) {
 	select {
 	case <-bp.previewed:
 		return nil
 	default:
 	}
-	if bp.isCancelled{
+	if bp.isCancelled {
 		bp.Items = bp.items
 	}
 	if bp.isCancelled || bp.done {
 		close(bp.previewed)
-		return
+		return err
 	}
 	totalSelected := 0
 	for _, item := range bp.Items {
@@ -158,13 +161,13 @@ func (bp *BatchPreview) Update () (err error) {
 		}
 	}
 	total := len(bp.Items)
-	bp.pages = (total + bp.limit -1) / bp.limit
+	bp.pages = (total + bp.limit - 1) / bp.limit
 	if bp.pageNo > bp.pages && bp.pages != 0 {
 		bp.start = (bp.limit * bp.pages) - 12
 		bp.pageNo = bp.pages
 	}
-	var msg strings.Builder	
-	for _, item := range bp.Items[bp.start: bp.limit + bp.start] {
+	var msg strings.Builder
+	for _, item := range bp.Items[bp.start : bp.limit+bp.start] {
 		name := item.FileName
 		if bp.parse && item.Status != 3 {
 			name, err = parser.QParse(name, &parser.ParseOptions{
@@ -182,7 +185,7 @@ func (bp *BatchPreview) Update () (err error) {
 	}
 	var buttonRows []tg.KeyboardButtonRow
 	if total > bp.limit {
-		buttonRows = append(buttonRows,	
+		buttonRows = append(buttonRows,
 			markup.Row(
 				markup.Callback(
 					"<<",
@@ -196,7 +199,7 @@ func (bp *BatchPreview) Update () (err error) {
 					">>",
 					[]byte(CallbackData+" next"),
 				),
-			),	
+			),
 		)
 	} else {
 		fmt.Fprintf(&msg, "**Selected:** %d of %d\n", totalSelected, total)
@@ -210,7 +213,7 @@ func (bp *BatchPreview) Update () (err error) {
 			markup.Callback(
 				parseBtn,
 				[]byte(CallbackData+" parse"),
-			),	
+			),
 			markup.Callback(
 				"Done",
 				[]byte(CallbackData+" done"),
@@ -227,22 +230,25 @@ func (bp *BatchPreview) Update () (err error) {
 	fmt.Fprintf(&msg, "\n**📌 Tip: To change the state of an item reply this message with ** /select%s <item number(s)", cmdSuf)
 	txt := msg.String()
 	if txt == bp.prevMsg {
-		return
+		return err
 	}
 	bp.prevMsg = txt
 	_, err = bp.msg.Edit(
 		txt,
-		&tele.EditOptions{ReplyMarkup: markup.InlineKeyboard(buttonRows...),
-	})
-	return
+		&tele.EditOptions{
+			ReplyMarkup: markup.InlineKeyboard(buttonRows...),
+		})
+	return err
 }
 
 type batchCallBackInfo struct {
 	*BatchPreview
 }
 
-var batchCallbackDataMutex sync.Mutex
-var batchCallbackData  map[string]*batchCallBackInfo 
+var (
+	batchCallbackDataMutex sync.Mutex
+	batchCallbackData      map[string]*batchCallBackInfo
+)
 
 func storeBatchCallbackInfo(data *batchCallBackInfo, key string) string {
 	batchCallbackDataMutex.Lock()
@@ -285,10 +291,10 @@ func PreviewAction(ctx *ext.Context, update *ext.Update, query *tele.CallbackQue
 	if d := strings.SplitN(args, " ", 2); len(d) == 2 {
 		data = d[1]
 	}
-	_=query.Answer(data +"...", true)
+	_ = query.Answer(data+"...", true)
 	preview.Mutex.Lock()
 	defer preview.Mutex.Unlock()
-	switch data{
+	switch data {
 	case "next":
 		if preview.pageNo == preview.pages {
 			preview.pageNo = 1

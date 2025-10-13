@@ -69,7 +69,7 @@ type EncodeJob struct {
 	Busy         bool
 	ID           any
 	SMInfo       any
-	PrevDLClient any 
+	PrevDLClient any
 }
 
 // jobs holds flags for each ffmpeg script

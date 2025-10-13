@@ -34,16 +34,18 @@ func getNext() (n1 string, n2 string) {
 			n1, err = parser.QParse(
 				entry.Name,
 				&parser.ParseOptions{
-					Direct: entry.ForceName,
-					UseAniList: entry.AniList,
+					Direct:         entry.ForceName,
+					UseAniList:     entry.AniList,
 					FilterOverride: entry.Filter,
-					Version: entry.Version,
+					Version:        entry.Version,
 				},
 			)
 			if err != nil {
 				n1 = entry.Name
 			}
-		} else {n1 = "[Batch]: " + entry.Name}
+		} else {
+			n1 = "[Batch]: " + entry.Name
+		}
 		if len(n1) > 45 {
 			n1 = n1[:45] + "…"
 		}
@@ -54,16 +56,18 @@ func getNext() (n1 string, n2 string) {
 			n2, err = parser.QParse(
 				entry.Name,
 				&parser.ParseOptions{
-					Direct: entry.ForceName,
-					UseAniList: entry.AniList,
+					Direct:         entry.ForceName,
+					UseAniList:     entry.AniList,
 					FilterOverride: entry.Filter,
-					Version: entry.Version,
+					Version:        entry.Version,
 				},
 			)
 			if err != nil {
 				n1 = entry.Name
 			}
-		} else {n2 = "[Batch]: " + entry.Name}
+		} else {
+			n2 = "[Batch]: " + entry.Name
+		}
 		if len(n2) > 45 {
 			n2 = n2[:45] + "…"
 		}
@@ -71,5 +75,5 @@ func getNext() (n1 string, n2 string) {
 			n2 += fmt.Sprintf(" (+%d)", total-3)
 		}
 	}
-	return
+	return n1, n2
 }

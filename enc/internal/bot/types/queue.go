@@ -1,10 +1,11 @@
 package types
 
 import (
-	"enc/internal/bot/source"
 	"strconv"
 	"strings"
 	"sync"
+
+	"enc/internal/bot/source"
 )
 
 // QueueKey uniquely identifies an incoming message.
@@ -40,17 +41,17 @@ type BatchItem struct {
 // QueueEntry holds all the data for a queue item.
 type QueueEntry struct {
 	// Key       QueueKey     `bson:"key"`
-	Name      string       `bson:"name"`
-	ChatID    int64        `bson:"chat_id"`
-	MessageID int          `bson:"message_id"`
-	Sender    int64        `bson:"sender"`  // sender_id
-	Version   string       `bson:"version"` // cust_v or get_v()
-	Filter    *FilterData   `bson:"filter"`  // holds Fil1, Fil2, Fil3
-	Source    QueueSource  `bson:"source"`  // e.g. {"tg","None"}
-	ForceName string       `bson:"force_name"`
-	AniList   bool         `bson:"anilist"` // true/false
-	URI       string       `bson:"uri"`     // generic URI
-	Doc       *FileMeta    `bson:"file_meta,omitempty"`
+	Name      string      `bson:"name"`
+	ChatID    int64       `bson:"chat_id"`
+	MessageID int         `bson:"message_id"`
+	Sender    int64       `bson:"sender"`  // sender_id
+	Version   string      `bson:"version"` // cust_v or get_v()
+	Filter    *FilterData `bson:"filter"`  // holds Fil1, Fil2, Fil3
+	Source    QueueSource `bson:"source"`  // e.g. {"tg","None"}
+	ForceName string      `bson:"force_name"`
+	AniList   bool        `bson:"anilist"` // true/false
+	URI       string      `bson:"uri"`     // generic URI
+	Doc       *FileMeta   `bson:"file_meta,omitempty"`
 	Batch     []BatchItem `bson:"batch"`
 }
 
@@ -85,7 +86,7 @@ func (q *Queue) Add(entry QueueEntry) {
 }
 
 // Find check if entry with the given name exists.
-func(q *Queue) Find(key string) bool {
+func (q *Queue) Find(key string) bool {
 	if _, exists := q.keysExist[key]; exists {
 		return true
 	}
@@ -151,12 +152,12 @@ func (q *Queue) LockForSave() (map[string]struct{}, []QueueEntry, func()) {
 
 	keys := q.keysExist
 	slice := q.entries
-	
+
 	// The unlock function returns the data to the queue if the save fails.
 	unlock := func() {
 		q.mu.Unlock()
 	}
-	
+
 	return keys, slice, unlock
 }
 
@@ -250,9 +251,9 @@ func (q *Queue) RemoveItems(indexes []int, requester int64, md bool) string {
 		delete(q.keysExist, entry.Name)
 		q.entries = append(q.entries[:idx], q.entries[idx+1:]...)
 		if md {
-			sb.WriteString(strconv.Itoa(idx)+". `"+entry.Name+"`")
-		}	else {
-			sb.WriteString(strconv.Itoa(idx)+". "+entry.Name)
+			sb.WriteString(strconv.Itoa(idx) + ". `" + entry.Name + "`")
+		} else {
+			sb.WriteString(strconv.Itoa(idx) + ". " + entry.Name)
 		}
 	}
 	if sb.Len() != 0 {
@@ -276,7 +277,7 @@ func (q *Queue) Clear() {
 func (q *Queue) LoadFromSlice(slice []QueueEntry) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
-	
+
 	// Create a new slice and copy the content to ensure isolation.
 	q.entries = make([]QueueEntry, len(slice))
 	copy(q.entries, slice)
@@ -292,7 +293,7 @@ func (q *Queue) LoadFromSlice(slice []QueueEntry) {
 func (q *Queue) LoadFromMapSlice(keys map[string]struct{}, slice []QueueEntry) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
-	
+
 	// Replace the old slice with the new one.
 	q.entries = slice
 

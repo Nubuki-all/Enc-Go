@@ -2,15 +2,16 @@ package queueutils
 
 import (
 	"cmp"
-	"enc/config"
-	"enc/internal/bot"
-	"enc/utils"
-	"enc/utils/tele"
 	"fmt"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"enc/config"
+	"enc/internal/bot"
+	"enc/utils"
+	"enc/utils/tele"
 
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/constant"
@@ -21,21 +22,23 @@ import (
 const CallbackData = "status/"
 
 type QueuePreview struct {
-	Bmsg  *tele.Message
-	msg   *tele.Message
-	Mutex sync.Mutex
-	close bool
+	Bmsg      *tele.Message
+	msg       *tele.Message
+	Mutex     sync.Mutex
+	close     bool
 	previewed chan struct{}
-	updated *chan struct{}
-	start  int
-	limit  int
-	pageNo int
-	pages  int
-	prevMsg string
+	updated   *chan struct{}
+	start     int
+	limit     int
+	pageNo    int
+	pages     int
+	prevMsg   string
 }
 
-var qpReg map[int64]int
-var qpRegMux sync.Mutex
+var (
+	qpReg    map[int64]int
+	qpRegMux sync.Mutex
+)
 
 func register(chatID int64, ID int) {
 	qpRegMux.Lock()
@@ -54,13 +57,13 @@ func unRegister(chatID int64, ID int) {
 func isRegistered(chatID int64, ID int) bool {
 	qpRegMux.Lock()
 	defer qpRegMux.Unlock()
-	return qpReg[chatID] == ID 
+	return qpReg[chatID] == ID
 }
 
 func (qp *QueuePreview) Start() (err error) {
 	// set defaultw
-	qp.pageNo =1
-	qp.pages =1
+	qp.pageNo = 1
+	qp.pages = 1
 	qp.limit = 10
 	qp.msg, err = qp.Bmsg.ReplyText("`Listing queue pls wait…`")
 	if err != nil {
@@ -77,14 +80,14 @@ func (qp *QueuePreview) Start() (err error) {
 	bot.Queue.Subscribe(qp.msg.ChatID, ch)
 	uTicker := time.NewTicker(5 * time.Second)
 	defer uTicker.Stop()
-	Out:
-	for  {
+Out:
+	for {
 		select {
 		case <-qp.previewed:
 			break Out
 		case <-uTicker.C:
 			select {
-			case <- ch:
+			case <-ch:
 				qp.Mutex.Lock()
 				_ = qp.update()
 				qp.Mutex.Unlock()
@@ -94,7 +97,7 @@ func (qp *QueuePreview) Start() (err error) {
 			if !isRegistered(qp.msg.ChatID, qp.msg.ID) {
 				break Out
 			}
-		}	
+		}
 	}
 	bot.Queue.UnSubscribe(qp.msg.ChatID, ch)
 	_ = qp.msg.Delete()
@@ -114,9 +117,9 @@ func (qp *QueuePreview) update() (err error) {
 		close(qp.previewed)
 		return nil
 	}
-	qp.pages = (total + qp.limit -2) / qp.limit
+	qp.pages = (total + qp.limit - 2) / qp.limit
 	if qp.pageNo > qp.pages && qp.pages != 0 {
-		qp.start = (qp.limit * qp.pages) -9
+		qp.start = (qp.limit * qp.pages) - 9
 		qp.pageNo = qp.pages
 	}
 	queue := bot.Queue.AsSlice()
@@ -162,8 +165,8 @@ func (qp *QueuePreview) update() (err error) {
 		return nil
 	}
 	var buttonRows []tg.KeyboardButtonRow
-	if (total -1) > qp.limit {
-		buttonRows = append(buttonRows,	
+	if (total - 1) > qp.limit {
+		buttonRows = append(buttonRows,
 			markup.Row(
 				markup.Callback(
 					"<<",
@@ -177,16 +180,18 @@ func (qp *QueuePreview) update() (err error) {
 					">>",
 					[]byte(CallbackData+" next"),
 				),
-			),	
+			),
 		)
 	} else {
 		fmt.Fprintf(&msg, "**Pending Tasks:** %d\n", total-1)
 	}
 	fmt.Fprintf(&msg, "\n**📌 Tip: To remove an item from queue use** /clear%s <queue number>", config.Conf.CmdSuffix)
 	txt := msg.String()
-	if qp.prevMsg == txt {return nil}
+	if qp.prevMsg == txt {
+		return nil
+	}
 	qp.prevMsg = txt
-	buttonRows = append(buttonRows,	
+	buttonRows = append(buttonRows,
 		markup.Row(
 			markup.Callback(
 				"Close",
@@ -196,14 +201,16 @@ func (qp *QueuePreview) update() (err error) {
 	)
 	_, err = qp.msg.Edit(
 		txt,
-		&tele.EditOptions{ReplyMarkup: markup.InlineKeyboard(buttonRows...),
-	})
-	return
+		&tele.EditOptions{
+			ReplyMarkup: markup.InlineKeyboard(buttonRows...),
+		})
+	return err
 }
 
-var qpCallbackDataMutex sync.Mutex
-var qpCallbackData  map[string]*QueuePreview
-
+var (
+	qpCallbackDataMutex sync.Mutex
+	qpCallbackData      map[string]*QueuePreview
+)
 
 func storeqpCallbackInfo(data *QueuePreview, key string) string {
 	qpCallbackDataMutex.Lock()
@@ -246,10 +253,10 @@ func PreviewAction(ctx *ext.Context, update *ext.Update, query *tele.CallbackQue
 	if d := strings.SplitN(args, " ", 2); len(d) == 2 {
 		data = d[1]
 	}
-	_=query.Answer(data +"...", true)
+	_ = query.Answer(data+"...", true)
 	preview.Mutex.Lock()
 	defer preview.Mutex.Unlock()
-	switch data{
+	switch data {
 	case "next":
 		if preview.pageNo == preview.pages {
 			preview.pageNo = 1
@@ -267,7 +274,7 @@ func PreviewAction(ctx *ext.Context, update *ext.Update, query *tele.CallbackQue
 			preview.pageNo -= 1
 		}
 	case "close":
-		preview.close = true	
+		preview.close = true
 	default:
 	}
 	_ = preview.update()

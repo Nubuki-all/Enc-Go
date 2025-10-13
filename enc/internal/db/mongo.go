@@ -89,7 +89,7 @@ func LoadQueue() {
 	}
 	doc := QueueCol.FindOne(context.Background(), bson.M{"_id": config.Rconf.BotID})
 	var result struct {
-		Queue []types.QueueEntry `bson:"queue"`
+		Queue     []types.QueueEntry  `bson:"queue"`
 		QueueKeys map[string]struct{} `bson:"queueKeys"`
 	}
 	if err := doc.Decode(&result); err != nil {
@@ -285,7 +285,7 @@ func SaveAll(ctx context.Context) {
 
 func SaveQueue(ctx context.Context) {
 	if !useMongo || QueueCol == nil {
-		SaveQueueLocal()	
+		SaveQueueLocal()
 		return
 	}
 	m, s, unlock := bot.Queue.LockForSave()

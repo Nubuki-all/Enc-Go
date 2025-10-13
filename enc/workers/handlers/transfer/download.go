@@ -378,7 +378,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			}
 		}
 		if selected != "" && !utils.IsNumber(selected) {
-			_, _ = sMsg.EditText("-s: argument accepts Only digits not: " +selected)
+			_, _ = sMsg.EditText("-s: argument accepts Only digits not: " + selected)
 			return nil
 		}
 		if force {
@@ -442,7 +442,9 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		}
 		if selected != "" {
 			s, _ := strconv.Atoi(selected)
-			if !zIdx {s -= 1}
+			if !zIdx {
+				s -= 1
+			}
 			if s > dlInfo.Count-1 {
 				_, _ = sMsg.EditText("-s: **Invalid file ID**")
 				return nil

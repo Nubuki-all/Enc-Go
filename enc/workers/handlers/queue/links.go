@@ -3,7 +3,6 @@ package queue
 import (
 	"cmp"
 	"fmt"
-
 	"strconv"
 	"strings"
 	"time"
@@ -24,9 +23,11 @@ import (
 	"enc/workers/downloaders"
 )
 
-const invalidMsg = "`Invalid torrent/direct link`"
-const noURIMsg = "`uhm you need to reply to or send command alongside a uri/direct link`"
-const NoBatchmsg = "`Link has multiple files.\nTo add all files to queue use -b or -s <id> to choose a single file`"
+const (
+	invalidMsg = "`Invalid torrent/direct link`"
+	noURIMsg   = "`uhm you need to reply to or send command alongside a uri/direct link`"
+	NoBatchmsg = "`Link has multiple files.\nTo add all files to queue use -b or -s <id> to choose a single file`"
+)
 
 func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
@@ -36,10 +37,10 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 	var err error
 
 	helpMsg := "Adds a link or torrent link to encoding queue:\n" +
-	"	Requires a reply to link or the link as argument\n" +
-  "	can also add consecutive items to queue by replying\n" +
-	"	to the first link and a number of how many subsequent links to add to queue\n" +
-	"Accepts the following flags:"
+		"	Requires a reply to link or the link as argument\n" +
+		"	can also add consecutive items to queue by replying\n" +
+		"	to the first link and a number of how many subsequent links to add to queue\n" +
+		"Accepts the following flags:"
 	if args == "" {
 		args = "--help"
 	}
@@ -97,13 +98,13 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 			"allow-duplicates",
 			"A",
 			"Allows adding links with the same filename",
-		), 
+		),
 		argparser.CreateDBoolFlag(
 			"da",
 			"",
 			"Disables anilist for queued item",
 		),
-		 argparser.CreateDBoolFlag(
+		argparser.CreateDBoolFlag(
 			"confirm",
 			"y",
 			"(used in conjunction with -b) add all batch to queue without preview",
@@ -121,7 +122,7 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 	pargs := arg.Values
 	var xtraArg string
 	if len(pargs) == 0 && !strings.HasPrefix(args, `"`) {
-			xtraArg = args
+		xtraArg = args
 	} else {
 		xtraArg = strings.Join(arg.UnknownArgs, " ")
 	}
@@ -186,12 +187,12 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		for c, id := 0, msg.ID-1; c < i; c, id = c+1, id+1 {
 			gtMsgs, err := tele.GetMessages(msg.ChatID, &tg.InputMessageID{ID: id})
 			if err != nil {
-				_,_ = msg.ReplyText("Could not fetch next message in chain")
+				_, _ = msg.ReplyText("Could not fetch next message in chain")
 				return nil
 			}
-			pMsg := tele.NewMsgFromGotg(gtMsgs[0], ctx, msg.ChatID, 0) 
+			pMsg := tele.NewMsgFromGotg(gtMsgs[0], ctx, msg.ChatID, 0)
 			uri := utils.ExtractMessageText(gtMsgs[0])
-			if uri == ""  {
+			if uri == "" {
 				_, _ = pMsg.ReplyText("Not a link.")
 				return nil
 			}
@@ -217,14 +218,18 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 				continue
 			}
 			if dlInfo.Count > 1 && selected == "" && !batch {
-					_, _ = pMsg.ReplyText(NoBatchmsg)
+				_, _ = pMsg.ReplyText(NoBatchmsg)
 				continue
 			}
 			if selected != "" {
-				if !mega { s -= 1 }
+				if !mega {
+					s -= 1
+				}
 				if s > (dlInfo.Count - 1) {
 					lastFileID := dlInfo.Count
-					if mega {lastFileID -= 1}
+					if mega {
+						lastFileID -= 1
+					}
 					_, _ = pMsg.ReplyText(fmt.Sprintf("'-s': `%s` is more than last file_id :- `%d`\nTotal files in folder :- `%d`", selected, lastFileID, dlInfo.Count))
 					continue
 				}
@@ -240,7 +245,7 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 				batches = batchutils.GetBatches(dlInfo.Files, mega)
 			} else if !utils.IsVideoFile(dlInfo.Name) {
 				_, _ = pMsg.ReplyText(fmt.Sprintf("File with name: %s is not a Video", dlInfo.Name))
-					continue
+				continue
 			}
 			if bot.Queue.Find(dlInfo.Name) {
 				if !allowDup {
@@ -256,24 +261,24 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 				}
 			}
 			bot.Queue.Add(types.QueueEntry{
-				Name: dlInfo.Name,
-				ChatID: msg.ChatID,
+				Name:      dlInfo.Name,
+				ChatID:    msg.ChatID,
 				MessageID: msg.ID,
-				Sender: msg.SenderID,
-				Version: version,
-				Filter: filter,
-				Source: qSource,
+				Sender:    msg.SenderID,
+				Version:   version,
+				Filter:    filter,
+				Source:    qSource,
 				ForceName: forcedFileName,
-				AniList: !dAnilist,
-				URI: uri,
-				Doc: nil,
-				Batch: batches,
+				AniList:   !dAnilist,
+				URI:       uri,
+				Doc:       nil,
+				Batch:     batches,
 			})
 			total := bot.Queue.Len()
-			m, _ = msg.ReplyText("**Link added To Queue ⏰, POS:** `" + strconv.Itoa(total -1) +"`\n`Please Wait , Encode will start soon`")
+			m, _ = msg.ReplyText("**Link added To Queue ⏰, POS:** `" + strconv.Itoa(total-1) + "`\n`Please Wait , Encode will start soon`")
 		}
-		if bot.Queue.Len() > 1 && m != nil{
-			go func() {_ = previewQueue(m, false)}()
+		if bot.Queue.Len() > 1 && m != nil {
+			go func() { _ = previewQueue(m, false) }()
 		}
 		return nil
 	}
@@ -292,14 +297,18 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		return nil
 	}
 	if dlInfo.Count > 1 && selected == "" && !batch {
-			_, _ = msg.ReplyText(NoBatchmsg)
+		_, _ = msg.ReplyText(NoBatchmsg)
 		return nil
 	}
 	if selected != "" {
-		if !mega { s -= 1 }
+		if !mega {
+			s -= 1
+		}
 		if s > (dlInfo.Count - 1) {
 			lastFileID := dlInfo.Count
-			if mega {lastFileID -= 1}
+			if mega {
+				lastFileID -= 1
+			}
 			_, _ = msg.ReplyText(fmt.Sprintf("'-s': `%s` is more than last file_id :- `%d`\nTotal files in folder :- `%d`", selected, lastFileID, dlInfo.Count))
 			return nil
 		}
@@ -315,10 +324,10 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		batches = batchutils.GetBatches(dlInfo.Files, mega)
 		if !y {
 			batchPreview := batchutils.BatchPreview{
-				Bmsg: msg,
-				Version: version,
-				Filter: filter,
-				Items: batches,
+				Bmsg:      msg,
+				Version:   version,
+				Filter:    filter,
+				Items:     batches,
 				Previewer: msg.SenderID,
 			}
 			batches, err = batchPreview.Start(true)
@@ -350,25 +359,25 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		}
 	}
 	bot.Queue.Add(types.QueueEntry{
-		Name: dlInfo.Name,
-		ChatID: msg.ChatID,
+		Name:      dlInfo.Name,
+		ChatID:    msg.ChatID,
 		MessageID: msg.ID,
-		Sender: msg.SenderID,
-		Version: version,
-		Filter: filter,
-		Source: qSource,
+		Sender:    msg.SenderID,
+		Version:   version,
+		Filter:    filter,
+		Source:    qSource,
 		ForceName: forcedFileName,
-		AniList: !dAnilist,
-		URI: link,
-		Doc: nil,
-		Batch: batches,
+		AniList:   !dAnilist,
+		URI:       link,
+		Doc:       nil,
+		Batch:     batches,
 	})
 	db.SaveQueue(ctx)
 	total := bot.Queue.Len()
-	if total >1 || bot.Paused.Any() {
-		m, err := msg.ReplyText("**Link added To Queue ⏰, POS:** `" + strconv.Itoa(total -1) +"`\n`Please Wait , Encode will start soon`")
+	if total > 1 || bot.Paused.Any() {
+		m, err := msg.ReplyText("**Link added To Queue ⏰, POS:** `" + strconv.Itoa(total-1) + "`\n`Please Wait , Encode will start soon`")
 		if total > 1 && err == nil {
-			go func() {_ = previewQueue(m, false)}()
+			go func() { _ = previewQueue(m, false) }()
 		}
 	}
 	return nil

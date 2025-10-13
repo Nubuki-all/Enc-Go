@@ -127,9 +127,9 @@ func GetMessageFromLink(url string) *Message {
 func GetSenderIDFromMessage(msg *gp.Message) int64 {
 	if msg == nil {
 		return 0
-	}	
+	}
 	if userPeer, ok := msg.PeerID.(*tg.PeerUser); ok {
-			return  userPeer.UserID
+		return userPeer.UserID
 	}
 	var id constant.TDLibPeerID
 	switch p := msg.FromID.(type) {
@@ -137,10 +137,10 @@ func GetSenderIDFromMessage(msg *gp.Message) int64 {
 		return p.UserID
 	case *tg.PeerChannel:
 		id.Channel(p.ChannelID)
-		return int64(id)	
+		return int64(id)
 	case *tg.PeerChat:
 		id.Chat(p.ChatID)
-	  return int64(id)
+		return int64(id)
 	default:
 		return 0
 	}

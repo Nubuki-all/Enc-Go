@@ -128,7 +128,7 @@ func ExtractMessageText(message *gp.Message) string {
 		}
 	}
 	if message.Media == nil || isText {
-		return  message.Text
+		return message.Text
 	}
 	return ""
 }
@@ -150,44 +150,44 @@ func GetChatID(msg *gp.Message) int64 {
 	}
 }
 
-func Range2Slice (s string) (out []int) {
+func Range2Slice(s string) (out []int) {
 	r := strings.Split(s, "-")
 	if len(r) != 2 {
-		return
+		return out
 	}
 	s = strings.TrimSpace(r[0])
 	e := strings.TrimSpace(r[0])
 	var start, end int
 	var err error
 	if start, err = strconv.Atoi(s); err != nil {
-		return
+		return out
 	}
 	if end, err = strconv.Atoi(e); err != nil {
-		return
+		return out
 	}
 	for i := start; i < end+1; i++ {
 		out = append(out, i)
 	}
-	return
+	return out
 }
 
-func Range2StringSlice (s string) (out []string) {
+func Range2StringSlice(s string) (out []string) {
 	r := strings.Split(s, "-")
 	if len(r) != 2 {
-		return
+		return out
 	}
 	s = strings.TrimSpace(r[0])
 	e := strings.TrimSpace(r[0])
 	var start, end int
 	var err error
 	if start, err = strconv.Atoi(s); err != nil {
-		return
+		return out
 	}
 	if end, err = strconv.Atoi(e); err != nil {
-		return
+		return out
 	}
 	for i := start; i < end+1; i++ {
 		out = append(out, strconv.Itoa(i))
 	}
-	return
+	return out
 }
