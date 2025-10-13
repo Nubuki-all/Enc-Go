@@ -2,8 +2,10 @@ package utils
 
 import (
 	"slices"
+	"strconv"
 	"strings"
 
+	gp "github.com/celestix/gotgproto/types"
 	"github.com/gotd/td/tg"
 
 	"enc/config"
@@ -81,7 +83,7 @@ func YesNo(b bool) string {
 	return "No"
 }
 
-// Broadcast a message to every registered user in bot and returns a list of the messages sent.
+// BcMsg broadcasts a message to every registered user in bot and returns a list of the messages sent.
 func BcMsg(text string, exceptUser int64, mlist []*tele.Message) []*tele.Message {
 	AddMessage := func(id int64) {
 		ctx := telegram.Context
@@ -114,4 +116,78 @@ func BcMsg(text string, exceptUser int64, mlist []*tele.Message) []*tele.Message
 		AddMessage(logchat)
 	}
 	return mlist
+}
+
+func ExtractMessageText(message *gp.Message) string {
+	var isText bool
+	if message.Media != nil {
+		switch message.Media.(type) {
+		case *tg.MessageMediaWebPage:
+			isText = true
+		default:
+		}
+	}
+	if message.Media == nil || isText {
+		return  message.Text
+	}
+	return ""
+}
+
+func GetChatID(msg *gp.Message) int64 {
+	peer := msg.PeerID
+	if peer == nil {
+		return 0
+	}
+	switch p := peer.(type) {
+	case *tg.PeerChannel:
+		return p.ChannelID
+	case *tg.PeerChat:
+		return p.ChatID
+	case *tg.PeerUser:
+		return p.UserID
+	default:
+		return 0
+	}
+}
+
+func Range2Slice (s string) (out []int) {
+	r := strings.Split(s, "-")
+	if len(r) != 2 {
+		return
+	}
+	s = strings.TrimSpace(r[0])
+	e := strings.TrimSpace(r[0])
+	var start, end int
+	var err error
+	if start, err = strconv.Atoi(s); err != nil {
+		return
+	}
+	if end, err = strconv.Atoi(e); err != nil {
+		return
+	}
+	for i := start; i < end+1; i++ {
+		out = append(out, i)
+	}
+	return
+}
+
+func Range2StringSlice (s string) (out []string) {
+	r := strings.Split(s, "-")
+	if len(r) != 2 {
+		return
+	}
+	s = strings.TrimSpace(r[0])
+	e := strings.TrimSpace(r[0])
+	var start, end int
+	var err error
+	if start, err = strconv.Atoi(s); err != nil {
+		return
+	}
+	if end, err = strconv.Atoi(e); err != nil {
+		return
+	}
+	for i := start; i < end+1; i++ {
+		out = append(out, strconv.Itoa(i))
+	}
+	return
 }

@@ -415,3 +415,19 @@ func (tmp *TempFile) Remove() (err error) {
 	}
 	return os.Remove(tmp.Name)
 }
+
+func RenameDup(fileName string) string {
+	if fileName == "" {return ""}
+	baseName := RemoveExt(fileName)
+	idx := len(baseName) - 2
+	suffix := "-1"
+	if idx > 0 {
+		suffix = baseName[idx:]
+		if IsNegativeNumber(suffix) {
+			baseName = baseName[:idx]
+			s, _ := strconv.Atoi(suffix)
+			suffix = strconv.Itoa(s-1)
+		} else { suffix = "-1" }
+	}
+	return baseName + suffix + filepath.Ext(fileName)
+}

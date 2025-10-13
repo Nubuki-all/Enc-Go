@@ -7,6 +7,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"go.uber.org/zap"
+	"gorm.io/datatypes"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -24,9 +25,14 @@ import (
 
 // queueRecord stores the ordered queue as JSON
 type queueRecord struct {
+	BotID     string             `gorm:"primaryKey"`
+	Queue     datatypes.JSON     `gorm:"type:JSON"`
+	QueueKeys datatypes.JSON     `gorm:"type:JSON"`
+}
+/*type queueRecord struct {
 	BotID string             `gorm:"primaryKey"`
 	Queue []types.QueueEntry `gorm:"type:TEXT"`
-}
+}*/
 
 // settingRecord stores simple string settings
 type settingRecord struct {
@@ -106,12 +112,30 @@ func LoadLocalDB() {
 
 	// Load queue
 	var qr queueRecord
-	if err := localdb.First(&qr, "bot_id = ?", config.Rconf.BotID).Error; err == nil {
-		if len(qr.Queue) > 0 {
-			bot.Queue.LoadFromSlice(qr.Queue)
-			logger.InfoW("Loaded queue from SQLite", zap.Int("count", len(qr.Queue)))
+	if err := localdb.First(&qr, "bot_id = ?", config.Rconf.BotID).Error; nil == err {
+		var queueSlice []types.QueueEntry
+		var queueKeysMap map[string]struct{}
+
+		// Unmarshal the queue data from the JSON byte slice
+		if err := json.Unmarshal(qr.Queue, &queueSlice); err != nil {
+			logger.WarnW("Failed to unmarshal queue", zap.Error(err))
 		}
-	}
+
+		// Unmarshal the queue keys from the JSON byte slice
+		if err := json.Unmarshal(qr.QueueKeys, &queueKeysMap); err != nil {
+			logger.WarnW("Failed to unmarshal queue keys", zap.Error(err))
+		}
+		
+		sLen, mLen := len(queueSlice), len(queueKeysMap)
+		if sLen > 0 && mLen > 0 {
+			if sLen != mLen {
+				logger.Warn("Length of keys is different from Length of entries")
+				return
+			}
+			bot.Queue.LoadFromMapSlice(queueKeysMap, queueSlice)
+			logger.InfoW("Loaded queue from SQLite", zap.Int("count", len(queueSlice)))
+		}
+	} 
 
 	// Load settings
 	var settings []settingRecord
@@ -174,7 +198,7 @@ func LoadLocalDB() {
 	var rec filterRecord
 	err := localdb.First(&rec, "bot_id = ?", config.Rconf.BotID).Error
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 			return
 		}
 		logger.ErrorW(err.Error())
@@ -193,7 +217,31 @@ func SaveQueueLocal() {
 	if config.Conf.DatabaseURL != "" || localdb == nil {
 		return
 	}
-	obj := queueRecord{BotID: config.Rconf.BotID, Queue: bot.Queue.AsSlice()}
+	m, s, unlock := bot.Queue.LockForSave()
+	defer unlock()
+
+	if len(s) == 0 {
+		// No data to save, so return early.
+		return
+	}
+	queueJSON, err := json.Marshal(s)
+	if err != nil {
+		logger.WarnW("Failed to marshal queue slice to JSON", zap.Error(err))
+		return
+	}
+	
+	queueKeysJSON, err := json.Marshal(m)
+	if err != nil {
+		logger.WarnW("Failed to marshal queue keys to JSON", zap.Error(err))
+		return
+	}
+	
+	obj := queueRecord{
+		BotID:     config.Rconf.BotID,
+		Queue:     datatypes.JSON(queueJSON),
+		QueueKeys: datatypes.JSON(queueKeysJSON),
+	}
+
 	localdb.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "bot_id"}},
 		UpdateAll: true,

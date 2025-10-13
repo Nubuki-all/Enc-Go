@@ -264,3 +264,9 @@ func IsNumber(s string) bool {
 	_, err := strconv.ParseInt(s, 10, 64)
 	return err == nil
 }
+
+// IsNegativeNumber returns true if the string is a valid number lesser than zero.
+func IsNegativeNumber(s string) bool {
+	f, err := strconv.ParseInt(s, 10, 64)
+	return err == nil && f < 0
+}

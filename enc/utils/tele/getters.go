@@ -18,9 +18,9 @@ import (
 	"enc/internal/clients/telegram"
 )
 
-func GetUser(userId int64) (*tg.User, error) {
+func GetUser(userID int64) (*tg.User, error) {
 	ctx := telegram.Context
-	peer := ctx.PeerStorage.GetPeerById(userId)
+	peer := ctx.PeerStorage.GetPeerById(userID)
 	if peer.ID == 0 {
 		return nil, mtp_errors.ErrPeerNotFound
 	}
@@ -44,9 +44,9 @@ func GetUser(userId int64) (*tg.User, error) {
 	}
 }
 
-func GetMessages(chatId int64, ids ...tg.InputMessageClass) (msgs []*gp.Message, err error) {
+func GetMessages(chatID int64, ids ...tg.InputMessageClass) (msgs []*gp.Message, err error) {
 	ctx := telegram.Context
-	peer := ctx.ResolvePeerById(chatId)
+	peer := ctx.ResolvePeerById(chatID)
 	if peer.ID == 0 {
 		return nil, mtp_errors.ErrPeerNotFound
 	}
@@ -122,4 +122,26 @@ func GetMessageFromLink(url string) *Message {
 		userID = userPeer.UserID
 	}
 	return NewMsgFromGotg(msgs[0], telegram.Context, chatID, userID)
+}
+
+func GetSenderIDFromMessage(msg *gp.Message) int64 {
+	if msg == nil {
+		return 0
+	}	
+	if userPeer, ok := msg.PeerID.(*tg.PeerUser); ok {
+			return  userPeer.UserID
+	}
+	var id constant.TDLibPeerID
+	switch p := msg.FromID.(type) {
+	case *tg.PeerUser:
+		return p.UserID
+	case *tg.PeerChannel:
+		id.Channel(p.ChannelID)
+		return int64(id)	
+	case *tg.PeerChat:
+		id.Chat(p.ChatID)
+	  return int64(id)
+	default:
+		return 0
+	}
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -346,7 +347,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	var direct, fileName, selected, tgFileName, version string
 	var emoji, quality, tcaption, tfile string
 	var size int64
-	var force, nparse bool
+	var force, nparse, zIdx bool
 	if fInfo != nil {
 		size = fInfo.Size
 		tgFileName = fInfo.Name
@@ -376,6 +377,10 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 				fileName = name
 			}
 		}
+		if selected != "" && !utils.IsNumber(selected) {
+			_, _ = sMsg.EditText("-s: argument accepts Only digits not: " +selected)
+			return nil
+		}
 		if force {
 			if fileName == "" {
 				_, _ = sMsg.EditText("**Force rename to what exactly?**")
@@ -386,11 +391,13 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		if link != "" {
 			if qbit {
 				dlInfo = downloaders.GetQbitDlInfo(link)
+				zIdx = true
 			} else if ytdl {
 				dlInfo = downloaders.GetYdlInfo(link)
 			} else {
 				if utils.IsMegaLink(link) {
 					dlInfo = downloaders.GetMegaDlInfo(link)
+					zIdx = true
 				} else {
 					dlInfo = downloaders.GetAria2DlInfo(link)
 				}
@@ -414,6 +421,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		if link != "" {
 			if utils.IsMegaLink(link) {
 				dlInfo = downloaders.GetMegaDlInfo(link)
+				zIdx = true
 			} else {
 				dlInfo = downloaders.GetAria2DlInfo(link)
 			}
@@ -431,6 +439,17 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		if dlInfo.Count > 1 && selected == "" {
 			_, _ = sMsg.EditText("**Can not rename multiple files at once, use -s to select a file.**")
 			return nil
+		}
+		if selected != "" {
+			s, _ := strconv.Atoi(selected)
+			if !zIdx {s -= 1}
+			if s > dlInfo.Count-1 {
+				_, _ = sMsg.EditText("-s: **Invalid file ID**")
+				return nil
+			}
+			fileName = dlInfo.Files[s]
+		} else {
+			fileName = dlInfo.Name
 		}
 	}
 	if fileName == "" {

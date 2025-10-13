@@ -12,18 +12,15 @@ var (
 	EJob  = NewEncodeJob()
 )
 
-// QbitC represents a qBittorrent job status
-// Equivalent to Python's Qbit_c
+// DLInfo represents a download service job status
 // Count: number of files
 // FileList: list of file names
 // Error: error message if any
-// Hash: torrent hash
 // Name: torrent name
 type DLInfo struct {
 	Count int
 	Files []string
 	Error error
-	Hash  string
 	Name  string
 }
 
@@ -42,8 +39,8 @@ type EncodeInfo struct {
 	Batch    bool
 	CachedDL bool
 	QBit     bool
-	Select   interface{}
-	URI      interface{}
+	Select   any
+	URI      any
 	Previous string
 }
 
@@ -70,9 +67,9 @@ func (e *EncodeInfo) Reset() {
 type EncodeJob struct {
 	ins          jobs
 	Busy         bool
-	ID           interface{}
-	SMInfo       interface{}
-	PrevDLClient interface{}
+	ID           any
+	SMInfo       any
+	PrevDLClient any 
 }
 
 // jobs holds flags for each ffmpeg script
@@ -116,7 +113,7 @@ func (e *EncodeJob) Reset(force bool) {
 //	return !info.IsDir()
 //}
 
-// JobsCount returns how many ffmpeg scripts are pending
+// PendingInfo returns how many ffmpeg scripts are pending
 type PendingInfo struct {
 	Count int
 	List  []string

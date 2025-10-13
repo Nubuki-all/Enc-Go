@@ -1,3 +1,4 @@
+// Package db contains database related functions
 package db
 
 import (
@@ -89,6 +90,7 @@ func LoadQueue() {
 	doc := QueueCol.FindOne(context.Background(), bson.M{"_id": config.Rconf.BotID})
 	var result struct {
 		Queue []types.QueueEntry `bson:"queue"`
+		QueueKeys map[string]struct{} `bson:"queueKeys"`
 	}
 	if err := doc.Decode(&result); err != nil {
 		if err != mongo.ErrNoDocuments {
@@ -96,12 +98,12 @@ func LoadQueue() {
 		}
 		return
 	}
-	bot.Queue.LoadFromSlice(result.Queue)
+	bot.Queue.LoadFromMapSlice(result.QueueKeys, result.Queue)
 	logger.InfoW("Queue loaded from MongoDB", zap.Int("count", len(result.Queue)))
 }
 
-// loadMap reads a sub-document under key into the target map
-func LoadMap(coll *mongo.Collection, key string, target *map[string]interface{}) {
+// LoadMap reads a sub-document under key into the target map
+func LoadMap(coll *mongo.Collection, key string, target *map[string]any) {
 	if !useMongo {
 		return
 	}
@@ -147,7 +149,7 @@ func LoadRSSDict() {
 	bot.RSSDictMutex.Unlock()
 }
 
-// loadSlice reads an array of strings under key into the target slice
+// LoadSlice reads an array of strings under key into the target slice
 func LoadSlice(coll *mongo.Collection, key string, target *[]int64) {
 	if !useMongo {
 		return
@@ -170,7 +172,7 @@ func LoadSlice(coll *mongo.Collection, key string, target *[]int64) {
 	}
 }
 
-// loadString reads a string under key into the target string pointer
+// LoadString reads a string under key into the target string pointer
 func LoadString(coll *mongo.Collection, key string, target *string) {
 	if !useMongo {
 		return
@@ -283,14 +285,18 @@ func SaveAll(ctx context.Context) {
 
 func SaveQueue(ctx context.Context) {
 	if !useMongo || QueueCol == nil {
-		SaveQueueLocal()
-		//if err := SaveQueueLocal(); err != nil {
-		// 	logger.WarnW("SaveQueueLocal failed", zap.Error(err))
-		//}
+		SaveQueueLocal()	
 		return
 	}
+	m, s, unlock := bot.Queue.LockForSave()
+	defer unlock()
 	filter := bson.M{"_id": config.Rconf.BotID}
-	update := bson.M{"$set": bson.M{"queue": bot.Queue.AsSlice()}}
+	update := bson.M{
+		"$set": bson.M{
+			"queue":     s,
+			"queueKeys": m,
+		},
+	}
 	opts := options.Update().SetUpsert(true)
 	if _, err := QueueCol.UpdateOne(ctx, filter, update, opts); err != nil {
 		logger.WarnW("SaveQueue failed", zap.Error(err))

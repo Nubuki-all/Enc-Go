@@ -203,7 +203,33 @@ func (e *Encoder) AwaitCompletion() (err error) {
 	e.stderr = e.errBuf.String()
 	e.stdout = e.outBuf.String()
 	close(ch)
+	if e.clean {
+		e.cleanUp()
+	}
 	return err
+}
+
+func (e *Encoder) cleanUp() {
+	cInfo := utils.GetCallbackInfo(e.ID)
+	if cInfo == nil {
+		return
+	}
+	m := false
+	if e.Job != nil && cInfo.ReturnFlags == "cancel_jobs" {
+		e.Job.Complete()
+		m = true
+	}
+	utils.DelCallbackInfo(e.ID)
+	if e.LMsg != nil && e.Sender != 0 {
+		cInfo = utils.GetCallbackInfo(e.LogID)
+		if cInfo == nil {
+			return
+		}
+		if !m && e.Job != nil && cInfo.ReturnFlags == "cancel_jobs" {
+			e.Job.Complete()
+		}
+		utils.DelCallbackInfo(e.LogID)
+	}
 }
 
 func (e *Encoder) ReportStatus(action string) (err error) {

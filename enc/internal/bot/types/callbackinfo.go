@@ -8,4 +8,6 @@ type CallbackInfo struct {
 	Process *os.Process
 	DlPath  string
 	OutPath string
+	ReturnFlags string
+	
 }

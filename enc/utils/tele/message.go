@@ -4,6 +4,7 @@ package tele
 import (
 	"fmt"
 	"path/filepath"
+	"time"
 
 	"github.com/celestix/gotgproto/ext"
 	gp "github.com/celestix/gotgproto/types"
@@ -38,6 +39,7 @@ type EditOptions struct {
 
 type ReplyOptions struct {
 	HTMLParseMode bool
+	SleepDelete  int
 	ReplyMarkup   tg.ReplyMarkupClass
 	// will add more fields as required
 }
@@ -137,6 +139,15 @@ func (m *Message) Reply(text string, replyOptions *ReplyOptions) (*Message, erro
 	if err != nil {
 		logger.ErrorW(err.Error())
 		return nil, err
+	}
+	if replyOptions.SleepDelete != 0 {
+		go func(msg *Message, seconds time.Duration) {
+			time.Sleep(seconds)
+			_ = msg.Delete()
+		}(
+			NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID),
+			time.Duration(replyOptions.SleepDelete)*time.Second,
+		)
 	}
 	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID), nil
 }

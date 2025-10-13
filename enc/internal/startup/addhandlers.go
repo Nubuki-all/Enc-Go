@@ -14,6 +14,7 @@ import (
 	"enc/config"
 	"enc/internal/clients/telegram"
 	"enc/internal/logger"
+	batchutils "enc/utils/batch"
 	"enc/utils/tele"
 	"enc/utils/tele/parser"
 	"enc/workers/downloaders"
@@ -22,6 +23,7 @@ import (
 	"enc/workers/handlers/callbacks"
 	"enc/workers/handlers/dev"
 	"enc/workers/handlers/manage"
+	"enc/workers/handlers/queue"
 	"enc/workers/handlers/transfer"
 	"enc/workers/uploaders"
 )
@@ -89,11 +91,19 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		"rename":   EventHandlerWithArgs(transfer.Rename),
 		"list":     EventHandlerWithArgs(transfer.ListFiles),
 		"listv":    EventHandlerWithArgs(transfer.ListYtdlFiles),
-
 		"mux": EventHandlerWithArgs(transfer.Mux),
-
 		"upload": EventHandlerWithArgs(transfer.Upload),
 		"ul":     EventHandlerWithArgs(transfer.Upload),
+
+		// Queue-related Handlers
+		//Add:
+		"l": EventHandlerWithArgs(queue.AddLink),
+		//Manage
+		"queue": EventHandlerWithArgs(queue.ListQueue),
+		"batch": EventHandlerWithArgs(queue.EditBatch),
+		"clear": EventHandlerWithArgs(queue.ClearQueue),
+		"editq": EventHandlerWithArgs(queue.EditQueue),
+		"select": EventHandlerWithArgs(queue.Select),
 	}
 
 	for cmd, handler := range cmdHandlers {
@@ -123,6 +133,9 @@ func AddCBHandlers(dispatch dispatcher.Dispatcher) {
 		// Turn Handlers
 		"cancel_rturn": CallbackEventHandler(callbacks.CancelRTurn),
 		"cancel_mturn": CallbackEventHandler(callbacks.CancelMTurn),
+
+		// Batch Preview Handlers
+		batchutils.CallbackData: CallbackEventHandler(batchutils.PreviewAction),
 	}
 	for prefix, handler := range callbackHandlers {
 		dispatch.AddHandler(onevent.NewCallbackQuery(
@@ -138,13 +151,14 @@ func addSuffixcmd(cmd string) string {
 
 func BaseEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message) error) func(*ext.Context, *ext.Update) error {
 	return func(ctx *ext.Context, update *ext.Update) error {
-		user := update.EffectiveUser()
+		//user := update.EffectiveUser()
 		chat := update.EffectiveChat()
 		msg := tele.NewMsgFromGotg(
 			update.EffectiveMessage,
 			ctx,
 			chat.GetID(),
-			user.ID,
+			//user.ID,
+			tele.GetSenderIDFromMessage(update.EffectiveMessage),
 		)
 		err := handler(ctx, update, msg)
 		if err != nil {
@@ -174,7 +188,7 @@ func CallbackEventHandler(handler func(*ext.Context, *ext.Update, *tele.Callback
 
 func EventHandlerWithArgs(handler func(*ext.Context, *ext.Update, *tele.Message, string) error) func(*ext.Context, *ext.Update) error {
 	return func(ctx *ext.Context, update *ext.Update) error {
-		user := update.EffectiveUser()
+		//user := update.EffectiveUser()
 		chat := update.EffectiveChat()
 		_, args, _ := strings.Cut(update.EffectiveMessage.Text, " ")
 		args = strings.Trim(args, " ")
@@ -182,7 +196,8 @@ func EventHandlerWithArgs(handler func(*ext.Context, *ext.Update, *tele.Message,
 			update.EffectiveMessage,
 			ctx,
 			chat.GetID(),
-			user.ID,
+			//user.ID,
+			tele.GetSenderIDFromMessage(update.EffectiveMessage),
 		)
 		err := handler(ctx, update, msg, args)
 		if err != nil {
@@ -194,7 +209,7 @@ func EventHandlerWithArgs(handler func(*ext.Context, *ext.Update, *tele.Message,
 
 func EventHandlerWithRawArgs(handler func(*ext.Context, *ext.Update, *tele.Message, string) error) func(*ext.Context, *ext.Update) error {
 	return func(ctx *ext.Context, update *ext.Update) error {
-		user := update.EffectiveUser()
+		//user := update.EffectiveUser()
 		chat := update.EffectiveChat()
 		text := update.EffectiveMessage.Text
 		rawText, err := parser.Unparse(
@@ -211,7 +226,8 @@ func EventHandlerWithRawArgs(handler func(*ext.Context, *ext.Update, *tele.Messa
 			update.EffectiveMessage,
 			ctx,
 			chat.GetID(),
-			user.ID,
+			//user.ID,
+			tele.GetSenderIDFromMessage(update.EffectiveMessage),
 		)
 		err = handler(ctx, update, msg, args)
 		if err != nil {
