@@ -97,7 +97,7 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 
 		// Queue-related Handlers
 		// Add:
-		"l": EventHandlerWithArgs(queue.AddLink),
+		"l":  EventHandlerWithArgs(queue.AddLink),
 		"ql": EventHandlerWithArgs(queue.AddTorrent),
 		// Manage
 		"queue":  EventHandlerWithArgs(queue.ListQueue),
@@ -127,10 +127,10 @@ func AddCBHandlers(dispatch dispatcher.Dispatcher) {
 		uploaders.CallbackData:   CallbackEventHandler(callbacks.CancelUpload),
 
 		// Encode Handlers
-		encoders.CallbackData:       CallbackEventHandler(callbacks.EncodeInfo),
-		encoders.SCallbackData:      CallbackEventHandler(callbacks.EncodeStats),
-		encoders.CancelCallbackData: CallbackEventHandler(callbacks.CancelEncode),
-		"j"+encoders.CancelCallbackData: CallbackEventHandler(callbacks.CancelEncodeJobs),
+		encoders.CallbackData:             CallbackEventHandler(callbacks.EncodeInfo),
+		encoders.SCallbackData:            CallbackEventHandler(callbacks.EncodeStats),
+		encoders.CancelCallbackData:       CallbackEventHandler(callbacks.CancelEncode),
+		"j" + encoders.CancelCallbackData: CallbackEventHandler(callbacks.CancelEncodeJobs),
 
 		// Turn Handlers
 		"cancel_rturn": CallbackEventHandler(callbacks.CancelRTurn),
