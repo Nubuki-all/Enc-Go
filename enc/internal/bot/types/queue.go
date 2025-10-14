@@ -1,6 +1,7 @@
 package types
 
 import (
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -255,6 +256,7 @@ func (q *Queue) RemoveItems(indexes []int, requester int64, md bool) string {
 	defer q.mu.Unlock()
 	var sb strings.Builder
 	total := len(q.entries)
+	slices.Reverse(indexes)
 	for _, idx := range indexes {
 		if idx < 0 || idx >= total {
 			continue
