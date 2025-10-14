@@ -18,9 +18,9 @@ import (
 
 	//"enc/internal/logger"
 	"enc/utils"
-	"enc/utils/argparser"	
+	"enc/utils/argparser"
 	"enc/utils/tele"
-	)
+)
 
 const notAVid = "`Replied Message is not a Video.`"
 
@@ -48,7 +48,7 @@ func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	arg := argparser.ParseFlags(
 		cmd,
 		helpMsg,
-		argList,	
+		argList,
 		argparser.CreateDStringFlag(
 			"force",
 			"f",
@@ -58,7 +58,7 @@ func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 			"rm",
 			"r",
 			"Words to remove from filename, delimeted by '|'",
-		),	
+		),
 		argparser.CreateDStringFlag(
 			"tc",
 			"C",
@@ -73,7 +73,7 @@ func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 			"version",
 			"v",
 			"tag according to release version number",
-		),	
+		),
 		argparser.CreateDBoolFlag(
 			"allow-duplicates",
 			"A",
@@ -83,7 +83,7 @@ func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 			"da",
 			"",
 			"Disables anilist for queued item",
-		),	
+		),
 	)
 	if out := arg.Output; out != "" {
 		_, _ = msg.Reply(utils.CodeBlock(out, true),
@@ -111,14 +111,14 @@ func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		xtraArg = args
 	} else {
 		xtraArg = strings.Join(arg.UnknownArgs, " ")
-	}	
+	}
 	forcedFileName := pargs["force"].(string)
 	tcaption := pargs["tc"].(string)
 	tfile := pargs["tf"].(string)
 	remove := pargs["rm"].(string)
-	version := pargs["version"].(string)	
+	version := pargs["version"].(string)
 	dAnilist := pargs["da"].(bool)
-	allowDup := pargs["allow-duplicates"].(bool)	
+	allowDup := pargs["allow-duplicates"].(bool)
 	qSource := types.QueueSource{}
 	qSource.Source = source.Telegram
 	var filter *types.FilterData
@@ -140,7 +140,7 @@ func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 				break
 			}
 			gtMsg := gtMsgs[0]
-			pMsg := tele.NewMsgFromGotg(gtMsg, ctx, msg.ChatID, 0)	
+			pMsg := tele.NewMsgFromGotg(gtMsg, ctx, msg.ChatID, 0)
 			fMeta := utils.MediaToFileMeta(gtMsg.Media)
 			if fMeta == nil || !slices.Contains(utils.VideoMimetype, fMeta.MimeType) {
 				_, _ = pMsg.ReplyText(notAVid)
@@ -154,7 +154,7 @@ func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 			}
 			if name == "" {
 				name = "video_" + time.Now().Format("2006-01-02_15-04-05") + ".mp4"
-			}	
+			}
 			if bot.Queue.Find(name) {
 				if !allowDup {
 					_, _ = pMsg.ReplyText("**This item has already been added to queue.**")
@@ -177,7 +177,7 @@ func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 				Filter:    filter,
 				Source:    qSource,
 				ForceName: forcedFileName,
-				AniList:   !dAnilist,	
+				AniList:   !dAnilist,
 				Doc:       fMeta,
 			})
 			toSave = true
@@ -191,7 +191,7 @@ func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		}
 		return nil
 	}
-	fMeta := utils.MediaToFileMeta(repMsg.Media)	
+	fMeta := utils.MediaToFileMeta(repMsg.Media)
 	if fMeta == nil || !slices.Contains(utils.VideoMimetype, fMeta.MimeType) {
 		_, _ = msg.ReplyText(notAVid)
 		return nil

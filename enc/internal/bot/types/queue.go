@@ -84,7 +84,7 @@ func (q *Queue) Add(entry QueueEntry) int {
 	q.entries = append(q.entries, entry)
 	q.keysExist[entry.Name] = struct{}{}
 	go q.notifyWaiters()
-	return (len(q.entries) -1)
+	return (len(q.entries) - 1)
 }
 
 // Find checks if an entry with the given name exists.
@@ -149,7 +149,7 @@ func (q *Queue) Get(key string) (QueueEntry, bool) {
 	return QueueEntry{}, false
 }
 
-//GetByIndex finds an entry by its index and returns a copy.
+// GetByIndex finds an entry by its index and returns a copy.
 func (q *Queue) GetByIndex(idx int) (QueueEntry, bool) {
 	q.mu.Lock()
 	defer q.mu.Unlock()

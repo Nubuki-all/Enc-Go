@@ -175,7 +175,7 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		if selected != "" && !y {
 			_, _ = msg.ReplyText("Warning: '-s' flag ignored!\nAdd -y to bypass this.")
 			selected = ""
-		} 
+		}
 		var m *tele.Message
 		toSave := false
 		for c, id := 0, msg.ReplyToID; c < i; c, id = c+1, id+1 {

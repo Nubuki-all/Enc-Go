@@ -23,7 +23,6 @@ import (
 	"enc/workers/downloaders"
 )
 
-
 func AddWithYtdl(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
@@ -178,7 +177,7 @@ func AddWithYtdl(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 		if selected != "" && !y {
 			_, _ = msg.ReplyText("Warning: '-s' flag ignored!\nAdd -y to bypass this.")
 			selected = ""
-		}	
+		}
 		var m *tele.Message
 		toSave := false
 		for c, id := 0, msg.ReplyToID; c < i; c, id = c+1, id+1 {
@@ -199,7 +198,7 @@ func AddWithYtdl(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 
 			}
 			dlInfo := downloaders.GetYdlInfo(uri)
-			qSource := types.QueueSource{}	
+			qSource := types.QueueSource{}
 			if dlInfo.Error != nil {
 				_, _ = pMsg.ReplyText("**Error:** " + dlInfo.Error.Error())
 				time.Sleep(5 * time.Second)
@@ -215,12 +214,12 @@ func AddWithYtdl(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 					_, _ = pMsg.ReplyText(fmt.Sprintf("'-s': `%s` is more than last file_id :- `%d`\nTotal files in folder :- `%d`", selected, lastFileID, dlInfo.Count))
 					continue
 				}
-				dlInfo.Name = dlInfo.Files[s]	
+				dlInfo.Name = dlInfo.Files[s]
 				qSource.Select = selected
 			} else if batch && dlInfo.Count > 1 {
 				forcedFileName = ""
 				batches = batchutils.GetBatches(dlInfo.Files, false)
-			} 
+			}
 			if bot.Queue.Find(dlInfo.Name) {
 				if !allowDup {
 					_, _ = pMsg.ReplyText("**This item has already been added to queue.**")
@@ -260,7 +259,7 @@ func AddWithYtdl(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 		return nil
 	}
 	dlInfo := downloaders.GetYdlInfo(link)
-	var mega bool	
+	var mega bool
 	if dlInfo.Error != nil {
 		_, _ = msg.ReplyText("**Error:** " + dlInfo.Error.Error())
 		return nil
@@ -269,13 +268,13 @@ func AddWithYtdl(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 		_, _ = msg.ReplyText(NoBatchmsg)
 		return nil
 	}
-	if selected != "" {	
+	if selected != "" {
 		if s > (dlInfo.Count - 1) {
-			lastFileID := dlInfo.Count	
+			lastFileID := dlInfo.Count
 			_, _ = msg.ReplyText(fmt.Sprintf("'-s': `%s` is more than last file_id :- `%d`\nTotal files in folder :- `%d`", selected, lastFileID, dlInfo.Count))
 			return nil
 		}
-		dlInfo.Name = dlInfo.Files[s]	
+		dlInfo.Name = dlInfo.Files[s]
 		qSource.Select = selected
 	} else if batch && dlInfo.Count > 1 {
 		forcedFileName = ""
@@ -299,7 +298,7 @@ func AddWithYtdl(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 				return nil
 			}
 		}
-	} 
+	}
 	if bot.Queue.Find(dlInfo.Name) {
 		if !allowDup {
 			_, _ = msg.ReplyText("**This link has already been added to queue.**")
