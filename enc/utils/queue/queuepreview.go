@@ -19,7 +19,7 @@ import (
 	"github.com/gotd/td/tg"
 )
 
-const CallbackData = "status/"
+const CallbackData = "status"
 
 type QueuePreview struct {
 	Bmsg      *tele.Message
@@ -35,7 +35,7 @@ type QueuePreview struct {
 }
 
 var (
-	qpReg    map[int64]int
+	qpReg  =  make(map[int64]int, 0)
 	qpRegMux sync.Mutex
 )
 

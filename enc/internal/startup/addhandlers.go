@@ -15,6 +15,7 @@ import (
 	"enc/internal/clients/telegram"
 	"enc/internal/logger"
 	batchutils "enc/utils/batch"
+	queueutils "enc/utils/queue"
 	"enc/utils/tele"
 	"enc/utils/tele/parser"
 	"enc/workers/downloaders"
@@ -138,6 +139,9 @@ func AddCBHandlers(dispatch dispatcher.Dispatcher) {
 
 		// Batch Preview Handlers
 		batchutils.CallbackData: CallbackEventHandler(batchutils.PreviewAction),
+
+		// Queue Preview Handlers
+		queueutils.CallbackData: CallbackEventHandler(queueutils.PreviewAction),
 	}
 	for prefix, handler := range callbackHandlers {
 		dispatch.AddHandler(onevent.NewCallbackQuery(
