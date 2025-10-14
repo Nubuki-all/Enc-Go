@@ -168,7 +168,7 @@ func (bp *BatchPreview) Update() (err error) {
 		bp.pageNo = bp.pages
 	}
 	var msg strings.Builder
-	for _, item := range bp.Items[bp.start : min(total, bp.limit+bp.start)] {
+	for _, item := range bp.Items[bp.start:min(total, bp.limit+bp.start)] {
 		name := item.FileName
 		if bp.parse && item.Status != 3 {
 			name, err = parser.QParse(name, &parser.ParseOptions{
