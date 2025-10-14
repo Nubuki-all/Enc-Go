@@ -117,14 +117,19 @@ func LoadLocalDB() {
 		var queueSlice []types.QueueEntry
 		var queueKeysMap map[string]struct{}
 
-		// Unmarshal the queue data from the JSON byte slice
-		if err := json.Unmarshal(qr.Queue, &queueSlice); err != nil {
-			logger.WarnW("Failed to unmarshal queue", zap.Error(err))
+		if len(qr.Queue) > 0 {
+			if err := json.Unmarshal(qr.Queue, &queueSlice); err != nil {
+				logger.WarnW("Failed to unmarshal queue", zap.Error(err))
+				return
+			}
 		}
-
-		// Unmarshal the queue keys from the JSON byte slice
-		if err := json.Unmarshal(qr.QueueKeys, &queueKeysMap); err != nil {
-			logger.WarnW("Failed to unmarshal queue keys", zap.Error(err))
+	
+		// Check if the JSON keys data is empty before unmarshaling.
+		if len(qr.QueueKeys) > 0 {
+			if err := json.Unmarshal(qr.QueueKeys, &queueKeysMap); err != nil {
+				logger.WarnW("Failed to unmarshal queue keys", zap.Error(err))
+				return
+			}
 		}
 
 		sLen, mLen := len(queueSlice), len(queueKeysMap)
