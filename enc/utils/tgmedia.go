@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	mtp_errors "github.com/celestix/gotgproto/errors"
@@ -132,4 +133,35 @@ func GetInputFileLocationAndSize(media tg.MessageMediaClass) (tg.InputFileLocati
 		return f.AsInputDocumentFileLocation(), file, nil
 	}
 	return nil, nil, mtp_errors.ErrUnknownTypeMedia
+}
+
+var VideoMimetype = []string{
+    "video/x-flv",
+    "video/mp4",
+    "application/x-mpegURL",
+    "video/MP2T",
+    "video/3gpp",
+    "video/quicktime",
+    "video/x-msvideo",
+    "video/x-ms-wmv",
+    "video/x-matroska",
+    "video/webm",
+    "video/x-m4v",
+    "video/quicktime",
+    "video/mpeg",
+}
+
+func IsVideo(media tg.MessageMediaClass) (b bool) {
+	if media == nil {
+		return
+	}
+	switch v := media.(type) {
+	case *tg.MessageMediaDocument: // messageMediaDocument#4cf4d72d
+		f, ok := v.Document.AsNotEmpty()
+		if !ok {
+			return
+		}
+		return slices.Contains(VideoMimetype, f.MimeType)	
+	}
+	return
 }

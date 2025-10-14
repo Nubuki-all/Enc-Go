@@ -73,20 +73,24 @@ func NewQueue() *Queue {
 }
 
 // Add appends a new entry to the end of the queue if it does not already exist.
-func (q *Queue) Add(entry QueueEntry) {
+// and returns the index position of the added entry
+func (q *Queue) Add(entry QueueEntry) int {
 	q.mu.Lock()
 	defer q.mu.Unlock()
 	if _, exists := q.keysExist[entry.Name]; exists {
-		return
+		return -1
 	}
 
 	q.entries = append(q.entries, entry)
 	q.keysExist[entry.Name] = struct{}{}
 	go q.notifyWaiters()
+	return (len(q.entries) -1)
 }
 
-// Find check if entry with the given name exists.
+// Find checks if an entry with the given name exists.
 func (q *Queue) Find(key string) bool {
+	q.mu.RLock()
+	defer q.mu.RUnlock()
 	if _, exists := q.keysExist[key]; exists {
 		return true
 	}
@@ -143,6 +147,16 @@ func (q *Queue) Get(key string) (QueueEntry, bool) {
 		}
 	}
 	return QueueEntry{}, false
+}
+
+//GetByIndex finds an entry by its index and returns a copy.
+func (q *Queue) GetByIndex(idx int) (QueueEntry, bool) {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	if idx < 0 || idx >= len(q.entries) {
+		return QueueEntry{}, false
+	}
+	return q.entries[idx], true
 }
 
 // LockForSave locks the queue and performs a zero-copy of its contents.
@@ -240,8 +254,9 @@ func (q *Queue) RemoveItems(indexes []int, requester int64, md bool) string {
 	q.mu.Lock()
 	defer q.mu.Unlock()
 	var sb strings.Builder
+	total := len(q.entries)
 	for _, idx := range indexes {
-		if idx < 0 || idx >= len(q.entries) {
+		if idx < 0 || idx >= total {
 			continue
 		}
 		entry := q.entries[idx]
@@ -251,9 +266,9 @@ func (q *Queue) RemoveItems(indexes []int, requester int64, md bool) string {
 		delete(q.keysExist, entry.Name)
 		q.entries = append(q.entries[:idx], q.entries[idx+1:]...)
 		if md {
-			sb.WriteString(strconv.Itoa(idx) + ". `" + entry.Name + "`")
+			sb.WriteString(strconv.Itoa(idx) + ". `" + entry.Name + "`\n")
 		} else {
-			sb.WriteString(strconv.Itoa(idx) + ". " + entry.Name)
+			sb.WriteString(strconv.Itoa(idx) + ". " + entry.Name + "\n")
 		}
 	}
 	if sb.Len() != 0 {

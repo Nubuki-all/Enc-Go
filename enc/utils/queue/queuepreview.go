@@ -256,7 +256,7 @@ func PreviewAction(ctx *ext.Context, update *ext.Update, query *tele.CallbackQue
 	if d := strings.SplitN(args, " ", 2); len(d) == 2 {
 		data = d[1]
 	}
-	_ = query.Answer(data+"...", true)
+	_ = query.Answer(data+"...", false)
 	preview.Mutex.Lock()
 	defer preview.Mutex.Unlock()
 	switch data {

@@ -492,10 +492,13 @@ func EditQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	} else {
 		id = i
 	}
-	if id > bot.Queue.Len()-1 {
+	if id < 0 || id > bot.Queue.Len()-1 {
 		return helpFunc("Invalid queue id")
 	}
-	entry := bot.Queue.AsSlice()[id]
+	entry, found := bot.Queue.GetByIndex(id)
+	if !found {
+		return helpFunc("Could not retrieve queued item with given id")
+	}
 	if entry.Sender != msg.SenderID && !utils.UserIsOwner(msg.SenderID) {
 		_, _ = msg.ReplyText("`This item wasn't added to queue by you.`")
 		return nil

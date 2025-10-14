@@ -175,24 +175,24 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		if selected != "" && !y {
 			_, _ = msg.ReplyText("Warning: '-s' flag ignored!\nAdd -y to bypass this.")
 			selected = ""
-		}
-		defer db.SaveQueue(ctx)
+		} 
 		var m *tele.Message
+		toSave := false
 		for c, id := 0, msg.ReplyToID; c < i; c, id = c+1, id+1 {
 			gtMsgs, err := tele.GetMessages(msg.ChatID, &tg.InputMessageID{ID: id})
 			if err != nil {
 				_, _ = msg.ReplyText("Could not fetch next message in chain")
-				return nil
+				break
 			}
 			pMsg := tele.NewMsgFromGotg(gtMsgs[0], ctx, msg.ChatID, 0)
 			uri := utils.ExtractMessageText(gtMsgs[0])
 			if uri == "" {
 				_, _ = pMsg.ReplyText("Not a link.")
-				return nil
+				break
 			}
 			if !utils.IsURL(uri) && !utils.IsMagnet(uri) {
 				_, _ = pMsg.ReplyText(invalidMsg)
-				return nil
+				break
 
 			}
 			qSource := types.QueueSource{}
@@ -240,7 +240,7 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 					}
 				}
 			}
-			bot.Queue.Add(types.QueueEntry{
+			id := bot.Queue.Add(types.QueueEntry{
 				Name:      dlInfo.Name,
 				ChatID:    msg.ChatID,
 				MessageID: msg.ID,
@@ -254,11 +254,14 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 				Doc:       nil,
 				Batch:     batches,
 			})
-			total := bot.Queue.Len()
-			m, _ = msg.ReplyText("**Link added To Queue ⏰, POS:** `" + strconv.Itoa(total-1) + "`\n`Please Wait , Encode will start soon`")
+			toSave = true
+			m, _ = msg.ReplyText("**Link added To Queue ⏰, POS:** `" + strconv.Itoa(id) + "`\n`Please Wait , Encode will start soon`")
 		}
 		if bot.Queue.Len() > 1 && m != nil {
 			go func() { _ = previewQueue(m, false) }()
+		}
+		if toSave {
+			db.SaveQueue(ctx)
 		}
 		return nil
 	}
@@ -325,7 +328,7 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 			}
 		}
 	}
-	bot.Queue.Add(types.QueueEntry{
+	id := bot.Queue.Add(types.QueueEntry{
 		Name:      dlInfo.Name,
 		ChatID:    msg.ChatID,
 		MessageID: msg.ID,
@@ -342,7 +345,7 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	db.SaveQueue(ctx)
 	total := bot.Queue.Len()
 	if total > 1 || bot.Paused.Any() {
-		m, err := msg.ReplyText("**Link added To Queue ⏰, POS:** `" + strconv.Itoa(total-1) + "`\n`Please Wait , Encode will start soon`")
+		m, err := msg.ReplyText("**Link added To Queue ⏰, POS:** `" + strconv.Itoa(id) + "`\n`Please Wait , Encode will start soon`")
 		if total > 1 && err == nil {
 			go func() { _ = previewQueue(m, false) }()
 		}
