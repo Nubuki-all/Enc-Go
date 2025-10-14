@@ -67,7 +67,7 @@ func (qp *QueuePreview) Start() (err error) {
 	qp.msg, err = qp.Bmsg.ReplyText("`Listing queue pls wait…`")
 	if err != nil {
 		return err
-	}	
+	}
 	register(qp.msg.ChatID, qp.msg.ID)
 	qp.previewed = make(chan struct{})
 	err = qp.update()
