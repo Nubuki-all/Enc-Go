@@ -35,7 +35,7 @@ type QueuePreview struct {
 }
 
 var (
-	qpReg  =  make(map[int64]int, 0)
+	qpReg    = make(map[int64]int, 0)
 	qpRegMux sync.Mutex
 )
 
