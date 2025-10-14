@@ -138,27 +138,27 @@ func (qp *QueuePreview) update() (err error) {
 		var aniL, batch, filStr, fRename string
 		if entry.Filter != nil {
 			fil := entry.Filter
-			filStr = fmt.Sprintf("[-rm: `%s`, -tf: `%s`, -tc: `%s`]", cmp.Or(fil.Fil1, "None"), cmp.Or(fil.Fil2, "None"), cmp.Or(fil.Fil3, "None"))
+			filStr = fmt.Sprintf("[-rm: <code>%s</code>, -tf: <code>%s</code>, -tc: <code>%s</code>]", cmp.Or(fil.Fil1, "None"), cmp.Or(fil.Fil2, "None"), cmp.Or(fil.Fil3, "None"))
 		}
 		if len(entry.Batch) != 0 {
-			batch = "  ├**Batch:** Yes\n"
+			batch = "  ├<b>Batch:</b> Yes\n"
 		}
 		if entry.ForceName != "" {
-			fRename = "  ├**Force rename to:** `" + entry.ForceName + "`\n"
+			fRename = "  ├<b>Force rename to:</b> <code>" + entry.ForceName + "</code>\n"
 		}
 		if !entry.AniList {
-			aniL = "  ├**Anilist:** Off\n"
+			aniL = "  ├<b>Anilist:</b> Off\n"
 		}
 		fmt.Fprintf(
 			&msg,
-			"%d. `%s`\n  ├**Filter:** %s\n  ├**Release version:** %s\n%s  └**Added by:** [%s](tg://user?id=%d)\n\n",
+			"%d. <code>%s</code>\n  ├<b>Filter:</b> %s\n  ├<b>Release version:</b> %s\n%s  └<b>Added by:</b> <a href=\"tg://user?id=%d\">%s</a>\n\n",
 			i,
 			entry.Name,
 			cmp.Or(filStr, "[None]"),
 			cmp.Or(entry.Version, "None"),
 			batch+fRename+aniL,
-			userName,
 			user,
+			userName,
 		)
 	}
 	if msg.Len() == 0 {
@@ -209,7 +209,7 @@ func (qp *QueuePreview) update() (err error) {
 
 var (
 	qpCallbackDataMutex sync.Mutex
-	qpCallbackData      map[string]*QueuePreview
+	qpCallbackData      = make(map[string]*QueuePreview, 0)
 )
 
 func storeqpCallbackInfo(data *QueuePreview, key string) string {
