@@ -98,9 +98,9 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 
 		// Queue-related Handlers
 		// Add:
-		"l":  EventHandlerWithArgs(queue.AddLink),
-		"ql": EventHandlerWithArgs(queue.AddTorrent),
-		"yl": EventHandlerWithArgs(queue.AddWithYtdl),
+		"l":   EventHandlerWithArgs(queue.AddLink),
+		"ql":  EventHandlerWithArgs(queue.AddTorrent),
+		"yl":  EventHandlerWithArgs(queue.AddWithYtdl),
 		"add": EventHandlerWithArgs(queue.AddVideo),
 		// Manage
 		"queue":  EventHandlerWithArgs(queue.ListQueue),
