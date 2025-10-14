@@ -237,7 +237,8 @@ func previewQueue(msg *tele.Message, deletable bool) error {
 }
 
 func listQueueP(msg *tele.Message, args string) error {
-	total := bot.Queue.Len()
+	entries := bot.Queue.AsSlice()
+	total := len(entries)
 	if total == 0 {
 		_, _ = msg.Reply("`Nothing In Queue`", &tele.ReplyOptions{SleepDelete: 5})
 		return msg.Delete()
@@ -247,7 +248,7 @@ func listQueueP(msg *tele.Message, args string) error {
 			_, _ = msg.ReplyText("Supply a Valid queue id/index")
 			return nil
 		}
-		entry := bot.Queue.AsSlice()[i]
+		entry := entries[i]
 		var pName string
 		if len(entry.Batch) == 0 {
 			pName, _ = parser.QParse(entry.Name, &parser.ParseOptions{
@@ -272,8 +273,8 @@ func listQueueP(msg *tele.Message, args string) error {
 		return nil
 	}
 	var sb strings.Builder
-	for i := range ids[:min(idsL, 10)] {
-		entry := bot.Queue.AsSlice()[i]
+	for _, i := range ids[:min(idsL, 10)] {
+		entry := entries[i]
 		var pName string
 		if len(entry.Batch) == 0 {
 			pName, _ = parser.QParse(entry.Name, &parser.ParseOptions{
@@ -285,7 +286,7 @@ func listQueueP(msg *tele.Message, args string) error {
 		} else {
 			pName = "[Batch]: " + entry.Name
 		}
-		sb.WriteString(strconv.Itoa(i) + ". `" + pName + "`")
+		sb.WriteString(strconv.Itoa(i) + ". `" + pName + "`\n")
 	}
 	if sb.Len() != 0 {
 		_, _ = msg.ReplyText("**Parsed Queue Result(s):**\n" + sb.String())
