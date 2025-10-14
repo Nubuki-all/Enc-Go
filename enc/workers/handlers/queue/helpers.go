@@ -112,8 +112,7 @@ func Select(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		}
 		preview.Items = items
 		_, _ = msg.Reply(txt, &tele.ReplyOptions{SleepDelete: 10})
-		preview.Update()
-		return nil
+		return preview.Update()
 	}
 	if enable == "" && disable == "" {
 		_, _ = msg.Reply(
@@ -207,7 +206,7 @@ func Select(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			_, _ = msg.Reply(stxt, &tele.ReplyOptions{SleepDelete: 10})
 		}
 		preview.Items = items
-		preview.Update()
+		_ = preview.Update()
 	} else {
 		txt = "**Errors:**\n" + errs.String()
 		_, _ = msg.Reply(txt, &tele.ReplyOptions{SleepDelete: 10})

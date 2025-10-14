@@ -26,8 +26,7 @@ type QueuePreview struct {
 	msg       *tele.Message
 	Mutex     sync.Mutex
 	close     bool
-	previewed chan struct{}
-	updated   *chan struct{}
+	previewed chan struct{}	
 	start     int
 	limit     int
 	pageNo    int
