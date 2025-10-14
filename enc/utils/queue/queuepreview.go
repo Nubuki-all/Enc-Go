@@ -61,6 +61,7 @@ func isRegistered(chatID int64, ID int) bool {
 
 func (qp *QueuePreview) Start() (err error) {
 	// set defaultw
+	qp.start = 1
 	qp.pageNo = 1
 	qp.pages = 1
 	qp.limit = 10

@@ -156,7 +156,7 @@ func Range2Slice(s string) (out []int) {
 		return out
 	}
 	s = strings.TrimSpace(r[0])
-	e := strings.TrimSpace(r[0])
+	e := strings.TrimSpace(r[1])
 	var start, end int
 	var err error
 	if start, err = strconv.Atoi(s); err != nil {
@@ -177,7 +177,7 @@ func Range2StringSlice(s string) (out []string) {
 		return out
 	}
 	s = strings.TrimSpace(r[0])
-	e := strings.TrimSpace(r[0])
+	e := strings.TrimSpace(r[1])
 	var start, end int
 	var err error
 	if start, err = strconv.Atoi(s); err != nil {

@@ -263,15 +263,16 @@ func listQueueP(msg *tele.Message, args string) error {
 		return nil
 	}
 	ids := utils.Range2Slice(args)
-	if len(ids) == 0 {
+	idsL := len(ids)
+	if idsL == 0 {
 		_, _ = msg.ReplyText("Send a range of number (i.e 1-5) (max 10 items) or the index number of item in queue to be parsed.")
 	}
-	if ids[len(ids)-1] > (total - 1) {
+	if ids[idsL-1] > (total - 1) {
 		_, _ = msg.ReplyText("Range out of bounds")
 		return nil
 	}
 	var sb strings.Builder
-	for i := range ids[:10] {
+	for i := range ids[:min(idsL, 10)] {
 		entry := bot.Queue.AsSlice()[i]
 		var pName string
 		if len(entry.Batch) == 0 {
