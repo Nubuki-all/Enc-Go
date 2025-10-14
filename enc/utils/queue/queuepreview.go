@@ -122,8 +122,9 @@ func (qp *QueuePreview) update() (err error) {
 		qp.pageNo = qp.pages
 	}
 	queue := bot.Queue.AsSlice()
+	total = len(queue)
 	var msg strings.Builder
-	for i := qp.start; i < (qp.limit + qp.start); i++ {
+	for i := qp.start; i < min(total, (qp.limit + qp.start)); i++ {
 		entry := queue[i]
 		user := entry.Sender
 		if userID := constant.TDLibPeerID(user); !userID.IsUser() {

@@ -98,6 +98,11 @@ func LoadQueue() {
 		}
 		return
 	}
+	mLen := len(result.QueueKeys)
+	sLen := len(result.Queue)
+	if mLen != sLen || mLen == 0 {
+		return
+	}
 	bot.Queue.LoadFromMapSlice(result.QueueKeys, result.Queue)
 	logger.InfoW("Queue loaded from MongoDB", zap.Int("count", len(result.Queue)))
 }
