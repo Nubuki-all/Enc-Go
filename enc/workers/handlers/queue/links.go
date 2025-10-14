@@ -41,7 +41,7 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		"	can also add consecutive items to queue by replying\n" +
 		"	to the first link and a number of how many subsequent links to add to queue\n" +
 		"Accepts the following flags:"
-	if args == "" {
+	if args == "" && msg.ReplyToID == 0 {
 		args = "--help"
 	}
 	// always parse the args since positional arguments are allowed
@@ -184,7 +184,7 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		}
 		defer db.SaveQueue(ctx)
 		var m *tele.Message
-		for c, id := 0, msg.ID-1; c < i; c, id = c+1, id+1 {
+		for c, id := 0, msg.ReplyToID; c < i; c, id = c+1, id+1 {
 			gtMsgs, err := tele.GetMessages(msg.ChatID, &tg.InputMessageID{ID: id})
 			if err != nil {
 				_, _ = msg.ReplyText("Could not fetch next message in chain")
