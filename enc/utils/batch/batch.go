@@ -168,7 +168,7 @@ func (bp *BatchPreview) Update() (err error) {
 		bp.pageNo = bp.pages
 	}
 	var msg strings.Builder
-	for _, item := range bp.Items[bp.start : bp.limit+bp.start] {
+	for _, item := range bp.Items[bp.start : min(total, bp.limit+bp.start)] {
 		name := item.FileName
 		if bp.parse && item.Status != 3 {
 			name, err = parser.QParse(name, &parser.ParseOptions{
@@ -300,7 +300,7 @@ func PreviewAction(ctx *ext.Context, update *ext.Update, query *tele.CallbackQue
 	case "next":
 		if preview.pageNo == preview.pages {
 			preview.pageNo = 1
-			preview.start = 1
+			preview.start = 0
 		} else {
 			preview.start += preview.limit
 			preview.pageNo += 1

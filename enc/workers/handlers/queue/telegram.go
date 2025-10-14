@@ -181,7 +181,7 @@ func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 				Doc:       fMeta,
 			})
 			toSave = true
-			m, _ = msg.ReplyText("**Video added To Queue ⏰, POS:** `" + strconv.Itoa(id) + "`\n`Please Wait , Encode will start soon`")
+			m, _ = pMsg.ReplyText("**Video added To Queue ⏰, POS:** `" + strconv.Itoa(id) + "`\n`Please Wait , Encode will start soon`")
 		}
 		if toSave && bot.Queue.Len() > 1 && m != nil {
 			go func() { _ = previewQueue(m, false) }()
