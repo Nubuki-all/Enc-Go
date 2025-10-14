@@ -202,6 +202,7 @@ func (qp *QueuePreview) update() (err error) {
 	_, err = qp.msg.Edit(
 		txt,
 		&tele.EditOptions{
+			HTMLParseMode: true,
 			ReplyMarkup: markup.InlineKeyboard(buttonRows...),
 		})
 	return err
