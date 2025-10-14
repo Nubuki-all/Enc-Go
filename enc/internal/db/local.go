@@ -123,7 +123,7 @@ func LoadLocalDB() {
 				return
 			}
 		}
-	
+
 		// Check if the JSON keys data is empty before unmarshaling.
 		if len(qr.QueueKeys) > 0 {
 			if err := json.Unmarshal(qr.QueueKeys, &queueKeysMap); err != nil {
