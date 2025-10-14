@@ -203,7 +203,7 @@ func (qp *QueuePreview) update() (err error) {
 		txt,
 		&tele.EditOptions{
 			HTMLParseMode: true,
-			ReplyMarkup: markup.InlineKeyboard(buttonRows...),
+			ReplyMarkup:   markup.InlineKeyboard(buttonRows...),
 		})
 	return err
 }
