@@ -67,12 +67,13 @@ func (qp *QueuePreview) Start() (err error) {
 	qp.msg, err = qp.Bmsg.ReplyText("`Listing queue pls wait…`")
 	if err != nil {
 		return err
-	}
+	}	
+	register(qp.msg.ChatID, qp.msg.ID)
+	qp.previewed = make(chan struct{})
 	err = qp.update()
 	if err != nil {
 		return err
 	}
-	register(qp.msg.ChatID, qp.msg.ID)
 	id := fmt.Sprintf("%d:%d", qp.msg.ChatID, qp.msg.ID)
 	_ = storeqpCallbackInfo(qp, id)
 	ch := make(chan struct{}, 1)
@@ -183,9 +184,9 @@ func (qp *QueuePreview) update() (err error) {
 			),
 		)
 	} else {
-		fmt.Fprintf(&msg, "**Pending Tasks:** %d\n", total-1)
+		fmt.Fprintf(&msg, "<b>Pending Tasks:</b> %d\n", total-1)
 	}
-	fmt.Fprintf(&msg, "\n**📌 Tip: To remove an item from queue use** /clear%s <queue number>", config.Conf.CmdSuffix)
+	fmt.Fprintf(&msg, "\n<b>📌 Tip: To remove an item from queue use</b> /clear%s <queue number>", config.Conf.CmdSuffix)
 	txt := msg.String()
 	if qp.prevMsg == txt {
 		return nil

@@ -121,6 +121,7 @@ func (bp *BatchPreview) Start(emptyOnCancel bool) (_ []types.BatchItem, err erro
 	if err != nil {
 		return nil, err
 	}
+	bp.previewed = make(chan struct{})
 	err = bp.Update()
 	if err != nil {
 		return nil, err
@@ -177,7 +178,7 @@ func (bp *BatchPreview) Update() (err error) {
 				logger.WarnW("Error parsing item", zap.Error(err))
 			}
 		}
-		fmt.Fprintf(&msg, "%s. `%s`\n  └**Status:** `%s`\n\n", item.ID, name, StatusMap[item.Status])
+		fmt.Fprintf(&msg, "%s. <code>%s</code>\n  └<b>Status:</b> <code>%s</code>\n\n", item.ID, name, StatusMap[item.Status])
 	}
 	// if there's by some miracle an empty Message return
 	if msg.Len() == 0 {
@@ -202,7 +203,7 @@ func (bp *BatchPreview) Update() (err error) {
 			),
 		)
 	} else {
-		fmt.Fprintf(&msg, "**Selected:** %d of %d\n", totalSelected, total)
+		fmt.Fprintf(&msg, "<b>Selected:</b> %d of %d\n", totalSelected, total)
 	}
 	parseBtn := "Parse"
 	if bp.parse {
@@ -227,7 +228,7 @@ func (bp *BatchPreview) Update() (err error) {
 		),
 	)
 	cmdSuf := config.Conf.CmdSuffix
-	fmt.Fprintf(&msg, "\n**📌 Tip: To change the state of an item reply this message with ** /select%s <item number(s)", cmdSuf)
+	fmt.Fprintf(&msg, "\n<b>📌 Tip: To change the state of an item reply this message with</b> /select%s", cmdSuf)
 	txt := msg.String()
 	if txt == bp.prevMsg {
 		return err
@@ -236,6 +237,7 @@ func (bp *BatchPreview) Update() (err error) {
 	_, err = bp.msg.Edit(
 		txt,
 		&tele.EditOptions{
+			HTMLParseMode: true,
 			ReplyMarkup: markup.InlineKeyboard(buttonRows...),
 		})
 	return err
@@ -247,7 +249,7 @@ type batchCallBackInfo struct {
 
 var (
 	batchCallbackDataMutex sync.Mutex
-	batchCallbackData      map[string]*batchCallBackInfo
+	batchCallbackData      = make(map[string]*batchCallBackInfo)
 )
 
 func storeBatchCallbackInfo(data *batchCallBackInfo, key string) string {
