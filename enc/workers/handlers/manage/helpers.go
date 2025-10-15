@@ -1,3 +1,4 @@
+//Package manage contains handlers that control bot's behaviour
 package manage
 
 import (
@@ -157,7 +158,7 @@ func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 			if data.Process == nil || data.ExtraFlags != "" {
 				continue
 			}
-			data.Process.Kill()
+			_ = data.Process.Kill()
 			data.IsCancelled = true
 			data.ReturnFlags = "cancel_jobs"
 		}
@@ -168,7 +169,7 @@ func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 		for _, data := range bot.ECallbackData {
 			data.IsCancelled = true
 			if data.Process != nil {
-				data.Process.Kill()
+				_ = data.Process.Kill()
 				if data.ExtraFlags == "" {
 					data.ReturnFlags = "cancel_jobs"
 				}
@@ -194,7 +195,7 @@ func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 			if data.Process == nil || data.ExtraFlags != "" {
 				continue
 			}
-			data.Process.Kill()
+			_ = data.Process.Kill()
 			data.IsCancelled = true
 			data.ReturnFlags = "cancel_jobs"
 		}
@@ -208,7 +209,7 @@ func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 			if data.Process == nil || data.ExtraFlags == "" {
 				continue
 			}
-			data.Process.Kill()
+			_ = data.Process.Kill()
 			data.IsCancelled = true
 		}
 		bot.WaitQueueM.Clear()
