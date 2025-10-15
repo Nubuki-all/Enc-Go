@@ -118,7 +118,7 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		))
 	}
 
-	//Media Auto Handler
+	// Media Auto Handler
 	dispatch.AddHandler(
 		onevent.NewMessage(
 			filters.Message.Media,

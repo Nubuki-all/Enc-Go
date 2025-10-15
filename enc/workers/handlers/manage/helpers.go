@@ -135,15 +135,15 @@ func ReleaseExtFilterExists(name string, caseSensitive bool) bool {
 
 func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	helpMsg := "Cancels all download/upload/encode processes\n" +
-	"Arguments:\n" +
-	"  'transfer' - Cancels all ongoing download and upload\n" +
-	"  'encode' - Cancels all ongoing (queued) encoding\n" +
-	"  'mux' - cancels all ongoing and queued muxing\n" +
-	"  'rename' - Cancels all queued rename processes\n" +
-	"  'queue' - Clears encoding queue\n" +
-	"  'all' Cancels all of the above\n" +
-	"   [Default], (No Argument) - Clear queued & current encoding processes.\n" +
-	"Supply the args (if any) without single quotes"
+		"Arguments:\n" +
+		"  'transfer' - Cancels all ongoing download and upload\n" +
+		"  'encode' - Cancels all ongoing (queued) encoding\n" +
+		"  'mux' - cancels all ongoing and queued muxing\n" +
+		"  'rename' - Cancels all queued rename processes\n" +
+		"  'queue' - Clears encoding queue\n" +
+		"  'all' Cancels all of the above\n" +
+		"   [Default], (No Argument) - Clear queued & current encoding processes.\n" +
+		"Supply the args (if any) without single quotes"
 	if utils.SendHelp(args) {
 		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg, false))
 		return nil
@@ -168,7 +168,7 @@ func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 		for _, data := range bot.ECallbackData {
 			data.IsCancelled = true
 			if data.Process != nil {
-				data.Process.Kill()	
+				data.Process.Kill()
 				if data.ExtraFlags == "" {
 					data.ReturnFlags = "cancel_jobs"
 				}
@@ -198,10 +198,10 @@ func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 			data.IsCancelled = true
 			data.ReturnFlags = "cancel_jobs"
 		}
-		
-			_, _ = msg.ReplyText("**Cancelled all encodes succesfully**")
-			return nil
-		
+
+		_, _ = msg.ReplyText("**Cancelled all encodes succesfully**")
+		return nil
+
 	}
 	if strings.EqualFold(args, "mux") {
 		for _, data := range bot.ECallbackData {
@@ -226,8 +226,8 @@ func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 		return nil
 	}
 	_, _ = msg.Reply(
-		"Unknown args, for help send "+ update.Args()[0]+" --help",
+		"Unknown args, for help send "+update.Args()[0]+" --help",
 		&tele.ReplyOptions{HTMLParseMode: true},
 	)
 	return nil
-}	
+}

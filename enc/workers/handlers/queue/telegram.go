@@ -242,10 +242,9 @@ func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	return nil
 }
 
-
 func AutoAddDocument(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	if !config.Conf.AutoQVids {
-		return  nil
+		return nil
 	}
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
@@ -265,7 +264,7 @@ func AutoAddDocument(ctx *ext.Context, update *ext.Update, msg *tele.Message) er
 		name = "video_" + time.Now().Format("2006-01-02_15-04-05") + ".mp4"
 	}
 	if bot.Queue.Find(name) {
-		_, _ = msg.ReplyText("**This video has already been added to queue.**")	
+		_, _ = msg.ReplyText("**This video has already been added to queue.**")
 	}
 	qSource := types.QueueSource{}
 	qSource.Source = source.Telegram
@@ -273,8 +272,8 @@ func AutoAddDocument(ctx *ext.Context, update *ext.Update, msg *tele.Message) er
 		Name:      name,
 		ChatID:    msg.ChatID,
 		MessageID: msg.ID,
-		Sender:    msg.SenderID,	
-		Source:    qSource,	
+		Sender:    msg.SenderID,
+		Source:    qSource,
 		AniList:   true,
 		Doc:       fMeta,
 	})

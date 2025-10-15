@@ -87,11 +87,11 @@ func (q *WaitQueue) Contains(id string) bool {
 	return slices.Contains(q.items, id)
 }
 
-func (q *WaitQueue) containsLocked(id string) bool {	
+func (q *WaitQueue) containsLocked(id string) bool {
 	return slices.Contains(q.items, id)
 }
 
-//Clear removes all queued items
+// Clear removes all queued items
 func (q *WaitQueue) Clear() {
 	q.mu.Lock()
 	defer q.mu.Unlock()
