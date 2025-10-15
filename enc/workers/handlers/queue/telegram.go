@@ -11,6 +11,7 @@ import (
 	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 
+	"enc/config"
 	"enc/internal/bot"
 	"enc/internal/bot/source"
 	"enc/internal/bot/types"
@@ -228,6 +229,53 @@ func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		Source:    qSource,
 		ForceName: forcedFileName,
 		AniList:   !dAnilist,
+		Doc:       fMeta,
+	})
+	db.SaveQueue(ctx)
+	total := bot.Queue.Len()
+	if total > 1 || bot.Paused.Any() {
+		m, err := msg.ReplyText("**Video added To Queue ⏰, POS:** `" + strconv.Itoa(id) + "`\n`Please Wait , Encode will start soon`")
+		if total > 1 && err == nil {
+			go func() { _ = previewQueue(m, false) }()
+		}
+	}
+	return nil
+}
+
+
+func AutoAddDocument(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
+	if !config.Conf.AutoQVids {
+		return  nil
+	}
+	if !utils.UserIsAllowed(msg.SenderID) {
+		return nil
+	}
+	message := update.EffectiveMessage
+	fMeta := utils.MediaToFileMeta(message.Media)
+	if fMeta == nil || !slices.Contains(utils.VideoMimetype, fMeta.MimeType) {
+		return nil
+	}
+	name := fMeta.FileName
+	if bot.CaptionParse {
+		if message.Text != "" && !strings.Contains(message.Text, "\n") {
+			name = message.Text
+		}
+	}
+	if name == "" {
+		name = "video_" + time.Now().Format("2006-01-02_15-04-05") + ".mp4"
+	}
+	if bot.Queue.Find(name) {
+		_, _ = msg.ReplyText("**This video has already been added to queue.**")	
+	}
+	qSource := types.QueueSource{}
+	qSource.Source = source.Telegram
+	id := bot.Queue.Add(types.QueueEntry{
+		Name:      name,
+		ChatID:    msg.ChatID,
+		MessageID: msg.ID,
+		Sender:    msg.SenderID,	
+		Source:    qSource,	
+		AniList:   true,
 		Doc:       fMeta,
 	})
 	db.SaveQueue(ctx)

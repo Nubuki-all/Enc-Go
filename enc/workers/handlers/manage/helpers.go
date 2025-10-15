@@ -132,3 +132,102 @@ func ReleaseExtFilterExists(name string, caseSensitive bool) bool {
 	}
 	return false
 }
+
+func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+	helpMsg := "Cancels all download/upload/encode processes\n" +
+	"Arguments:\n" +
+	"  'transfer' - Cancels all ongoing download and upload\n" +
+	"  'encode' - Cancels all ongoing (queued) encoding\n" +
+	"  'mux' - cancels all ongoing and queued muxing\n" +
+	"  'rename' - Cancels all queued rename processes\n" +
+	"  'queue' - Clears encoding queue\n" +
+	"  'all' Cancels all of the above\n" +
+	"   [Default], (No Argument) - Clear queued & current encoding processes.\n" +
+	"Supply the args (if any) without single quotes"
+	if utils.SendHelp(args) {
+		_, _ = msg.ReplyText(utils.CodeBlock(helpMsg, false))
+		return nil
+	}
+	noArgs := args == ""
+	bot.ECallbackDataMutex.RLock()
+	defer bot.ECallbackDataMutex.RUnlock()
+	if noArgs {
+		bot.Queue.Clear()
+		for _, data := range bot.ECallbackData {
+			if data.Process == nil || data.ExtraFlags != "" {
+				continue
+			}
+			data.Process.Kill()
+			data.IsCancelled = true
+			data.ReturnFlags = "cancel_jobs"
+		}
+		_, _ = msg.ReplyText("**Cleared all queued encodes and cancelled current encode process(es) (if any)**")
+		return nil
+	}
+	if strings.EqualFold(args, "all") {
+		for _, data := range bot.ECallbackData {
+			data.IsCancelled = true
+			if data.Process != nil {
+				data.Process.Kill()	
+				if data.ExtraFlags == "" {
+					data.ReturnFlags = "cancel_jobs"
+				}
+			}
+		}
+		bot.Queue.Clear()
+		bot.WaitQueueM.Clear()
+		bot.WaitQueueR.Clear()
+		_, _ = msg.ReplyText("**Cleared all queued items, encode, mux, download, rename and upload processes.**")
+		return nil
+	}
+	if strings.EqualFold(args, "transfer") {
+		for _, data := range bot.ECallbackData {
+			if data.Process == nil {
+				data.IsCancelled = true
+			}
+		}
+		_, _ = msg.ReplyText("**Cancelled all uploads and downloads**")
+		return nil
+	}
+	if strings.EqualFold(args, "encode") {
+		for _, data := range bot.ECallbackData {
+			if data.Process == nil || data.ExtraFlags != "" {
+				continue
+			}
+			data.Process.Kill()
+			data.IsCancelled = true
+			data.ReturnFlags = "cancel_jobs"
+		}
+		
+			_, _ = msg.ReplyText("**Cancelled all encodes succesfully**")
+			return nil
+		
+	}
+	if strings.EqualFold(args, "mux") {
+		for _, data := range bot.ECallbackData {
+			if data.Process == nil || data.ExtraFlags == "" {
+				continue
+			}
+			data.Process.Kill()
+			data.IsCancelled = true
+		}
+		bot.WaitQueueM.Clear()
+		_, _ = msg.ReplyText("**Cancelled all mux processes succesfully**")
+		return nil
+	}
+	if strings.EqualFold(args, "rename") {
+		bot.WaitQueueR.Clear()
+		_, _ = msg.ReplyText("**Cancelled all queued rename processes succesfully**")
+		return nil
+	}
+	if strings.EqualFold(args, "queue") {
+		bot.Queue.Clear()
+		_, _ = msg.ReplyText("**Cleared all queued encodes.**")
+		return nil
+	}
+	_, _ = msg.Reply(
+		"Unknown args, for help send "+ update.Args()[0]+" --help",
+		&tele.ReplyOptions{HTMLParseMode: true},
+	)
+	return nil
+}	

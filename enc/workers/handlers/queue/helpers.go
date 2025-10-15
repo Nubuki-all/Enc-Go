@@ -1,3 +1,4 @@
+// Package queue Contains handlers that modify or preview the enconding queue
 package queue
 
 import (
@@ -337,7 +338,8 @@ func ListQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 func EditBatch(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
 	cmd := update.Args()[0]
 	helpMsg := "Command for viewing queued batches;\n" +
-		"Queue ID of the batch, enables live preview for the batch."
+		"Argument:\n" +
+		"Queue ID of the batch, enables to preview & edit the batch."
 	if args == "" || utils.SendHelp(args) {
 		_, _ = msg.Reply(utils.CodeBlock(helpMsg, true), &tele.ReplyOptions{HTMLParseMode: true})
 		return nil
@@ -357,7 +359,11 @@ func EditBatch(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	if id > bot.Queue.Len()-1 {
 		return helpFunc("Invalid queue id")
 	}
-	entry := bot.Queue.AsSlice()[id]
+	entry, found := bot.Queue.GetByIndex(id)
+	if !found {
+		_, _ = msg.ReplyText("`Could not fetch queued item by ID`")
+		return nil
+	}
 	if entry.Sender != msg.SenderID && !utils.UserIsOwner(msg.SenderID) {
 		_, _ = msg.ReplyText("`This item wasn't added to queue by you.`")
 		return nil
@@ -398,7 +404,7 @@ func EditQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 		return nil
 	}
 	helpMsg := "Edit configuration of items already in queue:\n" +
-		"Be aware that this operation is quite slow\n" +
+		"Be aware that this operation might be quite slow\n" +
 		"Arguments:"
 	arg := argparser.ParseFlags(
 		cmd,

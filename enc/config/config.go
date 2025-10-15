@@ -1,3 +1,4 @@
+// Package config houses bot's configurations
 package config
 
 import (
@@ -18,6 +19,7 @@ type Config struct {
 	AppID                 int
 	APIHash               string
 	Aria2Port             int
+	AutoQVids             bool
 	BotToken              string
 	CacheDL               bool
 	CapDeco               string
@@ -49,7 +51,7 @@ type Config struct {
 	FlCap                 bool
 	FSThreshold           int
 	FSticker              string
-	JsonLog               bool
+	JSONLog               bool
 	LocalDBPath           string
 	LockOnStartup         bool
 	LogChannel            int64
@@ -108,7 +110,7 @@ type RuntimeConfig struct {
 	ReleaseNameB          string
 	Started               bool
 	TgpAuthor             string
-	TgpAuthorUrl          string
+	TgpAuthorURL          string
 	TgUlTimeout           time.Duration
 	YDLTimeout            time.Duration
 	YtdlpTimeout          time.Duration
@@ -204,6 +206,7 @@ func LoadConfig() error {
 		AppID:                 viper.GetInt("APP_ID"),
 		APIHash:               viper.GetString("API_HASH"),
 		Aria2Port:             viper.GetInt("ARIA2_PORT"),
+		AutoQVids:             viper.GetBool("AUTO_QUEUE_VID"),
 		BotToken:              viper.GetString("BOT_TOKEN"),
 		CacheDL:               viper.GetBool("CACHE_DL"),
 		CapDeco:               viper.GetString("CAP_DECO"),
@@ -235,7 +238,7 @@ func LoadConfig() error {
 		FlCap:                 viper.GetBool("FILENAME_AS_CAPTION"),
 		FSThreshold:           viper.GetInt("FLOOD_SLEEP_THRESHOLD"),
 		FSticker:              viper.GetString("FSTICKER"),
-		JsonLog:               viper.GetBool("JSON_LOGFILE"),
+		JSONLog:               viper.GetBool("JSON_LOGFILE"),
 		LocalDBPath:           viper.GetString("LOCAL_DB_PATH"),
 		LockOnStartup:         viper.GetBool("LOCK_ON_STARTUP"),
 		LogChannel:            viper.GetInt64("LOG_CHANNEL"),
@@ -290,7 +293,7 @@ func LoadConfig() error {
 			Rconf.TgpAuthor = parts[0]
 		}
 		if len(parts) > 1 && !strings.EqualFold(parts[1], "auto") {
-			Rconf.TgpAuthorUrl = parts[1]
+			Rconf.TgpAuthorURL = parts[1]
 		}
 	}
 	releaser := Conf.Releaser

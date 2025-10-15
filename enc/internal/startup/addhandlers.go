@@ -85,6 +85,7 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		"bash": EventHandlerWithRawArgs(dev.Bash),
 		"eval": EventHandlerWithRawArgs(dev.Eval),
 		"logs": EventHandlerWithArgs(dev.GetLogs),
+		"sh":   EventHandlerWithArgs(dev.Sh),
 
 		// Transfer Handlers
 		"download": EventHandlerWithArgs(transfer.Download),
@@ -116,6 +117,14 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 			handler,
 		))
 	}
+
+	//Media Auto Handler
+	dispatch.AddHandler(
+		onevent.NewMessage(
+			filters.Message.Media,
+			BaseEventHandler(queue.AutoAddDocument),
+		),
+	)
 }
 
 func AddCBHandlers(dispatch dispatcher.Dispatcher) {

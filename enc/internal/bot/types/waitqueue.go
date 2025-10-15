@@ -3,6 +3,7 @@ package types
 import (
 	"context"
 	"errors"
+	"slices"
 	"sync"
 
 	"github.com/gotd/td/telegram/message/markup"
@@ -20,7 +21,7 @@ type WaitQueue struct {
 	waiters      map[string][]chan struct{} // per-turnID list of waiter channels
 }
 
-// New constructs a WaitQueue.
+// NewWaitQueue constructs a WaitQueue.
 func NewWaitQueue(cBData string) *WaitQueue {
 	return &WaitQueue{
 		callBackData: cBData,
@@ -83,16 +84,20 @@ func (q *WaitQueue) Front() string {
 func (q *WaitQueue) Contains(id string) bool {
 	q.mu.Lock()
 	defer q.mu.Unlock()
-	return q.containsLocked(id)
+	return slices.Contains(q.items, id)
 }
 
-func (q *WaitQueue) containsLocked(id string) bool {
-	for _, v := range q.items {
-		if v == id {
-			return true
-		}
-	}
-	return false
+func (q *WaitQueue) containsLocked(id string) bool {	
+	return slices.Contains(q.items, id)
+}
+
+//Clear removes all queued items
+func (q *WaitQueue) Clear() {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	q.items = make([]string, 0)
+	q.notifyAllLocked()
+	q.waiters = map[string][]chan struct{}{}
 }
 
 // Waiting reports whether there are more than one item in the queue.

@@ -20,6 +20,7 @@ func GetBotCommands() string {
 		fmt.Sprintf("nuke%s - ☢️ nuke bot", cmdSuffix),
 		fmt.Sprintf("bash%s - /bash + command", cmdSuffix),
 		fmt.Sprintf("eval%s - evaluate code", cmdSuffix),
+		fmt.Sprintf("sh%s - /sh + command", cmdSuffix),
 		fmt.Sprintf("pause%s - prevent bot from encoding", cmdSuffix),
 		fmt.Sprintf("peval%s - same as eval but with pyrogram", cmdSuffix),
 		"ping - ping!",

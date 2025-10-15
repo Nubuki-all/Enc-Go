@@ -19,7 +19,7 @@ func PostToTelegraph(title, text string) (*telegraph.Page, error) {
 	}
 	// Derive author and URL (once)
 	author := config.Rconf.TgpAuthor
-	authorURL := config.Rconf.TgpAuthorUrl
+	authorURL := config.Rconf.TgpAuthorURL
 
 	// placeholder
 	if author == "" {

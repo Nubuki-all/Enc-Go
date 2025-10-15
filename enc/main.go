@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	if err := logger.Init(config.Conf.LogFileName, config.Conf.JsonLog); err != nil {
+	if err := logger.Init(config.Conf.LogFileName, config.Conf.JSONLog); err != nil {
 		log.Fatalf("logger init error: %v", err)
 	}
 	defer func() { _ = logger.Logger.Sync() }()

@@ -99,7 +99,7 @@ func Eval(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) 
 		_, _ = msg.UploadDoc(&tele.UploadOptions{
 			Bytes:   []byte(out),
 			Name:    "eval.txt",
-			Caption: args,
+			Caption: "`eval.txt`",
 			Quote:   true,
 		})
 		_ = bMsg.Delete()
