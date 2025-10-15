@@ -1,4 +1,4 @@
-//Package manage contains handlers that control bot's behaviour
+// Package manage contains handlers that control bot's behaviour
 package manage
 
 import (
