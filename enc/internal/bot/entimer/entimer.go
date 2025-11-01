@@ -1,4 +1,4 @@
-//Package entimer houses the bot's custom timer
+// Package entimer houses the bot's custom timer
 package entimer
 
 import (
@@ -49,7 +49,7 @@ func (et *EnTimer) loop() {
 
 	for range ticker.C {
 		et.mu.Lock()
-		paused := et.indPause || et.timeLeft > 0	
+		paused := et.indPause || et.timeLeft > 0
 
 		if paused {
 			status := "Paused "

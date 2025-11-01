@@ -634,7 +634,9 @@ func niceCodecName(raw string) string {
 }
 
 func VideoInfo(fileName string) (out string) {
-	if fileName == "" {return}
+	if fileName == "" {
+		return
+	}
 	p := tanuki.Parse(fileName, tanuki.DefaultOptions)
 	out = "**Video/file information:**\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
 	var o strings.Builder
@@ -696,4 +698,4 @@ func VideoInfo(fileName string) (out string) {
 		fmt.Fprintf(&o, "**Others(v):** `%s`\n", strings.Join(v, ", "))
 	}
 	return out + o.String()
-} 
+}

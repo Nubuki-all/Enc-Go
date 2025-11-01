@@ -29,7 +29,6 @@ import (
 	"enc/workers/downloaders"
 )
 
-
 func Finalize(ctx context.Context) {
 	bot.ID, _ = strconv.ParseInt(config.Rconf.BotID, 10, 64)
 	if !config.Conf.NoExternalDL {

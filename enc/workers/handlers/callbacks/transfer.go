@@ -71,7 +71,7 @@ func DLStat(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) err
 		_ = query.Answer(notAllowed, false)
 		return nil
 	}
-	dlp :=  info.Path
+	dlp := info.Path
 	fn := filepath.Base(dlp)
 	if !utils.FileExists(dlp) {
 		dlp += ".!qB"
@@ -80,11 +80,11 @@ func DLStat(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) err
 	entry, found := bot.Queue.GetByIndex(0)
 	if found {
 		p, err := parser.QParse(fn, &parser.ParseOptions{
-			Direct: entry.ForceName,
-			UseAniList: entry.AniList,
+			Direct:         entry.ForceName,
+			UseAniList:     entry.AniList,
 			FilterOverride: entry.Filter,
-			Version: entry.Version,
-			Path: dlp,
+			Version:        entry.Version,
+			Path:           dlp,
 		})
 		if err != nil {
 			fn = p
@@ -142,7 +142,7 @@ func ViewDlInfo(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery)
 	info.Mutex.Lock()
 	defer info.Mutex.Unlock()
 	info.PauseProgress = true
-	_, _ = msg.Edit(vidStat, &tele.EditOptions{ReplyMarkup:replyMarkup})
+	_, _ = msg.Edit(vidStat, &tele.EditOptions{ReplyMarkup: replyMarkup})
 	return nil
 }
 

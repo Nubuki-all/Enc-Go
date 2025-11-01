@@ -27,7 +27,6 @@ import (
 	"enc/utils"
 )
 
-
 var CachedDL = make(map[string]*Downloader, 1)
 
 var ErrDownloadCanceled = errors.New("download canceled by user")

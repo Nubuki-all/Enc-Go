@@ -3,12 +3,13 @@ package tele
 // minimal: decode bot file_id -> media_id, access_hash, file_ref, dc
 import (
 	"bytes"
-	"enc/internal/clients/telegram"
 	"encoding/base64"
 	"encoding/binary"
 	"errors"
 
-	"github.com/gotd/td/tg"	
+	"enc/internal/clients/telegram"
+
+	"github.com/gotd/td/tg"
 )
 
 const (
@@ -23,7 +24,9 @@ func rleDecode(in []byte) []byte {
 		b := in[i]
 		if b == 0 {
 			i++
-			if i >= len(in) { break }
+			if i >= len(in) {
+				break
+			}
 			n := int(in[i])
 			for j := 0; j < n; j++ {
 				out = append(out, 0)
@@ -159,10 +162,9 @@ func SendStickerByFileID(chatID int64, botFileID string) (_ *Message, err error)
 
 	media := &tg.InputMediaDocument{ID: loc}
 	ctx := telegram.Context
-	msg, err := ctx.SendMedia(chatID,&tg.MessagesSendMediaRequest{Media: media})
+	msg, err := ctx.SendMedia(chatID, &tg.MessagesSendMediaRequest{Media: media})
 	if err != nil {
 		return
 	}
 	return NewMsgFromGotg(msg, ctx, chatID, ctx.Self.ID), err
 }
-
