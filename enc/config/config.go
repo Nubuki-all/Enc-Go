@@ -80,6 +80,7 @@ type Config struct {
 	RSSChat               string
 	RSSDelay              int
 	RSSDirect             bool
+	SequentialJobs        bool
 	TelegraphAPI          string
 	TelegraphAuthor       string
 	TempDir               string
@@ -190,6 +191,7 @@ func LoadConfig() error {
 	viper.SetDefault("REPORT_FAILED", true)
 	viper.SetDefault("RSS_DELAY", 60)
 	viper.SetDefault("RSS_DIRECT", true)
+	viper.SetDefault("SEQUENTIAL_JOBS", true)
 	viper.SetDefault("TELEGRAPH_API", "https://api.telegra.ph")
 	viper.SetDefault("TEMP_DIR", ".temp")
 	viper.SetDefault("UN_FINISHED_PROGRESS_STR", "🤍")
@@ -267,6 +269,7 @@ func LoadConfig() error {
 		RSSChat:               viper.GetString("RSS_CHAT"),
 		RSSDelay:              viper.GetInt("RSS_DELAY"),
 		RSSDirect:             viper.GetBool("RSS_DIRECT"),
+		SequentialJobs:        viper.GetBool("SEQUENTIAL_JOBS"),
 		TelegraphAPI:          viper.GetString("TELEGRAPH_API"),
 		TelegraphAuthor:       viper.GetString("TELEGRAPH_AUTHOR"),
 		TempDir:               viper.GetString("TEMP_DIR"),

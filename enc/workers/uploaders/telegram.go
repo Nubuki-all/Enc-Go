@@ -34,6 +34,7 @@ type TgUpload struct {
 	reply  *tele.Message
 	upload *uploader.Uploader
 	pchan  chan uploader.ProgressState
+	media  tg.InputMediaClass // uploaded Media
 	// err       error
 	// completed bool
 	forceDoc bool
@@ -185,7 +186,7 @@ func (ul *TgUpload) Start() (err error) {
 	} else {
 		thumbFile = ul.uploadThumbnail(ctx)
 	}
-	media := &tg.InputMediaUploadedDocument{
+	ul.media = &tg.InputMediaUploadedDocument{
 		File:       inputFile,
 		MimeType:   mime.String(),
 		ForceFile:  asDoc,
@@ -193,7 +194,7 @@ func (ul *TgUpload) Start() (err error) {
 		Thumb:      thumbFile,
 		Attributes: attributes,
 	}
-	return ul.sendMedia(media)
+	return ul.sendMedia()
 }
 
 func (ul *TgUpload) actionCallback(upload uploader.ProgressState) {
@@ -339,9 +340,9 @@ func (ul *TgUpload) uploadThumbnail(ctx context.Context) (thumb tg.InputFileClas
 	return thumb
 }
 
-func (ul *TgUpload) sendMedia(media *tg.InputMediaUploadedDocument) (err error) {
+func (ul *TgUpload) sendMedia() (err error) {
 	if ul.reply != nil {
-		_, err = ul.reply.ReplyMediaDoc(media,
+		_, err = ul.reply.ReplyMediaDoc(ul.media,
 			&tele.UploadOptions{
 				Quote:   true,
 				Caption: ul.caption,
@@ -349,7 +350,7 @@ func (ul *TgUpload) sendMedia(media *tg.InputMediaUploadedDocument) (err error) 
 		)
 	} else {
 		_, err = ul.msg.Edit(ul.caption,
-			&tele.EditOptions{Media: media},
+			&tele.EditOptions{Media: ul.media},
 		)
 	}
 	return err
@@ -365,21 +366,21 @@ func (ul *TgUpload) waitTillReconnect() {
 		err := telegram.Client.Ping(ul.msg.Ctx)
 		if err == nil {
 			fmt.Println("successfully waited for restart.")
-			return // Exit the main function upon success.
+			return
 		}
 
 		fmt.Printf("Attempt failed: %v. Retrying in %v...\n", err, retryInterval)
 
-		// Use a select statement to wait for either the next retry interval
+		// Try to wait for either the next retry interval
 		// or the overall timeout.
 		select {
 		case <-time.After(retryInterval):
-			// The retry interval has passed, so the loop continues to the next attempt.
+
 			continue
 		case <-ctx.Done():
-			// The context has been canceled due to the timeout.
+
 			fmt.Printf("Total duration exceeded (%s). Giving up.\n", timeoutDuration)
-			return // Exit the main function.
+			return
 		}
 	}
 }

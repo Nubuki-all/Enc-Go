@@ -185,6 +185,8 @@ func (dl *QbitDownload) Start() (err error) {
 }
 
 func (dl *QbitDownload) ProgressCallback(ctx context.Context, start time.Time, tag string) (ok bool) {
+	dl.Mutex.Lock()
+	defer dl.Mutex.Unlock()
 	if dl.PauseProgress {
 		return dl.UpdateCallback(ctx, tag)
 	}

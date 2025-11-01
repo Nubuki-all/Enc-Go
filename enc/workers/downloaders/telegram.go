@@ -2,6 +2,8 @@ package downloaders
 
 import (
 	"fmt"
+	"os"
+
 	//"io"
 	"math"
 	"strings"
@@ -13,6 +15,7 @@ import (
 
 	"enc/config"
 	"enc/internal/bot/types"
+	"enc/internal/logger"
 	"enc/utils"
 	"enc/utils/random"
 	"enc/utils/tele"
@@ -166,6 +169,8 @@ func (dl *TgDownload) Start() error {
 }
 
 func (dl *TgDownload) ProgressCallback(start time.Time, done, total int64) {
+	dl.Mutex.Lock()
+	defer dl.Mutex.Unlock()
 	if dl.PauseProgress {
 		return
 	}
@@ -205,4 +210,11 @@ func (dl *TgDownload) ProgressCallback(start time.Time, done, total int64) {
 	)
 	txt := "`Downloading to` `" + dl.Path + "`…\n" + tmp
 	_, _ = dl.msg.EditText(txt)
+}
+
+func (dl *TgDownload) Clean() {
+	err := os.Remove(dl.Path)
+	if err != nil {
+		logger.Error(err)
+	}
 }

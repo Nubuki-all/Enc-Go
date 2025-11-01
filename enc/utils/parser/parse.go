@@ -121,8 +121,10 @@ func ParseName(
 
 	// 7) Codecs
 	codec := quality
-	if codec == "" {
+	if codec == "" && encString != "" {
 		codec = utils.GetCodec(encString)
+	} else {
+		codec = utils.ProbeQualityCodec(path)
 	}
 
 	// 8) AniList lookup, if enabled

@@ -4,6 +4,7 @@ package batchutils
 import (
 	"fmt"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -324,4 +325,36 @@ func PreviewAction(ctx *ext.Context, update *ext.Update, query *tele.CallbackQue
 	}
 	_ = preview.Update()
 	return nil
+}
+
+func GetNextBatchItem(batch []types.BatchItem) *types.BatchItem {
+	if len(batch) == 0 {
+		return nil
+	}
+	// sort the batch alphabetically (ascending)
+	slices.SortFunc(batch, func(a, b types.BatchItem) int {
+		return strings.Compare(a.FileName, b.FileName)
+	})
+	for _, item := range batch {
+		if item.Status == 1 {
+			return &item
+		}
+	}
+	return nil
+}
+
+func MarkAsDone(batch []types.BatchItem, id string) (uBatch []types.BatchItem) {
+	if len(batch) == 0 {
+		return
+	}
+	slices.SortFunc(batch, func(a, b types.BatchItem) int {
+		return strings.Compare(a.FileName, b.FileName)
+	})
+	for _, item := range batch {
+		if item.ID == id {
+			item.Status = 2
+		}
+		uBatch = append(uBatch, item)
+	}
+	return
 }

@@ -92,6 +92,16 @@ func GetMessages(chatID int64, ids ...tg.InputMessageClass) (msgs []*gp.Message,
 	return msgs, err
 }
 
+func GetMessage(chatID int64, id int) (*Message, error) {
+	msgs, err := GetMessages(chatID, &tg.InputMessageID{ID: id})
+	if err != nil {
+		return nil, err
+	}
+	return NewMsgFromGotg(
+		msgs[0], telegram.Context, chatID, GetSenderIDFromMessage(msgs[0]),
+	), nil
+}
+
 func GetMessageFromLink(url string) *Message {
 	if url == "" {
 		return nil

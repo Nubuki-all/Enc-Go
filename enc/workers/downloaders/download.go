@@ -3,7 +3,6 @@ package downloaders
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -23,6 +22,7 @@ const (
 	CallbackData  = "cancel_download"
 	CallbackDataB = "back"
 	CallbackDataI = "dl_info"
+	CallbackDataM = "more"
 )
 
 type Downloader struct {
@@ -30,12 +30,9 @@ type Downloader struct {
 	LCMsg         *tele.Message
 	Msg           *tele.Message
 	InputLoc      tg.InputFileLocationClass
-	aria2Dl       *Aria2Download
-	qbitDl        *QbitDownload
-	megaDl        *MegaDownload
-	ytDl          *YtdlDownload
+	service       dlService
 	DlInfo        bool
-	Done          bool
+	Done          chan struct{}
 	Folder        string
 	FileName      string
 	Selected      string
@@ -43,9 +40,15 @@ type Downloader struct {
 	Size          int64
 	Qbit          bool
 	Ytdl          bool
+	Background    bool
 	err           error
 	cleaned       bool
 	pauseOnDLInfo bool
+}
+
+type dlService interface {
+	Start() error
+	Clean()
 }
 
 func (dl *Downloader) Init(id string, sender int64) {
@@ -65,6 +68,39 @@ func (dl *Downloader) Init(id string, sender int64) {
 			ReplyMarkup:   dl.GenButtons(),
 		},
 	)
+	dl.initLMsg()
+}
+
+func (dl *Downloader) Go() {
+	if dl.TransferInfo == nil {
+		dl.TransferInfo = &types.TransferInfo{
+			Time: time.Now(),
+		}
+	}
+	dl.pauseOnDLInfo = config.Conf.PauseOnDLInfo
+	dl.Background = true
+	dl.PauseProgress = true
+	go func() { _ = dl.Start() }()
+}
+
+func (dl *Downloader) Attach(id string, Sender int64) error {
+	if !dl.Background {
+		logger.Warn("Calling Attach on Non-background download!")
+		return nil
+	}
+	select {
+	case <-dl.Done:
+		return dl.err
+	default:
+	}
+	dl.ID = id
+	dl.Sender = Sender
+	dl.Register()
+	defer dl.UnRegister() // Just in case
+	dl.PauseProgress = false
+	dl.initLMsg()
+	<-dl.Done
+	return dl.err
 }
 
 func (dl *Downloader) Start() error {
@@ -72,39 +108,47 @@ func (dl *Downloader) Start() error {
 		dl.Folder = config.Conf.DownloadDir
 	}
 	defer dl.UnRegister()
+	dl.Done = make(chan struct{})
+	defer func() {
+		close(dl.Done)
+	}()
 	dl.Path = filepath.Join(dl.Folder, dl.FileName)
 	var err error
 	if dl.InputLoc != nil {
-		tgDl := NewTgDl(dl.InputLoc, dl.Size, dl.Msg, dl.TransferInfo)
-		err = tgDl.Start()
+		dl.service = NewTgDl(dl.InputLoc, dl.Size, dl.Msg, dl.TransferInfo)
+		err = dl.service.Start()
 	} else if dl.Qbit && dl.URI != "" {
 		folder, _ := filepath.Abs(dl.Folder)
-		dl.qbitDl = NewQbtitDl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
-		err = dl.qbitDl.Start()
+		qbitDl := NewQbtitDl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
+		dl.service = qbitDl
+		err = qbitDl.Start()
 		if err == nil {
-			dl.FileName = dl.qbitDl.name
+			dl.FileName = qbitDl.name
 		}
 	} else if dl.Ytdl && dl.URI != "" {
 		folder, _ := filepath.Abs(dl.Folder)
-		dl.ytDl = NewYTDl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
-		err = dl.ytDl.Start()
+		ytDl := NewYTDl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
+		dl.service = ytDl
+		err = ytDl.Start()
 		if err == nil {
-			dl.FileName = dl.ytDl.name
+			dl.FileName = ytDl.name
 		}
 
 	} else if dl.URI != "" && utils.IsMegaLink(dl.URI) {
 		folder, _ := filepath.Abs(dl.Folder)
-		dl.megaDl = NewMegaDl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
-		err = dl.megaDl.Start()
+		megaDl := NewMegaDl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
+		dl.service = megaDl
+		err = megaDl.Start()
 		if err == nil {
-			dl.FileName = filepath.Base(dl.megaDl.Path)
+			dl.FileName = filepath.Base(megaDl.Path)
 		}
 	} else if dl.URI != "" {
 		folder, _ := filepath.Abs(dl.Folder)
-		dl.aria2Dl = NewAria2Dl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
-		err = dl.aria2Dl.Start()
+		aria2Dl := NewAria2Dl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
+		dl.service = aria2Dl
+		err = aria2Dl.Start()
 		if err == nil {
-			dl.FileName = dl.aria2Dl.name
+			dl.FileName = aria2Dl.name
 		}
 	}
 	if err != nil || dl.IsCancelled { // for downloaders that don't return an err on download cancel
@@ -114,7 +158,6 @@ func (dl *Downloader) Start() error {
 			logger.Error(err)
 		}
 	}
-	dl.Done = true
 	return err
 }
 
@@ -123,48 +166,57 @@ func (dl *Downloader) CleanDownload() {
 		return
 	}
 	dl.cleaned = true
-	if dl.aria2Dl != nil {
-		dl.aria2Dl.Clean()
-		return
-	}
-	if dl.qbitDl != nil {
-		dl.qbitDl.Clean()
-		return
-	}
-	if dl.megaDl != nil {
-		dl.megaDl.Clean()
-		return
-	}
-	if dl.ytDl != nil {
-		dl.ytDl.Clean()
-		return
-	}
-	err := os.Remove(dl.Path)
-	if err != nil {
-		logger.Error(err)
-	}
+	dl.service.Clean()
 }
 
 func (dl *Downloader) GenButtons() tg.ReplyMarkupClass {
-	buttonRows := []tg.KeyboardButtonRow{
-		markup.Row(
-			markup.Callback(
-				random.Enmoji()+" Cancel Download",
-				[]byte(CallbackData),
-			),
-		),
-	}
+	buttonRows := []tg.KeyboardButtonRow{}
 	if dl.DlInfo {
-		buttonRows = append(buttonRows,
+		buttonRows = []tg.KeyboardButtonRow{
 			markup.Row(
 				markup.Callback(
 					"ℹ️",
 					[]byte(CallbackDataI),
 				),
 			),
-		)
+		}
 	}
+	buttonRows = append(buttonRows,
+		markup.Row(
+			markup.Callback(
+				random.Enmoji()+" Cancel Download",
+				[]byte(CallbackData),
+			),
+		),
+	)
 	return markup.InlineKeyboard(buttonRows...)
+}
+
+func (dl *Downloader) initLMsg() {
+	if dl.LCMsg == nil {
+		return
+	}
+	_, _ = dl.LCMsg.Edit(
+		"Currently downloading an item",
+		&tele.EditOptions{ReplyMarkup: dl.genLButtons()},
+	)
+}
+
+func (dl *Downloader) genLButtons() tg.ReplyMarkupClass {
+	return markup.InlineKeyboard(
+		markup.Row(
+			markup.Callback(
+				"ℹ️",
+				[]byte(CallbackDataM),
+			),
+		),
+		markup.Row(
+			markup.Callback(
+				random.Enmoji()+" CANCEL DOWNLOAD",
+				[]byte(CallbackData),
+			),
+		),
+	)
 }
 
 func (dl *Downloader) Register() {

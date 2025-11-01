@@ -38,14 +38,17 @@ type EditOptions struct {
 }
 
 type ReplyOptions struct {
-	HTMLParseMode bool
-	SleepDelete   int
-	ReplyMarkup   tg.ReplyMarkupClass
+	HTMLParseMode     bool
+	SleepDelete       int
+	ReplyMarkup       tg.ReplyMarkupClass
+	DisableWebPreview bool
 	// will add more fields as required
 }
-type RespondOptions struct {
+type SendOptions struct {
 	HTMLParseMode bool
 	ReplyMarkup   tg.ReplyMarkupClass
+	Caption       string
+	ReplyTo       int
 	// will add more fields as required
 }
 
@@ -134,6 +137,7 @@ func (m *Message) Reply(text string, replyOptions *ReplyOptions) (*Message, erro
 		Entities:    entities,
 		ReplyTo:     inputRep,
 		ReplyMarkup: replyOptions.ReplyMarkup,
+		NoWebpage:   replyOptions.DisableWebPreview,
 	},
 	)
 	if err != nil {
@@ -174,11 +178,11 @@ func (m *Message) RespondText(text string) (*Message, error) {
 	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID), nil
 }
 
-func (m *Message) Respond(text string, opt *RespondOptions) (*Message, error) {
+func (m *Message) Respond(text string, opt *SendOptions) (*Message, error) {
 	var pText string
 	var entities []tg.MessageEntityClass
 	if opt == nil {
-		opt = &RespondOptions{}
+		opt = &SendOptions{}
 	}
 	if opt.HTMLParseMode {
 		pText, entities, _ = htmlparser.Parse(text)
@@ -465,6 +469,69 @@ func (m *Message) Action(action string, prog int) error {
 	default:
 		return msgAction.Cancel(ctx)
 	}
+}
+
+func SendMedia(id int64, media tg.InputMediaClass, opts *SendOptions) (*Message, error) {
+	var pText string
+	var entities []tg.MessageEntityClass
+	var inputRep *tg.InputReplyToMessage
+	if opts == nil {
+		opts = &SendOptions{}
+	}
+	if text := opts.Caption; text != "" {
+		if opts.HTMLParseMode {
+			pText, entities, _ = htmlparser.Parse(text)
+		} else {
+			pText, entities, _ = parser.Parse(text, true)
+		}
+	}
+	if opts.ReplyTo != 0 {
+		inputRep = &tg.InputReplyToMessage{ReplyToMsgID: opts.ReplyTo}
+	}
+	msg, err := telegram.Context.SendMedia(id, &tg.MessagesSendMediaRequest{
+		Message:     pText,
+		Entities:    entities,
+		ReplyMarkup: opts.ReplyMarkup,
+		ReplyTo:     inputRep,
+		Media:       media,
+	},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return NewMsgFromGotg(
+		msg, telegram.Context, id, telegram.Client.Self.ID,
+	), nil
+}
+
+func SendMsg(id int64, text string, opts *SendOptions) (*Message, error) {
+	var pText string
+	var entities []tg.MessageEntityClass
+	var inputRep *tg.InputReplyToMessage
+	if opts == nil {
+		opts = &SendOptions{}
+	}
+	if opts.HTMLParseMode {
+		pText, entities, _ = htmlparser.Parse(text)
+	} else {
+		pText, entities, _ = parser.Parse(text, true)
+	}
+	if opts.ReplyTo != 0 {
+		inputRep = &tg.InputReplyToMessage{ReplyToMsgID: opts.ReplyTo}
+	}
+	msg, err := telegram.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
+		Message:     pText,
+		Entities:    entities,
+		ReplyMarkup: opts.ReplyMarkup,
+		ReplyTo:     inputRep,
+	},
+	)
+	if err != nil {
+		return nil, err
+	}
+	return NewMsgFromGotg(
+		msg, telegram.Context, id, telegram.Client.Self.ID,
+	), nil
 }
 
 func EditMessage(id int64, msgID int, text string) error {

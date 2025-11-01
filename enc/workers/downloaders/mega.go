@@ -261,6 +261,11 @@ func (dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) erro
 }
 
 func (dl *MegaDownload) ProgressCallback(start time.Time, name string, total, current int64) {
+	dl.Mutex.Lock()
+	defer dl.Mutex.Unlock()
+	if dl.PauseProgress {
+		return
+	}
 	remainingSize := total - current
 	diff := time.Since(start).Round(time.Second).Seconds()
 	var speed int64

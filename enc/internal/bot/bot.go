@@ -26,14 +26,10 @@ var (
 	Started            bool
 	CustomRename       string
 	TempUsers          []int64
-	BatchIng           []string
 	BatchQueue         map[string]any
 	ECancel            map[string]any
 	RSSDictMutex       sync.RWMutex
 	ECallbackDataMutex sync.RWMutex
-	UCancel            []any
-	PreviewBatch       any
-	PreviewList        any
 )
 
 var (
@@ -42,7 +38,7 @@ var (
 	FFmpeg3Args string
 	FFmpeg4Args string
 	MuxArgs     string
-	// named FFmpeg for historical reasons, even though other encoders are supported
+	// named FFmpeg for historical reasons, even though other cmd tools are supported
 )
 
 var ID int64

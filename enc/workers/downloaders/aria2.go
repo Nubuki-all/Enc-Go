@@ -183,6 +183,8 @@ func (dl *Aria2Download) Start() error {
 }
 
 func (dl *Aria2Download) ProgressCallback(start time.Time, gid string) string {
+	dl.Mutex.Lock()
+	defer dl.Mutex.Unlock()
 	if dl.PauseProgress {
 		return dl.UpdateCallback(gid)
 	}

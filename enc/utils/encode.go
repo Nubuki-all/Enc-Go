@@ -36,13 +36,11 @@ func (d *DLInfo) String() string {
 // EncodeInfo tracks encoding status
 // Equivalent to Python's Encode_info
 type EncodeInfo struct {
-	Current  string
-	Batch    bool
-	CachedDL bool
-	QBit     bool
-	Select   any
-	URI      any
-	Previous string
+	Current      string
+	Workers      int
+	WorkersCodec []string
+	BatchID      string
+	Previous     string
 }
 
 // NewEncodeInfo creates and resets an EncodeInfo
@@ -54,13 +52,10 @@ func NewEncodeInfo() *EncodeInfo {
 
 // Reset clears the encoding info
 func (e *EncodeInfo) Reset() {
-	e.Previous = e.Current
+	// e.Previous = e.Current
 	e.Current = ""
-	e.Batch = false
-	e.CachedDL = false
-	e.QBit = false
-	e.Select = nil
-	e.URI = nil
+	e.BatchID = ""
+	e.Workers = 0
 }
 
 // EncodeJob manages which ffmpeg scripts to run
@@ -68,6 +63,7 @@ func (e *EncodeInfo) Reset() {
 type EncodeJob struct {
 	ins          jobs
 	Busy         bool
+	Completed    bool
 	ID           any
 	SMInfo       any
 	PrevDLClient any
@@ -147,6 +143,7 @@ func (e *EncodeJob) Complete() {
 		}
 		e.Done()
 	}
+	e.Completed = true
 }
 
 // Done clears the next pending flag in order

@@ -1,6 +1,9 @@
 package types
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 type TransferInfo struct {
 	Path          string
@@ -11,4 +14,5 @@ type TransferInfo struct {
 	Canceller     int64
 	Time          time.Time
 	PauseProgress bool
+	Mutex         sync.Mutex
 }

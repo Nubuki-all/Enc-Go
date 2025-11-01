@@ -26,6 +26,7 @@ type Uploader struct {
 	*types.TransferInfo
 	Msg             *tele.Message
 	Reply           *tele.Message
+	TgMedia         tg.InputMediaClass // contains uploaded media
 	Caption         string
 	FileName        string
 	ThumbPath       string
@@ -68,6 +69,7 @@ func (ul *Uploader) Start() error {
 		tgUl.threads = ul.Threads
 	}
 	err = tgUl.Start()
+	ul.TgMedia = tgUl.media
 	if err != nil {
 		if errors.Is(err, ErrRetry) && !ul.retried {
 			ul.retried = true

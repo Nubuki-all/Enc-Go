@@ -1,3 +1,4 @@
+//Package entimer houses the bot's custom timer
 package entimer
 
 import (
@@ -48,8 +49,7 @@ func (et *EnTimer) loop() {
 
 	for range ticker.C {
 		et.mu.Lock()
-		paused := et.indPause || et.timeLeft > 0
-		bot.Paused.Set(state.DefaultPause, paused)
+		paused := et.indPause || et.timeLeft > 0	
 
 		if paused {
 			status := "Paused "
@@ -66,6 +66,9 @@ func (et *EnTimer) loop() {
 				if et.timeLeft == 0 {
 					et.indPause = false
 				}
+			}
+			if et.timeLeft == 0 {
+				bot.Paused.Set(state.DefaultPause, false)
 			}
 			et.mu.Unlock()
 			continue
@@ -92,21 +95,32 @@ func (et *EnTimer) NewTimer(duration int, msgs []*tele.Message) {
 	defer et.mu.Unlock()
 	et.timeLeft = duration
 	et.msgs = msgs
+	if et.indPause || et.timeLeft > 0 {
+		defer bot.Paused.Set(state.DefaultPause, false)
+	}
+	bot.Paused.Set(state.DefaultPause, true)
 }
 
 // PauseIndefinitely sets indefinite pause, with optional msgs
 func (et *EnTimer) PauseIndefinitely(msgs []*tele.Message) {
 	et.mu.Lock()
 	defer et.mu.Unlock()
+	if et.indPause || et.timeLeft > 0 {
+		defer bot.Paused.Set(state.DefaultPause, false)
+	}
 	et.indPause = true
 	et.timeLeft = 0
 	et.msgs = msgs
+	bot.Paused.Set(state.DefaultPause, true)
 }
 
 // StopTimer stops any countdown and unpauses immediately
 func (et *EnTimer) StopTimer() {
 	et.mu.Lock()
 	defer et.mu.Unlock()
+	if !et.indPause && et.timeLeft == 0 {
+		return
+	}
 	et.timeLeft = 0
 	et.indPause = false
 	// et.msgs = nil

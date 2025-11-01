@@ -135,8 +135,11 @@ func AddCBHandlers(dispatch dispatcher.Dispatcher) {
 		"icommands": CallbackEventHandler(handlers.Commands),
 
 		// Tranfer Handlers
-		downloaders.CallbackData: CallbackEventHandler(callbacks.CancelDownload),
-		uploaders.CallbackData:   CallbackEventHandler(callbacks.CancelUpload),
+		downloaders.CallbackData:  CallbackEventHandler(callbacks.CancelDownload),
+		downloaders.CallbackDataB: CallbackEventHandler(callbacks.RevertView),
+		downloaders.CallbackDataI: CallbackEventHandler(callbacks.DLStat),
+		downloaders.CallbackDataM: CallbackEventHandler(callbacks.ViewDlInfo),
+		uploaders.CallbackData:    CallbackEventHandler(callbacks.CancelUpload),
 
 		// Encode Handlers
 		encoders.CallbackData:             CallbackEventHandler(callbacks.EncodeInfo),

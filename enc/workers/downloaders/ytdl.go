@@ -135,6 +135,8 @@ func (dl *YtdlDownload) Start() (err error) {
 }
 
 func (dl *YtdlDownload) ProgressCallback(update ytdlp.ProgressUpdate) {
+	dl.Mutex.Lock()
+	defer dl.Mutex.Unlock()
 	if dl.PauseProgress {
 		return
 	}

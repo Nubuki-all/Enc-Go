@@ -17,11 +17,6 @@ func BotIsPaused() bool {
 	return bot.Paused.Any()
 }
 
-// UCancelled returns the list of user cancellations
-func UCancelled() []any {
-	return bot.UCancel
-}
-
 // EnCanceller returns the encode cancellation map
 func EnCanceller() map[string]any {
 	return bot.ECancel
@@ -89,22 +84,6 @@ func RmPause(idx int, duration time.Duration) error {
 // GetBatchQueue returns the current batch queue
 func GetBatchQueue() map[string]any {
 	return bot.BatchQueue
-}
-
-// GetPreview returns preview batch or list
-func GetPreview(list bool) any {
-	if list {
-		return bot.PreviewList
-	}
-	return bot.PreviewBatch
-}
-
-// GetPreviewer returns the first preview ing item
-func GetPreviewer() any {
-	if len(bot.BatchIng) > 0 {
-		return bot.BatchIng[0]
-	}
-	return nil
 }
 
 // GetQueue returns the main queue

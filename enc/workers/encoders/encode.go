@@ -3,6 +3,7 @@ package encoders
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -32,32 +33,35 @@ const (
 
 type Encoder struct {
 	*types.TransferInfo
-	Msg     *tele.Message
-	LMsg    *tele.Message
-	cmd     *exec.Cmd
-	Process *os.ProcessState
-	process *os.Process
-	Job     *utils.EncodeJob
-	STime   time.Time
-	clean   bool
-	done    bool
-	Sender  int64
-	ID      string
-	LogID   string
-	exe     string
-	outPath string
-	stderr  string
-	stdout  string
-	errBuf  *bytes.Buffer
-	outBuf  *bytes.Buffer
+	Context   context.Context
+	Msg       *tele.Message
+	LMsg      *tele.Message
+	cmd       *exec.Cmd
+	Process   *os.ProcessState
+	process   *os.Process
+	Job       *utils.EncodeJob
+	ExtraPath string
+	ETime     time.Time
+	STime     time.Time
+	clean     bool
+	done      bool
+	Sender    int64
+	ID        string
+	LogID     string
+	exe       string
+	outPath   string
+	stderr    string
+	stdout    string
+	errBuf    *bytes.Buffer
+	outBuf    *bytes.Buffer
 }
 
 func (e *Encoder) Start(cmdline string) error {
 	var cmd *exec.Cmd
 	if runtime.GOOS == "windows" {
-		cmd = exec.Command("cmd", "/C", cmdline)
+		cmd = exec.CommandContext(e.Context, "cmd", "/C", cmdline)
 	} else {
-		cmd = exec.Command("sh", "-c", cmdline)
+		cmd = exec.CommandContext(e.Context, "sh", "-c", cmdline)
 	}
 	e.outBuf = &bytes.Buffer{}
 	e.errBuf = &bytes.Buffer{}
@@ -88,6 +92,7 @@ func (e *Encoder) Callback(dlPath, enPath, text string) {
 		TransferInfo: e.TransferInfo,
 		Process:      e.process,
 		OutPath:      enPath,
+		DlPath:       e.ExtraPath,
 	}
 	_ = utils.StoreCallbackInfo(cInfo, e.ID)
 	var addMsg string
@@ -136,6 +141,9 @@ func (e *Encoder) Callback(dlPath, enPath, text string) {
 		&tele.EditOptions{ReplyMarkup: markup.InlineKeyboard(buttonRows...)},
 	)
 	if e.LMsg != nil && e.Sender != 0 {
+		if e.LogID == "" {
+			e.LogID = fmt.Sprintf("%d:%d", e.LMsg.ChatID, e.LMsg.ID)
+		}
 		_ = utils.StoreCallbackInfo(cInfo, e.LogID)
 		sender := "Unknown"
 		if user, err := tele.GetUser(e.Sender); err != nil {
@@ -198,8 +206,12 @@ func (e *Encoder) AwaitCompletion() (err error) {
 		}()
 	}
 	err = e.cmd.Wait()
+	if e.Job != nil && e.Job.Completed {
+		e.IsCancelled = true
+	}
 	e.Process = e.cmd.ProcessState
 	e.done = true
+	e.ETime = time.Now()
 	e.stderr = e.errBuf.String()
 	e.stdout = e.outBuf.String()
 	close(ch)

@@ -15,16 +15,20 @@ import (
 	"enc/utils"
 )
 
+type FPostOptions struct {
+	Path           string
+	Anilist        bool
+	Fcodec         string
+	MediaInfoURL   string
+	FilterOverride *types.FilterData
+	Direct         string
+	EncString      string
+	Job            utils.EncodeJob
+}
+
 func FPost(
 	name string,
-	out string,
-	anilist bool,
-	fcodec string,
-	mi string,
-	filterOverride *types.FilterData,
-	evt bool,
-	direct string,
-	encString string,
+	opts *FPostOptions,
 ) (picURL string, msg string, err error) {
 	if config.Conf.NoBanner {
 		return "", "", nil
@@ -42,8 +46,12 @@ func FPost(
 		}
 	}()
 
+	if opts == nil {
+		opts = &FPostOptions{}
+	}
+	direct := opts.Direct
 	if direct == "" {
-		name, _, _ = FilterName(name, filterOverride)
+		name, _, _ = FilterName(name, opts.FilterOverride)
 	} else {
 		name = direct
 	}
@@ -57,7 +65,7 @@ func FPost(
 	season := parsed.AnimeSeason[0]
 	relGroup := parsed.ReleaseGroup
 	// handle epi logic
-	if epi != "" && !evt {
+	if epi != "" && !config.Conf.FBanner {
 		if epi == "1" || epi == "01" || epi == "001" {
 			epi = ""
 		} else {
@@ -81,15 +89,15 @@ func FPost(
 
 	anilistOverride, title = utils.AutoRename(title, title, false, true)
 	if anilistOverride {
-		anilist = false
+		opts.Anilist = false
 	}
 
 	// codec resolution
 	var codec string
-	if fcodec != "" {
-		codec = fcodec
+	if opts.Fcodec != "" {
+		codec = opts.Fcodec
 	} else {
-		codec = utils.GetCodecs(utils.EJob.PendingInfo().List)
+		codec = utils.GetCodecs(opts.Job.PendingInfo().List)
 	}
 
 	// Try to fetch anilist info, similar to the inner try/except
@@ -98,7 +106,7 @@ func FPost(
 	var idStr string
 	var genres []string
 
-	if (!bot.AnilistParse && !anilist) || direct != "" {
+	if (!bot.AnilistParse && !opts.Anilist) || direct != "" {
 		logger.DebugW("Parsing turned off")
 	} else {
 		media, err := GetAniInfo(title, nil, nil, false)
@@ -139,10 +147,10 @@ func FPost(
 	// stream info
 	aLangFlags := "N/A"
 	sLangFlags := "N/A"
-	if aInfo, sInfo, err := utils.GetStreamInfo(out); err == nil {
+	if aInfo, sInfo, err := utils.GetStreamInfo(opts.Path); err == nil {
 		if aInfo != "" {
 			var aParts []string
-			for _, part := range strings.Split(aInfo, "|") {
+			for part := range strings.SplitSeq(aInfo, "|") {
 				f := GetFlag(part)
 				aParts = append(aParts, f)
 			}
@@ -150,7 +158,7 @@ func FPost(
 		}
 		if sInfo != "" {
 			var sParts []string
-			for _, part := range strings.Split(sInfo, "|") {
+			for part := range strings.SplitSeq(sInfo, "|") {
 				f := GetFlag(part)
 				sParts = append(sParts, f)
 			}
@@ -187,6 +195,7 @@ func FPost(
 		b.WriteString(fmt.Sprintf("**%s** | `%s`", titleR, title))
 	}
 	b.WriteString("\n\n")
+	mi := opts.MediaInfoURL
 	if relGroup != "" || mi != "" {
 		if relGroup == "" {
 			relGroup = "None"
