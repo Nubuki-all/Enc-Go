@@ -52,15 +52,6 @@ func RssHandler(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		argparser.CreateDBoolFlag("list", "l", "To list all subscribed feeds."),
 		argparser.CreateDBoolFlag("subscribe", "s", "To subscribe to a rss feed."),
 	)
-	if out := arg.Output; out != "" {
-		_, _ = msg.Reply(utils.CodeBlock(out, true),
-			&tele.ReplyOptions{HTMLParseMode: true},
-		)
-		return nil
-	} else if err := arg.Err; err != nil {
-		_, _ = msg.ReplyText(err.Error())
-		return nil
-	}
 	pargs := arg.Values
 	del := pargs["delete"].(bool)
 	edit := pargs["edit"].(bool)
@@ -73,6 +64,9 @@ func RssHandler(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 			_, _ = msg.Reply(utils.CodeBlock(out, true),
 				&tele.ReplyOptions{HTMLParseMode: true},
 			)
+			return nil
+		} else if err := arg.Err; err != nil {
+			_, _ = msg.ReplyText(err.Error())
 			return nil
 		}
 		txt := fmt.Sprintf("/%s requires an argument; send %s --help if lost.", cmd, cmd)
