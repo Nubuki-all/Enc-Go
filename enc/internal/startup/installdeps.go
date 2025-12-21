@@ -746,23 +746,26 @@ func InstallYtdlp(ctx context.Context, binDir string) (string, error) {
 		return "", nil
 	}
 	baseURL := "https://github.com/yt-dlp/yt-dlp/releases/download/2025.09.23/"
+	denoURL := "https://github.com/denoland/deno/releases/download/v2.6.3/"
 
 	goos := runtime.GOOS
 	goarch := runtime.GOARCH
 
-	var fileName string
+	var denoFileName, fileName string
 	targetName := "yt-dlp"
 
-	// map platform -> filename (as provided)
 	switch {
 	case goos == "linux" && goarch == "amd64":
 		fileName = "yt-dlp_linux"
+		denoFileName = "deno-x86_64-unknown-linux-gnu.zip"
 	case goos == "linux" && goarch == "arm64":
 		fileName = "yt-dlp_linux_aarch64"
+		denoFileName = "deno-aarch64-unknown-linux-gnu.zip"
 	case goos == "windows" && goarch == "arm64":
 		fileName = "yt-dlp_arm64.exe"
 	case goos == "windows" && goarch == "amd64":
 		fileName = "yt-dlp_x86.exe"
+		denoFileName = "deno-x86_64-pc-windows-msvc.zip"
 
 	default:
 		return "", fmt.Errorf("install yt-dlp: platform not supported: os=%s arch=%s", goos, goarch)
@@ -830,7 +833,91 @@ func InstallYtdlp(ctx context.Context, binDir string) (string, error) {
 	if err := atomicMove(tmpPath, destPath); err != nil {
 		return "", fmt.Errorf("install binary: %w", err)
 	}
+	if denoFileName == "" {
+		return destPath, nil
+	}
+	s.Stop()
+	fullURL = denoURL + denoFileName
+	req, err = http.NewRequestWithContext(ctx, http.MethodHead, fullURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("build HEAD request: %w", err)
+	}
+	resp, err = http.DefaultClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("remote HEAD failed: %w", err)
+	}
+	_ = resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
+		return "", fmt.Errorf("remote file not available: %s (status %d)", fullURL, resp.StatusCode)
+	}
 
+	// Download zip to temp file
+	tmpZip := &utils.TempFile{}
+	err = tmpZip.Create("-deno.zip")
+	if err != nil {
+		return "", fmt.Errorf("create temp zip: %w", err)
+	}
+	tmpZipPath := tmpZip.Name
+	defer func() {
+		_ = tmpZip.Remove()
+	}()
+	if err := utils.DownloadFileWithProgress(ctx, fullURL, tmpZipPath); err != nil {
+		return "", nil
+	}
+	s.Start()
+	// Open zip and find the aria2c entry
+	zr, err := zip.OpenReader(tmpZipPath)
+	if err != nil {
+		return "", fmt.Errorf("open zip: %w", err)
+	}
+	defer func() { _ = zr.Close() }()
+	var found *zip.File
+	for _, f := range zr.File {
+		base := filepath.Base(f.Name)
+		if strings.HasPrefix(strings.ToLower(base), "deno") {
+			found = f
+			break
+		}
+	}
+	if found == nil {
+		return "", errors.New("deno binary not found in zip")
+	}
+	rc, err := found.Open()
+	if err != nil {
+		return "", fmt.Errorf("open zip entry: %w", err)
+	}
+	defer func() { _ = rc.Close() }()
+
+	tmpBin, err := os.CreateTemp("", "deno-bin-*")
+	if err != nil {
+		return "", fmt.Errorf("create temp bin: %w", err)
+	}
+	tmpBinPath := tmpBin.Name()
+	// ensure cleanup on error
+	cleanupTmpBin := func() {
+		_ = tmpBin.Close()
+		_ = os.Remove(tmpBinPath)
+	}
+	defer cleanupTmpBin()
+
+	if _, err := io.Copy(tmpBin, rc); err != nil {
+		return "", fmt.Errorf("extract binary: %w", err)
+	}
+	if err := tmpBin.Close(); err != nil {
+		return "", fmt.Errorf("close tmp bin: %w", err)
+	}
+
+	// On Unix set executable bit; on Windows it's not necessary but harmless to skip
+	if goos != "windows" {
+		if err := os.Chmod(tmpBinPath, 0o755); err != nil {
+			return "", fmt.Errorf("chmod tmp bin: %w", err)
+		}
+	}
+
+	// Atomic move: try rename, otherwise copy+remove fallback
+	if err := atomicMove(tmpBinPath, destPath); err != nil {
+		return "", fmt.Errorf("install binary: %w", err)
+	}
 	return destPath, nil
 }
 

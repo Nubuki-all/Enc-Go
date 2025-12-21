@@ -1,4 +1,4 @@
-// package rssmonitor
+// Package rssmonitor
 package rssmonitor
 
 import (
@@ -13,77 +13,46 @@ import (
 	"github.com/mmcdole/gofeed"
 
 	"enc/internal/bot"
+	"enc/internal/bot/types"
 	"enc/internal/db"
 	"enc/internal/logger"
 	"enc/utils"
+	"enc/utils/tele"
 	"enc/workers/auto/scheduler"
 )
 
-// ----- Types & placeholders you must adapt to your project -----
-
-// Event is a minimal placeholder for whatever your bot uses to represent
-// a "sent message" event returned by sendRSS. Adapt fields as needed.
-type Event struct {
-	Text string
-	// Add more fields (SenderID, ChatID, etc.) if your handlers need them.
-}
-
-// ----- External helpers you need to provide -----
-
-// sendRSS should create/send the RSS-derived command to the configured chat
-// and return an Event representing the sent message (or nil). Implement it
-// according to your bot's send logic.
-func sendRSS(feedMsg string, chatID int64) (*Event, error) {
-	// placeholder: implement integration with your bot to send feedMsg to chatID
-	// return an Event that contains at least .Text (the text the bot sent)
-	return &Event{Text: feedMsg}, nil
-}
-
-// enleech / enleech2 are worker functions. In Python you created tasks with asyncio.
-// Here we start goroutines to run them concurrently. Ensure they are safe.
-func enleech(event *Event, args string, pyro interface{}, flag bool) {
-	// placeholder
-}
-
-func enleech2(event *Event, args string, pyro interface{}, flag bool) {
-	// placeholder
-}
-
-// checkCmds verifies if the command is one of allowed commands.
-func checkCmds(cmd string, allowed ...string) bool {
-	for _, a := range allowed {
-		if cmd == a {
-			return true
+func sendRSS(feedMsg string, chat []types.FeedChat) (*tele.Message, error) {
+	var msg *tele.Message
+	var err error
+	for _, fc := range chat {
+		msg, err = tele.SendMsg(fc.ChatID, feedMsg, &tele.SendOptions{ReplyTo: fc.TopicID})
+		if err != nil {
+			logger.Error(err)
 		}
 	}
-	return false
+	return msg, err
 }
 
-// ----- RSS monitor implementation -----
-
-// fakeEventHandler mimics your Python function that accepts an Event and dispatches to enleech/enleech2.
-func fakeEventHandler(event *Event) {
+func fakeEventHandler(event *tele.Message) {
 	// event.Text expected to be "command args..."
-	parts := strings.Fields(event.Text)
+	parts := strings.Fields(event.Raw.Message.Message)
 	if len(parts) == 0 {
 		return
 	}
 	command := parts[0]
-	args := ""
-	if len(parts) > 1 {
-		args = strings.Join(parts[1:], " ")
-	}
+	args := strings.Join(parts[1:], " ")
 
-	if !checkCmds(command, "/l", "/ql", "/qbleech", "/leech") {
+	handler, found := HandlerMap[strings.TrimLeft(command, "/")]
+	if !found {
 		return
 	}
-	if checkCmds(command, "/l", "/leech") {
-		// run as goroutine to mimic asyncio.create_task
-		go enleech(event, args, nil, true)
-	} else if checkCmds(command, "/ql", "/qbleech") {
-		go enleech2(event, args, nil, true)
-	}
-	// sleep for 3s analogous to Python await asyncio.sleep(3) so caller doesn't fire too fast
+	go func() {
+		err := handler(event, args)
+		if err != nil {
+			logger.Error(err)
+		}
+	}()
+
 	time.Sleep(3 * time.Second)
 }
 
@@ -232,6 +201,7 @@ func rssMonitorOnce(ctx context.Context) {
 			// build command as Python did
 			cmdParts := strings.Fields(data.Command)
 			if len(cmdParts) == 0 {
+				feedList = append(feedList, fmt.Sprintf("Title: %s\nLink: %s", itemTitle, itemURL))
 				continue
 			}
 			// insert url after first element
@@ -247,15 +217,15 @@ func rssMonitorOnce(ctx context.Context) {
 				feedMsg = "/" + feedMsg
 			}
 			feedList = append(feedList, feedMsg)
-		} // for idx
+		}
 
-		// send feeds newest-first -> Python reversed(feed_list) then process
 		for i := len(feedList) - 1; i >= 0; i-- {
 			feedMsg := feedList[i]
 			ev, err := sendRSS(feedMsg, data.Chat)
 			if err == nil && ev != nil && data.Direct {
-				// pass to fake_event_handler
 				go fakeEventHandler(ev)
+			} else if ev != nil && err == nil {
+				logger.Warn("Unknown error @rssMonitor")
 			}
 			// throttle between sends
 			time.Sleep(1 * time.Second)

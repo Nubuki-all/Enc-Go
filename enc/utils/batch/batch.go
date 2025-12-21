@@ -51,15 +51,18 @@ func GetYtdlBatches(files []string) (items []types.BatchItem) {
 	return items
 }
 
-func GetPendingItems(items []types.BatchItem, limit int, anilist bool, version string, filter *types.FilterData, truncate bool) ([]string, int) {
+func GetPendingItems(items []types.BatchItem, except string, limit int, anilist bool, version string, filter *types.FilterData, truncate bool) ([]string, int) {
 	var pending []string
 	for _, item := range items {
+		if item.ID == except {
+			continue
+		}
 		if item.Status == 1 {
 			pending = append(pending, item.FileName)
 		}
 	}
-	if len(pending) > 0 {
-		pending = pending[1:]
+	if len(pending) == 0 {
+		return nil, 0
 	}
 	length := len(pending)
 	list := make([]string, limit)

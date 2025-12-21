@@ -81,6 +81,9 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		// Run-control Handlers
 		"restart": EventHandlerWithArgs(manage.Restart),
 
+		// Rss Handlers
+		"rss": EventHandlerWithArgs(manage.RssHandler),
+
 		// Dev Handlers
 		"bash": EventHandlerWithRawArgs(dev.Bash),
 		"eval": EventHandlerWithRawArgs(dev.Eval),
@@ -131,7 +134,7 @@ func AddCBHandlers(dispatch dispatcher.Dispatcher) {
 	callbackHandlers := map[string]func(*ext.Context, *ext.Update) error{
 		// Welcome Handlers
 		"ihelp":     CallbackEventHandler(handlers.Help),
-		"back_cb":   CallbackEventHandler(handlers.StartBack),
+		"iback":     CallbackEventHandler(handlers.StartBack),
 		"icommands": CallbackEventHandler(handlers.Commands),
 
 		// Tranfer Handlers

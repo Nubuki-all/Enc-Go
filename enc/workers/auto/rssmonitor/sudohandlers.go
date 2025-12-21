@@ -1,0 +1,674 @@
+package rssmonitor
+
+import (
+	"cmp"
+	"fmt"
+	"strconv"
+	"strings"
+
+	"enc/internal/bot"
+	"enc/internal/bot/source"
+	"enc/internal/bot/types"
+	"enc/internal/db"
+
+	//"enc/internal/logger"
+	"enc/utils"
+	"enc/utils/argparser"
+	batchutils "enc/utils/batch"
+	"enc/utils/tele"
+	"enc/workers/downloaders"
+	"enc/workers/handlers/queue"
+)
+
+const (
+	cmd = "rss"
+	// invalidMsg = "`Invalid torrent/direct link`"
+	noURIMsg   = "`uhm you need to reply to or send command alongside a uri/direct link`"
+	NoBatchmsg = "`Link has multiple files.\nTo add all files to queue use -b or -s <id> to choose a single file`"
+)
+
+var HandlerMap = map[string]func(*tele.Message, string) error{
+	"leech":   addLink,
+	"qbleech": addTorrent,
+	"ytdl":    addWithYtdl,
+}
+
+func addLink(msg *tele.Message, args string) error {
+	var err error
+
+	helpMsg := "Adds a link or torrent link to encoding queue:\n" +
+		"	Requires a reply to link or the link as argument\n" +
+		"	can also add consecutive items to queue by replying\n" +
+		"	to the first link and a number of how many subsequent links to add to queue\n" +
+		"Accepts the following flags:"
+	if args == "" && msg.ReplyToID == 0 {
+		args = "--help"
+	}
+	// always parse the args since positional arguments are allowed
+	argList, err := utils.SplitQuotedFieldsErr(args)
+	if err != nil {
+		_, _ = msg.ReplyText(err.Error())
+		return nil
+	}
+	arg := argparser.ParseFlags(
+		cmd,
+		helpMsg,
+		argList,
+		argparser.CreateDStringFlag(
+			"link",
+			"l",
+			"Link of file",
+		),
+		argparser.CreateDStringFlag(
+			"force",
+			"f",
+			"Force rename to file name",
+		),
+		argparser.CreateDStringFlag(
+			"rm",
+			"r",
+			"Words to remove from filename, delimeted by '|'",
+		),
+		argparser.CreateDStringFlag(
+			"select",
+			"s",
+			"File id (if link is a folder)",
+		),
+		argparser.CreateDStringFlag(
+			"tc",
+			"C",
+			"caption_tag (tag caption type as…)",
+		),
+		argparser.CreateDStringFlag(
+			"tf",
+			"F",
+			"file_tag (tag file_as)",
+		),
+		argparser.CreateDStringFlag(
+			"version",
+			"v",
+			"tag according to release version number",
+		),
+		argparser.CreateDBoolFlag(
+			"batch",
+			"b",
+			"Enables adding link with multiple files",
+		),
+		argparser.CreateDBoolFlag(
+			"allow-duplicates",
+			"A",
+			"Allows adding links with the same filename",
+		),
+		argparser.CreateDBoolFlag(
+			"da",
+			"",
+			"Disables anilist for queued item",
+		),
+		argparser.CreateDBoolFlag(
+			"confirm",
+			"y",
+			"(used in conjunction with -b) add all batch to queue without preview",
+		),
+	)
+	if out := arg.Output; out != "" {
+		_, _ = msg.Reply(utils.CodeBlock(out, true),
+			&tele.ReplyOptions{HTMLParseMode: true},
+		)
+		return nil
+	} else if err := arg.Err; err != nil {
+		_, _ = msg.ReplyText(err.Error())
+		return nil
+	}
+	pargs := arg.Values
+	var xtraArg string
+	if len(pargs) == 0 && !strings.HasPrefix(args, `"`) {
+		xtraArg = args
+	} else {
+		xtraArg = strings.Join(arg.UnknownArgs, " ")
+	}
+	link := pargs["link"].(string)
+	link = cmp.Or(link, xtraArg)
+	if !utils.IsURL(link) && !utils.IsMagnet(link) {
+		_, _ = msg.ReplyText(noURIMsg)
+		return nil
+	}
+	forcedFileName := pargs["force"].(string)
+	tcaption := pargs["tc"].(string)
+	tfile := pargs["tf"].(string)
+	remove := pargs["rm"].(string)
+	selected := pargs["select"].(string)
+	version := pargs["version"].(string)
+	batch := pargs["batch"].(bool)
+	dAnilist := pargs["da"].(bool)
+	y := pargs["confirm"].(bool)
+	allowDup := pargs["allow-duplicates"].(bool)
+	var s int
+	if selected != "" && !utils.IsNumber(selected) {
+		_, _ = msg.ReplyText("`Value for '-s' arg has to be digit.`")
+		return nil
+	}
+	if selected != "" {
+		s, _ = strconv.Atoi(selected)
+	}
+	qSource := types.QueueSource{}
+	var batches []types.BatchItem
+	var filter *types.FilterData
+	if cmp.Or(remove, tfile, tcaption) != "" {
+		filter = &types.FilterData{Fil1: remove, Fil2: tfile, Fil3: tcaption}
+	}
+	var dlInfo *utils.DLInfo
+	var mega bool
+	if utils.IsMegaLink(link) {
+		mega = true
+		qSource.Source = source.Mega
+		dlInfo = downloaders.GetMegaDlInfo(link)
+	} else {
+		qSource.Source = source.Aria2
+		dlInfo = downloaders.GetAria2DlInfo(link)
+	}
+	if dlInfo.Error != nil {
+		_, _ = msg.ReplyText("**Error:** " + dlInfo.Error.Error())
+		return nil
+	}
+	if dlInfo.Count > 1 && selected == "" && !batch {
+		_, _ = msg.ReplyText(NoBatchmsg)
+		return nil
+	}
+	if selected != "" {
+		if !mega {
+			s -= 1
+		}
+		if s > (dlInfo.Count - 1) {
+			lastFileID := dlInfo.Count
+			if mega {
+				lastFileID -= 1
+			}
+			_, _ = msg.ReplyText(fmt.Sprintf("'-s': `%s` is more than last file_id :- `%d`\nTotal files in folder :- `%d`", selected, lastFileID, dlInfo.Count))
+			return nil
+		}
+		if name := dlInfo.Files[s]; utils.IsVideoFile(name) {
+			dlInfo.Name = name
+		} else {
+			_, _ = msg.ReplyText(fmt.Sprintf("File with name: %s is not a Video", name))
+			return nil
+		}
+		qSource.Select = selected
+	} else if batch && dlInfo.Count > 1 {
+		forcedFileName = ""
+		batches = batchutils.GetBatches(dlInfo.Files, mega)
+		if !y {
+			batchPreview := batchutils.BatchPreview{
+				Bmsg:      msg,
+				Version:   version,
+				Filter:    filter,
+				Items:     batches,
+				Previewer: msg.SenderID,
+			}
+			batches, err = batchPreview.Start(true)
+			if err != nil {
+				_, _ = msg.ReplyText("**Error:** " + err.Error())
+				return nil
+
+			}
+			if len(batches) == 0 {
+				_, _ = msg.ReplyText("Cancelled adding batch to queue")
+				return nil
+			}
+		}
+	} else if !utils.IsVideoFile(dlInfo.Name) {
+		_, _ = msg.ReplyText(fmt.Sprintf("File with name: %s is not a Video", dlInfo.Name))
+		return nil
+	}
+	if bot.Queue.Find(dlInfo.Name) {
+		if !allowDup {
+			_, _ = msg.ReplyText("**This link has already been added to queue.**")
+			return nil
+		}
+		inQueue := true
+		for inQueue {
+			dlInfo.Name = utils.RenameDup(dlInfo.Name)
+			if bot.Queue.Find(dlInfo.Name) {
+				inQueue = false
+			}
+		}
+	}
+	id := bot.Queue.Add(types.QueueEntry{
+		Name:      dlInfo.Name,
+		ChatID:    msg.ChatID,
+		MessageID: msg.ID,
+		Sender:    msg.SenderID,
+		Version:   version,
+		Filter:    filter,
+		Source:    qSource,
+		ForceName: forcedFileName,
+		AniList:   !dAnilist,
+		URI:       link,
+		Doc:       nil,
+		Batch:     batches,
+	})
+	db.SaveQueue(msg.Ctx)
+	total := bot.Queue.Len()
+	if total > 1 || bot.Paused.Any() {
+		m, err := msg.ReplyText("**Link added To Queue ⏰, POS:** `" + strconv.Itoa(id) + "`\n`Please Wait , Encode will start soon`")
+		if total > 1 && err == nil {
+			go func() { _ = queue.PreviewQueue(m, false) }()
+		}
+	}
+	return nil
+}
+
+func addTorrent(msg *tele.Message, args string) error {
+	var err error
+
+	helpMsg := "Adds a torrent or magnetic link to encoding queue via qbittorrent:\n" +
+		"	Requires a reply to link or the link as argument\n" +
+		"	can also add consecutive items to queue by replying\n" +
+		"	to the first link and a number of how many subsequent links to add to queue\n" +
+		"Accepts the following flags:"
+	if args == "" && msg.ReplyToID == 0 {
+		args = "--help"
+	}
+	// always parse the args since positional arguments are allowed
+	argList, err := utils.SplitQuotedFieldsErr(args)
+	if err != nil {
+		_, _ = msg.ReplyText(err.Error())
+		return nil
+	}
+	arg := argparser.ParseFlags(
+		cmd,
+		helpMsg,
+		argList,
+		argparser.CreateDStringFlag(
+			"link",
+			"l",
+			"Link of file",
+		),
+		argparser.CreateDStringFlag(
+			"force",
+			"f",
+			"Force rename to file name",
+		),
+		argparser.CreateDStringFlag(
+			"rm",
+			"r",
+			"Words to remove from filename, delimeted by '|'",
+		),
+		argparser.CreateDStringFlag(
+			"select",
+			"s",
+			"File id (if link is a folder)",
+		),
+		argparser.CreateDStringFlag(
+			"tc",
+			"C",
+			"caption_tag (tag caption type as…)",
+		),
+		argparser.CreateDStringFlag(
+			"tf",
+			"F",
+			"file_tag (tag file_as)",
+		),
+		argparser.CreateDStringFlag(
+			"version",
+			"v",
+			"tag according to release version number",
+		),
+		argparser.CreateDBoolFlag(
+			"batch",
+			"b",
+			"Enables adding link with multiple files",
+		),
+		argparser.CreateDBoolFlag(
+			"allow-duplicates",
+			"A",
+			"Allows adding links with the same filename",
+		),
+		argparser.CreateDBoolFlag(
+			"da",
+			"",
+			"Disables anilist for queued item",
+		),
+		argparser.CreateDBoolFlag(
+			"confirm",
+			"y",
+			"(used in conjunction with -b) add all batch to queue without preview",
+		),
+	)
+	if out := arg.Output; out != "" {
+		_, _ = msg.Reply(utils.CodeBlock(out, true),
+			&tele.ReplyOptions{HTMLParseMode: true},
+		)
+		return nil
+	} else if err := arg.Err; err != nil {
+		_, _ = msg.ReplyText(err.Error())
+		return nil
+	}
+	pargs := arg.Values
+	var xtraArg string
+	if len(pargs) == 0 && !strings.HasPrefix(args, `"`) {
+		xtraArg = args
+	} else {
+		xtraArg = strings.Join(arg.UnknownArgs, " ")
+	}
+	link := pargs["link"].(string)
+	link = cmp.Or(link, xtraArg)
+	if !utils.IsURL(link) && !utils.IsMagnet(link) {
+		_, _ = msg.ReplyText(noURIMsg)
+		return nil
+	}
+	forcedFileName := pargs["force"].(string)
+	tcaption := pargs["tc"].(string)
+	tfile := pargs["tf"].(string)
+	remove := pargs["rm"].(string)
+	selected := pargs["tf"].(string)
+	version := pargs["version"].(string)
+	batch := pargs["batch"].(bool)
+	dAnilist := pargs["da"].(bool)
+	y := pargs["confirm"].(bool)
+	allowDup := pargs["allow-duplicates"].(bool)
+	var s int
+	if selected != "" && !utils.IsNumber(selected) {
+		_, _ = msg.ReplyText("`Value for '-s' arg has to be digit.`")
+		return nil
+	}
+	if selected != "" {
+		s, _ = strconv.Atoi(selected)
+	}
+	qSource := types.QueueSource{}
+	var batches []types.BatchItem
+	var filter *types.FilterData
+	if cmp.Or(remove, tfile, tcaption) != "" {
+		filter = &types.FilterData{Fil1: remove, Fil2: tfile, Fil3: tcaption}
+	}
+	qSource.Source = source.Qbit
+	dlInfo := downloaders.GetQbitDlInfo(link)
+	if dlInfo.Error != nil {
+		_, _ = msg.ReplyText("**Error:** " + dlInfo.Error.Error())
+		return nil
+	}
+	if dlInfo.Count > 1 && selected == "" && !batch {
+		_, _ = msg.ReplyText(NoBatchmsg)
+		return nil
+	}
+	if selected != "" {
+		if s > (dlInfo.Count - 1) {
+			lastFileID := dlInfo.Count - 1
+			_, _ = msg.ReplyText(fmt.Sprintf("'-s': `%s` is more than last file_id :- `%d`\nTotal files in folder :- `%d`", selected, lastFileID, dlInfo.Count))
+			return nil
+		}
+		if name := dlInfo.Files[s]; utils.IsVideoFile(name) {
+			dlInfo.Name = name
+		} else {
+			_, _ = msg.ReplyText(fmt.Sprintf("File with name: %s is not a Video", name))
+			return nil
+		}
+		qSource.Select = selected
+	} else if batch && dlInfo.Count > 1 {
+		forcedFileName = ""
+		batches = batchutils.GetBatches(dlInfo.Files, true)
+		if !y {
+			batchPreview := batchutils.BatchPreview{
+				Bmsg:      msg,
+				Version:   version,
+				Filter:    filter,
+				Items:     batches,
+				Previewer: msg.SenderID,
+			}
+			batches, err = batchPreview.Start(true)
+			if err != nil {
+				_, _ = msg.ReplyText("**Error:** " + err.Error())
+				return nil
+
+			}
+			if len(batches) == 0 {
+				_, _ = msg.ReplyText("Cancelled adding batch to queue")
+				return nil
+			}
+		}
+	} else if !utils.IsVideoFile(dlInfo.Name) {
+		_, _ = msg.ReplyText(fmt.Sprintf("File with name: %s is not a Video", dlInfo.Name))
+		return nil
+	}
+	if bot.Queue.Find(dlInfo.Name) {
+		if !allowDup {
+			_, _ = msg.ReplyText("**This link has already been added to queue.**")
+			return nil
+		}
+		inQueue := true
+		for inQueue {
+			dlInfo.Name = utils.RenameDup(dlInfo.Name)
+			if bot.Queue.Find(dlInfo.Name) {
+				inQueue = false
+			}
+		}
+	}
+	id := bot.Queue.Add(types.QueueEntry{
+		Name:      dlInfo.Name,
+		ChatID:    msg.ChatID,
+		MessageID: msg.ID,
+		Sender:    msg.SenderID,
+		Version:   version,
+		Filter:    filter,
+		Source:    qSource,
+		ForceName: forcedFileName,
+		AniList:   !dAnilist,
+		URI:       link,
+		Doc:       nil,
+		Batch:     batches,
+	})
+	db.SaveQueue(msg.Ctx)
+	total := bot.Queue.Len()
+	if total > 1 || bot.Paused.Any() {
+		m, err := msg.ReplyText("**Link added To Queue ⏰, POS:** `" + strconv.Itoa(id) + "`\n`Please Wait , Encode will start soon`")
+		if total > 1 && err == nil {
+			go func() { _ = queue.PreviewQueue(m, false) }()
+		}
+	}
+	return nil
+}
+
+func addWithYtdl(msg *tele.Message, args string) error {
+	var err error
+
+	helpMsg := "Adds a link to encoding queue using YT-DLP:\n" +
+		"	Requires a reply to link or the link as argument\n" +
+		"	can also add consecutive items to queue by replying\n" +
+		"	to the first link and a number of how many subsequent links to add to queue\n" +
+		"Accepts the following flags:"
+	if args == "" && msg.ReplyToID == 0 {
+		args = "--help"
+	}
+	// always parse the args since positional arguments are allowed
+	argList, err := utils.SplitQuotedFieldsErr(args)
+	if err != nil {
+		_, _ = msg.ReplyText(err.Error())
+		return nil
+	}
+	arg := argparser.ParseFlags(
+		cmd,
+		helpMsg,
+		argList,
+		argparser.CreateDStringFlag(
+			"link",
+			"l",
+			"Link of file",
+		),
+		argparser.CreateDStringFlag(
+			"force",
+			"f",
+			"Force rename to file name",
+		),
+		argparser.CreateDStringFlag(
+			"rm",
+			"r",
+			"Words to remove from filename, delimeted by '|'",
+		),
+		argparser.CreateDStringFlag(
+			"select",
+			"s",
+			"File id (if link is a folder)",
+		),
+		argparser.CreateDStringFlag(
+			"tc",
+			"C",
+			"caption_tag (tag caption type as…)",
+		),
+		argparser.CreateDStringFlag(
+			"tf",
+			"F",
+			"file_tag (tag file_as)",
+		),
+		argparser.CreateDStringFlag(
+			"version",
+			"v",
+			"tag according to release version number",
+		),
+		argparser.CreateDBoolFlag(
+			"batch",
+			"b",
+			"Enables adding link with multiple files",
+		),
+		argparser.CreateDBoolFlag(
+			"allow-duplicates",
+			"A",
+			"Allows adding links with the same filename",
+		),
+		argparser.CreateDBoolFlag(
+			"da",
+			"",
+			"Disables anilist for queued item",
+		),
+		argparser.CreateDBoolFlag(
+			"confirm",
+			"y",
+			"(used in conjunction with -b) add all batch to queue without preview",
+		),
+	)
+	if out := arg.Output; out != "" {
+		_, _ = msg.Reply(utils.CodeBlock(out, true),
+			&tele.ReplyOptions{HTMLParseMode: true},
+		)
+		return nil
+	} else if err := arg.Err; err != nil {
+		_, _ = msg.ReplyText(err.Error())
+		return nil
+	}
+	pargs := arg.Values
+	var xtraArg string
+	if len(pargs) == 0 && !strings.HasPrefix(args, `"`) {
+		xtraArg = args
+	} else {
+		xtraArg = strings.Join(arg.UnknownArgs, " ")
+	}
+	link := pargs["link"].(string)
+	link = cmp.Or(link, xtraArg)
+
+	if !utils.IsURL(link) && !utils.IsMagnet(link) {
+		_, _ = msg.ReplyText(noURIMsg)
+		return nil
+	}
+	forcedFileName := pargs["force"].(string)
+	tcaption := pargs["tc"].(string)
+	tfile := pargs["tf"].(string)
+	remove := pargs["rm"].(string)
+	selected := pargs["select"].(string)
+	version := pargs["version"].(string)
+	batch := pargs["batch"].(bool)
+	dAnilist := pargs["da"].(bool)
+	y := pargs["confirm"].(bool)
+	allowDup := pargs["allow-duplicates"].(bool)
+	var s int
+	if selected != "" && !utils.IsNumber(selected) {
+		_, _ = msg.ReplyText("`Value for '-s' arg has to be digit.`")
+		return nil
+	}
+	if selected != "" {
+		s, _ = strconv.Atoi(selected)
+		s -= 1
+	}
+	qSource := types.QueueSource{}
+	qSource.Source = source.Ytdl
+	var batches []types.BatchItem
+	var filter *types.FilterData
+	if cmp.Or(remove, tfile, tcaption) != "" {
+		filter = &types.FilterData{Fil1: remove, Fil2: tfile, Fil3: tcaption}
+	}
+
+	dlInfo := downloaders.GetYdlInfo(link)
+	var mega bool
+	if dlInfo.Error != nil {
+		_, _ = msg.ReplyText("**Error:** " + dlInfo.Error.Error())
+		return nil
+	}
+	if dlInfo.Count > 1 && selected == "" && !batch {
+		_, _ = msg.ReplyText(NoBatchmsg)
+		return nil
+	}
+	if selected != "" {
+		if s > (dlInfo.Count - 1) {
+			lastFileID := dlInfo.Count
+			_, _ = msg.ReplyText(fmt.Sprintf("'-s': `%s` is more than last file_id :- `%d`\nTotal files in folder :- `%d`", selected, lastFileID, dlInfo.Count))
+			return nil
+		}
+		dlInfo.Name = dlInfo.Files[s]
+		qSource.Select = selected
+	} else if batch && dlInfo.Count > 1 {
+		forcedFileName = ""
+		batches = batchutils.GetBatches(dlInfo.Files, mega)
+		if !y {
+			batchPreview := batchutils.BatchPreview{
+				Bmsg:      msg,
+				Version:   version,
+				Filter:    filter,
+				Items:     batches,
+				Previewer: msg.SenderID,
+			}
+			batches, err = batchPreview.Start(true)
+			if err != nil {
+				_, _ = msg.ReplyText("**Error:** " + err.Error())
+				return nil
+
+			}
+			if len(batches) == 0 {
+				_, _ = msg.ReplyText("Cancelled adding batch to queue")
+				return nil
+			}
+		}
+	}
+	if bot.Queue.Find(dlInfo.Name) {
+		if !allowDup {
+			_, _ = msg.ReplyText("**This link has already been added to queue.**")
+			return nil
+		}
+		inQueue := true
+		for inQueue {
+			dlInfo.Name = utils.RenameDup(dlInfo.Name)
+			if bot.Queue.Find(dlInfo.Name) {
+				inQueue = false
+			}
+		}
+	}
+	id := bot.Queue.Add(types.QueueEntry{
+		Name:      dlInfo.Name,
+		ChatID:    msg.ChatID,
+		MessageID: msg.ID,
+		Sender:    msg.SenderID,
+		Version:   version,
+		Filter:    filter,
+		Source:    qSource,
+		ForceName: forcedFileName,
+		AniList:   !dAnilist,
+		URI:       link,
+		Doc:       nil,
+		Batch:     batches,
+	})
+	db.SaveQueue(msg.Ctx)
+	total := bot.Queue.Len()
+	if total > 1 || bot.Paused.Any() {
+		m, err := msg.ReplyText("**Link added To Queue ⏰, POS:** `" + strconv.Itoa(id) + "`\n`Please Wait , Encode will start soon`")
+		if total > 1 && err == nil {
+			go func() { _ = queue.PreviewQueue(m, false) }()
+		}
+	}
+	return nil
+}

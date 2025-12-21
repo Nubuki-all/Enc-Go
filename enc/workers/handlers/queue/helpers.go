@@ -215,6 +215,11 @@ func Select(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	return nil
 }
 
+// PreviewQueue an exported function that calls previewQueue mostly because i was too lazy to refactor its usage
+func PreviewQueue(msg *tele.Message, deletable bool) error {
+	return previewQueue(msg, deletable)
+}
+
 func previewQueue(msg *tele.Message, deletable bool) error {
 	emptyQueueMsg := "`I'm as free as a bird 🦅`"
 	noQueuedMsg := "`Nothing Here, yet! 💖`"

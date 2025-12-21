@@ -1,3 +1,4 @@
+// Package argparser houses the flag parser
 package argparser
 
 import (
@@ -10,16 +11,16 @@ import (
 
 // ParseResult holds the outcome of parsing.
 type ParseResult struct {
-	Values      map[string]interface{} // parsed flag values keyed by long-name
-	UnknownArgs []string               // remaining (positional / unknown) args
-	Output      string                 // captured help / usage / error text
-	Err         error                  // parse error (including pflag.ErrHelp)
+	Values      map[string]any // parsed flag values keyed by long-name
+	UnknownArgs []string       // remaining (positional / unknown) args
+	Output      string         // captured help / usage / error text
+	Err         error          // parse error (including pflag.ErrHelp)
 }
 
 // ParseFlags parses tokens according to provided flag definitions.
 // - cmdName: name to give the FlagSet (used in usage output).
 // - helpMsg: string to print when user requests --help / -h (will be captured).
-// - tokens: the tokenized args (use your SplitQuotedFields helper).
+// - tokens: the tokenized args
 // - defs: list of flag definitions each as []string.
 //
 // Definition slice format (indices optional after 0):
@@ -121,7 +122,21 @@ func ParseFlags(cmdName, helpMsg string, tokens []string, defs ...[]string) Pars
 			} else {
 				fs.Int64(name, defInt, usage)
 			}
-
+		case "int64_slice":
+			defSlice := []int64{}
+			if defVal != "" {
+				strSlice := strings.SplitSeq(defVal, " ")
+				for str := range strSlice {
+					if i, err := strconv.ParseInt(str, 10, 64); err == nil {
+						defSlice = append(defSlice, i)
+					}
+				}
+			}
+			if short != "" {
+				fs.Int64SliceP(name, short, defSlice, usage)
+			} else {
+				fs.Int64Slice(name, defSlice, usage)
+			}
 		case "string_slice":
 			defSlice := []string{}
 			if defVal != "" {
@@ -131,6 +146,16 @@ func ParseFlags(cmdName, helpMsg string, tokens []string, defs ...[]string) Pars
 				fs.StringArrayP(name, short, defSlice, usage)
 			} else {
 				fs.StringArray(name, defSlice, usage)
+			}
+		case "string2slice":
+			defSlice := []string{}
+			if defVal != "" {
+				defSlice = strings.Split(defVal, " ")
+			}
+			if short != "" {
+				fs.StringSliceP(name, short, defSlice, usage)
+			} else {
+				fs.StringSlice(name, defSlice, usage)
 			}
 		default: // string
 			if short != "" {
@@ -159,8 +184,14 @@ func ParseFlags(cmdName, helpMsg string, tokens []string, defs ...[]string) Pars
 		case "int64":
 			v, _ := fs.GetInt64(r.name)
 			values[r.name] = v
+		case "int64_slice":
+			v, _ := fs.GetInt64Slice(r.name)
+			values[r.name] = v
 		case "string_slice":
 			v, _ := fs.GetStringArray(r.name)
+			values[r.name] = v
+		case "string2slice":
+			v, _ := fs.GetStringSlice(r.name)
 			values[r.name] = v
 		default:
 			v, _ := fs.GetString(r.name)
@@ -195,6 +226,14 @@ func CreateDInt64Flag(name, sName, helpMsg string) []string {
 	return []string{name, sName, "int64", "", helpMsg}
 }
 
+func CreateDInt64SliceFlag(name, sName, helpMsg string) []string {
+	return []string{name, sName, "int64_slice", "", helpMsg}
+}
+
 func CreateDStringSliceFlag(name, sName, helpMsg string) []string {
 	return []string{name, sName, "string_slice", "", helpMsg}
+}
+
+func CreateDString2SliceFlag(name, sName, helpMsg string) []string {
+	return []string{name, sName, "string2slice", "", helpMsg}
 }

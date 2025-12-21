@@ -249,3 +249,22 @@ func IsNegativeNumber(s string) bool {
 	f, err := strconv.ParseInt(s, 10, 64)
 	return err == nil && f < 0
 }
+
+func DeleteByIndices[T any](original []T, indices []int) []T {
+	toDelete := make(map[int]bool)
+	for _, idx := range indices {
+		toDelete[idx] = true
+	}
+
+	newLength := 0
+	for i, val := range original {
+		if !toDelete[i] {
+			original[newLength] = val
+			newLength++
+		}
+	}
+
+	clear(original[newLength:])
+
+	return original[:newLength]
+}

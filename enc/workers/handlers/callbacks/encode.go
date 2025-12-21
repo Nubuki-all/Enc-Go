@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"fmt"
 	"path/filepath"
+
 	//"strings"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 	"enc/utils"
 	batchutils "enc/utils/batch"
 	"enc/utils/tele"
+	"enc/workers/auto/transcode"
 )
 
 func EncodeInfo(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
@@ -31,13 +33,13 @@ func EncodeInfo(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery)
 		return query.Answer("Muxing:\n"+filepath.Base(info.OutPath), true)
 	}
 	total := bot.Queue.Len()
-	if total == 0 {
+	entry, found := bot.Queue.GetByIndex(0)
+	if total == 0 || !found {
 		return query.Answer(
 			"Yikes..\nQID 0 is missing, You wouldn't happen to know why? would you?",
 			true,
 		)
 	}
-	entry := bot.Queue.AsSlice()[1]
 	var ans string
 	if info.DlPath != "" {
 		ans = "Anilist thumbnail:\nYes"
@@ -47,6 +49,7 @@ func EncodeInfo(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery)
 	if len(entry.Batch) > 0 {
 		next, left := batchutils.GetPendingItems(
 			entry.Batch,
+			transcode.Einfo.BatchID,
 			2,
 			entry.AniList,
 			entry.Version,

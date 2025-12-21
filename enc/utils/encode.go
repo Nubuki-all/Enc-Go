@@ -40,6 +40,7 @@ type EncodeInfo struct {
 	Workers      int
 	WorkersCodec []string
 	BatchID      string
+	Event        chan struct{}
 	Previous     string
 }
 
@@ -55,6 +56,7 @@ func (e *EncodeInfo) Reset() {
 	// e.Previous = e.Current
 	e.Current = ""
 	e.BatchID = ""
+	e.Event = make(chan struct{}, 1)
 	e.Workers = 0
 }
 

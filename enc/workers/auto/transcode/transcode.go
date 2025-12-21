@@ -26,6 +26,7 @@ import (
 	"enc/workers/uploaders"
 
 	"github.com/gotd/td/tg"
+	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -96,6 +97,9 @@ func thing(entry types.QueueEntry) {
 			"Starting download...",
 			nil,
 		)
+		if err != nil {
+			LogChat = 0
+		}
 	}
 	download := getDownload(entry, batchItem, msg, Lmsg)
 	if download == nil {
@@ -105,6 +109,7 @@ func thing(entry types.QueueEntry) {
 
 	ID := strconv.FormatInt(msg.ChatID, 10) + ":" + strconv.Itoa(msg.ID)
 	if download.Background {
+		err = download.Attach(ID, entry.Sender)
 	} else {
 		download.Init(ID, entry.Sender)
 		err = download.Start()
@@ -112,6 +117,7 @@ func thing(entry types.QueueEntry) {
 	if err != nil || download.IsCancelled {
 		_, _ = download.ReportStatus()
 		_, _ = bot.Queue.Pop(entry.Name)
+		return
 	}
 	downloadTime := utils.TimeFormatter(time.Since(download.Time).Round(time.Second).Seconds())
 	if Lmsg != nil {
@@ -120,9 +126,26 @@ func thing(entry types.QueueEntry) {
 	job := &utils.EncodeJob{}
 	jobs := job.PendingInfo()
 	SourceMInfo, _ := utils.PostMediaInfo(download.Path)
+	dlName := filepath.Base(download.Path)
+	go func() {
+		err := uploaders.DumpDl(download.Path, dlName, entry.Sender, msg)
+		if err != nil {
+			logger.WarnW("[Dumper]: An error occured", zap.Error(err))
+		}
+	}()
+	Einfo.Current = dlName
+	pName, err := parser.QParse(dlName, &parser.ParseOptions{
+		Direct:         entry.ForceName,
+		UseAniList:     entry.AniList,
+		FilterOverride: entry.Filter,
+		Version:        entry.Version,
+	})
+	if err == nil {
+		Einfo.Current = pName
+	}
 	if !config.Conf.NoBanner {
 		txt, url, _ := parser.FPost(
-			entry.Name,
+			dlName,
 			&parser.FPostOptions{
 				Path:         download.Path,
 				Anilist:      entry.AniList,
@@ -161,6 +184,7 @@ func thing(entry types.QueueEntry) {
 			job:       job,
 			batchItem: batchItem,
 			item:      entry,
+			dlName:    dlName,
 			dlPath:    download.Path,
 			no:        i,
 			logChat:   LogChat,
@@ -193,6 +217,7 @@ type encodeWorker struct {
 	job       *utils.EncodeJob
 	batchItem *types.BatchItem
 	item      types.QueueEntry
+	dlName    string
 	dlPath    string
 	mInfo     string
 	dTime     string
@@ -214,6 +239,10 @@ func (e *encodeWorker) start(encodeArgs string) error {
 		return nil
 	default:
 	}
+	select {
+	case Einfo.Event <- struct{}{}:
+	default:
+	}
 	sMsg, err := tele.SendMsg(e.item.ChatID, "`Waiting for encoder worker…`", &tele.SendOptions{ReplyTo: e.item.MessageID})
 	if err != nil {
 		logger.Error(err)
@@ -224,7 +253,7 @@ func (e *encodeWorker) start(encodeArgs string) error {
 		Lmsg, _ = tele.SendMsg(e.logChat, "`Waiting for encoder worker…`", nil)
 	}
 	result, err := parser.ParseName(
-		e.item.Name,
+		e.dlName,
 		&parser.ParseOptions{
 			Direct:         e.item.ForceName,
 			UseAniList:     e.item.AniList,
@@ -235,7 +264,7 @@ func (e *encodeWorker) start(encodeArgs string) error {
 		},
 	)
 	if err != nil {
-		result.FileName = e.item.Name
+		result.FileName = e.dlName
 		result.MediaInfoName = utils.RemoveExt(result.FileName)
 	}
 	fn := result.MediaInfoName

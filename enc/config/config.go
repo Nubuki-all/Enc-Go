@@ -32,7 +32,7 @@ type Config struct {
 	Dev                   int64
 	DLStuff               string
 	DownloadDir           string
-	DumpChannel           int
+	DumpChannel           int64
 	DumpDir               string
 	DumpLeech             bool
 	Dyno                  string
@@ -221,7 +221,7 @@ func LoadConfig() error {
 		Dev:                   viper.GetInt64("DEV"),
 		DLStuff:               viper.GetString("DL_STUFF"),
 		DownloadDir:           viper.GetString("DOWNLOAD_DIR"),
-		DumpChannel:           viper.GetInt("DUMP_CHANNEL"),
+		DumpChannel:           viper.GetInt64("DUMP_CHANNEL"),
 		DumpDir:               viper.GetString("DUMP_DIR"),
 		DumpLeech:             viper.GetBool("DUMP_LEECH"),
 		Dyno:                  viper.GetString("DYNO"),
