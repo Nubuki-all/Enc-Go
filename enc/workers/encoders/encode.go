@@ -58,6 +58,9 @@ type Encoder struct {
 
 func (e *Encoder) Start(cmdline string) error {
 	var cmd *exec.Cmd
+	if e.Context == nil {
+		e.Context = context.Background()
+	}
 	if runtime.GOOS == "windows" {
 		cmd = exec.CommandContext(e.Context, "cmd", "/C", cmdline)
 	} else {
