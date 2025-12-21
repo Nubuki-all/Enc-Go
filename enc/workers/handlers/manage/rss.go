@@ -52,7 +52,12 @@ func RssHandler(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		argparser.CreateDBoolFlag("list", "l", "To list all subscribed feeds."),
 		argparser.CreateDBoolFlag("subscribe", "s", "To subscribe to a rss feed."),
 	)
-	if err := arg.Err; err != nil {
+	if out := arg.Output; out != "" {
+		_, _ = msg.Reply(utils.CodeBlock(out, true),
+			&tele.ReplyOptions{HTMLParseMode: true},
+		)
+		return nil
+	} else if err := arg.Err; err != nil {
 		_, _ = msg.ReplyText(err.Error())
 		return nil
 	}
@@ -147,7 +152,12 @@ func subRss(msg *tele.Message, args string) error {
 		argparser.CreateDBoolFlag("direct", "", "To enable rss message getting passed directly* to bot"),
 		argparser.CreateDBoolFlag("pause", "p", "To pause the rss feed."),
 	)
-	if err := arg.Err; err != nil {
+	if out := arg.Output; out != "" {
+		_, _ = msg.Reply(utils.CodeBlock(out, true),
+			&tele.ReplyOptions{HTMLParseMode: true},
+		)
+		return nil
+	} else if err := arg.Err; err != nil {
 		_, _ = msg.ReplyText(err.Error())
 		return nil
 	}
@@ -313,7 +323,12 @@ func editRss(msg *tele.Message, args string) error {
 		argparser.CreateDBoolFlag("pause", "p", "To pause the rss feed."),
 		argparser.CreateDBoolFlag("resume", "r", "To resume the rss feed."),
 	)
-	if err := arg.Err; err != nil {
+	if out := arg.Output; out != "" {
+		_, _ = msg.Reply(utils.CodeBlock(out, true),
+			&tele.ReplyOptions{HTMLParseMode: true},
+		)
+		return nil
+	} else if err := arg.Err; err != nil {
 		_, _ = msg.ReplyText(err.Error())
 		return nil
 	}
@@ -457,7 +472,12 @@ func getRss(msg *tele.Message, args string) error {
 		argparser.CreateDBoolFlag("get", "g", "HEAD PARAM"),
 		argparser.CreateDIntFlag("amount", "a", "Amount of links to grab/fetch."),
 	)
-	if err := arg.Err; err != nil {
+	if out := arg.Output; out != "" {
+		_, _ = msg.Reply(utils.CodeBlock(out, true),
+			&tele.ReplyOptions{HTMLParseMode: true},
+		)
+		return nil
+	} else if err := arg.Err; err != nil {
 		_, _ = msg.ReplyText(err.Error())
 		return nil
 	}
