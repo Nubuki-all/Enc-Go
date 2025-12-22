@@ -332,7 +332,7 @@ func (m *Message) Unpin(silent bool) error {
 
 func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
 	var file tg.InputFileClass
-	var inputRep *tg.InputReplyToMessage
+	inputRep := &tg.InputReplyToMessage{}
 	var err error
 	ctx := m.Ctx
 	bytes := uploadOptions.Bytes
@@ -369,9 +369,7 @@ func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
 		})
 	}
 	if uploadOptions.Quote {
-		inputRep = &tg.InputReplyToMessage{
-			ReplyToMsgID: m.ID,
-		}
+		inputRep.ReplyToMsgID = m.ID
 	}
 	var pCaption string
 	var entities []tg.MessageEntityClass
@@ -404,11 +402,9 @@ func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
 
 func (m *Message) ReplyMediaDoc(media tg.InputMediaClass, uploadOptions *UploadOptions) (*Message, error) {
 	ctx := m.Ctx
-	var inputRep *tg.InputReplyToMessage
+	inputRep := &tg.InputReplyToMessage{}
 	if uploadOptions.Quote {
-		inputRep = &tg.InputReplyToMessage{
-			ReplyToMsgID: m.ID,
-		}
+		inputRep.ReplyToMsgID = m.ID
 	}
 	var pCaption string
 	var entities []tg.MessageEntityClass
@@ -474,7 +470,7 @@ func (m *Message) Action(action string, prog int) error {
 func SendMedia(id int64, media tg.InputMediaClass, opts *SendOptions) (*Message, error) {
 	var pText string
 	var entities []tg.MessageEntityClass
-	var inputRep *tg.InputReplyToMessage
+	inputRep := &tg.InputReplyToMessage{}
 	if opts == nil {
 		opts = &SendOptions{}
 	}
@@ -486,7 +482,7 @@ func SendMedia(id int64, media tg.InputMediaClass, opts *SendOptions) (*Message,
 		}
 	}
 	if opts.ReplyTo != 0 {
-		inputRep = &tg.InputReplyToMessage{ReplyToMsgID: opts.ReplyTo}
+		inputRep.ReplyToMsgID = opts.ReplyTo
 	}
 	msg, err := telegram.Context.SendMedia(id, &tg.MessagesSendMediaRequest{
 		Message:     pText,

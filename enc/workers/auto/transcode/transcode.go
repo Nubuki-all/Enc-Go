@@ -57,6 +57,7 @@ func something() { // couldn't find a better name
 			time.Sleep(5 * time.Second)
 			continue
 		}
+		logger.InfoW("Handling queued item", zap.String("Name", entry.Name))
 		thing(entry)
 		db.SaveQueue(telegram.Context)
 	}

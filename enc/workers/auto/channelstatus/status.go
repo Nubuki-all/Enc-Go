@@ -3,6 +3,7 @@ package channelstatus
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"enc/config"
 	"enc/internal/bot"
@@ -90,10 +91,15 @@ var prevMsg string
 
 func autoStat() {
 	ch := make(chan struct{}, 1)
+	var lastWake time.Time
 	bot.Queue.Subscribe(0, ch)
 	for {
 		select {
 		case <-ch:
+			if time.Since(lastWake) < 10*time.Second {
+				continue
+			}
+			lastWake = time.Now()
 		case <-transcode.Einfo.Event:
 		}
 		if bot.Queue.Len() == 0 {
