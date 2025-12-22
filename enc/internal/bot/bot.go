@@ -30,6 +30,7 @@ var (
 	ECancel            map[string]any
 	RSSDictMutex       sync.RWMutex
 	ECallbackDataMutex sync.RWMutex
+	DownloaderMutex    sync.Mutex
 )
 
 var (

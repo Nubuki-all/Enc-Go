@@ -85,7 +85,7 @@ func DownloadLinks() {
 	if s == "" {
 		return
 	}
-	for _, link := range strings.Split(s, ",") {
+	for link := range strings.SplitSeq(s, ",") {
 		link = strings.TrimSpace(link)
 		if link == "" {
 			continue
@@ -172,7 +172,7 @@ func EnsureDirectories() {
 
 func AddOwners() {
 	var s []int64
-	for _, owner := range strings.Fields(config.Conf.Owner) {
+	for owner := range strings.FieldsSeq(config.Conf.Owner) {
 		if id, err := strconv.ParseInt(owner, 10, 64); err == nil {
 			s = append(s, id)
 		} else {
@@ -190,7 +190,7 @@ func AddTempUsers() {
 	var id int64
 	var err error
 	// owners := strings.Fields(config.Conf.Owner)
-	for _, t := range strings.Fields(raw) {
+	for t := range strings.FieldsSeq(raw) {
 		if id, err = strconv.ParseInt(t, 10, 64); err != nil {
 			logger.WarnW("Couldn't Parse temp_user id:- "+t, zap.Error(err))
 			continue

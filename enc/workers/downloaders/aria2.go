@@ -40,6 +40,8 @@ type Aria2Download struct {
 }
 
 func NewAria2Dl(uri, dir, selected string, msg *tele.Message, tInfo *types.TransferInfo) *Aria2Download {
+	bot.DownloaderMutex.Lock()
+	defer bot.DownloaderMutex.Unlock()
 	conf := config.Conf
 	return &Aria2Download{
 		TransferInfo: tInfo,

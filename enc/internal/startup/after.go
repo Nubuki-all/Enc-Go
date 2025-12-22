@@ -70,6 +70,8 @@ func Finalize(ctx context.Context) {
 
 // startRPC launches aria2c in RPC mode, then connects the Go API client
 func startRPC() {
+	bot.DownloaderMutex.Lock()
+	defer bot.DownloaderMutex.Unlock()
 	cmd := exec.Command("aria2c",
 		"--enable-rpc=true",
 		"--rpc-listen-all",
