@@ -98,7 +98,7 @@ func autoStat() {
 		}
 		if bot.Queue.Len() == 0 {
 			editStat("**Currently Resting…😑*")
-			return
+			continue
 		}
 		var msg string
 		start := 0

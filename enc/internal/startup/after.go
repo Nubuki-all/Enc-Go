@@ -21,11 +21,16 @@ import (
 	"enc/internal/bot/entimer"
 	"enc/internal/db"
 	"enc/internal/logger"
+
 	//"enc/utils"
 	"enc/utils/random"
 	"enc/utils/tele"
+
 	//"enc/internal/rss"
 	//"enc/internal/workers"
+	"enc/workers/auto/channelstatus"
+	"enc/workers/auto/rssmonitor"
+	"enc/workers/auto/transcode"
 	"enc/workers/downloaders"
 )
 
@@ -35,12 +40,7 @@ func Finalize(ctx context.Context) {
 		go startRPC()
 		go startQbit()
 	}
-	// 3) Kick off your scheduler and auto‐jobs
-	// rss.Scheduler.Start()
-	// go workers.AutoStatus(ctx)
-	// go workers.AutoTranscode(ctx)
-
-	// 4) Setup OS signal handlers for graceful shutdown
+	rssmonitor.ScheduleRSS(config.Conf.RSSDelay)
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM, syscall.SIGABRT)
 	go func() {
@@ -48,32 +48,23 @@ func Finalize(ctx context.Context) {
 		onTermination(ctx)
 	}()
 
-	// 5) Handle a restart/update invocation from os.Args
+	// handle restart
 	if len(os.Args) == 3 {
 		if err := onRestart(); err != nil {
 			logger.WarnW("onRestart failed", zap.Error(err))
 		}
 	} else {
-		// give processes a moment, then send onStart notifications
 		time.Sleep(1 * time.Second)
 		onStart()
 	}
 
-	// 6) Start the encoding‐pause timer
 	entimer.Timer.Start()
 	AddAllCommands()
 	AddAllHandlers()
 
-	// 7) Reset the encode job state
-	// workers.ResetEncodeJob(true)
-
-	// 8) After a delay, trigger your background \"something\" task
-	//go func() {
-	//	time.Sleep(30 * time.Second)
-	//	workers.Something(ctx)
-	//}()
-
-	// 9) Mark the bot as started
+	// start autos
+	channelstatus.Start()
+	transcode.Start()
 	bot.Started = true
 }
 
