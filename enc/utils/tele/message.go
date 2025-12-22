@@ -507,7 +507,7 @@ func SendMedia(id int64, media tg.InputMediaClass, opts *SendOptions) (*Message,
 func SendMsg(id int64, text string, opts *SendOptions) (*Message, error) {
 	var pText string
 	var entities []tg.MessageEntityClass
-	var inputRep *tg.InputReplyToMessage
+	inputRep := &tg.InputReplyToMessage{}
 	if opts == nil {
 		opts = &SendOptions{}
 	}
@@ -517,7 +517,7 @@ func SendMsg(id int64, text string, opts *SendOptions) (*Message, error) {
 		pText, entities, _ = parser.Parse(text, true)
 	}
 	if opts.ReplyTo != 0 {
-		inputRep = &tg.InputReplyToMessage{ReplyToMsgID: opts.ReplyTo}
+		inputRep.ReplyToMsgID = opts.ReplyTo
 	}
 	msg, err := telegram.Context.SendMessage(id, &tg.MessagesSendMessageRequest{
 		Message:     pText,

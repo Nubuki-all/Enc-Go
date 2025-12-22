@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/mmcdole/gofeed"
+	"go.uber.org/zap"
 
 	"enc/config"
 	"enc/internal/bot"
@@ -274,7 +275,7 @@ func ScheduleRSS(delaySeconds int) {
 		rssMonitorOnce(ctx) // your function
 	}
 	DefaultScheduler = scheduler.New(time.Duration(delaySeconds)*time.Second, job)
-	// use 20s initial delay to match your prior behaviour
+	logger.InfoW("Scheduled RSS Monitor!", zap.Int("Run every", delaySeconds))
 	DefaultScheduler.Start(20 * time.Second)
 }
 
