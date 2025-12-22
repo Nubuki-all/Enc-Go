@@ -12,6 +12,7 @@ import (
 
 	"github.com/mmcdole/gofeed"
 
+	"enc/config"
 	"enc/internal/bot"
 	"enc/internal/bot/types"
 	"enc/internal/db"
@@ -25,7 +26,11 @@ func sendRSS(feedMsg string, chat []types.FeedChat) (*tele.Message, error) {
 	var msg *tele.Message
 	var err error
 	for _, fc := range chat {
-		msg, err = tele.SendMsg(fc.ChatID, feedMsg, &tele.SendOptions{ReplyTo: fc.TopicID})
+		chatID := fc.ChatID
+		if fc.Default {
+			chatID = config.Conf.RSSChat
+		}
+		msg, err = tele.SendMsg(chatID, feedMsg, &tele.SendOptions{ReplyTo: fc.TopicID})
 		if err != nil {
 			logger.Error(err)
 		}

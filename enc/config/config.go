@@ -77,7 +77,7 @@ type Config struct {
 	ReportFailed          bool
 	ReportFailedDL        bool
 	ReportFailedEnc       bool
-	RSSChat               string
+	RSSChat               int64
 	RSSDelay              int
 	RSSDirect             bool
 	SequentialJobs        bool
@@ -266,7 +266,7 @@ func LoadConfig() error {
 		ReportFailed:          viper.GetBool("REPORT_FAILED"),
 		ReportFailedDL:        viper.GetBool("REPORT_FAILED_DL"),
 		ReportFailedEnc:       viper.GetBool("REPORT_FAILED_ENC"),
-		RSSChat:               viper.GetString("RSS_CHAT"),
+		RSSChat:               viper.GetInt64("RSS_CHAT"),
 		RSSDelay:              viper.GetInt("RSS_DELAY"),
 		RSSDirect:             viper.GetBool("RSS_DIRECT"),
 		SequentialJobs:        viper.GetBool("SEQUENTIAL_JOBS"),
