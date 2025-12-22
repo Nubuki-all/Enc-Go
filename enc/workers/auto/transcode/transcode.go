@@ -126,6 +126,11 @@ func thing(entry types.QueueEntry) {
 	}
 	job := &utils.EncodeJob{}
 	jobs := job.PendingInfo()
+	if len(jobs.List) == 0 {
+		logger.Error("transcode started with 0 jobs!")
+		broadcastAndPauseOnError()
+		return
+	}
 	SourceMInfo, _ := utils.PostMediaInfo(download.Path)
 	dlName := filepath.Base(download.Path)
 	go func() {
@@ -199,8 +204,8 @@ func thing(entry types.QueueEntry) {
 			return w.start(args)
 		})
 	}
-	sendSticker(entry, batchItem)
 	_ = g.Wait()
+	sendSticker(entry, batchItem)
 	Einfo.Reset()
 	if batchItem != nil {
 		updatedBatch := batchutils.MarkAsDone(entry.Batch, batchItem.ID)

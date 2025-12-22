@@ -156,7 +156,7 @@ func formatArgs(args, title, episode, season, metaName, dlPath string) string {
 }
 
 func sendBanner(fchannel int64, fmsgID int, fbanner bool) *tele.Message {
-	if fchannel == 0 || config.Conf.NoBanner || fbanner {
+	if fchannel == 0 || config.Conf.NoBanner || !fbanner {
 		return nil
 	}
 	sendOpts := &tele.SendOptions{}
