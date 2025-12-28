@@ -1,6 +1,7 @@
 package startup
 
 import (
+	"cmp"
 	"context"
 	"io"
 	"net/http"
@@ -16,6 +17,7 @@ import (
 	"enc/internal/bot/entimer"
 	"enc/internal/db"
 	"enc/internal/logger"
+
 	"go.uber.org/zap"
 )
 
@@ -26,10 +28,10 @@ func Initialize() {
 	SetupCustomRename()
 	DownloadLinks()
 	SetupFlags()
-	SetupFFmpegParams()
 	EnsureDirectories()
 	AddTempUsers()
 	LoadDB()
+	SetupFFmpegParams()
 	entimer.Timer.Start()
 }
 
@@ -145,11 +147,11 @@ func SetupFlags() {
 }
 
 func SetupFFmpegParams() {
-	bot.FFmpegArgs = config.Conf.FFmpeg
-	bot.FFmpeg2Args = config.Conf.FFmpeg2
-	bot.FFmpeg3Args = config.Conf.FFmpeg3
-	bot.FFmpeg4Args = config.Conf.FFmpeg4
-	bot.MuxArgs = config.Conf.MuxArgs
+	bot.FFmpegArgs = cmp.Or(bot.FFmpegArgs, config.Conf.FFmpeg)
+	bot.FFmpeg2Args = cmp.Or(bot.FFmpeg2Args, config.Conf.FFmpeg2)
+	bot.FFmpeg3Args = cmp.Or(bot.FFmpeg3Args, config.Conf.FFmpeg3)
+	bot.FFmpeg4Args = cmp.Or(bot.FFmpeg4Args, config.Conf.FFmpeg4)
+	bot.MuxArgs = cmp.Or(bot.MuxArgs, config.Conf.MuxArgs)
 }
 
 func EnsureDirectories() {
