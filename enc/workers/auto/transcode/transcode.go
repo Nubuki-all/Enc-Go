@@ -124,7 +124,7 @@ func thing(entry types.QueueEntry) {
 	if Lmsg != nil {
 		_ = Lmsg.Delete()
 	}
-	job := &utils.EncodeJob{}
+	job := utils.NewEncodeJob()
 	jobs := job.PendingInfo()
 	if len(jobs.List) == 0 {
 		logger.Error("transcode started with 0 jobs!")

@@ -55,7 +55,7 @@ func getQueueStatusPreview(start int) string {
 			continue
 		}
 		if i > 6+start {
-			fmt.Fprintf(&sb, "__+%d more…__\n", (len(entries)+1)-1)
+			fmt.Fprintf(&sb, "__+%d more…__\n", len(entries)-i)
 			break
 		}
 		var err error
