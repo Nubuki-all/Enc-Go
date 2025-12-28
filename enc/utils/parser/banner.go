@@ -61,8 +61,14 @@ func FPost(
 
 	// Extract and normalize fields
 	title := parsed.AnimeTitle
-	epi := parsed.EpisodeNumber[0]
-	season := parsed.AnimeSeason[0]
+	epi := ""
+	if len(parsed.EpisodeNumber) > 0 {
+		epi = parsed.EpisodeNumber[0]
+	}
+	season := ""
+	if len(parsed.AnimeSeason) > 0 {
+		season = parsed.AnimeSeason[0]
+	}
 	relGroup := parsed.ReleaseGroup
 	// handle epi logic
 	if epi != "" && !config.Conf.FBanner {
