@@ -120,6 +120,7 @@ func thing(entry types.QueueEntry) {
 		_, _ = bot.Queue.Pop(entry.Name)
 		return
 	}
+	defer download.CleanDownload()
 	downloadTime := utils.TimeFormatter(time.Since(download.Time).Round(time.Second).Seconds())
 	if Lmsg != nil {
 		_ = Lmsg.Delete()
