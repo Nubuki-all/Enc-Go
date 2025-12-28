@@ -420,7 +420,9 @@ func (e *encodeWorker) start(encodeArgs string) error {
 	uploadTime := utils.TimeFormatter(
 		time.Since(upload.Time).Round(time.Second).Seconds(),
 	)
-	_ = Lmsg.Delete()
+	if Lmsg != nil {
+		_ = Lmsg.Delete()
+	}
 	if e.fmsg != nil {
 		go func() {
 			_, _ = e.fmsg.Edit(caption, &tele.EditOptions{Media: upload.TgMedia})

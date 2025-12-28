@@ -4,6 +4,7 @@ package rssmonitor
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -126,6 +127,7 @@ func rssMonitorOnce(ctx context.Context) {
 	}
 	bot.RSSDictMutex.RUnlock()
 
+	client := &http.Client{Timeout: 30 * time.Second}
 	parser := gofeed.NewParser()
 
 	for _, title := range keys {
@@ -140,9 +142,57 @@ func rssMonitorOnce(ctx context.Context) {
 			continue
 		}
 
-		feed, err := parser.ParseURL(data.Link)
-		if err != nil || len(feed.Items) == 0 {
-			logger.Error(err)
+		req, err := http.NewRequest("GET", data.Link, nil)
+		if err != nil {
+			logger.ErrorW(
+				"Request creation error",
+				zap.String("Title", title),
+				zap.Error(err),
+			)
+			continue
+		}
+
+		req.Header.Set(
+			"User-Agent",
+			"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36",
+		)
+
+		resp, err := client.Do(req)
+		if err != nil {
+			logger.ErrorW(
+				"Fetch error",
+				zap.String("Title", title),
+				zap.Error(err),
+			)
+			continue
+		}
+		defer func() { _ = resp.Body.Close() }()
+
+		if resp.StatusCode == http.StatusTooManyRequests {
+			logger.WarnW(
+				"Rate limited! Server says too many requests.",
+				zap.String("Title", title),
+			)
+			allPaused = false
+			continue
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			logger.ErrorW(
+				"Unexpected status",
+				zap.String("Title", title),
+				zap.Int("StatusCode", resp.StatusCode),
+			)
+			return
+		}
+
+		feed, err := parser.Parse(resp.Body)
+		if err != nil {
+			logger.ErrorW("Parse Error", zap.String("Title", title), zap.Error(err))
+			continue
+		}
+		if len(feed.Items) == 0 {
+			logger.ErrorW("No feed items retrieved", zap.String("Title", title))
 			continue
 		}
 
