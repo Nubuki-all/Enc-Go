@@ -67,7 +67,7 @@ func (et *EnTimer) loop() {
 					et.indPause = false
 				}
 			}
-			if et.timeLeft == 0 {
+			if et.timeLeft == 0 && !et.indPause {
 				bot.Paused.Set(state.DefaultPause, false)
 			}
 			et.mu.Unlock()
@@ -95,23 +95,21 @@ func (et *EnTimer) NewTimer(duration int, msgs []*tele.Message) {
 	defer et.mu.Unlock()
 	et.timeLeft = duration
 	et.msgs = msgs
-	if et.indPause || et.timeLeft > 0 {
-		defer bot.Paused.Set(state.DefaultPause, false)
+	if !et.indPause && et.timeLeft == 0 {
+		bot.Paused.Set(state.DefaultPause, true)
 	}
-	bot.Paused.Set(state.DefaultPause, true)
 }
 
 // PauseIndefinitely sets indefinite pause, with optional msgs
 func (et *EnTimer) PauseIndefinitely(msgs []*tele.Message) {
 	et.mu.Lock()
 	defer et.mu.Unlock()
-	if et.indPause || et.timeLeft > 0 {
-		defer bot.Paused.Set(state.DefaultPause, false)
+	if !et.indPause && et.timeLeft == 0 {
+		bot.Paused.Set(state.DefaultPause, true)
 	}
 	et.indPause = true
 	et.timeLeft = 0
 	et.msgs = msgs
-	bot.Paused.Set(state.DefaultPause, true)
 }
 
 // StopTimer stops any countdown and unpauses immediately

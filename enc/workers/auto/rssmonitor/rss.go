@@ -148,6 +148,7 @@ func rssMonitorOnce(ctx context.Context) {
 		} else {
 			lastLink = feed.Items[0].Link
 		}
+		allPaused = false
 		lastTitle := feed.Items[0].Title
 
 		// If no change, continue
@@ -158,8 +159,6 @@ func rssMonitorOnce(ctx context.Context) {
 		if !bot.RSSRanOnce {
 			data.AllowSpam = true
 		}
-
-		allPaused = false
 
 		feedList := []string{}
 		// collect items from newest to older until we hit last_seen
@@ -262,6 +261,7 @@ func ScheduleRSS(delaySeconds int) {
 		rssMonitorOnce(ctx) // your function
 	}
 	DefaultScheduler = scheduler.New(time.Duration(delaySeconds)*time.Second, job)
+	DefaultScheduler.JobTimeout = 0
 	logger.InfoW("Scheduled RSS Monitor!", zap.Int("Run every", delaySeconds))
 	DefaultScheduler.Start(20 * time.Second)
 }
