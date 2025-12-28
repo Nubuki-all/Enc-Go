@@ -48,6 +48,10 @@ func NewYTDl(uri, dir, selected string, msg *tele.Message, tInfo *types.Transfer
 	}
 }
 
+func (dl *YtdlDownload) GetFileName() string {
+	return dl.name
+}
+
 func (dl *YtdlDownload) Start() (err error) {
 	rconf := config.Rconf
 	dlTimeout := rconf.YDLTimeout * time.Second
@@ -202,6 +206,10 @@ func (dl *YtdlDownload) ProgressCallback(update ytdlp.ProgressUpdate) {
 	}
 	txt := msgHead + "\n" + tmp
 	_, _ = dl.msg.EditText(txt)
+}
+
+func (dl *YtdlDownload) AttachMsg(msg *tele.Message) {
+	dl.msg = msg
 }
 
 func (dl *YtdlDownload) Clean() {

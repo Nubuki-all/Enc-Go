@@ -47,6 +47,8 @@ type Downloader struct {
 }
 
 type dlService interface {
+	AttachMsg(msg *tele.Message)
+	GetFileName() string
 	Start() error
 	Clean()
 }
@@ -93,6 +95,7 @@ func (dl *Downloader) Attach(id string, Sender int64) error {
 		return dl.err
 	default:
 	}
+	dl.service.AttachMsg(dl.Msg)
 	dl.ID = id
 	dl.Sender = Sender
 	dl.Register()
@@ -113,43 +116,21 @@ func (dl *Downloader) Start() error {
 		close(dl.Done)
 	}()
 	dl.Path = filepath.Join(dl.Folder, dl.FileName)
-	var err error
+	folder, _ := filepath.Abs(dl.Folder)
 	if dl.InputLoc != nil {
 		dl.service = NewTgDl(dl.InputLoc, dl.Size, dl.Msg, dl.TransferInfo)
-		err = dl.service.Start()
 	} else if dl.Qbit && dl.URI != "" {
-		folder, _ := filepath.Abs(dl.Folder)
-		qbitDl := NewQbtitDl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
-		dl.service = qbitDl
-		err = qbitDl.Start()
-		if err == nil {
-			dl.FileName = qbitDl.name
-		}
+		dl.service = NewQbtitDl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
 	} else if dl.Ytdl && dl.URI != "" {
-		folder, _ := filepath.Abs(dl.Folder)
-		ytDl := NewYTDl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
-		dl.service = ytDl
-		err = ytDl.Start()
-		if err == nil {
-			dl.FileName = ytDl.name
-		}
-
+		dl.service = NewYTDl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
 	} else if dl.URI != "" && utils.IsMegaLink(dl.URI) {
-		folder, _ := filepath.Abs(dl.Folder)
-		megaDl := NewMegaDl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
-		dl.service = megaDl
-		err = megaDl.Start()
-		if err == nil {
-			dl.FileName = filepath.Base(megaDl.Path)
-		}
+		dl.service = NewMegaDl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
 	} else if dl.URI != "" {
-		folder, _ := filepath.Abs(dl.Folder)
-		aria2Dl := NewAria2Dl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
-		dl.service = aria2Dl
-		err = aria2Dl.Start()
-		if err == nil {
-			dl.FileName = aria2Dl.name
-		}
+		dl.service = NewAria2Dl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
+	}
+	err := dl.service.Start()
+	if name := dl.service.GetFileName(); name != "" {
+		dl.FileName = name
 	}
 	if err != nil || dl.IsCancelled { // for downloaders that don't return an err on download cancel
 		dl.err = err
@@ -241,15 +222,15 @@ func (dl *Downloader) ReportStatus() (*tele.Message, error) {
 			if err == nil {
 				userName = user.FirstName
 			}
-			status = fmt.Sprintf("%s by [%s](tg://user?id=%d)", status, userName, cncl)
+			status = fmt.Sprintf("%s by <a href=\"tg://user?id=%d\">%s</a>", status, cncl, userName)
 		}
 		status += "."
 	} else if err = dl.err; err == nil {
 		status = "was completed successfully."
 	} else {
-		status = fmt.Sprintf("failed with error:\n`%s`", err.Error())
+		status = fmt.Sprintf("failed with error:\n<code>%s</code>", err.Error())
 	}
-	text := fmt.Sprintf("Download of `%s` %s", dl.FileName, status)
+	text := fmt.Sprintf("Download of <code>%s</code> %s", dl.FileName, status)
 	msg := dl.Msg
 
 	if bot.ReportFailedDl {
@@ -264,6 +245,6 @@ func (dl *Downloader) ReportStatus() (*tele.Message, error) {
 		}
 	}
 	return msg.Edit(text,
-		&tele.EditOptions{},
+		&tele.EditOptions{HTMLParseMode: true},
 	)
 }

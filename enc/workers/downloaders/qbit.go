@@ -55,6 +55,10 @@ func NewQbtitDl(uri, dir, selected string, msg *tele.Message, tInfo *types.Trans
 	}
 }
 
+func (dl *QbitDownload) GetFileName() string {
+	return dl.name
+}
+
 func (dl *QbitDownload) Start() (err error) {
 	qb, err := getQbitClient(false)
 	if err != nil {
@@ -352,6 +356,10 @@ func (dl *QbitDownload) UpdateCallback(ctx context.Context, tag string) (ok bool
 	}
 	ok = true
 	return ok
+}
+
+func (dl *QbitDownload) AttachMsg(msg *tele.Message) {
+	dl.msg = msg
 }
 
 func (dl *QbitDownload) Clean() {

@@ -55,6 +55,10 @@ func NewAria2Dl(uri, dir, selected string, msg *tele.Message, tInfo *types.Trans
 	}
 }
 
+func (dl *Aria2Download) GetFileName() string {
+	return dl.name
+}
+
 func (dl *Aria2Download) Start() error {
 	if dl.client == nil {
 		return fmt.Errorf("aria2 Client is inactive")
@@ -355,6 +359,10 @@ func (dl *Aria2Download) UpdateCallback(gid string) string {
 		}
 	}
 	return status.GID
+}
+
+func (dl *Aria2Download) AttachMsg(msg *tele.Message) {
+	dl.msg = msg
 }
 
 func (dl *Aria2Download) Clean() {

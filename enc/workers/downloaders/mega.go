@@ -53,6 +53,10 @@ func NewMegaDl(uri, dir, selected string, msg *tele.Message, tInfo *types.Transf
 	}
 }
 
+func (dl *MegaDownload) GetFileName() string {
+	return filepath.Base(dl.Path)
+}
+
 func (dl *MegaDownload) Start() error {
 	if dl.client == nil {
 		return fmt.Errorf("mega Client is inactive")
@@ -338,6 +342,10 @@ func (dl *MegaDownload) Select(files []mega.File) error {
 		dl.uri = dl.uri + "/file/" + fileID
 	}
 	return nil
+}
+
+func (dl *MegaDownload) AttachMsg(msg *tele.Message) {
+	dl.msg = msg
 }
 
 func (dl *MegaDownload) Clean() {

@@ -196,9 +196,9 @@ func FPost(
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf("[%s]", cflag))
 	if title == titleR {
-		b.WriteString(fmt.Sprintf("`%s`", title))
+		b.WriteString(fmt.Sprintf("<code>%s</code>", title))
 	} else {
-		b.WriteString(fmt.Sprintf("**%s** | `%s`", titleR, title))
+		b.WriteString(fmt.Sprintf("<b>%s</b> | <code>%s</code>", titleR, title))
 	}
 	b.WriteString("\n\n")
 	mi := opts.MediaInfoURL
@@ -206,21 +206,21 @@ func FPost(
 		if relGroup == "" {
 			relGroup = "None"
 		}
-		b.WriteString(fmt.Sprintf("**Source:** **[[%s]](%s)**", relGroup, mi))
+		b.WriteString(fmt.Sprintf("<b>Source:</b> <b><a href=\"%s\"> [%s]</a></b>", mi, relGroup))
 		b.WriteString("\n\n")
 	}
 	if genreStr != "" {
-		b.WriteString(fmt.Sprintf("**‣ Genre** : %s\n", genreStr))
+		b.WriteString(fmt.Sprintf("<b>‣ Genre</b> : %s\n", genreStr))
 	}
 	if epi != "" {
-		b.WriteString(fmt.Sprintf("**‣ Episode** : `%s`\n", epi))
+		b.WriteString(fmt.Sprintf("<b>‣ Episode</b> : <code>%s</code>\n", epi))
 	}
 	if season != "" {
-		b.WriteString(fmt.Sprintf("**‣ Season** : `%s`\n", season))
+		b.WriteString(fmt.Sprintf("<b>‣ Season</b> : <code>%s</code>\n", season))
 	}
-	b.WriteString(fmt.Sprintf("**‣ Quality** : `%s`\n", codec))
-	b.WriteString(fmt.Sprintf("**‣ Audio(s)** : `%s`\n", aLangFlags))
-	b.WriteString(fmt.Sprintf("**‣ Subtitle(s)** : `%s`\n", sLangFlags))
+	b.WriteString(fmt.Sprintf("<b>‣ Quality</b> : <code>%s</code>\n", codec))
+	b.WriteString(fmt.Sprintf("<b>‣ Audio(s)</b> : <code>%s</code>\n", aLangFlags))
+	b.WriteString(fmt.Sprintf("<b>‣ Subtitle(s)</b> : <code>%s</code>\n", sLangFlags))
 
 	msg = b.String()
 

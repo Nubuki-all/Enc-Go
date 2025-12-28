@@ -258,7 +258,7 @@ func (e *Encoder) ReportStatus(action string) (err error) {
 	text := action + " "
 	if !e.cmd.ProcessState.Success() {
 		if e.outPath != "" {
-			text += "of " + filepath.Base(e.outPath) + " "
+			text += "of <code>" + filepath.Base(e.outPath) + "</code> "
 		}
 		if e.IsCancelled {
 			text += "was cancelled"
@@ -267,7 +267,7 @@ func (e *Encoder) ReportStatus(action string) (err error) {
 				if user, err := tele.GetUser(e.Canceller); err != nil {
 					name = user.FirstName
 				}
-				text += fmt.Sprintf(" by [%s](tg://user?id=%d).", name, e.Canceller)
+				text += fmt.Sprintf(" by <a href=\"tg://user?id=%d.\">%s</a>", e.Canceller, name)
 			} else {
 				text += "."
 			}
@@ -284,7 +284,11 @@ func (e *Encoder) ReportStatus(action string) (err error) {
 				reportee = config.Rconf.Owners[0]
 				if reportee != e.Msg.ChatID {
 					go func(text string, id int64) {
-						err := tele.SendMessage(id, text)
+						_, err := tele.SendMsg(
+							id,
+							text,
+							&tele.SendOptions{HTMLParseMode: true},
+						)
 						if err != nil {
 							logger.Error(err)
 						}
@@ -318,10 +322,10 @@ func (e *Encoder) ReportStatus(action string) (err error) {
 		}
 	} else {
 		text += "was successful!"
-		text = "**" + text + "**"
+		text = "<b>" + text + "</b>"
 		_, _ = e.Msg.Edit(text, nil)
 		if e.LMsg != nil {
-			_, _ = e.LMsg.Edit(text, nil)
+			_, _ = e.LMsg.Edit(text, &tele.EditOptions{HTMLParseMode: true})
 		}
 		return nil
 	}

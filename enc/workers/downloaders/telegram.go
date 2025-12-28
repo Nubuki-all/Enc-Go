@@ -55,6 +55,10 @@ type progressEvent struct {
 	total int64
 }
 
+func (dl *TgDownload) GetFileName() string {
+	return "" // exists to satisfy an interface
+}
+
 // Start uses a channel-based throttler around dl.ProgressCallback.
 // First event is handled immediately; subsequent events are throttled to `interval`.
 func (dl *TgDownload) Start() error {
@@ -217,4 +221,8 @@ func (dl *TgDownload) Clean() {
 	if err != nil {
 		logger.Error(err)
 	}
+}
+
+func (dl *TgDownload) AttachMsg(msg *tele.Message) {
+	dl.msg = msg
 }
