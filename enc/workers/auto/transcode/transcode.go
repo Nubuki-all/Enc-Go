@@ -164,9 +164,15 @@ func thing(entry types.QueueEntry) {
 		)
 		logger.Info("url: ", url)
 		if txt != url && Bmsg != nil {
-			_, _ = Bmsg.Edit(txt, &tele.EditOptions{Media: &tg.InputMediaPhotoExternal{URL: url}})
+			_, _ = Bmsg.Edit(txt, &tele.EditOptions{
+				HTMLParseMode: true,
+				Media:         &tg.InputMediaPhotoExternal{URL: url},
+			})
 		} else if txt != url {
-			_, _ = tele.SendMedia(fchannel, &tg.InputMediaPhotoExternal{URL: url}, &tele.SendOptions{Caption: txt})
+			_, _ = tele.SendMedia(fchannel, &tg.InputMediaPhotoExternal{URL: url}, &tele.SendOptions{
+				Caption:       txt,
+				HTMLParseMode: true,
+			})
 		}
 
 	}
