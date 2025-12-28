@@ -283,6 +283,10 @@ func (e *encodeWorker) start(encodeArgs string) error {
 		result.FileName = e.dlName
 		result.MediaInfoName = utils.RemoveExt(result.FileName)
 	}
+	_, _ = e.fmsg.Edit(
+		"<b>Awaiting:</b> <code>"+result.FileName+"</code>",
+		&tele.EditOptions{HTMLParseMode: true},
+	)
 	fn := result.MediaInfoName
 	if e.no > 1 && !config.Conf.SequentialJobs {
 		fn += "-" + strconv.Itoa(e.no)
