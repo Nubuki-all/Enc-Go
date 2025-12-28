@@ -17,7 +17,7 @@ import (
 
 const FloodWaitMsg = "FLOOD_WAIT: wait %s for new request #%d"
 
-// SimpleWaiter
+// SimpleWaiter is a simple telegram flood waiter
 type SimpleWaiter struct {
 	clock clock.Clock
 
@@ -25,14 +25,12 @@ type SimpleWaiter struct {
 	maxWait    time.Duration
 }
 
-// NewSimpleWaiter
 func NewSimpleWaiter() *SimpleWaiter {
 	return &SimpleWaiter{
 		clock: clock.System,
 	}
 }
 
-// clone
 func (w *SimpleWaiter) clone() *SimpleWaiter {
 	return &SimpleWaiter{
 		clock:      w.clock,
@@ -41,28 +39,28 @@ func (w *SimpleWaiter) clone() *SimpleWaiter {
 	}
 }
 
-// WithClock
+// WithClock returns a cloned SimpleWaiter with clock
 func (w *SimpleWaiter) WithClock(c clock.Clock) *SimpleWaiter {
 	w = w.clone()
 	w.clock = c
 	return w
 }
 
-// WithMaxRetries
+// WithMaxRetries returns a cloned SimpleWaiter With MaxRetries set
 func (w *SimpleWaiter) WithMaxRetries(m uint) *SimpleWaiter {
 	w = w.clone()
 	w.maxRetries = m
 	return w
 }
 
-// WithMaxWait
+// WithMaxWait returns a cloned SimpleWaiter With maxWait set
 func (w *SimpleWaiter) WithMaxWait(m time.Duration) *SimpleWaiter {
 	w = w.clone()
 	w.maxWait = m
 	return w
 }
 
-// Handle
+// Handle handles floodwait with the specified tg.Invoker
 func (w *SimpleWaiter) Handle(next tg.Invoker) telegram.InvokeFunc {
 	return func(ctx context.Context, input bin.Encoder, output bin.Decoder) error {
 		var t clock.Timer

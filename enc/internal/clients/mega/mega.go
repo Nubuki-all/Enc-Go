@@ -6,17 +6,11 @@ import (
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
-
-	//"crypto/rand"
-	//"crypto/sha512"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-
-	//"io/ioutil"
 	"net/http"
-	//"os"
 	"path/filepath"
 	"sort"
 	"strings"

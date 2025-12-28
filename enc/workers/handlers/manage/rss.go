@@ -174,7 +174,7 @@ func subRss(msg *tele.Message, args string) error {
 	nodirect := pargs["nodirect"].(bool)
 	direct := pargs["direct"].(bool)
 	pause := pargs["pause"].(bool)
-	if cmd != "" && strings.HasPrefix(cmd, "/") {
+	if cmd != "" && !strings.HasPrefix(cmd, "/") {
 		cmd = "/" + cmd
 	}
 	var chats []types.FeedChat

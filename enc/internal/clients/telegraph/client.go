@@ -16,7 +16,7 @@ var (
 	Client  *telegraph.TelegraphClient
 )
 
-// InitTelegraph must be called once (e.g. from main.init()) after config is loaded.
+// Init must be called once
 
 func Init() {
 	Client = telegraph.GetTelegraphClient(&telegraph.ClientOpt{
@@ -27,7 +27,6 @@ func Init() {
 	})
 
 	var err error
-	// Create a single account (Mediainfo) and store it
 	Account, err = Client.CreateAccount("Mediainfo", &telegraph.CreateAccountOpts{
 		AuthorName: config.Rconf.TgpAuthor,
 	})

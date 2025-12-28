@@ -70,8 +70,8 @@ func Finalize(ctx context.Context) {
 
 // startRPC launches aria2c in RPC mode, then connects the Go API client
 func startRPC() {
-	bot.DownloaderMutex.Lock()
-	defer bot.DownloaderMutex.Unlock()
+	bot.DownloaderMutex.RLock()
+	defer bot.DownloaderMutex.RUnlock()
 	cmd := exec.Command("aria2c",
 		"--enable-rpc=true",
 		"--rpc-listen-all",
@@ -110,16 +110,14 @@ func startRPC() {
 	time.Sleep(1 * time.Second)
 	statuses := client.GetDownloads()
 	client.DeleteDownloads(statuses, true, true, true)
-	// if err != nil {
-	// 	logger.ErrorW("aria2 API test cleanup failed", zap.Error(err))
-	// 	return
-	// }
 	bot.Aria2Client = client
 	bot.SAS = true
 }
 
 // startQbit launches two qbittorrent‐nox daemons on different ports
 func startQbit() {
+	bot.DownloaderMutex.RLock()
+	defer bot.DownloaderMutex.RUnlock()
 	// Determine working directory at runtime
 	wd, err := os.Getwd()
 	if err != nil {

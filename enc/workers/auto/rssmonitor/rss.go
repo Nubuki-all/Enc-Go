@@ -3,11 +3,8 @@ package rssmonitor
 
 import (
 	"context"
-	//"errors"
 	"fmt"
-	//"net/http"
 	"strings"
-	//"sync"
 	"time"
 
 	"github.com/mmcdole/gofeed"
@@ -40,7 +37,6 @@ func sendRSS(feedMsg string, chat []types.FeedChat) (*tele.Message, error) {
 }
 
 func fakeEventHandler(event *tele.Message) {
-	// event.Text expected to be "command args..."
 	parts := strings.Fields(event.Raw.Message.Message)
 	if len(parts) == 0 {
 		return
@@ -92,11 +88,10 @@ func matchIncludeExclude(titleLower string, inf [][]string, exf [][]string) bool
 	return true
 }
 
-// rssMonitor performs a single sweep over the Bot.RSSDict similar to the Python coroutine.
+// rssMonitorOnce performs a single sweep over the Bot.RSSDict similar to the Python coroutine.
 func rssMonitorOnce(ctx context.Context) {
-	// guard: check services like _bot.sas/_bot.sqs
 	if !bot.SAS && !bot.SQS {
-		// wait a bit and re-check (like your Python early sleep)
+		// wait a bit and re-check
 		time.Sleep(10 * time.Second)
 		if !bot.SAS && !bot.SQS {
 			logger.WarnW("RSS scheduler paused since a download service is not responding…")
@@ -105,17 +100,13 @@ func rssMonitorOnce(ctx context.Context) {
 		}
 	}
 
-	// Replace Go's logger call with your logging function
-	// if conf.RSS_CHAT == 0 { ... }  -> you must check that externally
+	// if conf.RSS_CHAT == 0 { ... }  -> TODO
 	if len(bot.RSSDict) == 0 {
 		// no feeds -> pause scheduler
-		// scheduler.pause()
 		PauseRSS()
 		return
 	}
 
-	// mark paused status (you may want to hold this in bot state)
-	// pause(status="rss")
 	var err error
 	err = utils.Pause(2, true)
 	if err != nil {
@@ -124,7 +115,6 @@ func rssMonitorOnce(ctx context.Context) {
 
 	allPaused := true
 
-	// iterate a snapshot of keys to avoid holding lock while processing network IO
 	bot.RSSDictMutex.RLock()
 	keys := make([]string, 0, len(bot.RSSDict))
 	for k := range bot.RSSDict {
@@ -139,7 +129,6 @@ func rssMonitorOnce(ctx context.Context) {
 		data := bot.RSSDict[title]
 		bot.RSSDictMutex.RUnlock()
 
-		// skip if feed removed concurrently
 		if data == nil {
 			continue
 		}
@@ -147,21 +136,12 @@ func rssMonitorOnce(ctx context.Context) {
 			continue
 		}
 
-		// fetch feed HTML
-		// feedHTML, err := getHTML(ctx, data.Link)
-		// if err != nil {
-		// 	// log error and continue
-		// 	// log(fmt.Sprintf("%v - Feed Name: %s - Feed Link: %s", err, title, data.Link))
-		// 	continue
-		// }
-
 		feed, err := parser.ParseURL(data.Link)
 		if err != nil || len(feed.Items) == 0 {
 			logger.Error(err)
 			continue
 		}
 
-		// determine last link similar to Python: try Items[0].Links[1] else Item[0].Link
 		lastLink := ""
 		if len(feed.Items[0].Links) > 1 {
 			lastLink = feed.Items[0].Links[1]
@@ -195,6 +175,15 @@ func rssMonitorOnce(ctx context.Context) {
 
 			// stop if we've reached last seen
 			if itemURL == data.LastFeed || itemTitle == data.LastTitle {
+				break
+			}
+
+			if items := len(feed.Items); idx == (items - 1) {
+				logger.WarnW("Rss Monitor: Reached Max index no for this feed. Maybe you need to use less RSS_DELAY to not miss some torrents.", zap.String("Title", title), zap.Int("Items", items))
+				if !data.AllowSpam {
+					logger.Warn("Due to spam prevention, RSS feed has been reset.")
+					feedList = make([]string, 0)
+				}
 				break
 			}
 
@@ -244,12 +233,11 @@ func rssMonitorOnce(ctx context.Context) {
 			d.LastFeed = lastLink
 			d.LastTitle = lastTitle
 		}
-		db.SaveRSSDict(ctx)
 		bot.RSSDictMutex.Unlock()
+		db.SaveRSSDict(ctx)
 
 		// log feed info
-		logger.InfoW(fmt.Sprintf("Feed Name: %s", title))
-		logger.InfoW(fmt.Sprintf("Last item: %s", lastLink))
+		logger.InfoW("Feed Updated!", zap.String("Feed Name", title), zap.String("Last item", lastLink))
 	}
 
 	err = utils.RmPause(2, 0)
@@ -269,7 +257,6 @@ func rssMonitorOnce(ctx context.Context) {
 var DefaultScheduler *scheduler.Scheduler
 
 // ScheduleRSS creates and starts the scheduler with given delay (seconds).
-// Call ScheduleRSS(delaySeconds) from your main program.
 func ScheduleRSS(delaySeconds int) {
 	job := func(ctx context.Context) {
 		rssMonitorOnce(ctx) // your function
