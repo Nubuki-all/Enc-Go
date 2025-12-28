@@ -110,6 +110,8 @@ func thing(entry types.QueueEntry) {
 
 	ID := strconv.FormatInt(msg.ChatID, 10) + ":" + strconv.Itoa(msg.ID)
 	if download.Background {
+		download.Msg = msg
+		download.LCMsg = Lmsg
 		err = download.Attach(ID, entry.Sender)
 	} else {
 		download.Init(ID, entry.Sender)
@@ -152,7 +154,7 @@ func thing(entry types.QueueEntry) {
 		Einfo.Current = pName
 	}
 	if !config.Conf.NoBanner {
-		txt, url, _ := parser.FPost(
+		url, txt, _ := parser.FPost(
 			dlName,
 			&parser.FPostOptions{
 				Path:         download.Path,
