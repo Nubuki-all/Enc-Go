@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"html"
+	"path/filepath"
 	"strings"
 )
 
@@ -94,6 +95,9 @@ func ParseMediaInfoTextToHTML(input string) string {
 			} else {
 				key, val = strings.TrimSpace(line[:firstColon]), strings.TrimSpace(line[firstColon+1:])
 			}
+		}
+		if strings.EqualFold(currentSection, "General") && strings.EqualFold(key, "Complete name") {
+			val = filepath.Base(val)
 		}
 
 		// Append KV to the current track.

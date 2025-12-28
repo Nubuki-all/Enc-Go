@@ -429,11 +429,13 @@ func (e *encodeWorker) start(encodeArgs string) error {
 			_, _ = e.fmsg.Edit(caption, &tele.EditOptions{Media: upload.TgMedia})
 		}()
 	}
-	text := "**Source:** `[" + cmp.Or(r.ReleaseGroup, "None") + "]`"
+	text := "<b>Source:</b> <code>[" + cmp.Or(r.ReleaseGroup, "None") + "]</code>"
 	if e.mInfo != "" {
-		text += "\n\nMediainfo: **[(Source)](" + e.mInfo + ")**"
+		text += "\n\nMediainfo: <b><a href=\"" + e.mInfo + "\">(Source)</a></b>"
 	}
-	miMsg, _ := sMsg.Reply(text, &tele.ReplyOptions{DisableWebPreview: true})
+	miMsg, _ := sMsg.Reply(text,
+		&tele.ReplyOptions{DisableWebPreview: true, HTMLParseMode: true},
+	)
 	orgSize := utils.SizeOf(e.dlPath)
 	outSize := utils.SizeOf(outPath)
 	var muxText string

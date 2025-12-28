@@ -58,6 +58,7 @@ func (e *EncodeInfo) Reset() {
 	e.BatchID = ""
 	e.Event = make(chan struct{}, 1)
 	e.Workers = 0
+	e.WorkersCodec = make([]string, 0)
 }
 
 // EncodeJob manages which ffmpeg scripts to run
