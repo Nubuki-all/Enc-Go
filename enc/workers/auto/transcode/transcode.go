@@ -284,7 +284,7 @@ func (e *encodeWorker) start(encodeArgs string) error {
 		result.MediaInfoName = utils.RemoveExt(result.FileName)
 	}
 	_, _ = e.fmsg.Edit(
-		"<b>Awaiting:</b> <code>"+result.FileName+"</code>",
+		"<b>Awaiting:</b> <code>"+result.FileName+"</code> <code>("+codec+")</code>",
 		&tele.EditOptions{HTMLParseMode: true},
 	)
 	fn := result.MediaInfoName
