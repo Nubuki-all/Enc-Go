@@ -133,12 +133,14 @@ func thing(entry types.QueueEntry) {
 	}
 	SourceMInfo, _ := utils.PostMediaInfo(download.Path)
 	dlName := filepath.Base(download.Path)
-	go func() {
-		err := uploaders.DumpDl(download.Path, dlName, entry.Sender, msg)
-		if err != nil {
-			logger.WarnW("[Dumper]: An error occured", zap.Error(err))
-		}
-	}()
+	if entry.URI != "" && config.Conf.DumpLeech {
+		go func() {
+			err := uploaders.DumpDl(download.Path, dlName, entry.Sender, msg)
+			if err != nil {
+				logger.WarnW("[Dumper]: An error occured", zap.Error(err))
+			}
+		}()
+	}
 	Einfo.Current = dlName
 	pName, err := parser.QParse(dlName, &parser.ParseOptions{
 		Direct:         entry.ForceName,

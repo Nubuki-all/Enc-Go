@@ -124,7 +124,7 @@ func (e *Encoder) Callback(dlPath, enPath, text string) {
 		),
 	}
 	if e.Job != nil && e.Job.PendingInfo().Count > 1 {
-		addMsg = fmt.Sprintf("**%s Job**\n└`%s`\n\n", e.Job.Pending(), utils.GetCodec(e.Job.Pending()))
+		addMsg = fmt.Sprintf("**%s Job**\n└`%s`\n\n", e.Job.PendingPos(), utils.GetCodec(e.Job.Pending()))
 		buttonRows = append(buttonRows,
 			markup.Row(
 				markup.Callback(

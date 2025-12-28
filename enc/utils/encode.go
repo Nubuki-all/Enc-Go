@@ -93,9 +93,9 @@ func (e *EncodeJob) Reset(force bool) {
 	}
 	e.ins = jobs{
 		F1: true,
-		F2: bot.FFmpeg2Args == "",
-		F3: bot.FFmpeg3Args == "",
-		F4: bot.FFmpeg4Args == "",
+		F2: bot.FFmpeg2Args != "",
+		F3: bot.FFmpeg3Args != "",
+		F4: bot.FFmpeg4Args != "",
 	}
 	e.Busy = false
 	e.ID = nil
