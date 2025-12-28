@@ -15,64 +15,52 @@ const (
 
 // PauseState tracks multiple independent pause flags
 type PauseState struct {
-	Default atomic.Bool
-	DL      atomic.Bool
-	RSS     atomic.Bool
-	defC    atomic.Int64
-	dlC     atomic.Int64
-	rssC    atomic.Int64
+	defC atomic.Int64
+	dlC  atomic.Int64
+	rssC atomic.Int64
 }
 
-// Set turns the given pause type on or off
 func (ps *PauseState) Set(pt PauseType, on bool) {
+	var addr *atomic.Int64
 	switch pt {
 	case DefaultPause:
-		if on {
-			ps.defC.Add(1)
-		} else if l := ps.defC.Load(); l != 0 {
-			ps.defC.Add(-1)
-			if l > 1 {
-				return
-			}
-		}
-		ps.Default.Store(on)
+		addr = &ps.defC
 	case DLPause:
-		if on {
-			ps.dlC.Add(1)
-		} else if l := ps.dlC.Load(); l != 0 {
-			ps.dlC.Add(-1)
-			if l > 1 {
-				return
-			}
-		}
-		ps.DL.Store(on)
+		addr = &ps.dlC
 	case RSSPause:
-		if on {
-			ps.rssC.Add(1)
-		} else if l := ps.rssC.Load(); l != 0 {
-			ps.rssC.Add(-1)
-			if l > 1 {
+		addr = &ps.rssC
+	default:
+		return
+	}
+
+	if on {
+		addr.Add(1)
+	} else {
+		// Use a loop to ensure we never decrement below zero
+		for {
+			current := addr.Load()
+			if current <= 0 {
+				return
+			}
+			if addr.CompareAndSwap(current, current-1) {
 				return
 			}
 		}
-		ps.RSS.Store(on)
 	}
 }
 
-// Get returns whether the given pause type is on
 func (ps *PauseState) Get(pt PauseType) bool {
 	switch pt {
 	case DefaultPause:
-		return ps.Default.Load()
+		return ps.defC.Load() > 0
 	case DLPause:
-		return ps.DL.Load()
+		return ps.dlC.Load() > 0
 	case RSSPause:
-		return ps.RSS.Load()
+		return ps.rssC.Load() > 0
 	}
 	return false
 }
 
-// Any returns true if *any* pause flag is set
 func (ps *PauseState) Any() bool {
-	return ps.Default.Load() || ps.DL.Load() || ps.RSS.Load()
+	return ps.defC.Load() > 0 || ps.dlC.Load() > 0 || ps.rssC.Load() > 0
 }

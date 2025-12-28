@@ -91,6 +91,7 @@ var prevMsg string
 
 func autoStat() {
 	ch := make(chan struct{}, 1)
+	ch <- struct{}{} // force update on startup
 	var lastWake time.Time
 	bot.Queue.Subscribe(0, ch)
 	for {
