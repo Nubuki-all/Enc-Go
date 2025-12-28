@@ -183,8 +183,18 @@ func (e *Encoder) Callback(dlPath, enPath, text string) {
 			)
 		}
 		_, _ = e.LMsg.Edit(
-			fmt.Sprintf("**User:**\n└[%s](tg://user?id={%d})\n\n%s**Currently Encoding:**\n└`%s`\n\n**Source File:**\n└`%s`", sender, e.Sender, addMsg, out, filepath.Base(dlPath)),
-			&tele.EditOptions{ReplyMarkup: markup.InlineKeyboard(buttonRows...)},
+			fmt.Sprintf(
+				"<b>User:</b>\n└<a href=\"tg://user?id=%d\"%s</a>\n\n%s<b>Currently Encoding:</b>\n└<code>%s</code>\n\n<b>Source File:</b>\n└<code>%s</code>",
+				e.Sender,
+				sender,
+				addMsg,
+				out,
+				filepath.Base(dlPath),
+			),
+			&tele.EditOptions{
+				HTMLParseMode: true,
+				ReplyMarkup:   markup.InlineKeyboard(buttonRows...),
+			},
 		)
 	}
 }
@@ -275,9 +285,9 @@ func (e *Encoder) ReportStatus(action string) (err error) {
 			return err
 		} else {
 			text += "Failed. \nLogs available below."
-			_, _ = e.Msg.Edit(text, nil)
+			_, _ = e.Msg.Edit(text, &tele.EditOptions{HTMLParseMode: true})
 			if e.LMsg != nil {
-				_, _ = e.LMsg.Edit(text, nil)
+				_, _ = e.LMsg.Edit(text, &tele.EditOptions{HTMLParseMode: true})
 			}
 			var reportee int64
 			if bot.ReportFailedEnc {
