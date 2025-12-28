@@ -26,10 +26,12 @@ func sendRSS(feedMsg string, chat []types.FeedChat) (*tele.Message, error) {
 	var err error
 	for _, fc := range chat {
 		chatID := fc.ChatID
+		topicID := fc.TopicID
 		if fc.Default {
 			chatID = config.Conf.RSSChat
+			topicID = config.Conf.RSSChatTopic
 		}
-		msg, err = tele.SendMsg(chatID, feedMsg, &tele.SendOptions{ReplyTo: fc.TopicID})
+		msg, err = tele.SendMsg(chatID, feedMsg, &tele.SendOptions{ReplyTo: topicID})
 		if err != nil {
 			logger.Error(err)
 		}
