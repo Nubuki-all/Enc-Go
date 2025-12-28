@@ -100,7 +100,11 @@ func rssMonitorOnce(ctx context.Context) {
 		}
 	}
 
-	// if conf.RSS_CHAT == 0 { ... }  -> TODO
+	if config.Conf.RSSChat == 0 {
+		logger.InfoW("RSS_CHAT not added! Shutting down rss scheduler...")
+		StopRSS()
+		return
+	}
 	if len(bot.RSSDict) == 0 {
 		// no feeds -> pause scheduler
 		PauseRSS()

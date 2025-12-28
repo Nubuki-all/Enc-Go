@@ -291,10 +291,17 @@ func (m *Message) Forward(chatID int64) (*Message, error) {
 		updates = r.GetUpdates()
 	}
 	update := updates[0]
+	var rawMsg tg.MessageClass
 	switch update := update.(type) {
 	case *tg.UpdateNewMessage:
-		m := update.GetMessage()
-		msg = gp.ConstructMessage(m)
+		rawMsg = update.GetMessage()
+	case *tg.UpdateNewChannelMessage:
+		rawMsg = update.GetMessage()
+	}
+	if rawMsg != nil {
+		msg = gp.ConstructMessage(rawMsg)
+	} else {
+		return nil, fmt.Errorf("failed to extract message from updates")
 	}
 	return NewMsgFromGotg(msg, m.Ctx, chatID, m.Ctx.Self.ID), nil
 }
