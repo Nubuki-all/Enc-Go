@@ -192,6 +192,7 @@ func thing(entry types.QueueEntry) {
 	if config.Conf.CacheDL {
 		cacheNextDownload(bot.Queue.AsSlice(), batchItem)
 	}
+	_ = msg.Delete()
 	g, ctx := errgroup.WithContext(context.Background())
 	for i, args := range jobs.List {
 		w := encodeWorker{
