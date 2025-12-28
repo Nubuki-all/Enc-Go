@@ -19,7 +19,7 @@ require (
 	github.com/lrstanley/go-ytdlp v1.2.7
 	github.com/mattn/go-sqlite3 v1.14.32
 	github.com/mmcdole/gofeed v1.3.0
-	github.com/schollz/progressbar/v3 v3.18.0
+	github.com/schollz/progressbar/v3 v3.19.0
 	github.com/shirou/gopsutil/v3 v3.24.5
 	github.com/siku2/arigo v0.3.0
 	github.com/spf13/pflag v1.0.10
@@ -59,7 +59,7 @@ require (
 	github.com/cenkalti/hub v1.0.2 // indirect
 	github.com/cenkalti/rpc2 v1.0.5 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/cloudflare/circl v1.6.1 // indirect
+	github.com/cloudflare/circl v1.6.2 // indirect
 	github.com/coder/websocket v1.8.14 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
 	github.com/fatih/color v1.18.0 // indirect
@@ -125,9 +125,9 @@ require (
 	golang.org/x/tools v0.40.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gorm.io/driver/mysql v1.6.0 // indirect
-	modernc.org/libc v1.67.1 // indirect
+	modernc.org/libc v1.67.2 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/sqlite v1.41.0 // indirect
+	modernc.org/sqlite v1.42.1 // indirect
 	rsc.io/qr v0.2.0 // indirect
 )
