@@ -125,17 +125,17 @@ func (ul *Uploader) ReportStatus() (*tele.Message, error) {
 			if err == nil {
 				userName = user.FirstName
 			}
-			status = fmt.Sprintf("%s by [%s](tg://user?id=%d)", status, userName, cncl)
+			status = fmt.Sprintf("%s by <a href=\"tg://user?id=%d\">%s</a>", status, cncl, userName)
 		}
 		status += "."
 	} else if err = ul.err; err == nil {
 		status = "was completed successfully."
 	} else {
-		status = fmt.Sprintf("failed with error:\n`%s`", err.Error())
+		status = fmt.Sprintf("failed with error:\n<code>%s</code>", err.Error())
 	}
-	text := fmt.Sprintf("Upload of `%s` %s", ul.FileName, status)
+	text := fmt.Sprintf("Upload of <code>%s</code> %s", ul.FileName, status)
 
 	return ul.Msg.Edit(text,
-		&tele.EditOptions{},
+		&tele.EditOptions{HTMLParseMode: true},
 	)
 }
