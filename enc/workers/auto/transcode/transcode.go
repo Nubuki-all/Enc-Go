@@ -213,8 +213,8 @@ func thing(entry types.QueueEntry) {
 			return w.start(args)
 		})
 	}
-	_ = g.Wait()
 	sendSticker(entry, batchItem)
+	_ = g.Wait()
 	Einfo.Reset()
 	if batchItem != nil {
 		updatedBatch := batchutils.MarkAsDone(entry.Batch, batchItem.ID)
