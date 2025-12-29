@@ -101,37 +101,21 @@ func (e *Encoder) Callback(dlPath, enPath, text string) {
 	var addMsg string
 	buttonRows := []tg.KeyboardButtonRow{
 		markup.Row(
-			markup.Callback(
-				"ℹ️",
-				[]byte(CallbackData+"0"),
-			),
+			markup.Callback("ℹ️", []byte(CallbackData+"0")),
 		),
 		markup.Row(
-			markup.Callback(
-				"Progress",
-				[]byte(SCallbackData+"0"),
-			),
-			markup.Callback(
-				"Server-info",
-				[]byte(SCallbackData+"1"),
-			),
+			markup.Callback("Progress", []byte(SCallbackData+"0")),
+			markup.Callback("Server-info", []byte(SCallbackData+"1")),
 		),
 		markup.Row(
-			markup.Callback(
-				"Cancel",
-				[]byte(CancelCallbackData+"0"),
-			),
+			markup.Callback("Cancel", []byte(CancelCallbackData+"0")),
 		),
 	}
 	if e.Job != nil && e.Job.PendingInfo().Count > 1 {
 		addMsg = fmt.Sprintf("**%s Job**\n└`%s`\n\n", e.Job.PendingPos(), utils.GetCodec(e.Job.Pending()))
-		buttonRows = append(buttonRows,
-			markup.Row(
-				markup.Callback(
-					"❌ all jobs",
-					[]byte("j"+CancelCallbackData+"0"),
-				),
-			),
+		buttonRows[len(buttonRows)-1] = markup.Row(
+			markup.Callback("Cancel", []byte(CancelCallbackData+"0")),
+			markup.Callback("❌ all jobs", []byte("j"+CancelCallbackData+"0")),
 		)
 	}
 

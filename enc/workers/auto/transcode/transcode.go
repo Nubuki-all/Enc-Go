@@ -248,6 +248,7 @@ func (e *encodeWorker) start(encodeArgs string) error {
 	defer func() {
 		remove(Einfo.WorkersCodec, codec)
 		Einfo.Workers--
+		e.job.Done()
 	}()
 	workerMutex.Lock()
 	defer workerMutex.Unlock()

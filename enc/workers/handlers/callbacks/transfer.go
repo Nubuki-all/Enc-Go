@@ -93,9 +93,9 @@ func DLStat(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) err
 		}
 	}
 	ans := fmt.Sprintf(
-		"➡️:\n%s\n\nSize:\n%d\n\nElapsed time:\n%s",
+		"➡️:\n%s\n\nSize:\n%s\n\nElapsed time:\n%s",
 		fn,
-		sz,
+		utils.HBS(sz),
 		utils.TimeFormatter(time.Since(info.Time).Round(time.Second).Seconds()),
 	)
 	_ = query.Answer(ans, true)
