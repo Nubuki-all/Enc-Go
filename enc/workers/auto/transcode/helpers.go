@@ -237,6 +237,10 @@ func cacheNextDownload(entries []types.QueueEntry, batchItem *types.BatchItem) {
 			return
 		case source.Ytdl:
 			download.Ytdl = true
+		default:
+			if !utils.IsMegaLink(entry.URI) {
+				return
+			}
 		}
 		download.Go()
 		downloaders.CachedDL[entry.Name+"++"+batchItem.ID] = download
