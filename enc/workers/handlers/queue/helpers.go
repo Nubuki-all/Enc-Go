@@ -192,7 +192,7 @@ func Select(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 				fmt.Fprintf(&errs, "%s - \"%s\" is not a video. Cannot Select.\n", item.ID, item.FileName)
 			} else {
 				fmt.Fprintf(&msg, "%s - `%s`\n    **Changed from:** '%s'\n\n", item.ID, item.FileName, batchutils.StatusMap[item.Status])
-				item.Status = 1
+				item.Status = 0
 			}
 			items = append(items, item)
 		}
