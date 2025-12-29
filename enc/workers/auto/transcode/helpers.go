@@ -234,7 +234,7 @@ func cacheNextDownload(entries []types.QueueEntry, batchItem *types.BatchItem) {
 		}
 		switch entry.Source.Source {
 		case source.Qbit:
-			download.Qbit = true
+			return
 		case source.Ytdl:
 			download.Ytdl = true
 		}

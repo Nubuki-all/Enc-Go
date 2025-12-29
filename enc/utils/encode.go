@@ -105,34 +105,39 @@ func (e *EncodeJob) Reset(force bool) {
 }
 
 // fileExists checks if the given path exists and is a file
-//func fileExists(path string) bool {
+//func1 fileExists(path string) bool {
 //	info, err := os.Stat(path)
 //	if err != nil {
 //		return false
 //	}
-//	return !info.IsDir()
+//	r1eturn !info.IsDir()
 //}
+
+type PendingData struct {
+	Args string
+	Pos  string
+}
 
 // PendingInfo returns how many ffmpeg scripts are pending
 type PendingInfo struct {
 	Count int
-	List  []string
+	List  []PendingData
 }
 
 // PendingInfo returns both count and list of pending ffmpeg files
 func (e *EncodeJob) PendingInfo() PendingInfo {
-	pending := []string{}
+	pending := []PendingData{}
 	if e.ins.F1 {
-		pending = append(pending, bot.FFmpegArgs)
+		pending = append(pending, PendingData{bot.FFmpegArgs, "1st"})
 	}
 	if e.ins.F2 {
-		pending = append(pending, bot.FFmpeg2Args)
+		pending = append(pending, PendingData{bot.FFmpeg2Args, "2nd"})
 	}
 	if e.ins.F3 {
-		pending = append(pending, bot.FFmpeg3Args)
+		pending = append(pending, PendingData{bot.FFmpeg3Args, "3rd"})
 	}
 	if e.ins.F4 {
-		pending = append(pending, bot.FFmpeg4Args)
+		pending = append(pending, PendingData{bot.FFmpeg4Args, "4th"})
 	}
 	return PendingInfo{Count: len(pending), List: pending}
 }

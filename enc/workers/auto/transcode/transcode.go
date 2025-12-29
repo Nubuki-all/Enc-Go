@@ -195,7 +195,7 @@ func thing(entry types.QueueEntry) {
 	}
 	_ = msg.Delete()
 	g, ctx := errgroup.WithContext(context.Background())
-	for i, args := range jobs.List {
+	for i, data := range jobs.List {
 		w := encodeWorker{
 			ctx:       ctx,
 			job:       job,
@@ -207,12 +207,13 @@ func thing(entry types.QueueEntry) {
 			logChat:   LogChat,
 			mInfo:     SourceMInfo,
 			dTime:     downloadTime,
+			pos:       data.Pos,
 		}
 		if fchannel != 0 {
 			w.fmsg, _ = tele.SendMsg(fchannel, "file #"+strconv.Itoa(i), nil)
 		}
 		g.Go(func() error {
-			return w.start(args)
+			return w.start(data.Args)
 		})
 	}
 	sendSticker(entry, batchItem)
@@ -238,6 +239,7 @@ type encodeWorker struct {
 	dlPath    string
 	mInfo     string
 	dTime     string
+	pos       string
 	no        int
 }
 
@@ -332,6 +334,8 @@ func (e *encodeWorker) start(encodeArgs string) error {
 		Sender:    e.item.Sender,
 		ID:        id,
 		ExtraPath: thumbPath,
+		JobCodec:  codec,
+		JobPos:    e.pos,
 	}
 	if err := encode.Start(cmd); err != nil {
 		_, _ = sMsg.Edit("Error while Starting encode: "+err.Error(), nil)

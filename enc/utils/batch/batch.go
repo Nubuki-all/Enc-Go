@@ -61,12 +61,17 @@ func GetPendingItems(items []types.BatchItem, except string, limit int, anilist 
 			pending = append(pending, item.FileName)
 		}
 	}
-	if len(pending) == 0 {
+
+	length := len(pending)
+	if length == 0 {
 		return nil, 0
 	}
-	length := len(pending)
-	list := make([]string, limit)
-	for _, n := range pending[:limit] {
+
+	// Initialize with 0 length and the smaller of limit/length as capacity
+	list := make([]string, 0, min(limit, length))
+
+	// Use min to prevent out-of-bounds slicing
+	for _, n := range pending[:min(limit, length)] {
 		q, e := parser.QParse(n, &parser.ParseOptions{
 			UseAniList:     anilist,
 			FilterOverride: filter,
@@ -80,7 +85,8 @@ func GetPendingItems(items []types.BatchItem, except string, limit int, anilist 
 		}
 		list = append(list, q)
 	}
-	return list, length - limit
+
+	return list, max(0, length-limit)
 }
 
 var StatusMap = map[int]string{

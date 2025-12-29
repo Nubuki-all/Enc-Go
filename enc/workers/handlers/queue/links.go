@@ -26,7 +26,7 @@ import (
 const (
 	invalidMsg = "`Invalid torrent/direct link`"
 	noURIMsg   = "`uhm you need to reply to or send command alongside a uri/direct link`"
-	NoBatchmsg = "`Link has multiple files.\nTo add all files to queue use -b or -s <id> to choose a single file`"
+	NoBatchmsg = "`Link has multiple files.`\n`To add all files to queue use -b or -s <id> to choose a single file`"
 )
 
 func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {

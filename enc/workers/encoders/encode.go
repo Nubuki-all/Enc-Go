@@ -3,6 +3,7 @@ package encoders
 
 import (
 	"bytes"
+	"cmp"
 	"context"
 	"fmt"
 	"os"
@@ -41,6 +42,8 @@ type Encoder struct {
 	Process   *os.ProcessState
 	process   *types.Process
 	Job       *utils.EncodeJob
+	JobPos    string
+	JobCodec  string
 	ExtraPath string
 	ETime     time.Time
 	STime     time.Time
@@ -114,7 +117,11 @@ func (e *Encoder) Callback(dlPath, enPath, text string) {
 		),
 	}
 	if e.Job != nil && e.Job.PendingInfo().Count > 1 {
-		addMsg = fmt.Sprintf("**%s Job**\n└`%s`\n\n", e.Job.PendingPos(), utils.GetCodec(e.Job.Pending()))
+		addMsg = fmt.Sprintf(
+			"**%s Job**\n└`%s`\n\n",
+			cmp.Or(e.JobPos, e.Job.PendingPos()),
+			cmp.Or(e.JobCodec, utils.GetCodec(e.Job.Pending())),
+		)
 		buttonRows[len(buttonRows)-1] = markup.Row(
 			markup.Callback("Cancel", []byte(CancelCallbackData+"0")),
 			markup.Callback("❌ all jobs", []byte("j"+CancelCallbackData+"0")),

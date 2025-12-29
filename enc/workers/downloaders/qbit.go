@@ -3,6 +3,7 @@ package downloaders
 import (
 	"context"
 	"fmt"
+
 	//"io"
 	"math"
 	"path/filepath"
@@ -367,7 +368,12 @@ func (dl *QbitDownload) Clean() {
 		logger.WarnW("Qbittorrent Dl: Calling Clean on a download that exited early")
 		return
 	}
-	ctx := dl.msg.Ctx
+	var ctx context.Context
+	if dl.msg != nil {
+		ctx = dl.msg.Ctx
+	} else {
+		ctx = context.Background()
+	}
 	qb := dl.client
 	err := qb.DeleteTagsCtx(ctx, []string{dl.tag})
 	if err != nil {
