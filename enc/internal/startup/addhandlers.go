@@ -106,12 +106,13 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		"ql":  EventHandlerWithArgs(queue.AddTorrent),
 		"yl":  EventHandlerWithArgs(queue.AddWithYtdl),
 		"add": EventHandlerWithArgs(queue.AddVideo),
-		// Manage
-		"queue":  EventHandlerWithArgs(queue.ListQueue),
-		"batch":  EventHandlerWithArgs(queue.EditBatch),
-		"clear":  EventHandlerWithArgs(queue.ClearQueue),
-		"editq":  EventHandlerWithArgs(queue.EditQueue),
-		"select": EventHandlerWithArgs(queue.Select),
+		// Manage:
+		"queue":     EventHandlerWithArgs(queue.ListQueue),
+		"batch":     EventHandlerWithArgs(queue.EditBatch),
+		"clear":     EventHandlerWithArgs(queue.ClearQueue),
+		"editq":     EventHandlerWithArgs(queue.EditQueue),
+		"select":    EventHandlerWithArgs(queue.Select),
+		"cancelall": EventHandlerWithArgs(manage.CancelProcesses),
 	}
 
 	for cmd, handler := range cmdHandlers {
