@@ -104,7 +104,7 @@ func autoStat() {
 		case <-transcode.Einfo.Event:
 		}
 		if bot.Queue.Len() == 0 {
-			editStat("**Currently Resting…😑*")
+			editStat("**Currently Resting…😑**")
 			continue
 		}
 		var msg string
