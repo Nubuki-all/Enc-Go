@@ -109,7 +109,6 @@ func thing(entry types.QueueEntry) {
 	}
 
 	ID := strconv.FormatInt(msg.ChatID, 10) + ":" + strconv.Itoa(msg.ID)
-	download.DlInfo = true
 	if download.Background {
 		err = download.Attach(ID, entry.Sender)
 	} else {

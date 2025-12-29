@@ -141,8 +141,8 @@ func AddCBHandlers(dispatch dispatcher.Dispatcher) {
 		// Tranfer Handlers
 		downloaders.CallbackData:  CallbackEventHandler(callbacks.CancelDownload),
 		downloaders.CallbackDataB: CallbackEventHandler(callbacks.RevertView),
-		downloaders.CallbackDataI: CallbackEventHandler(callbacks.DLStat),
-		downloaders.CallbackDataM: CallbackEventHandler(callbacks.ViewDlInfo),
+		downloaders.CallbackDataM: CallbackEventHandler(callbacks.DLStat),
+		downloaders.CallbackDataI: CallbackEventHandler(callbacks.ViewDlInfo),
 		uploaders.CallbackData:    CallbackEventHandler(callbacks.CancelUpload),
 
 		// Encode Handlers

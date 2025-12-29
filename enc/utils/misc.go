@@ -21,6 +21,7 @@ import (
 	"enc/config"
 	"enc/internal/bot"
 	"enc/internal/bot/types"
+	"enc/internal/logger"
 
 	"github.com/5rahim/tanuki"
 )
@@ -641,69 +642,30 @@ func niceCodecName(raw string) string {
 	}
 }
 
+func StructToMap(data any) (map[string]any, error) {
+	result := make(map[string]any)
+	bytes, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal(bytes, &result)
+	return result, err
+}
+
 func VideoInfo(fileName string) (out string) {
 	if fileName == "" {
 		return
 	}
 	p := tanuki.Parse(fileName, tanuki.DefaultOptions)
 	out = "**Video/file information:**\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-	var o strings.Builder
-	if v := p.FileName; v != "" {
-		fmt.Fprintf(&o, "**File Name:** `%s`\n", v)
+	pMap, err := StructToMap(p)
+	if err != nil {
+		logger.Error(err)
+		return "<b>An Error Occured.</b>"
 	}
-	if v := p.AnimeTitle; v != "" {
-		fmt.Fprintf(&o, "**Title:** `%s`\n", v)
+	var sb strings.Builder
+	for k, v := range pMap {
+		fmt.Fprintf(&sb, "<b>%s:</b> <code>%v</code>\n", k, v)
 	}
-	if v := p.AnimeSeason; len(v) != 0 {
-		fmt.Fprintf(&o, "**Season(s):** `%s`\n", strings.Join(v, ", "))
-	}
-	if v := p.EpisodeNumber; len(v) != 0 {
-		fmt.Fprintf(&o, "**Episode(s):** `%s`\n", strings.Join(v, ", "))
-	}
-	if v := p.EpisodeTitle; v != "" {
-		fmt.Fprintf(&o, "**Episode Title:** `%s`\n", v)
-	}
-	if v := p.AnimeYear; v != "" {
-		fmt.Fprintf(&o, "**Year:** `%s`\n", v)
-	}
-	if v := p.VolumeNumber; len(v) != 0 {
-		fmt.Fprintf(&o, "**Volume Number(s):** `%s`\n", strings.Join(v, ", "))
-	}
-	if v := p.AnimeType; len(v) != 0 {
-		fmt.Fprintf(&o, "**Type:** `%s`\n", strings.Join(v, ", "))
-	}
-	if v := p.ReleaseGroup; v != "" {
-		fmt.Fprintf(&o, "**Release Group:** `%s`\n", v)
-	}
-	if v := p.ReleaseInformation; len(v) != 0 {
-		fmt.Fprintf(&o, "**Release Information(s):** `%s`\n", strings.Join(v, ", "))
-	}
-	if v := p.ReleaseVersion; len(v) != 0 {
-		fmt.Fprintf(&o, "**Release Version:** `%s`\n", strings.Join(v, ", "))
-	}
-	if v := p.Source; len(v) != 0 {
-		fmt.Fprintf(&o, "**Source:** `%s`\n", strings.Join(v, ", "))
-	}
-	if v := p.AudioTerm; len(v) != 0 {
-		fmt.Fprintf(&o, "**Audio Terms(s):** `%s`\n", strings.Join(v, ", "))
-	}
-	if v := p.VideoTerm; len(v) != 0 {
-		fmt.Fprintf(&o, "**Video Term(s):** `%s`\n", strings.Join(v, ", "))
-	}
-	if v := p.Subtitles; len(v) != 0 {
-		fmt.Fprintf(&o, "**Subtitle(s):** `%s`\n", strings.Join(v, ", "))
-	}
-	if v := p.VideoResolution; v != "" {
-		fmt.Fprintf(&o, "**Video Resolution:** `%s`\n", v)
-	}
-	if v := p.FileChecksum; v != "" {
-		fmt.Fprintf(&o, "**File Checksum:** `%s`\n", v)
-	}
-	if v := p.Language; len(v) != 0 {
-		fmt.Fprintf(&o, "**Language(s):** `%s`\n", strings.Join(v, ", "))
-	}
-	if v := p.Other; len(v) != 0 {
-		fmt.Fprintf(&o, "**Others(v):** `%s`\n", strings.Join(v, ", "))
-	}
-	return out + o.String()
+	return out + sb.String()
 }
