@@ -195,7 +195,7 @@ func addLink(msg *tele.Message, args string) error {
 		qSource.Select = selected
 	} else if batch && dlInfo.Count > 1 {
 		forcedFileName = ""
-		batches = batchutils.GetBatches(dlInfo.Files, mega)
+		batches = batchutils.GetBatches(dlInfo.Files, mega, y)
 		if !y {
 			batchPreview := batchutils.BatchPreview{
 				Bmsg:      msg,
@@ -405,7 +405,7 @@ func addTorrent(msg *tele.Message, args string) error {
 		qSource.Select = selected
 	} else if batch && dlInfo.Count > 1 {
 		forcedFileName = ""
-		batches = batchutils.GetBatches(dlInfo.Files, true)
+		batches = batchutils.GetBatches(dlInfo.Files, true, y)
 		if !y {
 			batchPreview := batchutils.BatchPreview{
 				Bmsg:      msg,
@@ -595,7 +595,6 @@ func addWithYtdl(msg *tele.Message, args string) error {
 	}
 
 	dlInfo := downloaders.GetYdlInfo(link)
-	var mega bool
 	if dlInfo.Error != nil {
 		_, _ = msg.ReplyText("**Error:** " + dlInfo.Error.Error())
 		return nil
@@ -614,7 +613,7 @@ func addWithYtdl(msg *tele.Message, args string) error {
 		qSource.Select = selected
 	} else if batch && dlInfo.Count > 1 {
 		forcedFileName = ""
-		batches = batchutils.GetBatches(dlInfo.Files, mega)
+		batches = batchutils.GetBatches(dlInfo.Files, true, y)
 		if !y {
 			batchPreview := batchutils.BatchPreview{
 				Bmsg:      msg,
