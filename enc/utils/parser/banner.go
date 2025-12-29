@@ -103,7 +103,11 @@ func FPost(
 	if opts.Fcodec != "" {
 		codec = opts.Fcodec
 	} else {
-		codec = utils.GetCodecs(opts.Job.PendingInfo().List)
+		args := []string{}
+		for _, data := range opts.Job.PendingInfo().List {
+			args = append(args, data.Args)
+		}
+		codec = utils.GetCodecs(args)
 	}
 
 	// Try to fetch anilist info, similar to the inner try/except
