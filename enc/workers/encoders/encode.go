@@ -267,7 +267,7 @@ func (e *Encoder) ReportStatus(action string) (err error) {
 			} else {
 				text += "."
 			}
-			_, err := e.Msg.Edit(text, nil)
+			_, err := e.Msg.Edit(text, &tele.EditOptions{HTMLParseMode: true})
 			return err
 		} else {
 			text += "Failed. \nLogs available below."
