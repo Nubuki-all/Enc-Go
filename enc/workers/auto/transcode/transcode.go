@@ -121,7 +121,7 @@ func thing(entry types.QueueEntry) {
 		return
 	}
 	defer download.CleanDownload()
-	downloadTime := utils.TimeFormatter(time.Since(download.Time).Round(time.Second).Seconds())
+	downloadTime := utils.TimeFormatter(cmp.Or(download.CompletedTime, time.Since(download.Time).Round(time.Second).Seconds()))
 	if Lmsg != nil {
 		_ = Lmsg.Delete()
 	}
@@ -246,7 +246,7 @@ func (e *encodeWorker) start(encodeArgs string) error {
 	Einfo.WorkersCodec = append(Einfo.WorkersCodec, codec)
 	Einfo.Workers++
 	defer func() {
-		remove(Einfo.WorkersCodec, codec)
+		Einfo.WorkersCodec = remove(Einfo.WorkersCodec, codec)
 		Einfo.Workers--
 		e.job.Done()
 	}()

@@ -317,7 +317,7 @@ func (e *Encoder) ReportStatus(action string) (err error) {
 	} else {
 		text += "was successful!"
 		text = "<b>" + text + "</b>"
-		_, _ = e.Msg.Edit(text, nil)
+		_, _ = e.Msg.Edit(text, &tele.EditOptions{HTMLParseMode: true})
 		if e.LMsg != nil {
 			_, _ = e.LMsg.Edit(text, &tele.EditOptions{HTMLParseMode: true})
 		}

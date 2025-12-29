@@ -41,6 +41,7 @@ type Downloader struct {
 	Qbit          bool
 	Ytdl          bool
 	Background    bool
+	CompletedTime float64
 	err           error
 	cleaned       bool
 	pauseOnDLInfo bool
@@ -129,6 +130,9 @@ func (dl *Downloader) Start() error {
 		dl.service = NewAria2Dl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
 	}
 	err := dl.service.Start()
+	if err != nil && !dl.PauseProgress && dl.Background {
+		dl.CompletedTime = time.Since(dl.Time).Round(time.Second).Seconds()
+	}
 	if name := dl.service.GetFileName(); name != "" {
 		dl.FileName = name
 	}

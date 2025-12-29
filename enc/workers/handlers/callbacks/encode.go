@@ -73,7 +73,7 @@ func EncodeInfo(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery)
 		next1, next2 = getNext()
 	}
 	if next1 != "" {
-		ans = fmt.Sprintf("\n\nNext up:\n%s%s\n\nRemains:- %d", next1, next2, length)
+		ans = fmt.Sprintf("\n\nNext up:\n%s\n%s\n\nRemains:- %d", next1, next2, length)
 	}
 	ans = cmp.Or(ans, "Wow such emptiness 🐱")
 	return query.Answer(ans, true)
