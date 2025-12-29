@@ -657,7 +657,7 @@ func VideoInfo(fileName string) (out string) {
 		return
 	}
 	p := tanuki.Parse(fileName, tanuki.DefaultOptions)
-	out = "**Video/file information:**\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+	out = "<b>Video/file information:</b>\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
 	pMap, err := StructToMap(p)
 	if err != nil {
 		logger.Error(err)
