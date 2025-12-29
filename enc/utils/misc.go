@@ -389,21 +389,29 @@ func GetCodecs(slices []string) string {
 }
 
 // GetCodec extracts codec tags from an ffmpeg output file.
+
 func GetCodec(str string) string {
-	tags := map[string]string{
-		"360":       "360p",
-		"480":       "480p",
-		"720":       "720p",
-		"1080":      "1080p",
-		"x264":      "AVC",
-		"x265":      "HEVC",
-		"libsvtav1": "AV1",
-		"svt_av1":   "AV1",
+	// Define tags in a slice of structs to guarantee search order
+	tags := []struct {
+		key   string
+		value string
+	}{
+		// Resolution tags
+		{"360", "360p"},
+		{"480", "480p"},
+		{"720", "720p"},
+		{"1080", "1080p"},
+		// Codec tags
+		{"x264", "AVC"},
+		{"x265", "HEVC"},
+		{"libsvtav1", "AV1"},
+		{"svt_av1", "AV1"},
 	}
+
 	var out []string
-	for k, v := range tags {
-		if strings.Contains(str, k) {
-			out = append(out, "["+v+"]")
+	for _, tag := range tags {
+		if strings.Contains(str, tag.key) {
+			out = append(out, "["+tag.value+"]")
 		}
 	}
 	return strings.Join(out, " ")

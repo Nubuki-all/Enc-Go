@@ -1,11 +1,9 @@
 // Package types contain bot specific inteenal types
 package types
 
-import "os"
-
 type CallbackInfo struct {
 	*TransferInfo
-	Process     *os.Process
+	Process     *Process
 	DlPath      string
 	OutPath     string
 	ReturnFlags string

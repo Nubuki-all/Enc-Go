@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"syscall"
 	"time"
 
 	"enc/config"
@@ -38,7 +39,7 @@ type Encoder struct {
 	LMsg      *tele.Message
 	cmd       *exec.Cmd
 	Process   *os.ProcessState
-	process   *os.Process
+	process   *types.Process
 	Job       *utils.EncodeJob
 	ExtraPath string
 	ETime     time.Time
@@ -65,6 +66,7 @@ func (e *Encoder) Start(cmdline string) error {
 		cmd = exec.CommandContext(e.Context, "cmd", "/C", cmdline)
 	} else {
 		cmd = exec.CommandContext(e.Context, "sh", "-c", cmdline)
+		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	}
 	e.outBuf = &bytes.Buffer{}
 	e.errBuf = &bytes.Buffer{}
@@ -75,7 +77,7 @@ func (e *Encoder) Start(cmdline string) error {
 		return err
 	}
 	e.cmd = cmd
-	e.process = cmd.Process
+	e.process = types.NewProcess(cmd.Process)
 	e.TransferInfo = &types.TransferInfo{}
 	e.exe = strings.Split(cmdline, " ")[0]
 	return nil
