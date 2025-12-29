@@ -211,10 +211,13 @@ func sendSticker(entry types.QueueEntry, batchItem *types.BatchItem) {
 			return
 		}
 	}
-	_, _ = tele.SendStickerByFileID(
+	_, err := tele.SendStickerByFileID(
 		config.Conf.FChannel,
 		sticker,
 	)
+	if err != nil {
+		logger.Error(err)
+	}
 }
 
 func cacheNextDownload(entries []types.QueueEntry, batchItem *types.BatchItem) {

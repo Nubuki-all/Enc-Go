@@ -86,7 +86,7 @@ func DLStat(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) err
 			Version:        entry.Version,
 			Path:           dlp,
 		})
-		if err != nil {
+		if err == nil {
 			fn = p
 		} else {
 			logger.WarnW("parser returned an error", zap.Error(err))

@@ -96,6 +96,13 @@ func (dl *Downloader) Attach(id string, Sender int64) error {
 		return dl.err
 	default:
 	}
+	dl.Msg, _ = dl.Msg.Edit(
+		"<code>Waiting for download handler…</code>",
+		&tele.EditOptions{
+			HTMLParseMode: true,
+			ReplyMarkup:   dl.GenButtons(),
+		},
+	)
 	dl.service.AttachMsg(dl.Msg)
 	dl.ID = id
 	dl.Sender = Sender
