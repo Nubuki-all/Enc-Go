@@ -218,7 +218,7 @@ func AddWithYtdl(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 				qSource.Select = selected
 			} else if batch && dlInfo.Count > 1 {
 				forcedFileName = ""
-				batches = batchutils.GetBatches(dlInfo.Files, false)
+				batches = batchutils.GetBatches(dlInfo.Files, false, y)
 			}
 			if bot.Queue.Find(dlInfo.Name) {
 				if !allowDup {
@@ -259,7 +259,6 @@ func AddWithYtdl(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 		return nil
 	}
 	dlInfo := downloaders.GetYdlInfo(link)
-	var mega bool
 	if dlInfo.Error != nil {
 		_, _ = msg.ReplyText("**Error:** " + dlInfo.Error.Error())
 		return nil
@@ -278,7 +277,7 @@ func AddWithYtdl(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 		qSource.Select = selected
 	} else if batch && dlInfo.Count > 1 {
 		forcedFileName = ""
-		batches = batchutils.GetBatches(dlInfo.Files, mega)
+		batches = batchutils.GetBatches(dlInfo.Files, true, y)
 		if !y {
 			batchPreview := batchutils.BatchPreview{
 				Bmsg:      msg,

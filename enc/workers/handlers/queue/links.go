@@ -242,7 +242,7 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 				qSource.Select = selected
 			} else if batch && dlInfo.Count > 1 {
 				forcedFileName = ""
-				batches = batchutils.GetBatches(dlInfo.Files, mega)
+				batches = batchutils.GetBatches(dlInfo.Files, mega, y)
 			} else if !utils.IsVideoFile(dlInfo.Name) {
 				_, _ = pMsg.ReplyText(fmt.Sprintf("File with name: %s is not a Video", dlInfo.Name))
 				continue
@@ -324,7 +324,7 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		qSource.Select = selected
 	} else if batch && dlInfo.Count > 1 {
 		forcedFileName = ""
-		batches = batchutils.GetBatches(dlInfo.Files, mega)
+		batches = batchutils.GetBatches(dlInfo.Files, mega, y)
 		if !y {
 			batchPreview := batchutils.BatchPreview{
 				Bmsg:      msg,

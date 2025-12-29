@@ -222,7 +222,7 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 				qSource.Select = selected
 			} else if batch && dlInfo.Count > 1 {
 				forcedFileName = ""
-				batches = batchutils.GetBatches(dlInfo.Files, true)
+				batches = batchutils.GetBatches(dlInfo.Files, true, y)
 			} else if !utils.IsVideoFile(dlInfo.Name) {
 				_, _ = pMsg.ReplyText(fmt.Sprintf("File with name: %s is not a Video", dlInfo.Name))
 				continue
@@ -291,7 +291,7 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		qSource.Select = selected
 	} else if batch && dlInfo.Count > 1 {
 		forcedFileName = ""
-		batches = batchutils.GetBatches(dlInfo.Files, true)
+		batches = batchutils.GetBatches(dlInfo.Files, true, y)
 		if !y {
 			batchPreview := batchutils.BatchPreview{
 				Bmsg:      msg,

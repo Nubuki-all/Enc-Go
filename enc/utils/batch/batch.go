@@ -25,7 +25,7 @@ import (
 
 const CallbackData = "preview"
 
-func GetBatches(files []string, zeroID bool) (items []types.BatchItem) {
+func GetBatches(files []string, zeroID bool, selectAll bool) (items []types.BatchItem) {
 	id := 0
 	if !zeroID {
 		id += 1
@@ -33,7 +33,9 @@ func GetBatches(files []string, zeroID bool) (items []types.BatchItem) {
 	for _, name := range files {
 		item := types.BatchItem{FileName: filepath.Base(name), ID: strconv.Itoa(id)}
 		if !utils.IsVideoFile(name) {
-			item.Status = 2
+			item.Status = 3
+		} else if selectAll {
+			item.Status = 1
 		}
 		items = append(items, item)
 		id += 1
