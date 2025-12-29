@@ -352,18 +352,21 @@ func GetNextBatchItem(batch []types.BatchItem) *types.BatchItem {
 	return nil
 }
 
-func MarkAsDone(batch []types.BatchItem, id string) (uBatch []types.BatchItem) {
+func MarkAsDone(batch []types.BatchItem, id string) []types.BatchItem {
 	if len(batch) == 0 {
-		return
+		return batch
 	}
+
 	slices.SortFunc(batch, func(a, b types.BatchItem) int {
 		return strings.Compare(a.FileName, b.FileName)
 	})
-	for _, item := range batch {
-		if item.ID == id {
-			item.Status = 2
+
+	for i := range batch {
+		if batch[i].ID == id {
+			batch[i].Status = 2
+			break
 		}
-		uBatch = append(uBatch, item)
 	}
-	return
+
+	return batch
 }
