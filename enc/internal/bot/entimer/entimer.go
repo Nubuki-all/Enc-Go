@@ -93,11 +93,11 @@ func (et *EnTimer) loop() {
 func (et *EnTimer) NewTimer(duration int, msgs []*tele.Message) {
 	et.mu.Lock()
 	defer et.mu.Unlock()
-	et.timeLeft = duration
-	et.msgs = msgs
 	if !et.indPause && et.timeLeft == 0 {
 		bot.Paused.Set(state.DefaultPause, true)
 	}
+	et.timeLeft = duration
+	et.msgs = msgs
 }
 
 // PauseIndefinitely sets indefinite pause, with optional msgs
