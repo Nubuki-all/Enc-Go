@@ -313,7 +313,7 @@ func (e *encodeWorker) start(encodeArgs string) error {
 	}
 	r := parser.DynamicThumb(
 		e.ctx,
-		e.item.Name,
+		e.dlName,
 		thumbPath,
 		(e.item.AniList && e.item.ForceName == ""),
 		e.item.Filter,
@@ -355,7 +355,7 @@ func (e *encodeWorker) start(encodeArgs string) error {
 	var mux *encoders.Encoder
 	if bot.MuxArgs != "" {
 		result2, err := parser.ParseName(
-			e.item.Name,
+			e.dlName,
 			&parser.ParseOptions{
 				Direct:         e.item.ForceName,
 				UseAniList:     e.item.AniList,
@@ -407,7 +407,7 @@ func (e *encodeWorker) start(encodeArgs string) error {
 		Encoder:    config.Conf.Encoder,
 		Filter:     e.item.Filter,
 	}
-	caption, err := parser.CustCap(e.item.Name, cOptipns)
+	caption, err := parser.CustCap(e.dlName, cOptipns)
 	if err != nil {
 		caption = fmt.Sprintf("`%s`", filepath.Base(outPath))
 	}
