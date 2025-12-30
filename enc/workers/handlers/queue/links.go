@@ -327,11 +327,12 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		batches = batchutils.GetBatches(dlInfo.Files, mega, y)
 		if !y {
 			batchPreview := batchutils.BatchPreview{
-				Bmsg:      msg,
-				Version:   version,
-				Filter:    filter,
-				Items:     batches,
-				Previewer: msg.SenderID,
+				Bmsg:       msg,
+				Version:    version,
+				Filter:     filter,
+				Items:      batches,
+				Previewer:  msg.SenderID,
+				UseAniList: !dAnilist,
 			}
 			batches, err = batchPreview.Start(true)
 			if err != nil {

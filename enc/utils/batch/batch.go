@@ -101,6 +101,7 @@ var StatusMap = map[int]string{
 type BatchPreview struct {
 	msg         *tele.Message
 	Bmsg        *tele.Message
+	UseAniList  bool
 	Version     string
 	Filter      *types.FilterData
 	Items       []types.BatchItem
@@ -184,7 +185,7 @@ func (bp *BatchPreview) Update() (err error) {
 		name := item.FileName
 		if bp.parse && item.Status != 3 {
 			name, err = parser.QParse(name, &parser.ParseOptions{
-				FilterOverride: bp.Filter, Version: bp.Version,
+				FilterOverride: bp.Filter, UseAniList: bp.UseAniList, Version: bp.Version,
 			})
 			if err != nil {
 				logger.WarnW("Error parsing item", zap.Error(err))

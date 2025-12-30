@@ -374,11 +374,12 @@ func EditBatch(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 		return nil
 	}
 	previewBatch := batchutils.BatchPreview{
-		Bmsg:      msg,
-		Version:   entry.Version,
-		Filter:    entry.Filter,
-		Items:     entry.Batch,
-		Previewer: msg.SenderID,
+		Bmsg:       msg,
+		Version:    entry.Version,
+		Filter:     entry.Filter,
+		Items:      entry.Batch,
+		Previewer:  msg.SenderID,
+		UseAniList: entry.AniList,
 	}
 	items, err := previewBatch.Start(true)
 	if err != nil {

@@ -294,11 +294,12 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		batches = batchutils.GetBatches(dlInfo.Files, true, y)
 		if !y {
 			batchPreview := batchutils.BatchPreview{
-				Bmsg:      msg,
-				Version:   version,
-				Filter:    filter,
-				Items:     batches,
-				Previewer: msg.SenderID,
+				Bmsg:       msg,
+				Version:    version,
+				Filter:     filter,
+				Items:      batches,
+				Previewer:  msg.SenderID,
+				UseAniList: !dAnilist,
 			}
 			batches, err = batchPreview.Start(true)
 			if err != nil {
