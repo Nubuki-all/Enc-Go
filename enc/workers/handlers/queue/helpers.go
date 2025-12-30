@@ -122,97 +122,93 @@ func Select(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		)
 		return nil
 	}
+
 	preview.Mutex.Lock()
 	defer preview.Mutex.Unlock()
-	var items []types.BatchItem
+
 	var errs strings.Builder
 	var txt string
+
+	// Handle Enable
 	if enable != "" {
 		h := "**Selected:**\n"
-		var enableList []string
 		var msg strings.Builder
-		if enableList = utils.Range2StringSlice(enable); len(enableList) == 0 {
-			sep := " "
-			if strings.Contains(enable, ",") {
-				sep = ","
-			}
-			for idx := range strings.SplitSeq(enable, sep) {
-				idx = strings.TrimSpace(idx)
-				i, err := strconv.Atoi(idx)
-				if err != nil || i < 0 {
-					errs.WriteString(idx + " - is not a Valid number.\n")
-					continue
+		enableList := getIDList(enable, &errs)
+
+		// Modify in-place using index
+		for i := range preview.Items {
+			if slices.Contains(enableList, preview.Items[i].ID) {
+				if preview.Items[i].Status == 3 {
+					fmt.Fprintf(&errs, "%s - \"%s\" is not a video. Cannot Select.\n", preview.Items[i].ID, preview.Items[i].FileName)
+				} else {
+					fmt.Fprintf(&msg, "%s - `%s`\n    **Changed from:** '%s'\n\n", preview.Items[i].ID, preview.Items[i].FileName, batchutils.StatusMap[preview.Items[i].Status])
+					preview.Items[i].Status = 1
 				}
-				enableList = append(enableList, idx)
 			}
-		}
-		for _, item := range preview.Items {
-			if !slices.Contains(enableList, item.ID) {
-				items = append(items, item)
-				continue
-			}
-			if item.Status == 3 {
-				fmt.Fprintf(&errs, "%s - \"%s\" is not a video. Cannot Select.\n", item.ID, item.FileName)
-			} else {
-				fmt.Fprintf(&msg, "%s - `%s`\n    **Changed from:** '%s'\n\n", item.ID, item.FileName, batchutils.StatusMap[item.Status])
-				item.Status = 1
-			}
-			items = append(items, item)
 		}
 		if msg.Len() != 0 {
-			txt += h
-			txt += msg.String() + "\n"
+			txt += h + msg.String() + "\n"
 		}
 	}
+
+	// Handle Disable
 	if disable != "" {
 		h := "**Deselected:**\n"
-		var disableList []string
 		var msg strings.Builder
-		if disableList = utils.Range2StringSlice(disable); len(disableList) == 0 {
-			sep := " "
-			if strings.Contains(disable, ",") {
-				sep = ","
-			}
-			for idx := range strings.SplitSeq(disable, sep) {
-				idx = strings.TrimSpace(idx)
-				i, err := strconv.Atoi(idx)
-				if err != nil || i < 0 {
-					errs.WriteString(idx + " - is not a Valid number.\n")
-					continue
+		disableList := getIDList(disable, &errs)
+
+		// Modify in-place using index
+		for i := range preview.Items {
+			if slices.Contains(disableList, preview.Items[i].ID) {
+				if preview.Items[i].Status == 3 {
+					fmt.Fprintf(&errs, "%s - \"%s\" is not a video. Cannot Select.\n", preview.Items[i].ID, preview.Items[i].FileName)
+				} else {
+					fmt.Fprintf(&msg, "%s - `%s`\n    **Changed from:** '%s'\n\n", preview.Items[i].ID, preview.Items[i].FileName, batchutils.StatusMap[preview.Items[i].Status])
+					preview.Items[i].Status = 0
 				}
-				disableList = append(disableList, idx)
 			}
-		}
-		for _, item := range preview.Items {
-			if !slices.Contains(disableList, item.ID) {
-				items = append(items, item)
-				continue
-			}
-			if item.Status == 3 {
-				fmt.Fprintf(&errs, "%s - \"%s\" is not a video. Cannot Select.\n", item.ID, item.FileName)
-			} else {
-				fmt.Fprintf(&msg, "%s - `%s`\n    **Changed from:** '%s'\n\n", item.ID, item.FileName, batchutils.StatusMap[item.Status])
-				item.Status = 0
-			}
-			items = append(items, item)
 		}
 		if msg.Len() != 0 {
-			txt += h
-			txt += msg.String()
+			txt += h + msg.String()
 		}
 	}
+
+	// Finalize
 	if len(txt) != 0 {
-		txt += "\n**Errors:**\n" + errs.String()
+		if errs.Len() > 0 {
+			txt += "\n**Errors:**\n" + errs.String()
+		}
 		for _, stxt := range utils.SplitText(txt, "\n", false) {
 			_, _ = msg.Reply(stxt, &tele.ReplyOptions{SleepDelete: 10})
 		}
-		preview.Items = items
 		_ = preview.Update()
-	} else {
-		txt = "**Errors:**\n" + errs.String()
-		_, _ = msg.Reply(txt, &tele.ReplyOptions{SleepDelete: 10})
+	} else if errs.Len() > 0 {
+		_, _ = msg.Reply("**Errors:**\n"+errs.String(), &tele.ReplyOptions{SleepDelete: 10})
 	}
 	return nil
+}
+
+func getIDList(input string, errs *strings.Builder) []string {
+	list := utils.Range2StringSlice(input)
+	if len(list) > 0 {
+		return list
+	}
+	sep := " "
+	if strings.Contains(input, ",") {
+		sep = ","
+	}
+	for idx := range strings.SplitSeq(input, sep) {
+		idx = strings.TrimSpace(idx)
+		if idx == "" {
+			continue
+		}
+		if _, err := strconv.Atoi(idx); err != nil {
+			errs.WriteString(idx + " - is not a Valid number.\n")
+			continue
+		}
+		list = append(list, idx)
+	}
+	return list
 }
 
 // PreviewQueue an exported function that calls previewQueue mostly because i was too lazy to refactor its usage
