@@ -176,13 +176,14 @@ func sendBanner(fchannel int64, fmsgID int, fbanner bool) *tele.Message {
 }
 
 func NextBatchItem(items []types.BatchItem, except string) *types.BatchItem {
-	for i, item := range items {
-		if item.ID == except {
-			items = append(items[:1], items[i+1:]...)
+	tempItems := slices.Clone(items)
+	for i := range tempItems {
+		if tempItems[i].ID == except {
+			tempItems = append(tempItems[:i], tempItems[i+1:]...)
 			break
 		}
 	}
-	return batchutils.GetNextBatchItem(items)
+	return batchutils.GetNextBatchItem(tempItems)
 }
 
 func sendSticker(entry types.QueueEntry, batchItem *types.BatchItem) {
@@ -191,7 +192,7 @@ func sendSticker(entry types.QueueEntry, batchItem *types.BatchItem) {
 		return
 	}
 	if len(entry.Batch) > 0 {
-		next := NextBatchItem(slices.Clone(entry.Batch), batchItem.ID)
+		next := NextBatchItem(entry.Batch, batchItem.ID)
 		if next == nil {
 			return
 		}
