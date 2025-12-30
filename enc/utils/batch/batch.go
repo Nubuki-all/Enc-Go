@@ -342,13 +342,15 @@ func GetNextBatchItem(batch []types.BatchItem) *types.BatchItem {
 	if len(batch) == 0 {
 		return nil
 	}
-	// sort the batch alphabetically (ascending)
+	// Sort the batch alphabetically
 	slices.SortFunc(batch, func(a, b types.BatchItem) int {
 		return strings.Compare(a.FileName, b.FileName)
 	})
-	for _, item := range batch {
-		if item.Status == 1 {
-			return &item
+
+	for i := range batch {
+		if batch[i].Status == 1 {
+			// Return the address of the actual slice element
+			return &batch[i]
 		}
 	}
 	return nil
