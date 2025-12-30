@@ -70,9 +70,6 @@ func thing(entry types.QueueEntry) {
 		_, _ = bot.Queue.Pop(entry.Name)
 		return
 	}
-	if batchItem != nil {
-		Einfo.BatchID = batchItem.ID
-	}
 	fchannel := config.Conf.FChannel
 	fmsgID := config.Conf.FChannelStat
 	fBanner := config.Conf.FBanner
@@ -151,6 +148,9 @@ func thing(entry types.QueueEntry) {
 	})
 	if err == nil {
 		Einfo.Current = pName
+	}
+	if batchItem != nil {
+		Einfo.BatchID = batchItem.ID
 	}
 	if !config.Conf.NoBanner {
 		url, txt, _ := parser.FPost(
