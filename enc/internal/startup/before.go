@@ -29,6 +29,7 @@ func Initialize() {
 	DownloadLinks()
 	SetupFlags()
 	EnsureDirectories()
+	CleanDirectories()
 	AddTempUsers()
 	LoadDB()
 	SetupFFmpegParams()
@@ -172,6 +173,24 @@ func EnsureDirectories() {
 	}
 }
 
+func CleanDirectories() {
+	c := config.Conf
+	dirs := []string{
+		// c.DownloadDir,
+		c.DumpDir,
+		c.EncodeDir,
+		c.MuxDir,
+		c.MediaInfoDir,
+		c.TempDir,
+		// c.AltDownloadDir,
+	}
+	for _, d := range dirs {
+		if err := removeContents(d); err != nil {
+			logger.WarnW("Could not clean dir", zap.String("dir", d), zap.Error(err))
+		}
+	}
+}
+
 func AddOwners() {
 	var s []int64
 	for owner := range strings.FieldsSeq(config.Conf.Owner) {
@@ -244,4 +263,23 @@ func LoadDB() {
 	db.LoadRenameFilters(db.FilterCol)
 
 	logger.InfoW("startup: State loaded from mongodb database")
+}
+
+func removeContents(dir string) error {
+	d, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = d.Close() }()
+	names, err := d.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+	for _, name := range names {
+		err = os.RemoveAll(filepath.Join(dir, name))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
