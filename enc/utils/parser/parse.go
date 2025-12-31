@@ -108,6 +108,8 @@ func ParseName(
 		}
 	}
 
+	epTitle = SanitizeEpisodeTitle(epTitle)
+
 	// Wrap release info in brackets
 	releaseInfo := slice2String(relInfo)
 	source := slice2String(sources)
@@ -267,6 +269,28 @@ func ParseName(
 	}, nil
 }
 
+// SanitizeEpisodeTitle clears the title if it contains any exact "not allowed" keywords.
+func SanitizeEpisodeTitle(episodeTitle string) string {
+	if episodeTitle == "" {
+		return ""
+	}
+
+	// Combined list: Original keywords + new keywords
+	notAllowed := []string{
+		"END", "MULTi", "WEB", "WEB-DL", "DDP5.1",
+		"DDP2.0", "AAC2", "AMZN", "DUAL", "NF", "BILI",
+	}
+
+	for _, na := range notAllowed {
+		// Strict case-sensitive check
+		if strings.Contains(episodeTitle, na) {
+			return ""
+		}
+	}
+
+	return episodeTitle
+}
+
 type CustCapOptions struct {
 	Path          string
 	UseAniList    bool
@@ -360,15 +384,7 @@ func CustCap(
 	source := slice2String(sources)
 
 	// sanitize episode title against not_allowed
-	notAllowed := []string{"END", "MULTi", "WEB", "WEB-DL", "DDP5.1", "DDP2.0", "AAC2"}
-	if episodeTitle != "" {
-		for _, na := range notAllowed {
-			if strings.Contains(episodeTitle, na) {
-				episodeTitle = ""
-				break
-			}
-		}
-	}
+	episodeTitle = SanitizeEpisodeTitle(episodeTitle)
 
 	if title == "" {
 		return "", fmt.Errorf("parsing failed for %q", name)
