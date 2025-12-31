@@ -104,14 +104,13 @@ func Select(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		}
 		preview.Mutex.Lock()
 		defer preview.Mutex.Unlock()
-		var items []types.BatchItem
-		for _, item := range preview.Items {
-			if item.Status != 3 {
-				item.Status = s
+
+		for i := range preview.Items {
+			if preview.Items[i].Status != 3 {
+				preview.Items[i].Status = s
 			}
-			items = append(items, item)
 		}
-		preview.Items = items
+
 		_, _ = msg.Reply(txt, &tele.ReplyOptions{SleepDelete: 10})
 		return preview.Update()
 	}
