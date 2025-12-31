@@ -210,7 +210,7 @@ func thing(entry types.QueueEntry) {
 			pos:       data.Pos,
 		}
 		if fchannel != 0 {
-			w.fmsg, _ = tele.SendMsg(fchannel, "file #"+strconv.Itoa(i), nil)
+			w.fmsg, _ = tele.SendMsg(fchannel, "file #"+strconv.Itoa(i+1), nil)
 		}
 		g.Go(func() error {
 			return w.start(data.Args)
