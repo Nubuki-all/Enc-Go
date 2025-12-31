@@ -168,6 +168,7 @@ func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 	if strings.EqualFold(args, "all") {
 		for _, data := range bot.ECallbackData {
 			data.IsCancelled = true
+			data.Canceller = msg.SenderID
 			if data.Process != nil {
 				_ = data.Process.Kill()
 				if data.ExtraFlags == "" {

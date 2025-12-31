@@ -264,12 +264,15 @@ func (e *Encoder) ReportStatus(action string) (err error) {
 		}
 		if e.IsCancelled {
 			text += "was cancelled"
-			if e.Canceller != e.Sender {
+			if e.Canceller != 0 && e.Canceller != e.Sender {
 				name := "Unknown"
-				if user, err := tele.GetUser(e.Canceller); err != nil {
+				user, err := tele.GetUser(e.Canceller)
+				if err != nil {
+					logger.Warn(err)
+				} else {
 					name = user.FirstName
 				}
-				text += fmt.Sprintf(" by <a href=\"tg://user?id=%d.\">%s</a>", e.Canceller, name)
+				text += fmt.Sprintf(" by <a href=\"tg://user?id=%d\">%s</a>.", e.Canceller, name)
 			} else {
 				text += "."
 			}
