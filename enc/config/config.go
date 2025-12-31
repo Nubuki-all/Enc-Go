@@ -36,6 +36,7 @@ type Config struct {
 	DumpDir               string
 	DumpLeech             bool
 	Dyno                  string
+	EnablePPROF           bool
 	EncodeDir             string
 	Encoder               string
 	ExtCap                bool
@@ -174,6 +175,7 @@ func LoadConfig() error {
 	viper.SetDefault("DOWNLOAD_DIR", ".downloads")
 	viper.SetDefault("DUMP_DIR", ".dump")
 	viper.SetDefault("DUMP_LEECH", true)
+	viper.SetDefault("ENABLE_PPROF", true)
 	viper.SetDefault("ENCODE_DIR", ".encode")
 	viper.SetDefault("EXTENDED_CAPTIONS", true)
 	viper.SetDefault("FFMPEG", `ffmpeg -i """{input}""" -preset ultrafast -c:v libx265 -crf 27 -map 0:v -c:a aac -map 0:a -c:s copy -map 0:s? """{output}"""`)
@@ -226,6 +228,7 @@ func LoadConfig() error {
 		DumpDir:               viper.GetString("DUMP_DIR"),
 		DumpLeech:             viper.GetBool("DUMP_LEECH"),
 		Dyno:                  viper.GetString("DYNO"),
+		EnablePPROF:           viper.GetBool("ENABLE_PPROF"),
 		EncodeDir:             viper.GetString("ENCODE_DIR"),
 		Encoder:               viper.GetString("ENCODER"),
 		ExtCap:                viper.GetBool("EXTENDED_CAPTIONS"),

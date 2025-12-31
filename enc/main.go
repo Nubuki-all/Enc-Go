@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"net/http"
+	_ "net/http/pprof"
 	"strings"
 
 	"enc/config"
@@ -10,6 +12,8 @@ import (
 	"enc/internal/clients/telegraph"
 	"enc/internal/logger"
 	"enc/internal/startup"
+
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -17,10 +21,23 @@ func main() {
 		log.Fatalf("logger init error: %v", err)
 	}
 	defer func() { _ = logger.Logger.Sync() }()
+
+	if config.Conf.EnablePPROF {
+		go func() {
+			listenAddr := "localhost:6060"
+			logger.InfoW("Starting pprof server on", zap.String("Addr", listenAddr))
+			// Using http.DefaultServeMux which pprof automatically attaches to
+			if err := http.ListenAndServe(listenAddr, nil); err != nil {
+				logger.ErrorW("pprof server error", zap.Error(err))
+			}
+		}()
+	}
+
 	logger.Info("Starting up" + strings.Repeat(".", 10))
 	if config.Rconf.Error != nil {
 		logger.Criticalf("Failed to load config: %v", config.Rconf.Error)
 	}
+
 	bot.Version = Version
 	startup.Initialize()
 	extract()
@@ -28,6 +45,7 @@ func main() {
 	telegram.InitClient()
 	startup.Finalize(telegram.Context)
 	defer bot.Aria2Client.Close() //nolint:errcheck
+
 	err := telegram.Client.Idle()
 	if err != nil {
 		logger.Error(err)
