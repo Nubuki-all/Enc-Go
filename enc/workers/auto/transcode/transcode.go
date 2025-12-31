@@ -294,7 +294,7 @@ func (e *encodeWorker) start(encodeArgs string) error {
 		&tele.EditOptions{HTMLParseMode: true},
 	)
 	fn := result.MediaInfoName
-	if e.no > 1 && !config.Conf.SequentialJobs {
+	if e.no > 0 && !config.Conf.SequentialJobs {
 		fn += "-" + strconv.Itoa(e.no)
 	}
 	fn += filepath.Ext(result.FileName)
