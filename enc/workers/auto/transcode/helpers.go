@@ -193,13 +193,12 @@ func sendSticker(entry types.QueueEntry, batchItem *types.BatchItem) {
 	}
 	if len(entry.Batch) > 0 {
 		next := NextBatchItem(entry.Batch, batchItem.ID)
-		if next == nil {
-			return
-		}
-		c, _ := parser.QParseT(batchItem.FileName, entry.Version, entry.Filter)
-		n, _ := parser.QParseT(next.FileName, entry.Version, entry.Filter)
-		if c == n {
-			return
+		if next != nil {
+			c, _ := parser.QParseT(batchItem.FileName, entry.Version, entry.Filter)
+			n, _ := parser.QParseT(next.FileName, entry.Version, entry.Filter)
+			if c == n {
+				return
+			}
 		}
 	} else if entries := bot.Queue.AsSlice(); len(entries) > 1 {
 		i := 1

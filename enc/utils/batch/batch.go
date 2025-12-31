@@ -139,7 +139,11 @@ func (bp *BatchPreview) Start(emptyOnCancel bool) (_ []types.BatchItem, err erro
 	if err != nil {
 		return nil, err
 	}
-	id := fmt.Sprintf("%d:%d", bp.msg.ChatID, bp.msg.ID)
+	chatID := bp.msg.ChatID
+	if bp.msg.Raw != nil {
+		chatID = utils.GetChatID(bp.msg.Raw)
+	}
+	id := fmt.Sprintf("%d:%d", chatID, bp.msg.ID)
 	_ = storeBatchCallbackInfo(&batchCallBackInfo{bp}, id)
 Out:
 	for {
