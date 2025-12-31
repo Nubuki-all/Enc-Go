@@ -35,29 +35,30 @@ const (
 
 type Encoder struct {
 	*types.TransferInfo
-	Context   context.Context
-	Msg       *tele.Message
-	LMsg      *tele.Message
-	cmd       *exec.Cmd
-	Process   *os.ProcessState
-	process   *types.Process
-	Job       *utils.EncodeJob
-	JobPos    string
-	JobCodec  string
-	ExtraPath string
-	ETime     time.Time
-	STime     time.Time
-	clean     bool
-	done      bool
-	Sender    int64
-	ID        string
-	LogID     string
-	exe       string
-	outPath   string
-	stderr    string
-	stdout    string
-	errBuf    *bytes.Buffer
-	outBuf    *bytes.Buffer
+	Context    context.Context
+	Msg        *tele.Message
+	LMsg       *tele.Message
+	cmd        *exec.Cmd
+	Process    *os.ProcessState
+	process    *types.Process
+	CancelJobs bool
+	Job        *utils.EncodeJob
+	JobPos     string
+	JobCodec   string
+	ExtraPath  string
+	ETime      time.Time
+	STime      time.Time
+	clean      bool
+	done       bool
+	Sender     int64
+	ID         string
+	LogID      string
+	exe        string
+	outPath    string
+	stderr     string
+	stdout     string
+	errBuf     *bytes.Buffer
+	outBuf     *bytes.Buffer
 }
 
 func (e *Encoder) Start(cmdline string) error {
@@ -122,10 +123,12 @@ func (e *Encoder) Callback(dlPath, enPath, text string) {
 			cmp.Or(e.JobPos, e.Job.PendingPos()),
 			cmp.Or(e.JobCodec, utils.GetCodec(e.Job.Pending())),
 		)
-		buttonRows[len(buttonRows)-1] = markup.Row(
-			markup.Callback("Cancel", []byte(CancelCallbackData+"0")),
-			markup.Callback("❌ all jobs", []byte("j"+CancelCallbackData+"0")),
-		)
+		if e.CancelJobs {
+			buttonRows[len(buttonRows)-1] = markup.Row(
+				markup.Callback("Cancel", []byte(CancelCallbackData+"0")),
+				markup.Callback("❌ all jobs", []byte("j"+CancelCallbackData+"0")),
+			)
+		}
 	}
 
 	if text == "" {
@@ -165,14 +168,10 @@ func (e *Encoder) Callback(dlPath, enPath, text string) {
 				),
 			),
 		}
-		if e.Job != nil && e.Job.PendingInfo().Count > 1 {
-			buttonRows = append(buttonRows,
-				markup.Row(
-					markup.Callback(
-						"CANCEL ALL JOBS",
-						[]byte("j"+CancelCallbackData+"0"),
-					),
-				),
+		if e.Job != nil && e.Job.PendingInfo().Count > 1 && e.CancelJobs {
+			buttonRows[len(buttonRows)-1] = markup.Row(
+				markup.Callback("CANCEL PROCESS", []byte(CancelCallbackData+"0")),
+				markup.Callback("CANCEL ALL JOBS", []byte("j"+CancelCallbackData+"0")),
 			)
 		}
 		_, _ = e.LMsg.Edit(

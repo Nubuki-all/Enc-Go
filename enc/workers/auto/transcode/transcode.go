@@ -208,6 +208,7 @@ func thing(entry types.QueueEntry) {
 			mInfo:     SourceMInfo,
 			dTime:     downloadTime,
 			pos:       data.Pos,
+			syncJobs:  config.Conf.SequentialJobs,
 		}
 		if fchannel != 0 {
 			w.fmsg, _ = tele.SendMsg(fchannel, "file #"+strconv.Itoa(i+1), nil)
@@ -241,6 +242,7 @@ type encodeWorker struct {
 	dTime     string
 	pos       string
 	no        int
+	syncJobs  bool
 }
 
 func (e *encodeWorker) start(encodeArgs string) error {
@@ -326,16 +328,17 @@ func (e *encodeWorker) start(encodeArgs string) error {
 	cmd = strings.ReplaceAll(cmd, "{output}", outPath)
 	id := fmt.Sprintf("%d:%d", sMsg.ChatID, sMsg.ID)
 	encode := &encoders.Encoder{
-		LMsg:      Lmsg,
-		Msg:       sMsg,
-		Job:       e.job,
-		Context:   e.ctx,
-		STime:     time.Now(),
-		Sender:    e.item.Sender,
-		ID:        id,
-		ExtraPath: thumbPath,
-		JobCodec:  codec,
-		JobPos:    e.pos,
+		LMsg:       Lmsg,
+		Msg:        sMsg,
+		Job:        e.job,
+		Context:    e.ctx,
+		STime:      time.Now(),
+		Sender:     e.item.Sender,
+		ID:         id,
+		ExtraPath:  thumbPath,
+		JobCodec:   codec,
+		JobPos:     e.pos,
+		CancelJobs: e.syncJobs,
 	}
 	if err := encode.Start(cmd); err != nil {
 		_, _ = sMsg.Edit("Error while Starting encode: "+err.Error(), nil)
