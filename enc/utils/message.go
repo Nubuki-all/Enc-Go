@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	gp "github.com/celestix/gotgproto/types"
+	"github.com/gotd/td/constant"
 	"github.com/gotd/td/tg"
 
 	"enc/config"
@@ -138,11 +139,14 @@ func GetChatID(msg *gp.Message) int64 {
 	if peer == nil {
 		return 0
 	}
+	var ID constant.TDLibPeerID
 	switch p := peer.(type) {
 	case *tg.PeerChannel:
-		return p.ChannelID
+		ID.Channel(p.ChannelID)
+		return int64(ID)
 	case *tg.PeerChat:
-		return p.ChatID
+		ID.Chat(p.ChatID)
+		return int64(ID)
 	case *tg.PeerUser:
 		return p.UserID
 	default:
