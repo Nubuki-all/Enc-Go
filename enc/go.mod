@@ -125,7 +125,7 @@ require (
 	golang.org/x/tools v0.40.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gorm.io/driver/mysql v1.6.0 // indirect
-	modernc.org/libc v1.67.2 // indirect
+	modernc.org/libc v1.67.3 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 	modernc.org/sqlite v1.42.2 // indirect
