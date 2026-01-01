@@ -442,9 +442,9 @@ func (e *encodeWorker) start(encodeArgs string) error {
 			_, _ = e.fmsg.Edit(caption, &tele.EditOptions{Media: upload.TgMedia})
 		}()
 	}
-	text := "<b>Source:</b> <code>[" + cmp.Or(r.ReleaseGroup, "None") + "]</code>"
+	text := "<b>Source:</b>\n<code>" + cmp.Or(r.ReleaseGroup, "N/A") + "</code>"
 	if e.mInfo != "" {
-		text += "\n\nMediainfo: <b><a href=\"" + e.mInfo + "\">(Source)</a></b>"
+		text += "\n<b><a href=\"" + e.mInfo + "\">Mediainfo</a></b>"
 	}
 	orgSize := utils.SizeOf(e.dlPath)
 	outSize := utils.SizeOf(outPath)
@@ -455,7 +455,7 @@ func (e *encodeWorker) start(encodeArgs string) error {
 			"</code>\n"
 	}
 	text += fmt.Sprintf(
-		"\n\n<b>Encode Stats:</b>\n\nOriginal Size: <code>%s</code>\nEncoded Size: <code>%s</code>\nEncoded Percentage: <code>%.2f%%</code>\n\n"+
+		"\n\n<b>Encode Stats:</b>\nOriginal Size: <code>%s</code>\nEncoded Size: <code>%s</code>\nEncoded Percentage: <code>%.2f%%</code>\n\n"+
 			"Downloaded in <code>%s</code>\nEncoded in <code>%s</code>\n"+
 			"%sUploaded in <code>%s</code>",
 		utils.HBS(orgSize),

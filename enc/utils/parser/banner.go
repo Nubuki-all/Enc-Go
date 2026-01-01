@@ -208,7 +208,7 @@ func FPost(
 	mi := opts.MediaInfoURL
 	if relGroup != "" || mi != "" {
 		if relGroup == "" {
-			relGroup = "None"
+			relGroup = "N/A"
 		}
 		b.WriteString(fmt.Sprintf("<b>Source:</b> <b><a href=\"%s\"> [%s]</a></b>", mi, relGroup))
 		b.WriteString("\n\n")
