@@ -248,7 +248,7 @@ func (dl *Downloader) ReportStatus() (*tele.Message, error) {
 		reportee := config.Rconf.Owners[0]
 		if reportee != msg.ChatID && dl.err != nil && !dl.IsCancelled {
 			go func(text string, id int64) {
-				err := tele.SendMessage(id, text)
+				_, err := tele.SendMsg(id, text, &tele.SendOptions{HTMLParseMode: true})
 				if err != nil {
 					logger.Error(err)
 				}
