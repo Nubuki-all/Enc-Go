@@ -29,7 +29,10 @@ import (
 
 var CachedDL = make(map[string]*Downloader, 1)
 
-var ErrDownloadCanceled = errors.New("download canceled by user")
+var (
+	ErrDownloadCanceled = errors.New("download canceled by user")
+	ErrUnknownError     = errors.New("an unknown error occured")
+)
 
 // ProgressFunc is called on progress events. start is the download start time,
 // done is bytes downloaded so far, total is total size (0 if unknown).

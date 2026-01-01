@@ -1,7 +1,9 @@
 package downloaders
 
 import (
+	"cmp"
 	"context"
+	"errors"
 	"fmt"
 
 	//"io"
@@ -41,6 +43,8 @@ type QbitDownload struct {
 	selectedPath string
 	uri          string
 }
+
+var ErrTorrentRemoved = errors.New("torrent was removed elsewhere")
 
 func NewQbtitDl(uri, dir, selected string, msg *tele.Message, tInfo *types.TransferInfo) *QbitDownload {
 	conf := config.Conf
@@ -129,8 +133,8 @@ func (dl *QbitDownload) Start() (err error) {
 		}
 		time.Sleep(1 * time.Second) // small backoff
 		torrents, err = qb.GetTorrentsCtx(ctx, qbit.TorrentFilterOptions{Tag: tag})
-		if err != nil {
-			return fmt.Errorf("qbittorrent error while waiting for download: %w", err)
+		if err != nil || len(torrents) == 0 {
+			return fmt.Errorf("qbittorrent error while waiting for download: %w", cmp.Or(err, ErrTorrentRemoved))
 		}
 	}
 	if torrents[0].State == qbit.TorrentStateError {
@@ -201,10 +205,14 @@ func (dl *QbitDownload) ProgressCallback(ctx context.Context, start time.Time, t
 		dl.err = err
 		return ok
 	}
+	if len(torrents) == 0 {
+		dl.err = ErrTorrentRemoved
+		return
+	}
 	torrent := torrents[0]
 	switch torrent.State {
 	case qbit.TorrentStateError:
-		dl.err = fmt.Errorf("an unknown error occured")
+		dl.err = ErrUnknownError
 		return ok
 	case qbit.TorrentStatePausedUp:
 		dl.completed = true
@@ -336,10 +344,14 @@ func (dl *QbitDownload) UpdateCallback(ctx context.Context, tag string) (ok bool
 		dl.err = err
 		return ok
 	}
+	if len(torrents) == 0 {
+		dl.err = ErrTorrentRemoved
+		return
+	}
 	torrent := torrents[0]
 	switch torrent.State {
 	case qbit.TorrentStateError:
-		dl.err = fmt.Errorf("an unknown error occured")
+		dl.err = ErrUnknownError
 		return ok
 	case qbit.TorrentStatePausedUp:
 		dl.completed = true
