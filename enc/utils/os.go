@@ -204,10 +204,21 @@ func Updater(versionPath string) error {
 	return nil
 }
 
+func GetFFprobeMetadata(file string) ([]byte, error) {
+	cmd := exec.Command("ffprobe",
+		"-hide_banner",
+		"-show_streams",
+		"-show_format",
+		"-print_format", "json",
+		file,
+	)
+
+	return cmd.Output()
+}
+
 // GetStreamDuration parses ffprobe output and returns video duration in seconds
 func GetStreamDuration(file string) int {
-	cmd := fmt.Sprintf(`ffprobe -hide_banner -show_streams -show_format -print_format json "%s"`, file)
-	out, _, err := Enshell(cmd)
+	out, err := GetFFprobeMetadata(file)
 	if err != nil {
 		return 0
 	}
@@ -249,8 +260,7 @@ func GetVideoThumbnailAndDuration(file, output string) (string, int, error) {
 
 // GetStreamInfo extracts audio/subtitle language info from streams
 func GetStreamInfo(file string) (audioLang, subLang string, err error) {
-	cmd := fmt.Sprintf(`ffprobe -hide_banner -show_streams -print_format json "%s"`, file)
-	out, _, err := Enshell(cmd)
+	out, err := GetFFprobeMetadata(file)
 	if err != nil {
 		return "", "", err
 	}
@@ -476,4 +486,11 @@ func SafePath(path string) string {
 		return `"` + cleanPath + `"`
 	}
 	return "'" + strings.ReplaceAll(path, "'", "'\\''") + "'"
+}
+
+func SantizeText(t string) string {
+	if runtime.GOOS == "windows" {
+		return strings.ReplaceAll(t, "\"", "")
+	}
+	return strings.ReplaceAll(t, "'", "'\\''")
 }
