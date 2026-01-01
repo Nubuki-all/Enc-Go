@@ -460,7 +460,7 @@ func (e *encodeWorker) start(encodeArgs string) error {
 			"%sUploaded in <code>%s</code>",
 		utils.HBS(orgSize),
 		utils.HBS(outSize),
-		100-(float64(outSize/orgSize)*100),
+		100-(float64(outSize)/float64(orgSize)*100),
 		e.dTime,
 		utils.TimeFormatter(
 			encode.ETime.Sub(encode.STime).Round(time.Second).Seconds(),
