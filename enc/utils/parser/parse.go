@@ -275,14 +275,12 @@ func SanitizeEpisodeTitle(episodeTitle string) string {
 		return ""
 	}
 
-	// Combined list: Original keywords + new keywords
 	notAllowed := []string{
 		"END", "MULTi", "WEB", "WEB-DL", "DDP5.1",
-		"DDP2.0", "AAC2", "AMZN", "DUAL", "NF", "BILI",
+		"DDP2.0", "AAC2", "AMZN", "DUAL", "NF", "BILI", "FLAC2.0",
 	}
 
 	for _, na := range notAllowed {
-		// Strict case-sensitive check
 		if strings.Contains(episodeTitle, na) {
 			return ""
 		}
