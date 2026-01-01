@@ -446,21 +446,18 @@ func (e *encodeWorker) start(encodeArgs string) error {
 	if e.mInfo != "" {
 		text += "\n\nMediainfo: <b><a href=\"" + e.mInfo + "\">(Source)</a></b>"
 	}
-	miMsg, _ := sMsg.Reply(text,
-		&tele.ReplyOptions{DisableWebPreview: true, HTMLParseMode: true},
-	)
 	orgSize := utils.SizeOf(e.dlPath)
 	outSize := utils.SizeOf(outPath)
 	var muxText string
 	if mux != nil {
-		muxText = "Muxed in `" +
+		muxText = "Muxed in <code>" +
 			utils.TimeFormatter(mux.ETime.Sub(mux.STime).Round(time.Second).Seconds()) +
-			"`\n"
+			"</code>\n"
 	}
-	text = fmt.Sprintf(
-		"**Encode Stats:**\n\nOriginal Size: `%s`\nEncoded Size: `%s`\nEncoded Percentage: `%.2f%%`\n\n"+
-			"Downloaded in `%s`\nEncoded in `%s`\n"+
-			"%sUploaded in `%s`",
+	text += fmt.Sprintf(
+		"\n\n<b>Encode Stats:</b>\n\nOriginal Size: <code>%s</code>\nEncoded Size: <code>%s</code>\nEncoded Percentage: <code>%.2f%%</code>\n\n"+
+			"Downloaded in <code>%s</code>\nEncoded in <code>%s</code>\n"+
+			"%sUploaded in <code>%s</code>",
 		utils.HBS(orgSize),
 		utils.HBS(outSize),
 		100-(float64(outSize/orgSize)*100),
@@ -471,12 +468,9 @@ func (e *encodeWorker) start(encodeArgs string) error {
 		muxText,
 		uploadTime,
 	)
-	stMsg, _ := sMsg.ReplyText(text)
+	stMsg, _ := sMsg.Reply(text, &tele.ReplyOptions{DisableWebPreview: true, HTMLParseMode: true})
 	if e.logChat != 0 {
 		_, _ = sMsg.Forward(e.logChat)
-		if miMsg != nil {
-			_, _ = miMsg.Forward(e.logChat)
-		}
 		if stMsg != nil {
 			_, _ = stMsg.Forward(e.logChat)
 		}
