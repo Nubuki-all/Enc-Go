@@ -164,7 +164,10 @@ func (ul *TgUpload) Start() (err error) {
 	close(doneCh)
 	wg.Wait()
 	if err != nil {
-		if strings.Contains(err.Error(), "broken pipe") {
+		errStr := err.Error()
+		if strings.Contains(errStr, "engine forcibly closed") ||
+			strings.Contains(errStr, "broken pipe") ||
+			strings.Contains(errStr, "EOF") {
 			ul.waitTillReconnect()
 			return ErrRetry
 		}
@@ -357,13 +360,13 @@ func (ul *TgUpload) sendMedia() (err error) {
 }
 
 func (ul *TgUpload) waitTillReconnect() {
-	timeoutDuration := 20 * time.Minute
+	timeoutDuration := 5 * time.Minute
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutDuration)
 	defer cancel()
 	retryInterval := 5 * time.Second
 	logger.Info("Attempting to wait till reconnection.")
 	for {
-		err := telegram.Client.Ping(ul.msg.Ctx)
+		err := telegram.Client.Ping(ctx)
 		if err == nil {
 			fmt.Println("successfully waited for restart.")
 			return

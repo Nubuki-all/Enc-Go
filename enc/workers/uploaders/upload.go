@@ -10,6 +10,7 @@ import (
 
 	"github.com/gotd/td/telegram/message/markup"
 	"github.com/gotd/td/tg"
+	"go.uber.org/zap"
 
 	"enc/internal/bot/types"
 	"enc/internal/logger"
@@ -35,7 +36,6 @@ type Uploader struct {
 	CleanOnComplete bool
 	Done            bool
 	ForceDocument   bool
-	retried         bool
 	err             error
 }
 
@@ -60,28 +60,41 @@ func (ul *Uploader) Init(id, path string, sender int64) {
 
 func (ul *Uploader) Start() error {
 	defer ul.UnRegister()
-	var err error
+
 	if ul.Path != "" && ul.FileName == "" {
 		ul.FileName = filepath.Base(ul.Path)
 	}
-	tgUl := NewTgUl(ul.FileName, ul.Caption, ul.ThumbPath, ul.ForceDocument, ul.Msg, ul.Reply, ul.TransferInfo)
-	if ul.Threads > 0 {
-		tgUl.threads = ul.Threads
-	}
-	err = tgUl.Start()
-	ul.TgMedia = tgUl.media
-	if err != nil {
-		if errors.Is(err, ErrRetry) && !ul.retried {
-			ul.retried = true
-			return ul.Start()
+
+	defer func() { ul.Done = true }()
+	maxAttempts := 3
+	for i := range maxAttempts {
+		tgUl := NewTgUl(ul.FileName, ul.Caption, ul.ThumbPath, ul.ForceDocument, ul.Msg, ul.Reply, ul.TransferInfo)
+		if ul.Threads > 0 {
+			tgUl.threads = ul.Threads
 		}
+		err := tgUl.Start()
+
+		if err == nil {
+			ul.TgMedia = tgUl.media
+			if ul.CleanOnComplete {
+				ul.CleanUpload()
+			}
+			return nil
+		}
+
+		if errors.Is(err, ErrRetry) && i < maxAttempts-1 {
+			logger.WarnW("Upload failed due to connection, retrying after wait...",
+				zap.Int("attempt", i+1),
+				zap.Error(err),
+			)
+			continue
+		}
+
 		ul.err = err
 		logger.Error(err)
-	} else if ul.CleanOnComplete {
-		ul.CleanUpload()
+		return err
 	}
-	ul.Done = true
-	return err
+	return fmt.Errorf("upload failed after maximum retries")
 }
 
 func (ul *Uploader) CleanUpload() {
