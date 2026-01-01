@@ -205,7 +205,10 @@ func Updater(versionPath string) error {
 }
 
 func GetFFprobeMetadata(file string) ([]byte, error) {
-	cmd := exec.Command("ffprobe",
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "ffprobe",
 		"-hide_banner",
 		"-show_streams",
 		"-show_format",
@@ -246,15 +249,35 @@ func GetVideoThumbnailAndDuration(file, output string) (string, int, error) {
 	if duration <= 0 {
 		return "", 0, nil
 	}
+
 	seek := duration / 2
-	cmd := fmt.Sprintf(`ffmpeg -hide_banner -loglevel error -ss %d -i "%s" -vf thumbnail -q:v 1 -frames:v 1 -threads %d "%s" -y`, seek, file, runtime.NumCPU()/2, output)
-	_, _, err := Enshell(cmd)
+	threads := max(runtime.NumCPU()/2, 1)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "ffmpeg",
+		"-hide_banner",
+		"-loglevel", "error",
+		"-ss", strconv.Itoa(seek),
+		"-i", file,
+		"-vf", "thumbnail",
+		"-q:v", "1",
+		"-frames:v", "1",
+		"-threads", strconv.Itoa(threads),
+		output,
+		"-y",
+	)
+
+	err := cmd.Run()
 	if err != nil {
-		return "", duration, err
+		return "", duration, fmt.Errorf("ffmpeg thumbnail failed: %w", err)
 	}
+
 	if !FileExists(output) {
-		return "", duration, nil
+		return "", duration, fmt.Errorf("ffmpeg finished but output file missing")
 	}
+
 	return output, duration, nil
 }
 
