@@ -23,7 +23,7 @@ func ChangeEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 	}
 	helpMsg := "Changes bot encoding params;\n" +
 		"\n" +
-		"Requires full shell command with '''{input}''' for input and '''{output}''' output (use double quotes for better performance)\n" +
+		"Requires full shell command with {input} for input and {output} for output (no quotes)\n" +
 		"    - Binary name must me be included in argument and must installed locally or in docker\n" +
 		"    - Both ffmpeg and handbrake-cli are tested and supported. (Test if others work)\n" +
 		"    - Alternatively you can also create a custom bash script and pass the path of the script.\n" +

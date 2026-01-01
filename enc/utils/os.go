@@ -469,3 +469,11 @@ func CopyFile(src, dst string) error {
 
 	return nil
 }
+
+func SafePath(path string) string {
+	if runtime.GOOS == "windows" {
+		cleanPath := strings.ReplaceAll(path, "\"", "")
+		return `"` + cleanPath + `"`
+	}
+	return "'" + strings.ReplaceAll(path, "'", "'\\''") + "'"
+}

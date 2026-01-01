@@ -324,8 +324,8 @@ func (e *encodeWorker) start(encodeArgs string) error {
 		thumbPath = ""
 	}
 	cmd := formatArgs(encodeArgs, r.Title, r.Episode, r.Season, result.MediaInfoName, e.dlPath)
-	cmd = strings.ReplaceAll(cmd, "{input}", e.dlPath)
-	cmd = strings.ReplaceAll(cmd, "{output}", outPath)
+	cmd = strings.ReplaceAll(cmd, "{input}", utils.SafePath(e.dlPath))
+	cmd = strings.ReplaceAll(cmd, "{output}", utils.SafePath(outPath))
 	id := fmt.Sprintf("%d:%d", sMsg.ChatID, sMsg.ID)
 	encode := &encoders.Encoder{
 		LMsg:       Lmsg,
@@ -377,7 +377,7 @@ func (e *encodeWorker) start(encodeArgs string) error {
 		fn += filepath.Ext(result.FileName)
 		outPath2 := filepath.Join(config.Conf.EncodeDir, fn)
 		muxCmd := formatArgs(bot.MuxArgs, r.Title, r.Episode, r.Season, result.MediaInfoName, outPath)
-		ffmpegCmd := fmt.Sprintf(`ffmpeg -i """%s""" %s -codec copy """%s""" -y`, outPath, muxCmd, outPath2)
+		ffmpegCmd := fmt.Sprintf("ffmpeg -i %s %s -codec copy %s -y", utils.SafePath(outPath), muxCmd, utils.SafePath(outPath2))
 		mux = &encoders.Encoder{
 			Msg:    sMsg,
 			LMsg:   Lmsg,

@@ -448,9 +448,13 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 	tFile += " [Temp]" + ext
 
 	if downloadInput != nil {
-		ffmpegArgs = `-i """` + downloadInput.Path + `""" ` + ffmpegArgs
+		ffmpegArgs = "-i " + utils.SafePath(downloadInput.Path) + " " + ffmpegArgs
 	}
-	ffCmd := fmt.Sprintf(`ffmpeg -i """%s""" %s """%s""" -y`, download.Path, ffmpegArgs, tFile)
+	ffCmd := fmt.Sprintf(
+		"ffmpeg -i %s %s %s -y",
+		utils.SafePath(download.Path),
+		ffmpegArgs, utils.SafePath(tFile),
+	)
 	encode := &encoders.Encoder{
 		Msg:    sMsg,
 		STime:  time.Now(),
@@ -547,7 +551,8 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 		}
 
 	}
-	ffCmd = fmt.Sprintf(`ffmpeg -i """%s""" -map 0:v? -map 0:a? -map 0:s? -map 0:t? %s -codec copy """%s""" -y`, tFile, args2, tFile2)
+	ffCmd = fmt.Sprintf("fmpeg -i %s -map 0:v? -map 0:a? -map 0:s? -map 0:t? %s -codec copy %s -y",
+		utils.SafePath(tFile), args2, utils.SafePath(tFile2))
 	encode = &encoders.Encoder{
 		Msg:    sMsg,
 		STime:  time.Now(),
