@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"enc/config"
 	"enc/internal/bot/types"
@@ -123,39 +122,33 @@ func (bp *BatchPreview) Start(emptyOnCancel bool) (_ []types.BatchItem, err erro
 	if len(bp.Items) == 0 {
 		return nil, nil
 	}
-	// set defaultw
+	// set defaults
 	bp.pageNo = 1
 	bp.pages = 1
 	bp.limit = 12
+
 	if !emptyOnCancel {
-		copy(bp.items, bp.Items)
+		bp.items = slices.Clone(bp.Items)
 	}
+
 	bp.msg, err = bp.Bmsg.ReplyText("…")
 	if err != nil {
 		return nil, err
 	}
+
 	bp.previewed = make(chan struct{})
-	err = bp.Update()
-	if err != nil {
+	if err = bp.Update(); err != nil {
 		return nil, err
 	}
-	chatID := bp.msg.ChatID
-	if bp.msg.Raw != nil {
-		chatID = utils.GetChatID(bp.msg.Raw)
-	}
-	id := fmt.Sprintf("%d:%d", chatID, bp.msg.ID)
+
+	id := fmt.Sprintf("%d:%d", bp.msg.ChatID, bp.msg.ID)
 	_ = storeBatchCallbackInfo(&batchCallBackInfo{bp}, id)
-Out:
-	for {
-		select {
-		case <-bp.previewed:
-			break Out
-		default:
-			time.Sleep(1 * time.Second)
-		}
-	}
+
+	<-bp.previewed
+
 	delBatchCallbackInfo(id)
 	_ = bp.msg.Delete()
+
 	return bp.Items, nil
 }
 

@@ -79,13 +79,21 @@ func (qp *QueuePreview) Start() (err error) {
 	_ = storeqpCallbackInfo(qp, id)
 	ch := make(chan struct{}, 1)
 	bot.Queue.Subscribe(qp.msg.ChatID, ch)
+	regTicker := time.NewTicker(1 * time.Second)
 	uTicker := time.NewTicker(5 * time.Second)
+	defer regTicker.Stop()
 	defer uTicker.Stop()
 Out:
 	for {
 		select {
 		case <-qp.previewed:
 			break Out
+
+		case <-regTicker.C:
+			if !isRegistered(qp.msg.ChatID, qp.msg.ID) {
+				break Out
+			}
+
 		case <-uTicker.C:
 			select {
 			case <-ch:
@@ -93,10 +101,6 @@ Out:
 				_ = qp.update()
 				qp.Mutex.Unlock()
 			default:
-			}
-		default:
-			if !isRegistered(qp.msg.ChatID, qp.msg.ID) {
-				break Out
 			}
 		}
 	}
