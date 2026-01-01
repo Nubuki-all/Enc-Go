@@ -114,7 +114,7 @@ const (
 func formatArgs(args, title, episode, season, metaName, dlPath string) string {
 	if title != "" {
 		if strings.Contains(args, "This Episode") {
-			info := utils.SantizeText(title)
+			info := title
 			if episode != "" {
 				info = "Episode " + episode + " of " + info
 			}
@@ -125,7 +125,7 @@ func formatArgs(args, title, episode, season, metaName, dlPath string) string {
 		}
 	}
 	if strings.Contains(args, "Fileinfo") {
-		args = strings.ReplaceAll(args, "Fileinfo", utils.SantizeText(metaName))
+		args = strings.ReplaceAll(args, "Fileinfo", metaName)
 	}
 	if strings.Contains(args, audíoAutoDisp) || strings.Contains(args, SubtitleAutoDisp) {
 		aPosInSteam, sPosInSteam := utils.PosInStream(dlPath, "eng", "eng-us", "")
