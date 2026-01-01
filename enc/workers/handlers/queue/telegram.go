@@ -161,12 +161,8 @@ func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 					_, _ = pMsg.ReplyText("**This item has already been added to queue.**")
 					continue
 				}
-				inQueue := true
-				for inQueue {
+				for bot.Queue.Find(name) {
 					name = utils.RenameDup(name)
-					if bot.Queue.Find(name) {
-						inQueue = false
-					}
 				}
 			}
 			id := bot.Queue.Add(types.QueueEntry{
@@ -211,12 +207,8 @@ func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 			_, _ = msg.ReplyText("**This video has already been added to queue.**")
 			return nil
 		}
-		inQueue := true
-		for inQueue {
+		for bot.Queue.Find(name) {
 			name = utils.RenameDup(name)
-			if bot.Queue.Find(name) {
-				inQueue = false
-			}
 		}
 	}
 	id := bot.Queue.Add(types.QueueEntry{

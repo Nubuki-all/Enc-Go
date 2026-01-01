@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"regexp"
 
 	//"io"
 	"os"
@@ -197,6 +198,7 @@ func ReX(args ...string) error {
 }
 
 // Placeholder function for Update logic
+
 func Updater(versionPath string) error {
 	// Implement version check and updater mechanism if needed
 	return nil
@@ -417,24 +419,28 @@ func (tmp *TempFile) Remove() (err error) {
 	return os.Remove(tmp.Name)
 }
 
+var reDup = regexp.MustCompile(`-(\d+)$`)
+
 func RenameDup(fileName string) string {
 	if fileName == "" {
 		return ""
 	}
-	baseName := RemoveExt(fileName)
-	idx := len(baseName) - 2
-	suffix := "-1"
-	if idx > 0 {
-		suffix = baseName[idx:]
-		if IsNegativeNumber(suffix) {
-			baseName = baseName[:idx]
-			s, _ := strconv.Atoi(suffix)
-			suffix = strconv.Itoa(s - 1)
-		} else {
-			suffix = "-1"
-		}
+
+	ext := filepath.Ext(fileName)
+	baseName := fileName[:len(fileName)-len(ext)]
+
+	// Find if there is already a "-#", e.g., "video-1"
+	match := reDup.FindStringSubmatch(baseName)
+	if match != nil {
+		// Increment the existing number
+		num, _ := strconv.Atoi(match[1])
+		// Remove the old suffix and add the new incremented one
+		newBase := reDup.ReplaceAllString(baseName, fmt.Sprintf("-%d", num+1))
+		return newBase + ext
 	}
-	return baseName + suffix + filepath.Ext(fileName)
+
+	// If no suffix exists, start with -1
+	return baseName + "-1" + ext
 }
 
 func CopyFile(src, dst string) error {

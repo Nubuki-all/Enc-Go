@@ -232,12 +232,8 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 					_, _ = pMsg.ReplyText("**This item has already been added to queue.**")
 					continue
 				}
-				inQueue := true
-				for inQueue {
+				for bot.Queue.Find(dlInfo.Name) {
 					dlInfo.Name = utils.RenameDup(dlInfo.Name)
-					if bot.Queue.Find(dlInfo.Name) {
-						inQueue = false
-					}
 				}
 			}
 			id := bot.Queue.Add(types.QueueEntry{
@@ -321,12 +317,8 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 			_, _ = msg.ReplyText("**This link has already been added to queue.**")
 			return nil
 		}
-		inQueue := true
-		for inQueue {
+		for bot.Queue.Find(dlInfo.Name) {
 			dlInfo.Name = utils.RenameDup(dlInfo.Name)
-			if bot.Queue.Find(dlInfo.Name) {
-				inQueue = false
-			}
 		}
 	}
 	id := bot.Queue.Add(types.QueueEntry{
