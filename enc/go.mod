@@ -17,7 +17,7 @@ require (
 	github.com/gotd/td v0.136.0
 	github.com/k0kubun/go-ansi v0.0.0-20180517002512-3bf9e2903213
 	github.com/lrstanley/go-ytdlp v1.2.7
-	github.com/mattn/go-sqlite3 v1.14.32
+	github.com/mattn/go-sqlite3 v1.14.33
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/schollz/progressbar/v3 v3.19.0
 	github.com/shirou/gopsutil/v3 v3.24.5
@@ -125,7 +125,7 @@ require (
 	golang.org/x/tools v0.40.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gorm.io/driver/mysql v1.6.0 // indirect
-	modernc.org/libc v1.67.3 // indirect
+	modernc.org/libc v1.67.4 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 	modernc.org/sqlite v1.42.2 // indirect
