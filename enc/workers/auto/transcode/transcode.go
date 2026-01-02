@@ -102,6 +102,9 @@ func thing(entry types.QueueEntry) {
 	download := getDownload(entry, batchItem, msg, Lmsg)
 	if download == nil {
 		_, _ = bot.Queue.Pop(entry.Name)
+		if Bmsg != nil {
+			_ = Bmsg.Delete()
+		}
 		return
 	}
 
@@ -115,6 +118,9 @@ func thing(entry types.QueueEntry) {
 	if err != nil || download.IsCancelled {
 		_, _ = download.ReportStatus()
 		_, _ = bot.Queue.Pop(entry.Name)
+		if Bmsg != nil {
+			_ = Bmsg.Delete()
+		}
 		return
 	}
 	defer download.CleanDownload()
