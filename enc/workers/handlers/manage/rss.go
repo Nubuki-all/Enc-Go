@@ -59,7 +59,7 @@ func RssHandler(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	list := pargs["list"].(bool)
 	sub := pargs["subscribe"].(bool)
 	lc := pargs["list-chat"].(bool)
-	if !del && !edit && !get && !list && !sub {
+	if !del && !edit && !get && !list && !sub && !lc {
 		if out := arg.Output; out != "" {
 			_, _ = msg.Reply(utils.CodeBlock(out, true),
 				&tele.ReplyOptions{HTMLParseMode: true},
@@ -307,7 +307,7 @@ func editRss(msg *tele.Message, args string) error {
 		argparser.CreateDBoolFlag("edit", "e", "HEAD PARAM"),
 		argparser.CreateDStringFlag("link", "l", "New link of the previously subscribed rss feed."),
 		argparser.CreateDStringFlag("cmd", "c", "A command among ['leech', 'qbleech', 'ytdl'] (no short forms), to pass rss link to bot."),
-		argparser.CreateDStringSliceFlag("exf", "e", "Keyword of words to fiter out; Format: 'x || y'; where '||' means on either of both values (OR); for AND use the flag again."),
+		argparser.CreateDStringSliceFlag("exf", "x", "Keyword of words to fiter out; Format: 'x || y'; where '||' means on either of both values (OR); for AND use the flag again."),
 		argparser.CreateDStringSliceFlag("inf", "i", "Keywords to include; same format as exf"),
 		argparser.CreateDInt64SliceFlag("chat-id", "", "chat-id to send feeds."),
 		argparser.CreateDString2SliceFlag("rm-chat", "", "Index of chats to remove; check with list-chat."),
@@ -327,6 +327,11 @@ func editRss(msg *tele.Message, args string) error {
 		return nil
 	}
 	title := strings.Join(arg.UnknownArgs, " ")
+	title = strings.TrimSpace(title)
+	if title == "" {
+		_, _ = msg.ReplyText("Title is Required. Append --help for help")
+		return nil
+	}
 	bot.RSSDictMutex.RLock()
 	rssData, found := bot.RSSDict[title]
 	bot.RSSDictMutex.RUnlock()
@@ -476,6 +481,11 @@ func getRss(msg *tele.Message, args string) error {
 		return nil
 	}
 	title := strings.Join(arg.UnknownArgs, " ")
+	title = strings.TrimSpace(title)
+	if title == "" {
+		_, _ = msg.ReplyText("Title is Required. Append --help for help")
+		return nil
+	}
 	bot.RSSDictMutex.RLock()
 	rssData, found := bot.RSSDict[title]
 	bot.RSSDictMutex.RUnlock()
@@ -536,7 +546,7 @@ func listRss(msg *tele.Message, args string) error {
 	helpMsg := "Get list of subscribed rss feeds\n" +
 		"    Args:\n" +
 		"      None\n"
-	if args == "" || utils.SendHelp(args) {
+	if utils.SendHelp(args) {
 		_, _ = msg.Reply(utils.CodeBlock(helpMsg, true), &tele.ReplyOptions{HTMLParseMode: true})
 		return nil
 	}

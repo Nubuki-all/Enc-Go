@@ -29,7 +29,7 @@ func GetBotCommands() string {
 		fmt.Sprintf("add%s - add video to queue", cmdSuffix),
 		fmt.Sprintf("l%s - add link to queue", cmdSuffix),
 		fmt.Sprintf("ql%s - add torrent link to queue", cmdSuffix),
-		fmt.Sprintf("ql%s - add link to queue via yt-dlp", cmdSuffix),
+		fmt.Sprintf("yl%s - add link to queue via yt-dlp", cmdSuffix),
 		fmt.Sprintf("select%s - select files from torrent to encode", cmdSuffix),
 		fmt.Sprintf("queue%s - list queue", cmdSuffix),
 		fmt.Sprintf("editq%s - edit queue", cmdSuffix),

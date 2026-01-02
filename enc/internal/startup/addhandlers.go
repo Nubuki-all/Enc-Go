@@ -23,6 +23,7 @@ import (
 	"enc/workers/handlers"
 	"enc/workers/handlers/callbacks"
 	"enc/workers/handlers/dev"
+	"enc/workers/handlers/info"
 	"enc/workers/handlers/manage"
 	"enc/workers/handlers/queue"
 	"enc/workers/handlers/transfer"
@@ -113,6 +114,10 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		"editq":     EventHandlerWithArgs(queue.EditQueue),
 		"select":    EventHandlerWithArgs(queue.Select),
 		"cancelall": EventHandlerWithArgs(manage.CancelProcesses),
+
+		// Info Handlers:
+		"anime":  EventHandlerWithArgs(info.Anime),
+		"airing": EventHandlerWithArgs(info.AnimeAiring),
 	}
 
 	for cmd, handler := range cmdHandlers {

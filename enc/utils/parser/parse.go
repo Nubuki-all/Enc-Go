@@ -19,6 +19,21 @@ import (
 	"enc/utils"
 )
 
+func Parse(filename string, opts tanuki.Options) *tanuki.Elements {
+	if strings.Count(filename, ".") > 1 {
+		ext := filepath.Ext(filename)
+		root := strings.TrimSuffix(filename, ext)
+		root = strings.ReplaceAll(root, ".", " ")
+		filename = root + ext
+	}
+
+	if strings.Contains(strings.ToLower(filename), "varyg") {
+		filename = "[VARYG] " + filename
+	}
+
+	return tanuki.Parse(filename, opts)
+}
+
 type ParseResult struct {
 	FileName      string
 	MediaInfoName string
@@ -50,12 +65,10 @@ func ParseName(
 	rawName string,
 	opts *ParseOptions,
 ) (ParseResult, error) {
-	// default options if nil
 	if opts == nil {
 		opts = &ParseOptions{}
 	}
 
-	// unpack options to local variables (keeps the original names for minimal changes)
 	direct := opts.Direct
 	useAniList := opts.UseAniList
 	filterOverride := opts.FilterOverride
@@ -71,13 +84,13 @@ func ParseName(
 	}
 
 	// 2) First-pass parse for “orTitle”
-	baseParsed := tanuki.Parse(rawName, tanuki.DefaultOptions)
+	baseParsed := Parse(rawName, tanuki.DefaultOptions)
 
 	// 3) Apply your filters (returns filteredName, fil2, fil3)
 	filteredName, fil2, _ := FilterName(rawName, filterOverride)
 
 	// 4) Second-pass parse for the real fields
-	p := tanuki.Parse(filteredName, tanuki.DefaultOptions)
+	p := Parse(filteredName, tanuki.DefaultOptions)
 
 	// 5) Extract and normalize fields
 	title := p.AnimeTitle
@@ -347,8 +360,8 @@ func CustCap(
 	fName, _, fil3 := FilterName(name, filter)
 
 	// Parse with tanuki
-	baseParsed := tanuki.Parse(name, tanuki.DefaultOptions)
-	parsed := tanuki.Parse(fName, tanuki.DefaultOptions)
+	baseParsed := Parse(name, tanuki.DefaultOptions)
+	parsed := Parse(fName, tanuki.DefaultOptions)
 
 	orTitle := baseParsed.AnimeTitle
 	title := parsed.AnimeTitle
@@ -591,7 +604,7 @@ func QParseT(name, ver string, fil *types.FilterData) (string, error) {
 	}
 
 	// Re-parse the produced filename with tanuki to extract anime_title, year, season
-	parsed := tanuki.Parse(primary, tanuki.DefaultOptions)
+	parsed := Parse(primary, tanuki.DefaultOptions)
 	title := parsed.AnimeTitle
 
 	parts := []string{title}

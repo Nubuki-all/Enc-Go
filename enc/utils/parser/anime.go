@@ -18,19 +18,19 @@ import (
 // Template used for the final markdown message. Using text/template avoids
 // any backtick quoting issues and is type-safe.
 const animeTemplate = "" +
-	"[{{ .CFlag }}]**{{ .Romaji }}**\n\n" +
-	"**ID | MAL ID:** `{{ .IDM }}` | `{{ .IDMal }}`\n" +
-	"➤ **SOURCE:** `{{ .Source }}`\n" +
-	"➤ **TYPE:** `{{ .Formats }}`\n" +
-	"➤ **GENRES:** `{{ .Genre }}`\n" +
-	"➤ **SEASON:** `{{ .Season }}`\n" +
-	"➤ **EPISODES:** `{{ .Episodes }}`\n" +
-	"➤ **STATUS:** `{{ .Status }}`\n" +
-	"➤ **NEXT AIRING:** `{{ .AirOn }}`\n" +
-	"➤ **SCORE:** `{{ .Score }}` 🌟\n" +
-	"➤ **ADULT RATED:** `{{ .Adult }}`\n" +
+	"[{{ .CFlag }}]<b>{{ .Romaji }}</b>\n\n" +
+	"<b>ID | MAL ID:</b> <code>{{ .IDM }}</code> | <code>{{ .IDMal }}</code>\n" +
+	"➤ <b>SOURCE:</b> <code<{{ .Source }}</code>\n" +
+	"➤ <b>TYPE:</b> <code>{{ .Formats }}</code>\n" +
+	"➤ <b>GENRES:</b> <code>{{ .Genre }}</code>\n" +
+	"➤ <b>SEASON:</b> <code>{{ .Season }}</code>\n" +
+	"➤ <b>EPISODES:</b> <code>{{ .Episodes }}</code>\n" +
+	"➤ <b>STATUS:</b> <code>{{ .Status }}</code>\n" +
+	"➤ <b>NEXT AIRING:</b> <code>{{ .AirOn }}</code>\n" +
+	"➤ <b>SCORE:</b> <code>{{ .Score }}</code> 🌟\n" +
+	"➤ <b>ADULT RATED:</b> <code>{{ .Adult }}</code>\n" +
 	"🎬 {{ .TrailerLink }}\n" +
-	"📖 [Synopsis & More]({{ .SynopsisLink }})"
+	"📖 <a href=\"{{ .SynopsisLink }}\">Synopsis & More</a>"
 
 // data passed into the template
 type animeTemplateData struct {
@@ -41,17 +41,17 @@ type animeTemplateData struct {
 	Source       string
 	Formats      string
 	Genre        string
-	Season       interface{}
-	Episodes     interface{}
+	Season       any
+	Episodes     any
 	Status       string
 	AirOn        string
-	Score        interface{}
+	Score        any
 	Adult        bool
 	TrailerLink  string
 	SynopsisLink string
 }
 
-// MakeItRW: convert UNIX timestamp to readable string. If asCountdown is true,
+// MakeItRW convert UNIX timestamp to readable string. If asCountdown is true,
 // return a humanized relative time; otherwise a friendly absolute date.
 func MakeItRW(unixTS int64, asCountdown bool) string {
 	t := time.Unix(unixTS, 0)
@@ -63,15 +63,17 @@ func MakeItRW(unixTS int64, asCountdown bool) string {
 
 // AnimeArch performs the AniList lookup and returns (coverImageURL, message, error).
 // `useMal` corresponds to Python arg.m (if true, treat numeric query as MAL id).
-func AnimeArch(query string, useMal bool) (string, string, error) {
+func AnimeArch(query string, useMal bool, isID bool) (string, string, error) {
 	// prepare vars for GetAniInfo
 	var idPtr *int
 	var idMalPtr *int
-	if n, err := strconv.Atoi(query); err == nil {
-		if useMal {
-			idMalPtr = &n
-		} else {
-			idPtr = &n
+	if isID || useMal {
+		if n, err := strconv.Atoi(query); err == nil {
+			if useMal {
+				idMalPtr = &n
+			} else {
+				idPtr = &n
+			}
 		}
 	}
 
@@ -238,15 +240,17 @@ func AnimeArch(query string, useMal bool) (string, string, error) {
 // AiringAnim returns (coverImgURL, formattedMessage, error).
 // If useMal is true and query is numeric it will call AniList with idMal.
 // This mirrors the Python airing_anim logic.
-func AiringAnim(query string, useMal bool) (coverImg string, out string, err error) {
+func AiringAnim(query string, useMal bool, useID bool) (coverImg string, out string, err error) {
 	// Prepare id pointers if query is numeric
 	var idPtr *int
 	var idMalPtr *int
-	if n, perr := strconv.Atoi(query); perr == nil {
-		if useMal {
-			idMalPtr = &n
-		} else {
-			idPtr = &n
+	if useID || useMal {
+		if n, perr := strconv.Atoi(query); perr == nil {
+			if useMal {
+				idMalPtr = &n
+			} else {
+				idPtr = &n
+			}
 		}
 	}
 
@@ -297,15 +301,15 @@ func AiringAnim(query string, useMal bool) (coverImg string, out string, err err
 
 	// Build output the same way as Python
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("[%s] **%s** \n   (`%s`)", cFlag, native, title_))
-	b.WriteString(fmt.Sprintf("\n\n**ID:** `%d`", mid))
-	b.WriteString(fmt.Sprintf("\n**Status:** `%s`\n", status))
-	b.WriteString(fmt.Sprintf("**Source:** `%s`\n", source))
-	b.WriteString(fmt.Sprintf("**Score:** `%d`\n", score))
-	b.WriteString(fmt.Sprintf("**Genres:** `%s`\n", genre))
+	b.WriteString(fmt.Sprintf("[%s] <b>%s</b> \n   (<code>%s</code>)", cFlag, native, title_))
+	b.WriteString(fmt.Sprintf("\n\n<b>ID:</b> <code>%d</code>", mid))
+	b.WriteString(fmt.Sprintf("\n<b>Status:</b> <code>%s</code>\n", status))
+	b.WriteString(fmt.Sprintf("<b>Source:</b> <code>%s</code>\n", source))
+	b.WriteString(fmt.Sprintf("<b>Score:</b> <code>%d</code>\n", score))
+	b.WriteString(fmt.Sprintf("<b>Genres:</b> <code>%s</code>\n", genre))
 	if airOn != "" {
-		b.WriteString(fmt.Sprintf("**Airing Episode:** `[%d/%d]`\n", epNum, episodes))
-		b.WriteString(fmt.Sprintf("\n`%s`", airOn))
+		b.WriteString(fmt.Sprintf("<b>Airing Episode:</b> <code>[%d/%d]</code>\n", epNum, episodes))
+		b.WriteString(fmt.Sprintf("\n<code>%s</code>", airOn))
 	}
 
 	return coverImg, b.String(), nil

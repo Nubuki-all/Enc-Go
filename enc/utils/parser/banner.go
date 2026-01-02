@@ -57,7 +57,7 @@ func FPost(
 	}
 
 	// parsed = anitopy.parse(name)
-	parsed := tanuki.Parse(name, tanuki.DefaultOptions)
+	parsed := Parse(name, tanuki.DefaultOptions)
 
 	// Extract and normalize fields
 	title := parsed.AnimeTitle

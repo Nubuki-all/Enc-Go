@@ -33,7 +33,7 @@ func DynamicThumb(ctx context.Context, name string, thumb string, useAniList boo
 		name = filtered
 	}
 
-	parsed := tanuki.Parse(name, tanuki.DefaultOptions)
+	parsed := Parse(name, tanuki.DefaultOptions)
 	result.Title = parsed.AnimeTitle
 	if len(parsed.EpisodeNumber) > 0 {
 		result.Episode = parsed.EpisodeNumber[0]
