@@ -26,7 +26,6 @@ func main() {
 		go func() {
 			listenAddr := "localhost:6060"
 			logger.InfoW("Starting pprof server on", zap.String("Addr", listenAddr))
-			// Using http.DefaultServeMux which pprof automatically attaches to
 			if err := http.ListenAndServe(listenAddr, nil); err != nil {
 				logger.ErrorW("pprof server error", zap.Error(err))
 			}

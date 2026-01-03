@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/celestix/gotgproto"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/gotd/td/telegram/uploader"
 	"github.com/gotd/td/tg"
@@ -366,7 +367,7 @@ func (ul *TgUpload) waitTillReconnect() {
 	retryInterval := 5 * time.Second
 	logger.Info("Attempting to wait till reconnection.")
 	for {
-		err := telegram.Client.Ping(ctx)
+		err := safePing(ctx, telegram.Client)
 		if err == nil {
 			fmt.Println("successfully waited for restart.")
 			return
@@ -386,4 +387,13 @@ func (ul *TgUpload) waitTillReconnect() {
 			return
 		}
 	}
+}
+
+func safePing(ctx context.Context, client *gotgproto.Client) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("recovered from panic in Ping: %v", r)
+		}
+	}()
+	return client.Ping(ctx)
 }
