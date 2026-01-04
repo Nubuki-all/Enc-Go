@@ -66,8 +66,6 @@ func top(limit int) string {
 
 	var sb strings.Builder
 	w := tabwriter.NewWriter(&sb, 0, 0, 2, ' ', 0)
-	defer func() { _ = w.Flush() }()
-
 	_, _ = fmt.Fprintln(w, "PID\tUSER\tPROCESS\tCPU%")
 
 	for _, p := range list {
@@ -78,7 +76,7 @@ func top(limit int) string {
 			p.CPU,
 		)
 	}
-
+	_ = w.Flush()
 	return sb.String()
 }
 
