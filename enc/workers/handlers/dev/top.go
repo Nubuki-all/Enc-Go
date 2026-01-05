@@ -95,7 +95,6 @@ func Top(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 		return nil
 	}
 
-	// Send initial "Processing..." message (optional)
 	bMsg, _ := msg.ReplyText("Processing ...")
 
 	var desc string

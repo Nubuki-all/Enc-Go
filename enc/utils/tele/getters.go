@@ -106,24 +106,32 @@ func GetMessageFromLink(url string) *Message {
 	if url == "" {
 		return nil
 	}
+	tokens := strings.Split(strings.Trim(url, "/"), "/")
 	var chatID int64
-	tokens := strings.Split(url, "/")
-	if len(tokens) < 4 {
-		return nil
-	}
-	chatIDStr := tokens[len(tokens)-2]
-	if !strings.HasPrefix(chatIDStr, "-100") {
-		chatIDStr = "-100" + chatIDStr
-	}
-	chatID, err := strconv.ParseInt(chatIDStr, 10, 64)
+	var msgID int
+	msgID, err := strconv.Atoi(tokens[len(tokens)-1])
 	if err != nil {
 		return nil
 	}
-	ID, err := strconv.Atoi(tokens[len(tokens)-1])
-	if err != nil {
-		return nil
+	chatSegment := tokens[len(tokens)-2]
+	if val, err := strconv.ParseInt(chatSegment, 10, 64); err == nil {
+		chatIDStr := fmt.Sprintf("-100%d", val)
+		if strings.HasPrefix(chatSegment, "-100") {
+			chatID, _ = strconv.ParseInt(chatSegment, 10, 64)
+		} else {
+			chatID, _ = strconv.ParseInt(chatIDStr, 10, 64)
+		}
+	} else {
+		ec, err := telegram.Context.ResolveUsername(chatSegment)
+		if err != nil {
+			return nil
+		}
+		if !ec.IsAChannel() {
+			return nil
+		}
+		chatID = ec.GetID()
 	}
-	msgs, err := GetMessages(chatID, &tg.InputMessageID{ID: ID})
+	msgs, err := GetMessages(chatID, &tg.InputMessageID{ID: msgID})
 	if err != nil {
 		return nil
 	}

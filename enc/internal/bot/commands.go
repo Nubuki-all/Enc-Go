@@ -38,6 +38,7 @@ func GetBotCommands() string {
 		fmt.Sprintf("list%s - list all files in a link/torrent", cmdSuffix),
 		fmt.Sprintf("listv%s - list all videos in a link (yt-dlp)", cmdSuffix),
 		fmt.Sprintf("forward%s - manually forward a message to fchannel", cmdSuffix),
+		fmt.Sprintf("editmedia%s - edit channel media", cmdSuffix),
 		fmt.Sprintf("v%s - turn v2,3,4… on (with message) or off", cmdSuffix),
 		fmt.Sprintf("download%s - download a file or link to bot", cmdSuffix),
 		fmt.Sprintf("upload%s - upload from a local directory or link", cmdSuffix),

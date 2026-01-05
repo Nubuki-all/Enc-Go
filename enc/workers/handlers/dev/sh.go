@@ -29,10 +29,8 @@ func Sh(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) er
 		return nil
 	}
 
-	// Send initial "Processing..." message (optional)
 	bMsg, _ := msg.ReplyText("Processing ...")
 
-	// Prepare command: run under shell so we can pass complex commands
 	cmdExec := exec.CommandContext(ctx, "sh", "-c", args)
 
 	var stdoutBuf, stderrBuf bytes.Buffer

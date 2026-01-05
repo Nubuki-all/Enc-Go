@@ -79,6 +79,9 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		// Forward Handler
 		"forward": EventHandlerWithArgs(manage.FCForward),
 
+		// Edit-Media Handler
+		"editmedia": EventHandlerWithArgs(manage.EditChannelMsg),
+
 		// Run-control Handlers
 		"restart": EventHandlerWithArgs(manage.Restart),
 

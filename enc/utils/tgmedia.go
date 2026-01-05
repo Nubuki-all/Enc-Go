@@ -165,3 +165,29 @@ func IsVideo(media tg.MessageMediaClass) (b bool) {
 	}
 	return b
 }
+
+func ToInputMedia(m tg.MessageMediaClass) (tg.InputMediaClass, error) {
+	switch v := m.(type) {
+	case *tg.MessageMediaPhoto:
+		if photo, ok := v.Photo.AsNotEmpty(); ok {
+			return &tg.InputMediaPhoto{
+				ID: &tg.InputPhoto{
+					ID:            photo.ID,
+					AccessHash:    photo.AccessHash,
+					FileReference: photo.FileReference,
+				},
+			}, nil
+		}
+	case *tg.MessageMediaDocument:
+		if doc, ok := v.Document.AsNotEmpty(); ok {
+			return &tg.InputMediaDocument{
+				ID: &tg.InputDocument{
+					ID:            doc.ID,
+					AccessHash:    doc.AccessHash,
+					FileReference: doc.FileReference,
+				},
+			}, nil
+		}
+	}
+	return nil, fmt.Errorf("unsupported media type or empty media")
+}

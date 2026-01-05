@@ -18,7 +18,6 @@ import (
 const maxLen = 4000
 
 // EvalGoSnippet runs a Go snippet and returns its stdout and the returned error (if any).
-// The snippet should be full Go statements (e.g. `import "fmt"; fmt.Println("hello")` or `package main; func main(){...}`).
 func EvalGoSnippet(code string, ctx *ext.Context, update *ext.Update, msg *tele.Message) (string, error) {
 	r, w, err := os.Pipe()
 	if err != nil {
@@ -44,10 +43,8 @@ func EvalGoSnippet(code string, ctx *ext.Context, update *ext.Update, msg *tele.
 		return "", err
 	}
 
-	// Evaluate the snippet
 	_, evalErr := i.Eval(code)
 
-	// Close the writer
 	_ = w.Close()
 
 	// Read the captured output
