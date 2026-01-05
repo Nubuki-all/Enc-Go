@@ -34,6 +34,7 @@ type EditOptions struct {
 	HTMLParseMode bool
 	ReplyMarkup   tg.ReplyMarkupClass
 	Media         tg.InputMediaClass
+	Entities      []tg.MessageEntityClass
 	// will add more fields as required
 }
 
@@ -239,7 +240,9 @@ func (m *Message) Edit(text string, editOptions *EditOptions) (*Message, error) 
 	if editOptions == nil {
 		editOptions = &EditOptions{}
 	}
-	if editOptions.HTMLParseMode {
+	if len(editOptions.Entities) != 0 {
+		pText, entities = text, editOptions.Entities
+	} else if editOptions.HTMLParseMode {
 		pText, entities, _ = htmlparser.Parse(text)
 	} else {
 		pText, entities, _ = parser.Parse(text, true)

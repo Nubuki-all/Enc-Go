@@ -42,6 +42,7 @@ func EditChannelMsg(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg
 		return nil
 	}
 	media, _ := utils.ToInputMedia(repMsg.Media)
-	_, _ = oMsg.Edit(repMsg.Text, &tele.EditOptions{Media: media})
+	_, _ = oMsg.Edit(repMsg.Text, &tele.EditOptions{Entities: repMsg.Entities, Media: media})
+	_, _ = msg.ReplyText("Edited succesfully.")
 	return nil
 }
