@@ -144,6 +144,7 @@ func rssMonitorOnce(ctx context.Context) {
 			continue
 		}
 
+		allPaused = false
 		req, err := http.NewRequest("GET", data.Link, nil)
 		if err != nil {
 			logger.ErrorW(
@@ -175,7 +176,6 @@ func rssMonitorOnce(ctx context.Context) {
 				"Rate limited! Server says too many requests.",
 				zap.String("Title", title),
 			)
-			allPaused = false
 			continue
 		}
 
@@ -204,7 +204,6 @@ func rssMonitorOnce(ctx context.Context) {
 		} else {
 			lastLink = feed.Items[0].Link
 		}
-		allPaused = false
 		lastTitle := feed.Items[0].Title
 
 		// If no change, continue
