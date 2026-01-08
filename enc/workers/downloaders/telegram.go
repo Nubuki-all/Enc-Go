@@ -15,6 +15,7 @@ import (
 
 	"enc/config"
 	"enc/internal/bot/types"
+	"enc/internal/clients/telegram"
 	"enc/internal/logger"
 	"enc/utils"
 	"enc/utils/random"
@@ -62,7 +63,7 @@ func (dl *TgDownload) GetFileName() string {
 // Start uses a channel-based throttler around dl.ProgressCallback.
 // First event is handled immediately; subsequent events are throttled to `interval`.
 func (dl *TgDownload) Start() error {
-	ctx := dl.msg.Ctx
+	ctx := telegram.Context
 	interval := config.Rconf.ProgresUpdateInterval * time.Second
 
 	// single-slot buffered channel: holds latest event.
