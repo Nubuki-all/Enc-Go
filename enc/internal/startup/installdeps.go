@@ -3,6 +3,7 @@ package startup
 import (
 	"archive/tar"
 	"archive/zip"
+	"bufio"
 	"slices"
 
 	//"bufio"
@@ -371,7 +372,7 @@ func extractFromTarXz(tarXzPath, binDir string, targets []string) error {
 	}
 	defer func() { _ = f.Close() }()
 
-	xzr, err := xz.NewReader(f)
+	xzr, err := xz.NewReader(bufio.NewReader(f))
 	if err != nil {
 		return fmt.Errorf("xz reader: %w", err)
 	}
