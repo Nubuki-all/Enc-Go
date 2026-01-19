@@ -6,6 +6,7 @@ import (
 	"cmp"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -72,14 +73,19 @@ func (e *Encoder) Start(cmdline string) error {
 		cmd = exec.CommandContext(e.Context, "sh", "-c", cmdline)
 		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	}
+	stdoutPipe, _ := cmd.StdoutPipe()
+	stderrPipe, _ := cmd.StderrPipe()
+
 	e.outBuf = &bytes.Buffer{}
 	e.errBuf = &bytes.Buffer{}
-	cmd.Stdout = e.outBuf
-	cmd.Stderr = e.errBuf
-	err := cmd.Start()
-	if err != nil {
+
+	if err := cmd.Start(); err != nil {
 		return err
 	}
+
+	go io.Copy(e.outBuf, stdoutPipe) //nolint:errcheck
+	go io.Copy(e.errBuf, stderrPipe) //nolint:errcheck
+
 	e.cmd = cmd
 	e.process = types.NewProcess(cmd.Process)
 	e.TransferInfo = &types.TransferInfo{}
