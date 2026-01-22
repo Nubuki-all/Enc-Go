@@ -73,6 +73,7 @@ func (e *Encoder) Start(cmdline string) error {
 		cmd = exec.CommandContext(e.Context, "sh", "-c", cmdline)
 		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
 	}
+	cmd.Stdin = io.NopCloser(bytes.NewReader(nil))
 	stdoutPipe, _ := cmd.StdoutPipe()
 	stderrPipe, _ := cmd.StderrPipe()
 

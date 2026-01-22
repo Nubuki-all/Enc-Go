@@ -123,7 +123,7 @@ func AnimeArch(query string, useMal bool, isID bool) (string, string, error) {
 	// trailer link (only handle youtube per original logic)
 	trailerLink := "N/A"
 	if media.Trailer != nil && strings.EqualFold(media.Trailer.Site, "youtube") && media.Trailer.ID != "" {
-		trailerLink = fmt.Sprintf("[Trailer](https://youtu.be/%s)", media.Trailer.ID)
+		trailerLink = fmt.Sprintf("<a href=\"https://youtu.be/%s\">Trailer</a>", media.Trailer.ID)
 	}
 
 	// build characters HTML block

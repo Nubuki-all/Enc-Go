@@ -199,6 +199,7 @@ func ParseName(
 		}
 	}
 
+	title = strings.ReplaceAll(title, "/", " ")
 	// 10) Title truncation
 	shortTitle := title
 	if len(shortTitle) > 33 {
