@@ -91,6 +91,11 @@ func matchIncludeExclude(titleLower string, inf [][]string, exf [][]string) bool
 	return true
 }
 
+type feedTask struct {
+	msg string
+	url string
+}
+
 // rssMonitorOnce performs a single sweep over the Bot.RSSDict similar to the Python coroutine.
 func rssMonitorOnce(ctx context.Context) {
 	if !bot.SAS && !bot.SQS {
@@ -215,7 +220,7 @@ func rssMonitorOnce(ctx context.Context) {
 			data.AllowSpam = true
 		}
 
-		feedList := []string{}
+		feedTasks := []feedTask{}
 		// collect items from newest to older until we hit last_seen
 		for idx := 0; idx < len(feed.Items); idx++ {
 			item := feed.Items[idx]
@@ -236,7 +241,7 @@ func rssMonitorOnce(ctx context.Context) {
 				logger.WarnW("Rss Monitor: Reached Max index no for this feed. Maybe you need to use less RSS_DELAY to not miss some torrents.", zap.String("Title", title), zap.Int("Items", items))
 				if !data.AllowSpam {
 					logger.Warn("Due to spam prevention, RSS feed has been reset.")
-					feedList = make([]string, 0)
+					feedTasks = make([]feedTask, 0)
 				}
 				break
 			}
@@ -250,7 +255,7 @@ func rssMonitorOnce(ctx context.Context) {
 			// build command as Python did
 			cmdParts := strings.Fields(data.Command)
 			if len(cmdParts) == 0 {
-				feedList = append(feedList, fmt.Sprintf("Title: %s\nLink: %s", itemTitle, itemURL))
+				feedTasks = append(feedTasks, feedTask{msg: fmt.Sprintf("Title: %s\nLink: %s", itemTitle, itemURL)})
 				continue
 			}
 			// insert url after first element
@@ -265,14 +270,37 @@ func rssMonitorOnce(ctx context.Context) {
 			if !strings.HasPrefix(feedMsg, "/") {
 				feedMsg = "/" + feedMsg
 			}
-			feedList = append(feedList, feedMsg)
+			feedTasks = append(feedTasks, feedTask{msg: feedMsg, url: itemURL})
 		}
 
-		for i := len(feedList) - 1; i >= 0; i-- {
-			feedMsg := feedList[i]
-			ev, err := sendRSS(feedMsg, data.Chat)
-			if err == nil && ev != nil && data.Direct {
-				go fakeEventHandler(ev)
+		for i := len(feedTasks) - 1; i >= 0; i-- {
+			feedTask := feedTasks[i]
+			ev, err := sendRSS(feedTask.msg, data.Chat)
+			if err == nil && ev != nil && feedTask.url != "" && data.Direct {
+				go func(e *tele.Message, url string) {
+					for attempt := 0; attempt < 6; attempt++ {
+						req, _ := http.NewRequest("HEAD", url, nil)
+						req.Header.Set("User-Agent", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36")
+
+						resp, err := client.Do(req)
+						if err == nil {
+							if resp.Body != nil {
+								_ = resp.Body.Close()
+							}
+							if resp.StatusCode == http.StatusOK {
+								break
+							}
+						}
+
+						logger.WarnW("Resource not yet available, retrying...",
+							zap.String("URL", url),
+							zap.Int("attempt", attempt+1))
+
+						time.Sleep(5 * time.Second)
+					}
+
+					go fakeEventHandler(e)
+				}(ev, feedTask.url)
 			} else if ev != nil && err == nil {
 				logger.Warn("Unknown error @rssMonitor")
 			}
