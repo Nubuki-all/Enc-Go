@@ -41,6 +41,10 @@ func DynamicThumb(ctx context.Context, name string, thumb string, useAniList boo
 	if len(parsed.AnimeSeason) > 0 {
 		result.Season = parsed.AnimeSeason[0]
 	}
+
+	if len(parsed.AnimePart) > 0 {
+		result.Title += " " + parsed.AnimePart[0]
+	}
 	result.ReleaseGroup = parsed.ReleaseGroup
 
 	if result.Season != "" {

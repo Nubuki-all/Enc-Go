@@ -103,6 +103,12 @@ func ParseName(
 	if len(p.AnimeSeason) > 0 {
 		season = p.AnimeSeason[0]
 	}
+	if len(baseParsed.AnimePart) > 0 {
+		orTitle += " " + baseParsed.AnimePart[0]
+	}
+	if len(p.AnimePart) > 0 {
+		title += " " + p.AnimePart[0]
+	}
 	relGroup := p.ReleaseGroup
 	relInfo := p.ReleaseInformation
 	year := p.AnimeYear
@@ -386,7 +392,12 @@ func CustCap(
 			season = ""
 		}
 	}
-
+	if len(baseParsed.AnimePart) > 0 {
+		orTitle += " " + baseParsed.AnimePart[0]
+	}
+	if len(parsed.AnimePart) > 0 {
+		title += " " + parsed.AnimePart[0]
+	}
 	releaseGroup := parsed.ReleaseGroup
 	relInfo := parsed.ReleaseInformation
 	episodeTitle := parsed.EpisodeTitle

@@ -69,6 +69,9 @@ func FPost(
 	if len(parsed.AnimeSeason) > 0 {
 		season = parsed.AnimeSeason[0]
 	}
+	if len(parsed.AnimePart) > 0 {
+		title += " " + parsed.AnimePart[0]
+	}
 	relGroup := parsed.ReleaseGroup
 	// handle epi logic
 	if epi != "" && !config.Conf.FBanner {
