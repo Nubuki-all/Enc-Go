@@ -460,7 +460,10 @@ func (m *Message) Action(action string, prog int) error {
 	if err != nil {
 		return err
 	}
-	msgAction := ctx.Sender.To(inputPeer).TypingAction().ThreadID(m.TopicID)
+	msgAction := ctx.Sender.To(inputPeer).TypingAction()
+	if m.TopicID != 0 {
+		msgAction.ThreadID(m.TopicID)
+	}
 	switch action {
 	case "game":
 		return msgAction.GamePlay(ctx)
