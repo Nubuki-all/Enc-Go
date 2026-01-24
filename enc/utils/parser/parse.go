@@ -302,7 +302,7 @@ func SanitizeEpisodeTitle(episodeTitle string) string {
 	notAllowed := []string{
 		"END", "MULTi", "WEB", "WEB-DL", "DDP5",
 		"DDP2", "AAC2", "AMZN", "DUAL", "NF", "BILI", "FLAC2",
-		"OPUS", "Opus",
+		"OPUS", "Opus", "FLAC", "AAC", "DDP",
 	}
 
 	for _, na := range notAllowed {
