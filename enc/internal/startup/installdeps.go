@@ -22,6 +22,7 @@ import (
 	"github.com/ulikunitz/xz"
 
 	"enc/config"
+	"enc/internal/bot"
 	"enc/internal/logger"
 	"enc/utils"
 )
@@ -645,6 +646,94 @@ func InstallMediaInfo(ctx context.Context, binDir string) (string, error) {
 	if err := atomicMove(tmpPath, destPath); err != nil {
 		return "", fmt.Errorf("install binary: %w", err)
 	}
+
+	return destPath, nil
+}
+
+// InstallAnitomy downloads the appropriate static anitomy binary for
+// the current platform and installs it into binDir (creating binDir if needed).
+// If the target binary already exists (non-empty) this is a no-op.
+func InstallAnitomy(ctx context.Context, binDir string) (string, error) {
+	baseURL := "https://github.com/Nubuki-all/binary-builder/releases/download/anitomy/"
+	goos := runtime.GOOS
+	goarch := runtime.GOARCH
+
+	var fileName string
+	targetName := "anitomy"
+
+	switch {
+	case goos == "linux" && goarch == "amd64":
+		fileName = "anitomy-amd64"
+	case goos == "linux" && goarch == "arm":
+		fileName = "anitomy-arm32"
+	case goos == "linux" && goarch == "arm64":
+		fileName = "anitomy-arm64"
+	default:
+		return "", fmt.Errorf("install anitomy: binaries not available for platform: os=%s arch=%s", goos, goarch)
+	}
+
+	destPath := filepath.Join(binDir, targetName)
+
+	// If file already exists and seems valid, do nothing.
+	if fi, err := os.Stat(destPath); err == nil {
+		if !fi.IsDir() && fi.Size() > 0 {
+			bot.AnitomyAvailable = true
+			return destPath, nil
+		}
+	}
+
+	// Ensure binDir exists
+	if err := os.MkdirAll(binDir, 0o755); err != nil {
+		return "", fmt.Errorf("create bin dir: %w", err)
+	}
+
+	fullURL := baseURL + fileName
+
+	// HEAD to ensure remote exists
+	req, err := http.NewRequestWithContext(ctx, http.MethodHead, fullURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("build HEAD request: %w", err)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("remote HEAD failed: %w", err)
+	}
+	_ = resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 400 {
+		return "", fmt.Errorf("remote file not available: %s (status %d)", fullURL, resp.StatusCode)
+	}
+
+	// Download to temp file
+	tmpFile := &utils.TempFile{}
+	err = tmpFile.Create("-anitomy")
+	if err != nil {
+		return "", fmt.Errorf("create temp file: %w", err)
+	}
+	tmpPath := tmpFile.Name
+	defer func() {
+		_ = tmpFile.Remove()
+	}()
+	if err := utils.DownloadFileWithProgress(ctx, fullURL, tmpPath); err != nil {
+		return "", err
+	}
+
+	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
+	s.Suffix = " Finishing up..."
+	_ = s.Color("yellow")
+	s.Start()
+	defer s.Stop()
+
+	// make executable
+	if err := os.Chmod(tmpPath, 0o755); err != nil {
+		return "", fmt.Errorf("chmod temp file: %w", err)
+	}
+
+	// atomic move into place (reuses atomicMove helper)
+	if err := atomicMove(tmpPath, destPath); err != nil {
+		return "", fmt.Errorf("install binary: %w", err)
+	}
+
+	bot.AnitomyAvailable = true
 
 	return destPath, nil
 }

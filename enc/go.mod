@@ -41,9 +41,7 @@ require (
 
 replace github.com/celestix/gotgproto => github.com/Nubuki-all/gotgproto v1.0.0-beta21.0.20250920232014-4785cd9861fa
 
-replace github.com/siku2/arigo => github.com/Nubuki-all/arigo v0.0.0-20250904201643-4a96e2b73c13
-
-replace github.com/cenkalti/rpc2 => github.com/Nubuki-all/rpc2 v0.0.0-20250903152609-4270a8aef277
+replace github.com/siku2/arigo => github.com/Nubuki-all/arigo v0.0.0-20260123144835-fae1d481fa1a
 
 replace github.com/lrstanley/go-ytdlp => github.com/Nubuki-all/go-ytdlp v0.0.0-20250928204720-2a8a73ea7af7
 
@@ -57,7 +55,6 @@ require (
 	github.com/avast/retry-go v3.0.0+incompatible // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cenkalti/hub v1.0.2 // indirect
-	github.com/cenkalti/rpc2 v1.0.5 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.6.2 // indirect
 	github.com/coder/websocket v1.8.14 // indirect
@@ -91,6 +88,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
+	github.com/nubuki-all/rpc2 v1.0.0 // indirect
 	github.com/ogen-go/ogen v1.18.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

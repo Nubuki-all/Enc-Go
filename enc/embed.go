@@ -32,8 +32,11 @@ func extract() {
 		if err := os.Setenv("PATH", newPath); err != nil {
 			logger.Critical("updating path failed: %v", err)
 		}
-		ctx, cancel := context.WithTimeout(context.Background(), 180*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
 		defer cancel()
+		if _, err := startup.InstallAnitomy(ctx, p); err != nil {
+			logger.Error(err)
+		}
 		if _, err := startup.InstallAria2(ctx, p); err != nil {
 			logger.Error(err)
 		}

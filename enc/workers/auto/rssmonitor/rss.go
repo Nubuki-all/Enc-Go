@@ -278,7 +278,7 @@ func rssMonitorOnce(ctx context.Context) {
 			ev, err := sendRSS(feedTask.msg, data.Chat)
 			if err == nil && ev != nil && feedTask.url != "" && data.Direct {
 				go func(e *tele.Message, url string) {
-					for attempt := 0; attempt < 6; attempt++ {
+					for attempt := range 13 {
 						req, _ := http.NewRequest("HEAD", url, nil)
 						req.Header.Set("User-Agent", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36")
 

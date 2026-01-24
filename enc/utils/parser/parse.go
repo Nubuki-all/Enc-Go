@@ -17,9 +17,13 @@ import (
 	"enc/internal/bot/types"
 	"enc/internal/logger"
 	"enc/utils"
+	"enc/utils/parser/anitomy"
 )
 
 func Parse(filename string, opts tanuki.Options) *tanuki.Elements {
+	if bot.AnitomyAvailable {
+		return anitomy.Parse(filename).ToTanukiElements()
+	}
 	if strings.Count(filename, ".") > 1 {
 		ext := filepath.Ext(filename)
 		root := strings.TrimSuffix(filename, ext)

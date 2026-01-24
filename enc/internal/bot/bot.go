@@ -14,6 +14,7 @@ import (
 
 var (
 	AnilistParse       bool
+	AnitomyAvailable   bool
 	CaptionParse       bool
 	DockerDeployed     bool
 	GroupEnc           bool
