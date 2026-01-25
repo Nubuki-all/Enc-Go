@@ -193,7 +193,13 @@ jobs:
         with:
           merge-multiple: true
           path: binaries
-
+  
+      - name: Delete workflow artifacts
+        uses: geekyeggo/delete-artifact@v5
+        with:
+          name: |
+            enc*
+  
       - name: Upload shared library to draft release
         uses: softprops/action-gh-release@v1
         with:
