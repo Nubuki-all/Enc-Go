@@ -369,11 +369,11 @@ func (ul *TgUpload) waitTillReconnect() {
 	for {
 		err := safePing(ctx, telegram.Client)
 		if err == nil {
-			fmt.Println("successfully waited for restart.")
+			logger.Info("successfully waited for restart.")
 			return
 		}
 
-		fmt.Printf("Attempt failed: %v. Retrying in %v...\n", err, retryInterval)
+		logger.Warn("Attempt failed: %v. Retrying in %v...\n", err, retryInterval)
 
 		// Try to wait for either the next retry interval
 		// or the overall timeout.
@@ -383,7 +383,7 @@ func (ul *TgUpload) waitTillReconnect() {
 			continue
 		case <-ctx.Done():
 
-			fmt.Printf("Total duration exceeded (%s). Giving up.\n", timeoutDuration)
+			logger.Warn("Total duration exceeded (%s). Giving up.\n", timeoutDuration)
 			return
 		}
 	}

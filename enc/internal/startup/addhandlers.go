@@ -36,7 +36,7 @@ func AddAllHandlers() {
 	AddCBHandlers(d)
 
 	// dispatcher.AddHandlerToGroup(onevent.NewMessage(filters.Message.Text, handlers.Print), 1)
-	d.AddHandler(onevent.NewMessage(filters.Message.Text, handlers.Print))
+	//d.AddHandler(onevent.NewMessage(filters.Message.Text, handlers.Print))
 }
 
 func AddCmdHandlers(dispatch dispatcher.Dispatcher) {

@@ -1,6 +1,6 @@
-# [ENC]
+# [ENC-Go]
 
-[![pyLint](https://github.com/Nubuki-all/Tg-encoder/actions/workflows/pyLint.yml/badge.svg?branch=main)](https://github.com/Nubuki-all/Tg-encoder/actions/workflows/pyLint.yml)
+[![Checks](https://github.com/Nubuki-all/Tg-encoder/actions/workflows/pyLint.yml/badge.svg?branch=main)](https://github.com/Nubuki-all/Tg-encoder/actions/workflows/pyLint.yml)
 
 __Still in beta…__
 
@@ -35,7 +35,7 @@ Optional Variables | Explanation
 ---
 
 
-### Commands
+### Commands (outdated)
 ---
 ```
 start - check if bot is awake and get usage.
@@ -92,25 +92,16 @@ help - same as start
 - Install Docker
 - Clone repository to your preferred location 
 - Ensure you are in the proper directory with Dockerfile and .env file present
-- For a faster build run (optional) (don't run from the scripts directory):
-  - `python3 scripts/update_docker.py`
-  (Or manually edit Dockerfile, instructions provided there.
-  To undo, run:
-  `python3 scripts/update_docker.py undo`
 - Run:
   - `docker build . -t enc`
   - `docker run enc`
 
 **Without Docker:**
-- Install required dependencies check [Dockerfile](Dockerfile) or preferably [local_deploy.sh](scripts/local_deploy.sh) for inspiration (I no longer maintain the local_deploy script so run at your own risk)
-- python3.10, ffmpeg, ffprobe & mediainfo is required
-- Run:
-  - `bash run.sh` _To start bot normally_
-  - `bash srun.sh` _To start bot silently_
+- Grab executable from your host architecture from releases and run
 
 ### Features:
 __(Coming Soon)__
 
 ### Source 
-
+- **[A Fork of the original Enc re-written in go](https://github.com/Nubuki-all/Enc)**
 - **[An Heavily Modified Fork of Danish CompressorQueue](https://github.com/1Danish-00/CompressorQueue)**

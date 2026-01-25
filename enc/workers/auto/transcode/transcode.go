@@ -169,7 +169,6 @@ func thing(entry types.QueueEntry) {
 				Job:          *job,
 			},
 		)
-		logger.Info("url: ", url)
 		if txt != url && Bmsg != nil {
 			_, _ = Bmsg.Edit(txt, &tele.EditOptions{
 				HTMLParseMode: true,

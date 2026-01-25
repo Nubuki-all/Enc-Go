@@ -28,7 +28,6 @@ func Restart(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 	if bot.Aria2Client != nil {
 		bot.Aria2Client.Close() //nolint:errcheck
 	}
-	println("here")
 	// err = utils.ExecRestart(msg.ChatID, rMsg.ID)
 	err = utils.Restart(msg.ChatID, rMsg.ID)
 	if err != nil {
