@@ -186,10 +186,10 @@ func NextBatchItem(items []types.BatchItem, except string) *types.BatchItem {
 	return batchutils.GetNextBatchItem(tempItems)
 }
 
-func sendSticker(entry types.QueueEntry, batchItem *types.BatchItem) {
+func sendSticker(entry types.QueueEntry, batchItem *types.BatchItem) *tele.Message {
 	sticker := config.Conf.FSticker
 	if sticker == "" {
-		return
+		return nil
 	}
 	if len(entry.Batch) > 0 {
 		next := NextBatchItem(entry.Batch, batchItem.ID)
@@ -197,7 +197,7 @@ func sendSticker(entry types.QueueEntry, batchItem *types.BatchItem) {
 			c, _ := parser.QParseT(batchItem.FileName, entry.Version, entry.Filter)
 			n, _ := parser.QParseT(next.FileName, entry.Version, entry.Filter)
 			if c == n {
-				return
+				return nil
 			}
 		}
 	} else if entries := bot.Queue.AsSlice(); len(entries) > 1 {
@@ -208,16 +208,17 @@ func sendSticker(entry types.QueueEntry, batchItem *types.BatchItem) {
 		c, _ := parser.QParseT(entry.Name, entry.Version, entry.Filter)
 		n, _ := parser.QParseT(entries[i].Name, entries[i].Version, entries[i].Filter)
 		if c == n {
-			return
+			return nil
 		}
 	}
-	_, err := tele.SendStickerByFileID(
+	msg, err := tele.SendStickerByFileID(
 		config.Conf.FChannel,
 		sticker,
 	)
 	if err != nil {
 		logger.Error(err)
 	}
+	return msg
 }
 
 func cacheNextDownload(entries []types.QueueEntry, batchItem *types.BatchItem) {

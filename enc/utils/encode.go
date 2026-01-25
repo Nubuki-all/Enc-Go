@@ -42,6 +42,7 @@ type EncodeInfo struct {
 	BatchID      string
 	Event        chan struct{}
 	Previous     string
+	FailedJobs   int
 }
 
 // NewEncodeInfo creates and resets an EncodeInfo
@@ -59,6 +60,7 @@ func (e *EncodeInfo) Reset() {
 	e.Event = make(chan struct{}, 1)
 	e.Workers = 0
 	e.WorkersCodec = make([]string, 0)
+	e.FailedJobs = 0
 }
 
 // EncodeJob manages which ffmpeg scripts to run

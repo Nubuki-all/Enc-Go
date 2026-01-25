@@ -176,7 +176,7 @@ func thing(entry types.QueueEntry) {
 				Media:         &tg.InputMediaPhotoExternal{URL: url},
 			})
 		} else if txt != url {
-			_, _ = tele.SendMedia(fchannel, &tg.InputMediaPhotoExternal{URL: url}, &tele.SendOptions{
+			Bmsg, _ = tele.SendMedia(fchannel, &tg.InputMediaPhotoExternal{URL: url}, &tele.SendOptions{
 				Caption:       txt,
 				HTMLParseMode: true,
 			})
@@ -201,6 +201,10 @@ func thing(entry types.QueueEntry) {
 	}
 	_ = msg.Delete()
 	g, ctx := errgroup.WithContext(context.Background())
+
+	totalJobs := len(jobs.List)
+	fmsgs := make([]*tele.Message, 0, totalJobs)
+
 	for i, data := range jobs.List {
 		w := encodeWorker{
 			ctx:       ctx,
@@ -218,13 +222,31 @@ func thing(entry types.QueueEntry) {
 		}
 		if fchannel != 0 {
 			w.fmsg, _ = tele.SendMsg(fchannel, "file #"+strconv.Itoa(i+1), nil)
+			if w.fmsg != nil {
+				fmsgs = append(fmsgs, w.fmsg)
+			}
 		}
 		g.Go(func() error {
 			return w.start(data.Args)
 		})
 	}
-	sendSticker(entry, batchItem)
+	stkMsg := sendSticker(entry, batchItem)
 	_ = g.Wait()
+	// On All jobs fail, remove all associated FCHANNEL entry
+	if totalJobs == Einfo.FailedJobs {
+		if Bmsg != nil {
+			_ = Bmsg.Delete()
+		}
+
+		time.Sleep(1 * time.Second)
+		for _, msg := range fmsgs {
+			_ = msg.Delete()
+			time.Sleep(1 * time.Second)
+		}
+		if stkMsg != nil {
+			_ = stkMsg.Delete()
+		}
+	}
 	Einfo.Reset()
 	if batchItem != nil {
 		updatedBatch := batchutils.MarkAsDone(entry.Batch, batchItem.ID)
@@ -271,6 +293,12 @@ func (e *encodeWorker) start(encodeArgs string) error {
 	case Einfo.Event <- struct{}{}:
 	default:
 	}
+	var succeded bool
+	defer func() {
+		if !succeded {
+			Einfo.FailedJobs++
+		}
+	}()
 	sMsg, err := tele.SendMsg(e.item.ChatID, "`Waiting for encoder worker…`", &tele.SendOptions{ReplyTo: e.item.MessageID})
 	if err != nil {
 		logger.Error(err)
@@ -295,10 +323,12 @@ func (e *encodeWorker) start(encodeArgs string) error {
 		result.FileName = e.dlName
 		result.MediaInfoName = utils.RemoveExt(result.FileName)
 	}
-	_, _ = e.fmsg.Edit(
-		"<b>Awaiting:</b> <code>"+result.FileName+"</code> <code>("+codec+")</code>",
-		&tele.EditOptions{HTMLParseMode: true},
-	)
+	if e.fmsg != nil {
+		_, _ = e.fmsg.Edit(
+			"<b>Awaiting:</b> <code>"+result.FileName+"</code> <code>("+codec+")</code>",
+			&tele.EditOptions{HTMLParseMode: true},
+		)
+	}
 	fn := result.MediaInfoName
 	if e.no > 0 && !config.Conf.SequentialJobs {
 		fn += "-" + strconv.Itoa(e.no)
@@ -448,6 +478,8 @@ func (e *encodeWorker) start(encodeArgs string) error {
 			_, _ = e.fmsg.Edit(caption, &tele.EditOptions{Media: upload.TgMedia})
 		}()
 	}
+	succeded = true
+
 	text := "<b>Source:</b>\n<code>" + cmp.Or(r.ReleaseGroup, "N/A") + "</code>"
 	if e.mInfo != "" {
 		text += "\n<b><a href=\"" + e.mInfo + "\">Mediainfo</a></b>"
