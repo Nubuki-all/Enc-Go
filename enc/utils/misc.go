@@ -21,10 +21,6 @@ import (
 	"enc/config"
 	"enc/internal/bot"
 	"enc/internal/bot/types"
-	"enc/internal/logger"
-	"enc/utils/tele/parser"
-
-	"github.com/5rahim/tanuki"
 )
 
 // Regex patterns
