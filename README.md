@@ -1,6 +1,6 @@
 # [ENC-Go]
 
-[![Checks](https://github.com/Nubuki-all/Tg-encoder/actions/workflows/pyLint.yml/badge.svg?branch=main)](https://github.com/Nubuki-all/Tg-encoder/actions/workflows/pyLint.yml)
+[![Checks](https://github.com/Nubuki-all/Enc-Go/actions/workflows/GoLint.yml/badge.svg?branch=main)](https://github.com/Nubuki-all/Enc-Go/actions/workflows/GoLint.yml)
 
 __Still in beta…__
 
@@ -24,14 +24,10 @@ Optional Variables | Explanation
 `ENCODER` | Encoder's name/nickname to be included in captions can also contain encode info.
 `FCHANNEL` `FCHANNEL_STATS` | Input Channel id where **only** the output video will get forwarded. For the 2nd variable input message id of a message in channel to be used as live status for encodes.
 `LOGS_IN_CHANNEL` type=bool | Get error logs in log channel. Turned off by default, set to True to turn on.
-`ALWAYS_DEPLOY_LATEST` type=bool | When starting bot always pull latest code from upstream repo or default repo if none is given 
 `CMD_SUFFIX` | Bot will only listen to commands ending with the given value
 `TELEGRAPH_API` | Api to use instead of api.telegra.ph when posting mediainfo
 `LOCK_ON_STARTUP` | Pause bot on startup untill pause off is used.
-`FS_THRESHOLD` | Threshold for bot to sleep on floodwait in seconds
-`ALLOW_ACTION` type=bool | Set to True or False depending on whether you want encoding chat actions enabled for bot
-`UPSTREAM_REPO` `UPSTREAM_BRANCH` | Input custom repo link and custom repo branch name, For use with the update function
-  . | *Note:* Update will fail if there are new modules or dependencies in bot. Redeploy if that happens 
+`ALLOW_ACTION` type=bool | Set to True or False depending on whether you want encoding chat actions enabled for bot 
 ---
 
 
@@ -97,7 +93,7 @@ help - same as start
   - `docker run enc`
 
 **Without Docker:**
-- Grab executable from your host architecture from releases and run
+- Grab executable for your host architecture (linux only) from releases and run
 
 ### Features:
 __(Coming Soon)__
