@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/5rahim/tanuki"
 	"go.uber.org/zap"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -338,5 +339,20 @@ func CustomRename(title, season, episode, audio, codec string) (string, string) 
 	return res, res
 }
 
-// Additional functions like FilterName, GenerateCaption, DynamicThumb, etc.
-// can be added here following similar stubs and TODOs for complex logic.
+func VideoInfo(fileName string) (out string) {
+	if fileName == "" {
+		return
+	}
+	p := Parse(fileName, tanuki.DefaultOptions)
+	out = "<b>Video/file information:</b>\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+	pMap, err := utils.StructToMap(p)
+	if err != nil {
+		logger.Error(err)
+		return "<b>An Error Occured.</b>"
+	}
+	var sb strings.Builder
+	for k, v := range pMap {
+		fmt.Fprintf(&sb, "<b>%s:</b> <code>%v</code>\n", k, v)
+	}
+	return out + sb.String()
+}

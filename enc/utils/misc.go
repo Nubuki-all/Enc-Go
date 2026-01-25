@@ -22,6 +22,7 @@ import (
 	"enc/internal/bot"
 	"enc/internal/bot/types"
 	"enc/internal/logger"
+	"enc/utils/tele/parser"
 
 	"github.com/5rahim/tanuki"
 )
@@ -650,22 +651,4 @@ func StructToMap(data any) (map[string]any, error) {
 	}
 	err = json.Unmarshal(bytes, &result)
 	return result, err
-}
-
-func VideoInfo(fileName string) (out string) {
-	if fileName == "" {
-		return
-	}
-	p := tanuki.Parse(fileName, tanuki.DefaultOptions)
-	out = "<b>Video/file information:</b>\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
-	pMap, err := StructToMap(p)
-	if err != nil {
-		logger.Error(err)
-		return "<b>An Error Occured.</b>"
-	}
-	var sb strings.Builder
-	for k, v := range pMap {
-		fmt.Fprintf(&sb, "<b>%s:</b> <code>%v</code>\n", k, v)
-	}
-	return out + sb.String()
 }

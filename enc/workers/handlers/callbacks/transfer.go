@@ -117,7 +117,7 @@ func ViewDlInfo(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery)
 	if info.PauseProgress {
 		return nil
 	}
-	vidStat := utils.VideoInfo(filepath.Base(info.Path))
+	vidStat := parser.VideoInfo(filepath.Base(info.Path))
 	replyMarkup := markup.InlineKeyboard(
 		markup.Row(
 			markup.Callback(
