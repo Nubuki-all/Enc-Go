@@ -93,7 +93,7 @@ help - same as start
   - `docker run enc`
 
 **Without Docker:**
-- Grab executable for your host architecture (linux only) from releases and run
+- Grab the executable for your host architecture (linux only) from releases and run
 
 ### Features:
 __(Coming Soon)__
