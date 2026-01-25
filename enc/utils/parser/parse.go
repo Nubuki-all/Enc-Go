@@ -46,9 +46,9 @@ type ParseResult struct {
 func slice2String(slice []string) string {
 	var sb strings.Builder
 	for _, x := range slice {
-		sb.WriteString(fmt.Sprintf("[%s]", x))
+		sb.WriteString(fmt.Sprintf("[%s] ", x))
 	}
-	return sb.String()
+	return strings.TrimSpace(sb.String())
 }
 
 // ParseOptions holds optional parameters for ParseName.
@@ -273,7 +273,7 @@ func ParseName(
 		sec += " " + codec
 	}
 	if source != "" {
-		sec += source
+		sec += " " + source
 	}
 
 	var ext string
