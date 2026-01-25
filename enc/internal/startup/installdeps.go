@@ -438,72 +438,6 @@ func extractFromTarXz(tarXzPath, binDir string, targets []string) error {
 	return nil
 }
 
-/*func _extractFromTarXz(tarXzPath, binDir string, targets []string) error {
-	f, err := os.Open(tarXzPath)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	xzr, err := xz.NewReader(f)
-	if err != nil {
-		return fmt.Errorf("xz reader: %w", err)
-	}
-
-	tr := tar.NewReader(xzr)
-	targetSet := make(map[string]struct{})
-	for _, t := range targets {
-		targetSet[t] = struct{}{}
-	}
-
-	for {
-		hdr, err := tr.Next()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-		// tar headers use forward slashes
-		name := hdr.Name
-		bn := filepath.Base(name)
-		if _, want := targetSet[bn]; !want {
-			continue
-		}
-		if !strings.Contains(name, "/bin/") {
-			continue
-		}
-
-		// create temp file and write
-		tmpFile, err := os.CreateTemp("", "ffmpeg-bin-*")
-		if err != nil {
-			return err
-		}
-		tmpPath := tmpFile.Name()
-		_, err = io.Copy(tmpFile, tr)
-		_ = tmpFile.Close()
-		if err != nil {
-			_ = os.Remove(tmpPath)
-			return err
-		}
-
-		if runtime.GOOS != "windows" {
-			if err := os.Chmod(tmpPath, 0o755); err != nil {
-				_ = os.Remove(tmpPath)
-				return err
-			}
-		}
-
-		dest := filepath.Join(binDir, bn)
-		if err := atomicMove(tmpPath, dest); err != nil {
-			_ = os.Remove(tmpPath)
-			return err
-		}
-	}
-
-	return nil
-}*/
-
 // InstallMediaInfo downloads the appropriate static mediainfo  binary for
 // the current platform and installs it into binDir (creating binDir if needed).
 // If the target binary already exists (non-empty) this is a no-op.
@@ -642,7 +576,6 @@ func InstallMediaInfo(ctx context.Context, binDir string) (string, error) {
 		return "", fmt.Errorf("chmod temp file: %w", err)
 	}
 
-	// atomic move into place (reuses atomicMove helper)
 	if err := atomicMove(tmpPath, destPath); err != nil {
 		return "", fmt.Errorf("install binary: %w", err)
 	}
@@ -660,6 +593,9 @@ func InstallAnitomy(ctx context.Context, binDir string) (string, error) {
 
 	var fileName string
 	targetName := "anitomy"
+	if goos == "windows" {
+		targetName += ".exe"
+	}
 
 	switch {
 	case goos == "linux" && goarch == "amd64":
@@ -668,6 +604,12 @@ func InstallAnitomy(ctx context.Context, binDir string) (string, error) {
 		fileName = "anitomy-arm32"
 	case goos == "linux" && goarch == "arm64":
 		fileName = "anitomy-arm64"
+	case goos == "windows" && goarch == "amd64":
+		fileName = "anitomy-x64.exe"
+	case goos == "windows" && goarch == "386":
+		fileName = "anitomy-x86.exe"
+	case goos == "windows" && goarch == "arm64":
+		fileName = "anitomy-arm64.exe"
 	default:
 		return "", fmt.Errorf("install anitomy: binaries not available for platform: os=%s arch=%s", goos, goarch)
 	}
@@ -728,7 +670,6 @@ func InstallAnitomy(ctx context.Context, binDir string) (string, error) {
 		return "", fmt.Errorf("chmod temp file: %w", err)
 	}
 
-	// atomic move into place (reuses atomicMove helper)
 	if err := atomicMove(tmpPath, destPath); err != nil {
 		return "", fmt.Errorf("install binary: %w", err)
 	}
@@ -820,7 +761,6 @@ func InstallQbittorrentNox(ctx context.Context, binDir string) (string, error) {
 		return "", fmt.Errorf("chmod temp file: %w", err)
 	}
 
-	// atomic move into place (reuses atomicMove helper)
 	if err := atomicMove(tmpPath, destPath); err != nil {
 		return "", fmt.Errorf("install binary: %w", err)
 	}
@@ -919,7 +859,6 @@ func InstallYtdlp(ctx context.Context, binDir string) (string, error) {
 		return "", fmt.Errorf("chmod temp file: %w", err)
 	}
 
-	// atomic move into place (reuses atomicMove helper)
 	if err := atomicMove(tmpPath, destPath); err != nil {
 		return "", fmt.Errorf("install binary: %w", err)
 	}
