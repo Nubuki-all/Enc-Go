@@ -69,7 +69,7 @@ func RssHandler(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 			_, _ = msg.ReplyText(err.Error())
 			return nil
 		}
-		txt := fmt.Sprintf("/%s requires an argument; send %s --help if lost.", cmd, cmd)
+		txt := fmt.Sprintf("%s requires an argument; send %s --help if lost.", cmd, cmd)
 		_, _ = msg.Reply(txt, &tele.ReplyOptions{HTMLParseMode: true})
 		return nil
 	}
@@ -344,7 +344,7 @@ func editRss(msg *tele.Message, args string) error {
 	}
 	pargs := arg.Values
 	link := pargs["link"].(string)
-	if link != "" || !utils.IsURL(link) {
+	if link != "" && !utils.IsURL(link) {
 		_, _ = msg.ReplyText("Invalid RSS URL.")
 		return nil
 	}
