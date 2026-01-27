@@ -292,9 +292,16 @@ func cacheNextDownload(entries []types.QueueEntry, batchItem *types.BatchItem) {
 		download.InputLoc = loc
 		download.Size = entry.Doc.Size
 	case source.Qbit:
+		if download.Selected != "" {
+			return
+		}
 		download.Qbit = true
 	case source.Ytdl:
 		download.Ytdl = true
+	case source.Aria2:
+		if download.Selected != "" {
+			return
+		}
 	}
 	download.Go()
 	downloaders.CachedDL[entry.Name] = download
