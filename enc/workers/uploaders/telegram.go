@@ -373,7 +373,7 @@ func (ul *TgUpload) waitTillReconnect() {
 			return
 		}
 
-		logger.Warn("Attempt failed: %v. Retrying in %v...\n", err, retryInterval)
+		logger.Warnf("Attempt failed: %v. Retrying in %v...\n", err, retryInterval)
 
 		// Try to wait for either the next retry interval
 		// or the overall timeout.
@@ -383,7 +383,7 @@ func (ul *TgUpload) waitTillReconnect() {
 			continue
 		case <-ctx.Done():
 
-			logger.Warn("Total duration exceeded (%s). Giving up.\n", timeoutDuration)
+			logger.Warnf("Total duration exceeded (%s). Giving up.\n", timeoutDuration)
 			return
 		}
 	}
