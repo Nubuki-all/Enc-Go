@@ -183,7 +183,8 @@ func GetAria2DlInfo(uri string) *utils.DLInfo {
 	folder, _ := filepath.Abs(config.Conf.TempDir)
 	resp, err := aria2.AddURI(
 		arigo.URIs(uri), &arigo.Options{
-			Dir: folder,
+			Dir:            folder,
+			FileAllocation: "none",
 		})
 	if err != nil {
 		dlInfo.Error = err
