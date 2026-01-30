@@ -101,6 +101,7 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 		"rename":   EventHandlerWithArgs(transfer.Rename),
 		"list":     EventHandlerWithArgs(transfer.ListFiles),
 		"listv":    EventHandlerWithArgs(transfer.ListYtdlFiles),
+		"m":        EventHandlerWithArgs(transfer.MediaInfo),
 		"mux":      EventHandlerWithArgs(transfer.Mux),
 		"upload":   EventHandlerWithArgs(transfer.Upload),
 		"ul":       EventHandlerWithArgs(transfer.Upload),
