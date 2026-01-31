@@ -552,7 +552,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 		}
 
 	}
-	ffCmd = fmt.Sprintf("fmpeg -i %s -map 0:v? -map 0:a? -map 0:s? -map 0:t? %s -codec copy %s -y",
+	ffCmd = fmt.Sprintf("ffmpeg -i %s -map 0:v? -map 0:a? -map 0:s? -map 0:t? %s -codec copy %s -y",
 		utils.SafePath(tFile), args2, utils.SafePath(tFile2))
 	encode = &encoders.Encoder{
 		Msg:    sMsg,
