@@ -326,7 +326,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 						_, _ = sMsg.EditText("-I: " + "File is not in the list of supported files")
 						return nil
 					}
-					iFileName = dlInfo.Files[s]
+					iFileName = filepath.Base(dlInfo.Files[s])
 				} else if dlInfo.Count == 1 {
 					if !iYtdl && !utils.IsSupportedFile(dlInfo.Name) {
 						_, _ = sMsg.EditText("-i: File is either not a supported file or it is a folder with a single file. List the link and if it is the latter, select the file with -I.")
@@ -383,7 +383,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 				_, _ = sMsg.EditText("-s: " + "File is not in the list of supported files")
 				return nil
 			}
-			fileName = dlInfo.Files[s]
+			fileName = filepath.Base(dlInfo.Files[s])
 			// iFileName = dlInfo.Files[s]
 		} else if dlInfo.Count == 1 {
 			if !ytdl && !utils.IsSupportedFile(dlInfo.Name) {

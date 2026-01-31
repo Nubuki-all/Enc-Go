@@ -3,6 +3,7 @@ package queue
 import (
 	"cmp"
 	"fmt"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -18,7 +19,7 @@ import (
 	//"enc/internal/logger"
 	"enc/utils"
 	"enc/utils/argparser"
-	"enc/utils/batch"
+	batchutils "enc/utils/batch"
 	"enc/utils/tele"
 	"enc/workers/downloaders"
 )
@@ -234,7 +235,7 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 					continue
 				}
 				if name := dlInfo.Files[s]; utils.IsVideoFile(name) {
-					dlInfo.Name = name
+					dlInfo.Name = filepath.Base(name)
 				} else {
 					_, _ = pMsg.ReplyText(fmt.Sprintf("File with name: %s is not a Video", name))
 					continue
@@ -312,7 +313,7 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 			return nil
 		}
 		if name := dlInfo.Files[s]; utils.IsVideoFile(name) {
-			dlInfo.Name = name
+			dlInfo.Name = filepath.Base(name)
 		} else {
 			_, _ = msg.ReplyText(fmt.Sprintf("File with name: %s is not a Video", name))
 			return nil

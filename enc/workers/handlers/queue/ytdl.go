@@ -3,6 +3,7 @@ package queue
 import (
 	"cmp"
 	"fmt"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -18,7 +19,7 @@ import (
 	//"enc/internal/logger"
 	"enc/utils"
 	"enc/utils/argparser"
-	"enc/utils/batch"
+	batchutils "enc/utils/batch"
 	"enc/utils/tele"
 	"enc/workers/downloaders"
 )
@@ -214,7 +215,7 @@ func AddWithYtdl(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 					_, _ = pMsg.ReplyText(fmt.Sprintf("'-s': `%s` is more than last file_id :- `%d`\nTotal files in folder :- `%d`", selected, lastFileID, dlInfo.Count))
 					continue
 				}
-				dlInfo.Name = dlInfo.Files[s]
+				dlInfo.Name = filepath.Base(dlInfo.Files[s])
 				qSource.Select = selected
 			} else if batch && dlInfo.Count > 1 {
 				forcedFileName = ""
@@ -269,7 +270,7 @@ func AddWithYtdl(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 			_, _ = msg.ReplyText(fmt.Sprintf("'-s': `%s` is more than last file_id :- `%d`\nTotal files in folder :- `%d`", selected, lastFileID, dlInfo.Count))
 			return nil
 		}
-		dlInfo.Name = dlInfo.Files[s]
+		dlInfo.Name = filepath.Base(dlInfo.Files[s])
 		qSource.Select = selected
 	} else if batch && dlInfo.Count > 1 {
 		forcedFileName = ""

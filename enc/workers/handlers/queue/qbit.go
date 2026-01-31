@@ -3,6 +3,7 @@ package queue
 import (
 	"cmp"
 	"fmt"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -214,7 +215,7 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 					continue
 				}
 				if name := dlInfo.Files[s]; utils.IsVideoFile(name) {
-					dlInfo.Name = name
+					dlInfo.Name = filepath.Base(name)
 				} else {
 					_, _ = pMsg.ReplyText(fmt.Sprintf("File with name: %s is not a Video", name))
 					continue
@@ -279,7 +280,7 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 			return nil
 		}
 		if name := dlInfo.Files[s]; utils.IsVideoFile(name) {
-			dlInfo.Name = name
+			dlInfo.Name = filepath.Base(name)
 		} else {
 			_, _ = msg.ReplyText(fmt.Sprintf("File with name: %s is not a Video", name))
 			return nil

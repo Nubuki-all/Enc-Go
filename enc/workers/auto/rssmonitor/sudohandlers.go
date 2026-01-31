@@ -3,6 +3,7 @@ package rssmonitor
 import (
 	"cmp"
 	"fmt"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -187,7 +188,7 @@ func addLink(msg *tele.Message, args string) error {
 			return nil
 		}
 		if name := dlInfo.Files[s]; utils.IsVideoFile(name) {
-			dlInfo.Name = name
+			dlInfo.Name = filepath.Base(name)
 		} else {
 			_, _ = msg.ReplyText(fmt.Sprintf("File with name: %s is not a Video", name))
 			return nil
@@ -398,7 +399,7 @@ func addTorrent(msg *tele.Message, args string) error {
 			return nil
 		}
 		if name := dlInfo.Files[s]; utils.IsVideoFile(name) {
-			dlInfo.Name = name
+			dlInfo.Name = filepath.Base(name)
 		} else {
 			_, _ = msg.ReplyText(fmt.Sprintf("File with name: %s is not a Video", name))
 			return nil
@@ -611,7 +612,7 @@ func addWithYtdl(msg *tele.Message, args string) error {
 			_, _ = msg.ReplyText(fmt.Sprintf("'-s': `%s` is more than last file_id :- `%d`\nTotal files in folder :- `%d`", selected, lastFileID, dlInfo.Count))
 			return nil
 		}
-		dlInfo.Name = dlInfo.Files[s]
+		dlInfo.Name = filepath.Base(dlInfo.Files[s])
 		qSource.Select = selected
 	} else if batch && dlInfo.Count > 1 {
 		forcedFileName = ""
