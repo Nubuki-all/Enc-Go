@@ -401,6 +401,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 		InputLoc: inputLoc,
 		Folder:   folder,
 		FileName: fileName,
+		Selected: selected,
 		Size:     size,
 		URI:      link,
 		Qbit:     qbit,
