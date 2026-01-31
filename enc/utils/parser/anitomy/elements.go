@@ -50,7 +50,7 @@ type Elements struct {
 	ReleaseVersion      FlexibleStringSlice `json:"release_version,omitempty"`
 	Source              FlexibleStringSlice `json:"source,omitempty"`
 	Subtitles           FlexibleStringSlice `json:"subtitles,omitempty"`
-	VideoResolution     string              `json:"video_resolution,omitempty"`
+	VideoResolution     FlexibleStringSlice `json:"video_resolution,omitempty"`
 	VideoTerm           FlexibleStringSlice `json:"video_term,omitempty"`
 	VolumeNumber        FlexibleStringSlice `json:"volume,omitempty"`
 	VolumePrefix        FlexibleStringSlice `json:"volume_prefix,omitempty"`

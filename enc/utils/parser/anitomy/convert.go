@@ -1,6 +1,10 @@
 package anitomy
 
-import "github.com/5rahim/tanuki"
+import (
+	"strings"
+
+	"github.com/5rahim/tanuki"
+)
 
 func (e *Elements) ToTanukiElements() *tanuki.Elements {
 	return &tanuki.Elements{
@@ -27,7 +31,7 @@ func (e *Elements) ToTanukiElements() *tanuki.Elements {
 		ReleaseVersion:      e.ReleaseVersion,
 		Source:              e.Source,
 		Subtitles:           e.Subtitles,
-		VideoResolution:     e.VideoResolution,
+		VideoResolution:     strings.Join(e.VideoResolution, " "),
 		VideoTerm:           e.VideoTerm,
 		VolumeNumber:        e.VolumeNumber,
 		VolumePrefix:        e.VolumePrefix,
