@@ -12,7 +12,7 @@ RUN CGO_ENABLED=1 GOOS=linux go build -a -installsuffix cgo -tags netgo \
     -ldflags "-s -w -linkmode external -extldflags '-static'" \
     -o enc .
 
-FROM alpine:latest
+FROM fedora:latest
 
 WORKDIR /root/
 
