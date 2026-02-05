@@ -58,6 +58,7 @@ type Config struct {
 	LogChannel            int64
 	LogsInChannel         bool
 	LogFileName           string
+	MaxSequentialJobs     int64
 	MDLTimeout            int
 	MediaInfoDir          string
 	MICap                 bool
@@ -175,13 +176,14 @@ func LoadConfig() error {
 	viper.SetDefault("DOWNLOAD_DIR", ".downloads")
 	viper.SetDefault("DUMP_DIR", ".dump")
 	viper.SetDefault("DUMP_LEECH", true)
-	viper.SetDefault("ENABLE_PPROF", true)
+	// viper.SetDefault("ENABLE_PPROF", true)
 	viper.SetDefault("ENCODE_DIR", ".encode")
 	viper.SetDefault("EXTENDED_CAPTIONS", true)
 	viper.SetDefault("FFMPEG", `ffmpeg -i {input} -preset ultrafast -c:v libx265 -crf 27 -map 0:v -c:a aac -map 0:a -c:s copy -map 0:s? {output}`)
 	// viper.SetDefault("FINISHED_PROGRESS_STR", "🧡")
 	viper.SetDefault("FLOOD_SLEEP_THRESHOLD", 600)
 	viper.SetDefault("LOG_FILE_NAME", "logs.txt")
+	viper.SetDefault("MAX_SEQUENTIAL_JOBS", 1)
 	viper.SetDefault("MI_IN_CAPTION", true)
 	viper.SetDefault("MEDIAINFO_DIR", ".minfo")
 	viper.SetDefault("MUX_DIR", ".mux")
@@ -250,6 +252,7 @@ func LoadConfig() error {
 		LogChannel:            viper.GetInt64("LOG_CHANNEL"),
 		LogsInChannel:         viper.GetBool("LOGS_IN_CHANNEL"),
 		LogFileName:           viper.GetString("LOG_FILE_NAME"),
+		MaxSequentialJobs:     viper.GetInt64("MAX_SEQUENTIAL_JOBS"),
 		MDLTimeout:            viper.GetInt("MEGA_DL_TIMEOUT"),
 		MediaInfoDir:          viper.GetString("MEDIAINFO_DIR"),
 		MICap:                 viper.GetBool("MI_IN_CAPTION"),

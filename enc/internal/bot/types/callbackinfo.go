@@ -1,4 +1,4 @@
-// Package types contain bot specific inteenal types
+// Package types contain bot specific internal types
 package types
 
 type CallbackInfo struct {

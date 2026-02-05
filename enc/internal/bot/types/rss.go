@@ -7,11 +7,10 @@ type FeedData struct {
 	LastTitle string
 	AllowSpam bool
 	Command   string
-	Chat      []FeedChat // chat id to send to
+	Chat      []FeedChat // chat to send to
 	Direct    bool       // whether to pass to fakeEventHandler
 	Inf       [][]string // inclusion lists (list of lists)
 	Exf       [][]string // exclusion lists
-	// add other fields as needed
 }
 
 type FeedChat struct {

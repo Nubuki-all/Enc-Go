@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"enc/config"
@@ -31,18 +30,17 @@ import (
 )
 
 var (
-	Einfo       = utils.NewEncodeInfo()
-	workerMutex sync.Locker
+	Einfo           = utils.NewEncodeInfo()
+	workerSemaphore types.Throttler
 )
 
 // Start starts the encode workers in the background.
 // To be called only once
 func Start() {
-	if config.Conf.SequentialJobs {
-		workerMutex = &sync.Mutex{}
-	} else {
-		workerMutex = &types.NoopMutex{}
-	}
+	workerSemaphore = types.NewCPUThrottler(
+		!config.Conf.SequentialJobs,
+		config.Conf.MaxSequentialJobs,
+	)
 	go something()
 }
 
@@ -281,8 +279,8 @@ func (e *encodeWorker) start(encodeArgs string) error {
 		Einfo.Workers--
 		e.job.Done()
 	}()
-	workerMutex.Lock()
-	defer workerMutex.Unlock()
+	_ = workerSemaphore.Acquire(context.Background(), 1)
+	defer workerSemaphore.Release(1)
 	select {
 	case <-e.ctx.Done():
 		return nil

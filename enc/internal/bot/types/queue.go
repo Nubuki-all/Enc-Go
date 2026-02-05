@@ -125,7 +125,7 @@ func (q *Queue) Replace(name string, entry QueueEntry) {
 	for i := range q.entries {
 		if q.entries[i].Name == name {
 			delete(q.keysExist, name)
-			q.keysExist[name] = struct{}{}
+			q.keysExist[entry.Name] = struct{}{}
 			q.entries[i] = entry
 			go q.notifyWaiters()
 			return

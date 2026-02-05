@@ -32,7 +32,8 @@ func main() {
 		}()
 	}
 
-	logger.Info("Starting up" + strings.Repeat(".", 10))
+	logger.Info(strings.Repeat(".", 20))
+	logger.InfoW("Starting bot...", zap.String("Version", Version))
 	if config.Rconf.Error != nil {
 		logger.Criticalf("Failed to load config: %v", config.Rconf.Error)
 	}
