@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/celestix/gotgproto"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/gotd/td/telegram/uploader"
 	"github.com/gotd/td/tg"
@@ -169,11 +170,14 @@ func (ul *TgUpload) Start() (err error) {
 			strings.Contains(errStr, "engine was closed") ||
 			strings.Contains(errStr, "broken pipe") ||
 			strings.Contains(errStr, "EOF") {
-			err = telegram.Restart()
-			if err != nil {
-				logger.Error(err)
+			if config.Conf.ForceRestartOnRPCFail {
+				err = telegram.Restart()
+				if err != nil {
+					logger.Error(err)
+				}
+			} else {
+				ul.waitTillReconnect()
 			}
-			// ul.waitTillReconnect()
 			return ErrRetry
 		}
 		if !ul.IsCancelled {
@@ -364,7 +368,7 @@ func (ul *TgUpload) sendMedia() (err error) {
 	return err
 }
 
-/*func (ul *TgUpload) waitTillReconnect() {
+func (ul *TgUpload) waitTillReconnect() {
 	timeoutDuration := 5 * time.Minute
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutDuration)
 	defer cancel()
@@ -400,4 +404,4 @@ func safePing(ctx context.Context, client *gotgproto.Client) (err error) {
 		}
 	}()
 	return client.Ping(ctx)
-}*/
+}

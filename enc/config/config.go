@@ -50,6 +50,7 @@ type Config struct {
 	FFmpeg4               string
 	FinishedProgressStr   string
 	FlCap                 bool
+	ForceRestartOnRPCFail bool
 	FSThreshold           int
 	FSticker              string
 	JSONLog               bool
@@ -244,6 +245,7 @@ func LoadConfig() error {
 		FFmpeg4:               viper.GetString("FFMPEG4"),
 		FinishedProgressStr:   viper.GetString("FINISHED_PROGRESS_STR"),
 		FlCap:                 viper.GetBool("FILENAME_AS_CAPTION"),
+		ForceRestartOnRPCFail: viper.GetBool("FORCE_RESTART_ON_RPC_FAILURE"),
 		FSThreshold:           viper.GetInt("FLOOD_SLEEP_THRESHOLD"),
 		FSticker:              viper.GetString("FSTICKER"),
 		JSONLog:               viper.GetBool("JSON_LOGFILE"),
