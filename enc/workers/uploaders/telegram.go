@@ -167,6 +167,7 @@ func (ul *TgUpload) Start() (err error) {
 	if err != nil {
 		errStr := err.Error()
 		if strings.Contains(errStr, "engine forcibly closed") ||
+			strings.Contains(errStr, "engine was closed") ||
 			strings.Contains(errStr, "broken pipe") ||
 			strings.Contains(errStr, "EOF") {
 			ul.waitTillReconnect()
