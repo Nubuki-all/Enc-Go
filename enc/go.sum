@@ -8,8 +8,6 @@ github.com/Masterminds/semver v1.5.0 h1:H65muMkzWKEuNDnfl9d70GUjFniHKHRbFPGBuZ3Q
 github.com/Masterminds/semver v1.5.0/go.mod h1:MB6lktGJrhw8PrUyiEoblNEGEQ+RzHPF078ddwwvV3Y=
 github.com/Nubuki-all/arigo v0.0.0-20260123144835-fae1d481fa1a h1:6i9Xntm1MvlaBkLgyXXeJH355F01NZUZ2kbJfKCMuH0=
 github.com/Nubuki-all/arigo v0.0.0-20260123144835-fae1d481fa1a/go.mod h1:/5RntQunAQzHN2HLvv5UKYn0IBfpG+hW5bMJLJG6WXA=
-github.com/Nubuki-all/go-ytdlp v0.0.0-20250928204720-2a8a73ea7af7 h1:AHvWw/cTFUrW2TAq9a87bS9GjgT9xYzMpqtfMTtZFtE=
-github.com/Nubuki-all/go-ytdlp v0.0.0-20250928204720-2a8a73ea7af7/go.mod h1:38IL64XM6gULrWtKTiR0+TTNCVbxesNSbTyaFG2CGTI=
 github.com/Nubuki-all/gotgproto v1.0.0-beta21.0.20250920232014-4785cd9861fa h1:2LfE2huTasE5Ml/r61SU0G1l4pmmb+9zPiCNvVWB0FE=
 github.com/Nubuki-all/gotgproto v1.0.0-beta21.0.20250920232014-4785cd9861fa/go.mod h1:xjZlGA8ABRKkfGMmkHKyz520hK6pMfyE8yxpSTqohME=
 github.com/ProtonMail/go-crypto v1.3.0 h1:ILq8+Sf5If5DCpHQp4PbZdS1J7HDFRXz/+xKBiRGFrw=
@@ -132,6 +130,8 @@ github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
 github.com/kr/text v0.2.0 h1:5Nx0Ya0ZqY2ygV366QzturHI13Jq95ApcVaJBhpS+AY=
 github.com/kr/text v0.2.0/go.mod h1:eLer722TekiGuMkidMxC/pM04lWEeraHUUmBw8l2grE=
+github.com/lrstanley/go-ytdlp v1.2.7 h1:YNDvKkd0OCJSZLZePZvJwcirBCfL8Yw3eCwrTCE5w7Q=
+github.com/lrstanley/go-ytdlp v1.2.7/go.mod h1:38IL64XM6gULrWtKTiR0+TTNCVbxesNSbTyaFG2CGTI=
 github.com/lufia/plan9stats v0.0.0-20251013123823-9fd1530e3ec3 h1:PwQumkgq4/acIiZhtifTV5OUqqiP82UAl0h87xj/l9k=
 github.com/lufia/plan9stats v0.0.0-20251013123823-9fd1530e3ec3/go.mod h1:autxFIvghDt3jPTLoqZ9OZ7s9qTGNAWmYCjVFWPX/zg=
 github.com/mattn/go-colorable v0.1.14 h1:9A9LHSqF/7dyVVX6g0U9cwm9pG3kP9gSzcuIPHPsaIE=

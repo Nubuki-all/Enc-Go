@@ -43,7 +43,7 @@ replace github.com/celestix/gotgproto => github.com/Nubuki-all/gotgproto v1.0.0-
 
 replace github.com/siku2/arigo => github.com/Nubuki-all/arigo v0.0.0-20260123144835-fae1d481fa1a
 
-replace github.com/lrstanley/go-ytdlp => github.com/Nubuki-all/go-ytdlp v0.0.0-20250928204720-2a8a73ea7af7
+// replace github.com/lrstanley/go-ytdlp => github.com/Nubuki-all/go-ytdlp v0.0.0-20250928204720-2a8a73ea7af7
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
