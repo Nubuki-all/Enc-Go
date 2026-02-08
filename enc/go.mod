@@ -14,7 +14,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.13
 	github.com/google/uuid v1.6.0
 	github.com/gotd/contrib v0.21.1
-	github.com/gotd/td v0.138.0
+	github.com/gotd/td v0.139.0
 	github.com/k0kubun/go-ansi v0.0.0-20180517002512-3bf9e2903213
 	github.com/lrstanley/go-ytdlp v1.2.7
 	github.com/mattn/go-sqlite3 v1.14.33
@@ -26,7 +26,7 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/traefik/yaegi v0.16.1
 	github.com/ulikunitz/xz v0.5.15
-	go.mongodb.org/mongo-driver v1.17.8
+	go.mongodb.org/mongo-driver v1.17.9
 	go.uber.org/zap v1.27.1
 	golang.org/x/net v0.49.0
 	golang.org/x/sync v0.19.0
