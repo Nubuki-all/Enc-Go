@@ -783,6 +783,7 @@ func InstallYtdlp(ctx context.Context, binDir string) (string, error) {
 
 	var denoFileName, fileName string
 	targetName := "yt-dlp"
+	denoTargetName := "deno"
 
 	switch {
 	case goos == "linux" && goarch == "amd64":
@@ -802,9 +803,11 @@ func InstallYtdlp(ctx context.Context, binDir string) (string, error) {
 	}
 	if goos == "windows" {
 		targetName += ".exe"
+		denoTargetName += ".exe"
 	}
 
 	destPath := filepath.Join(binDir, targetName)
+	denoDestPath := filepath.Join(binDir, denoTargetName)
 
 	// If file already exists and seems valid, do nothing.
 	if fi, err := os.Stat(destPath); err == nil {
@@ -894,7 +897,6 @@ func InstallYtdlp(ctx context.Context, binDir string) (string, error) {
 		return "", nil
 	}
 	s.Start()
-	// Open zip and find the aria2c entry
 	zr, err := zip.OpenReader(tmpZipPath)
 	if err != nil {
 		return "", fmt.Errorf("open zip: %w", err)
@@ -944,7 +946,7 @@ func InstallYtdlp(ctx context.Context, binDir string) (string, error) {
 	}
 
 	// Atomic move: try rename, otherwise copy+remove fallback
-	if err := atomicMove(tmpBinPath, destPath); err != nil {
+	if err := atomicMove(tmpBinPath, denoDestPath); err != nil {
 		return "", fmt.Errorf("install binary: %w", err)
 	}
 	return destPath, nil
