@@ -13,7 +13,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/celestix/gotgproto"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/gotd/td/telegram/uploader"
 	"github.com/gotd/td/tg"
@@ -60,7 +59,7 @@ func NewTgUl(name, caption, thumb string, forceDocument bool, msg, reply *tele.M
 		reply:        reply,
 		thumb:        thumb,
 		threads:      3,
-		upload:       uploader.NewUploader(msg.Ctx.Raw),
+		upload:       uploader.NewUploader(telegram.Client.API()),
 		forceDoc:     forceDocument,
 		ufstr:        conf.UnfinishedProgressStr,
 		fstr:         conf.FinishedProgressStr,
@@ -170,7 +169,11 @@ func (ul *TgUpload) Start() (err error) {
 			strings.Contains(errStr, "engine was closed") ||
 			strings.Contains(errStr, "broken pipe") ||
 			strings.Contains(errStr, "EOF") {
-			ul.waitTillReconnect()
+			err = telegram.Restart()
+			if err != nil {
+				logger.Error(err)
+			}
+			// ul.waitTillReconnect()
 			return ErrRetry
 		}
 		if !ul.IsCancelled {
@@ -323,7 +326,7 @@ func (ul *TgUpload) getThumbWithDuration(ctx context.Context, ext string) (thumb
 		logger.Warn("Could not get video thumbnail!")
 		return thumb, dur
 	}
-	uClient := uploader.NewUploader(ul.msg.Ctx.Raw)
+	uClient := uploader.NewUploader(telegram.Client.API())
 	thumb, err = uClient.FromPath(ctx, thumbPath)
 	if err != nil {
 		logger.Error("Uploading thumbnail to telegram server failed with: ", err)
@@ -336,7 +339,7 @@ func (ul *TgUpload) uploadThumbnail(ctx context.Context) (thumb tg.InputFileClas
 	if ul.thumb == "" {
 		return thumb
 	}
-	uClient := uploader.NewUploader(ul.msg.Ctx.Raw)
+	uClient := uploader.NewUploader(telegram.Client.API())
 	thumb, err := uClient.FromPath(ctx, ul.thumb)
 	if err != nil {
 		logger.Error("Uploading thumbnail to telegram server failed with: ", err)
@@ -361,7 +364,7 @@ func (ul *TgUpload) sendMedia() (err error) {
 	return err
 }
 
-func (ul *TgUpload) waitTillReconnect() {
+/*func (ul *TgUpload) waitTillReconnect() {
 	timeoutDuration := 5 * time.Minute
 	ctx, cancel := context.WithTimeout(context.Background(), timeoutDuration)
 	defer cancel()
@@ -397,4 +400,4 @@ func safePing(ctx context.Context, client *gotgproto.Client) (err error) {
 		}
 	}()
 	return client.Ping(ctx)
-}
+}*/

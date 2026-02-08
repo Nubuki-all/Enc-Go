@@ -2,6 +2,7 @@
 package telegram
 
 import (
+	"errors"
 	"time"
 
 	"github.com/celestix/gotgproto"
@@ -23,8 +24,15 @@ import (
 )
 
 var (
-	Client  *gotgproto.Client
-	Context *ext.Context
+	Client   *gotgproto.Client
+	Context  *ext.Context
+	stopChan = make(chan struct{})
+	Idle     = func() {
+		<-stopChan
+	}
+	Stop = func() {
+		close(stopChan)
+	}
 )
 
 func InitClient() {
@@ -56,4 +64,13 @@ func InitClient() {
 
 	logger.Infof("client (@%s) has been started...\n", Client.Self.Username)
 	Context = Client.CreateContext()
+}
+
+func Restart() error {
+	if Client == nil {
+		return errors.New("no telegram client available to restart")
+	}
+	Client.Stop()
+	InitClient()
+	return nil
 }
