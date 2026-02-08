@@ -119,11 +119,16 @@ func rssMonitorOnce(ctx context.Context) {
 		return
 	}
 
-	var err error
-	err = utils.Pause(2, true)
+	err := utils.Pause(2, true)
 	if err != nil {
 		logger.Error(err)
 	}
+	defer func() {
+		err := utils.RmPause(2, 0)
+		if err != nil {
+			logger.Error(err)
+		}
+	}()
 
 	allPaused := true
 
@@ -320,11 +325,6 @@ func rssMonitorOnce(ctx context.Context) {
 
 		// log feed info
 		logger.InfoW("Feed Updated!", zap.String("Feed Name", title), zap.String("Last item", lastLink))
-	}
-
-	err = utils.RmPause(2, 0)
-	if err != nil {
-		logger.Error(err)
 	}
 	if allPaused {
 		PauseRSS()
