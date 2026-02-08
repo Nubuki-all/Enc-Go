@@ -35,6 +35,9 @@ var (
 	}
 )
 
+// ReAddHandlers quick hack to avoid circular import
+var ReAddHandlers func()
+
 func InitClient() {
 	var err error
 	waiter := floodwait.NewSimpleWaiter()
@@ -72,5 +75,6 @@ func Restart() error {
 	}
 	Client.Stop()
 	InitClient()
+	ReAddHandlers()
 	return nil
 }

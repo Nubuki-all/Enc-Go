@@ -19,6 +19,7 @@ import (
 	"enc/config"
 	"enc/internal/bot"
 	"enc/internal/bot/entimer"
+	"enc/internal/clients/telegram"
 	"enc/internal/db"
 	"enc/internal/logger"
 
@@ -35,6 +36,9 @@ import (
 )
 
 func Finalize(ctx context.Context) {
+	// hack to avoid circular import
+	telegram.ReAddHandlers = AddAllHandlers
+
 	bot.ID, _ = strconv.ParseInt(config.Rconf.BotID, 10, 64)
 	if !config.Conf.NoExternalDL {
 		go startRPC()
