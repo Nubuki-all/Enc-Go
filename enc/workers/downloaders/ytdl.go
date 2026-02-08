@@ -123,7 +123,34 @@ func (dl *YtdlDownload) Start() (err error) {
 			// continue loop
 		}
 	}()
-	ytdl = ytdl.ProgressFunc(progressInterval, dl.ProgressCallback)
+	progChan := make(chan ytdlp.ProgressUpdate, 1)
+	progressIntercep := func(update ytdlp.ProgressUpdate) {
+		select {
+		case progChan <- update:
+		default:
+		}
+	}
+	ytdl = ytdl.ProgressFunc(progressInterval, progressIntercep)
+	go func() {
+		uTicker := time.NewTicker(progressInterval)
+		defer uTicker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-uTicker.C:
+				if dl.done {
+					return
+				}
+				select {
+				case up := <-progChan:
+					dl.ProgressCallback(up)
+				default:
+				}
+			}
+			// continue loop
+		}
+	}()
 	result, err := ytdl.Run(ctx, dl.uri)
 	dl.done = true
 	if err != nil && !dl.IsCancelled {
