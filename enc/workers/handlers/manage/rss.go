@@ -2,6 +2,7 @@ package manage
 
 import (
 	"cmp"
+	"context"
 	"fmt"
 	"slices"
 	"strconv"
@@ -119,7 +120,7 @@ func delRss(msg *tele.Message, args string) error {
 		"Succesfully removed '%s' from subscribed feeds!",
 		args,
 	))
-	db.SaveRSSDict(msg.Ctx)
+	db.SaveRSSDict(context.Background())
 	return nil
 }
 
@@ -269,7 +270,7 @@ func subRss(msg *tele.Message, args string) error {
 		Paused:    pause,
 	}
 	bot.RSSDictMutex.Unlock()
-	db.SaveRSSDict(msg.Ctx)
+	db.SaveRSSDict(context.Background())
 	_, _ = msg.Reply(txt,
 		&tele.ReplyOptions{HTMLParseMode: true})
 	logger.InfoW(
@@ -363,7 +364,7 @@ func editRss(msg *tele.Message, args string) error {
 	}
 	bot.RSSDictMutex.Lock()
 	defer bot.RSSDictMutex.Unlock()
-	defer db.SaveRSSDict(msg.Ctx)
+	defer db.SaveRSSDict(context.Background())
 	rssData.Command = cmp.Or(cmd, rssData.Command)
 	rssData.Link = cmp.Or(link, rssData.Link)
 	if len(rmChats) != 0 {

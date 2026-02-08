@@ -14,7 +14,6 @@ import (
 	"enc/internal/bot"
 
 	"enc/internal/bot/types"
-	"enc/internal/clients/telegram"
 	"enc/internal/db"
 	"enc/internal/logger"
 	"enc/utils"
@@ -57,7 +56,7 @@ func something() { // couldn't find a better name
 		}
 		logger.InfoW("Handling queued item", zap.String("Name", entry.Name))
 		thing(entry)
-		db.SaveQueue(telegram.Context)
+		db.SaveQueue(context.Background())
 	}
 }
 

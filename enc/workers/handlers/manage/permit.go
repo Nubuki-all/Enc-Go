@@ -1,6 +1,7 @@
 package manage
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 
@@ -90,7 +91,7 @@ func TempUnauth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		displayName = fmt.Sprintf("%d", newID)
 	}
 	utils.RmTempUser(newID)
-	db.SaveTempUsers(ctx)
+	db.SaveTempUsers(context.Background())
 	_, _ = msg.ReplyText(fmt.Sprintf("Removed `%s` from temporarily allowed users %s", displayName, random.Enmoji()))
 	return nil
 }
@@ -168,7 +169,7 @@ func TempAuth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		displayName = fmt.Sprintf("%d", newID)
 	}
 	utils.AddTempUser(newID)
-	db.SaveTempUsers(ctx)
+	db.SaveTempUsers(context.Background())
 	_, _ = msg.ReplyText(fmt.Sprintf("Added `%s` to temporarily allowed users %s", displayName, random.Enmoji()))
 	return nil
 }

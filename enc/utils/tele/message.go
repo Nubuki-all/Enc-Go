@@ -104,7 +104,7 @@ func (m *Message) ReplyText(text string) (*Message, error) {
 		ReplyToMsgID: m.ID,
 		TopMsgID:     topicID,
 	}
-	msg, err := m.Ctx.SendMessage(m.ChatID, &tg.MessagesSendMessageRequest{
+	msg, err := telegram.Context.SendMessage(m.ChatID, &tg.MessagesSendMessageRequest{
 		Message:  pText,
 		Entities: entities,
 		ReplyTo:  inputRep,
@@ -114,7 +114,7 @@ func (m *Message) ReplyText(text string) (*Message, error) {
 		logger.ErrorW(err.Error())
 		return nil, err
 	}
-	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID), nil
+	return NewMsgFromGotg(msg, telegram.Context, m.ChatID, telegram.Context.Self.ID), nil
 }
 
 func (m *Message) Reply(text string, replyOptions *ReplyOptions) (*Message, error) {
@@ -133,7 +133,7 @@ func (m *Message) Reply(text string, replyOptions *ReplyOptions) (*Message, erro
 		ReplyToMsgID: m.ID,
 		TopMsgID:     topicID,
 	}
-	msg, err := m.Ctx.SendMessage(m.ChatID, &tg.MessagesSendMessageRequest{
+	msg, err := telegram.Context.SendMessage(m.ChatID, &tg.MessagesSendMessageRequest{
 		Message:     pText,
 		Entities:    entities,
 		ReplyTo:     inputRep,
@@ -150,11 +150,11 @@ func (m *Message) Reply(text string, replyOptions *ReplyOptions) (*Message, erro
 			time.Sleep(seconds)
 			_ = msg.Delete()
 		}(
-			NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID),
+			NewMsgFromGotg(msg, telegram.Context, m.ChatID, telegram.Context.Self.ID),
 			time.Duration(replyOptions.SleepDelete)*time.Second,
 		)
 	}
-	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID), nil
+	return NewMsgFromGotg(msg, telegram.Context, m.ChatID, telegram.Context.Self.ID), nil
 }
 
 func (m *Message) RespondText(text string) (*Message, error) {
@@ -166,7 +166,7 @@ func (m *Message) RespondText(text string) (*Message, error) {
 	inputRep := &tg.InputReplyToMessage{
 		ReplyToMsgID: topicID,
 	}
-	msg, err := m.Ctx.SendMessage(m.ChatID, &tg.MessagesSendMessageRequest{
+	msg, err := telegram.Context.SendMessage(m.ChatID, &tg.MessagesSendMessageRequest{
 		Message:  pText,
 		Entities: entities,
 		ReplyTo:  inputRep,
@@ -176,7 +176,7 @@ func (m *Message) RespondText(text string) (*Message, error) {
 		logger.ErrorW(err.Error())
 		return nil, err
 	}
-	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID), nil
+	return NewMsgFromGotg(msg, telegram.Context, m.ChatID, telegram.Context.Self.ID), nil
 }
 
 func (m *Message) Respond(text string, opt *SendOptions) (*Message, error) {
@@ -197,7 +197,7 @@ func (m *Message) Respond(text string, opt *SendOptions) (*Message, error) {
 	inputRep := &tg.InputReplyToMessage{
 		ReplyToMsgID: topicID,
 	}
-	msg, err := m.Ctx.SendMessage(m.ChatID, &tg.MessagesSendMessageRequest{
+	msg, err := telegram.Context.SendMessage(m.ChatID, &tg.MessagesSendMessageRequest{
 		Message:     pText,
 		Entities:    entities,
 		ReplyTo:     inputRep,
@@ -208,7 +208,7 @@ func (m *Message) Respond(text string, opt *SendOptions) (*Message, error) {
 		logger.ErrorW(err.Error())
 		return nil, err
 	}
-	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID), nil
+	return NewMsgFromGotg(msg, telegram.Context, m.ChatID, telegram.Context.Self.ID), nil
 }
 
 func (m *Message) EditText(text string) (*Message, error) {
@@ -217,7 +217,7 @@ func (m *Message) EditText(text string) (*Message, error) {
 	if m.Raw != nil {
 		replyMarkup = m.Raw.ReplyMarkup
 	}
-	msg, err := m.Ctx.EditMessage(m.ChatID, &tg.MessagesEditMessageRequest{
+	msg, err := telegram.Context.EditMessage(m.ChatID, &tg.MessagesEditMessageRequest{
 		ID:          m.ID,
 		Message:     pText,
 		Entities:    entities,
@@ -229,9 +229,9 @@ func (m *Message) EditText(text string) (*Message, error) {
 		return nil, err
 	}
 	if m.Raw == nil {
-		return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID), nil
+		return NewMsgFromGotg(msg, telegram.Context, m.ChatID, telegram.Context.Self.ID), nil
 	}
-	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.SenderID), nil
+	return NewMsgFromGotg(msg, telegram.Context, m.ChatID, m.SenderID), nil
 }
 
 func (m *Message) Edit(text string, editOptions *EditOptions) (*Message, error) {
@@ -247,7 +247,7 @@ func (m *Message) Edit(text string, editOptions *EditOptions) (*Message, error) 
 	} else {
 		pText, entities, _ = parser.Parse(text, true)
 	}
-	msg, err := m.Ctx.EditMessage(m.ChatID, &tg.MessagesEditMessageRequest{
+	msg, err := telegram.Context.EditMessage(m.ChatID, &tg.MessagesEditMessageRequest{
 		ID:          m.ID,
 		Message:     pText,
 		Entities:    entities,
@@ -260,9 +260,9 @@ func (m *Message) Edit(text string, editOptions *EditOptions) (*Message, error) 
 		return nil, err
 	}
 	if m.Raw == nil {
-		return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID), nil
+		return NewMsgFromGotg(msg, telegram.Context, m.ChatID, telegram.Context.Self.ID), nil
 	}
-	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.SenderID), nil
+	return NewMsgFromGotg(msg, telegram.Context, m.ChatID, m.SenderID), nil
 }
 
 func (m *Message) RawText() (string, error) {
@@ -273,11 +273,11 @@ func (m *Message) RawText() (string, error) {
 }
 
 func (m *Message) Delete() error {
-	return m.Ctx.DeleteMessages(m.ChatID, []int{m.ID})
+	return telegram.Context.DeleteMessages(m.ChatID, []int{m.ID})
 }
 
 func (m *Message) Forward(chatID int64) (*Message, error) {
-	resp, err := m.Ctx.ForwardMessages(m.ChatID, chatID,
+	resp, err := telegram.Context.ForwardMessages(m.ChatID, chatID,
 		&tg.MessagesForwardMessagesRequest{
 			DropAuthor: true,
 			ID:         []int{m.ID},
@@ -306,11 +306,11 @@ func (m *Message) Forward(chatID int64) (*Message, error) {
 	} else {
 		return nil, fmt.Errorf("failed to extract message from updates")
 	}
-	return NewMsgFromGotg(msg, m.Ctx, chatID, m.Ctx.Self.ID), nil
+	return NewMsgFromGotg(msg, telegram.Context, chatID, telegram.Context.Self.ID), nil
 }
 
 func (m *Message) Pin(silent bool) error {
-	ctx := m.Ctx
+	ctx := telegram.Context
 	peerID, err := ctx.ResolveInputPeerById(m.ChatID)
 	if err != nil {
 		return err
@@ -325,7 +325,7 @@ func (m *Message) Pin(silent bool) error {
 }
 
 func (m *Message) Unpin(silent bool) error {
-	ctx := m.Ctx
+	ctx := telegram.Context
 	peerID, err := ctx.ResolveInputPeerById(m.ChatID)
 	if err != nil {
 		return err
@@ -344,7 +344,7 @@ func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
 	var file tg.InputFileClass
 	inputRep := &tg.InputReplyToMessage{}
 	var err error
-	ctx := m.Ctx
+	ctx := telegram.Context
 	bytes := uploadOptions.Bytes
 	name := uploadOptions.Name
 	path := uploadOptions.Path
@@ -405,13 +405,13 @@ func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
 		return nil, err
 	}
 	if m.Raw == nil {
-		return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID), nil
+		return NewMsgFromGotg(msg, telegram.Context, m.ChatID, telegram.Context.Self.ID), nil
 	}
-	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.SenderID), nil
+	return NewMsgFromGotg(msg, telegram.Context, m.ChatID, m.SenderID), nil
 }
 
 func (m *Message) ReplyMediaDoc(media tg.InputMediaClass, uploadOptions *UploadOptions) (*Message, error) {
-	ctx := m.Ctx
+	ctx := telegram.Context
 	inputRep := &tg.InputReplyToMessage{}
 	if uploadOptions.Quote {
 		inputRep.ReplyToMsgID = m.ID
@@ -439,9 +439,9 @@ func (m *Message) ReplyMediaDoc(media tg.InputMediaClass, uploadOptions *UploadO
 		return nil, err
 	}
 	if m.Raw == nil {
-		return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.Ctx.Self.ID), nil
+		return NewMsgFromGotg(msg, telegram.Context, m.ChatID, telegram.Context.Self.ID), nil
 	}
-	return NewMsgFromGotg(msg, m.Ctx, m.ChatID, m.SenderID), nil
+	return NewMsgFromGotg(msg, telegram.Context, m.ChatID, m.SenderID), nil
 }
 
 func SendMessage(id int64, text string) error {
@@ -455,7 +455,7 @@ func SendMessage(id int64, text string) error {
 }
 
 func (m *Message) Action(action string, prog int) error {
-	ctx := m.Ctx
+	ctx := telegram.Context
 	inputPeer, err := ctx.ResolveInputPeerById(m.ChatID)
 	if err != nil {
 		return err

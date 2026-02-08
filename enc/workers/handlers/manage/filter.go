@@ -1,6 +1,7 @@
 package manage
 
 import (
+	"context"
 	"fmt"
 	"slices"
 	"strconv"
@@ -90,14 +91,14 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 			_, _ = msg.ReplyText(status)
 		} else if pargs["reset"].(bool) {
 			bot.CustomRename = config.Conf.CustomRename
-			db.SaveFilterSettings(ctx)
+			db.SaveFilterSettings(context.Background())
 			_, _ = msg.ReplyText("`Reseted custom rename format successfully!`")
 		} else if pargs["delete"].(bool) {
 			if bot.CustomRename == "" {
 				return notSet()
 			}
 			bot.CustomRename = ""
-			db.SaveFilterSettings(ctx)
+			db.SaveFilterSettings(context.Background())
 			_, _ = msg.ReplyText("`Deleted custom rename format successfully!`")
 		} else if pargs["check"].(bool) {
 			if bot.CustomRename == "" {
@@ -118,7 +119,7 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 
 	}
 	bot.CustomRename = strings.Trim(args, `"`)
-	db.SaveFilterSettings(ctx)
+	db.SaveFilterSettings(context.Background())
 	_, _ = msg.ReplyText("**Custom rename format has been changed.**")
 	return nil
 }
@@ -225,7 +226,7 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		DisableAnilist: dAni,
 	}
 	bot.RenameFilters = append(bot.RenameFilters, arFilter)
-	db.SaveRenameFilters(ctx)
+	db.SaveRenameFilters(context.Background())
 	_, _ = msg.ReplyText("**Added new Rename Filter Successfully**")
 	return nil
 }
@@ -392,7 +393,7 @@ func DelAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 		iD = ID
 	}
 	bot.RenameFilters = slices.Delete(bot.RenameFilters, iD, iD+1)
-	db.SaveRenameFilters(ctx)
+	db.SaveRenameFilters(context.Background())
 	_, _ = msg.ReplyText("**Removed filter from Rename Filters Successfully**")
 	return nil
 }
@@ -465,7 +466,7 @@ func Filter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		Fil2: tagFile,
 		Fil3: tagCap,
 	}
-	db.SaveFilterData(ctx)
+	db.SaveFilterData(context.Background())
 	_, _ = msg.ReplyText("**Updated Filter Successfully**")
 	return nil
 }
@@ -510,7 +511,7 @@ func DelFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 		return nil
 	}
 	bot.Filters = nil
-	db.SaveFilterData(ctx)
+	db.SaveFilterData(context.Background())
 	_, _ = msg.ReplyText("`Filters Deleted!`")
 	return nil
 }
@@ -617,7 +618,7 @@ func MatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 	}
 	filters = append(filters, filter)
 	updateMatchFilter(filters, release)
-	db.SaveMatchedFilters(ctx)
+	db.SaveMatchedFilters(context.Background())
 	_, _ = msg.ReplyText("**Added new Name filter Successfully**")
 	return nil
 }
@@ -745,7 +746,7 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 	if Delete {
 		filters = slices.Delete(filters, id, id+1)
 		updateMatchFilter(filters, release)
-		db.SaveMatchedFilters(ctx)
+		db.SaveMatchedFilters(context.Background())
 		_, _ = msg.ReplyText(
 			"**Deleted " +
 				typeName +
@@ -875,7 +876,7 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		CaseSensitive: cSensitive,
 	}
 	bot.RGExtendedFilters = append(bot.RGExtendedFilters, filter)
-	db.SaveRGExtendedFilters(ctx)
+	db.SaveRGExtendedFilters(context.Background())
 	_, _ = msg.ReplyText("**Added a new extended release filter Successfully**")
 	return nil
 }
@@ -980,7 +981,7 @@ func ManageExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message,
 	}
 	if Delete {
 		bot.RGExtendedFilters = slices.Delete(bot.RGExtendedFilters, id, id+1)
-		db.SaveRGExtendedFilters(ctx)
+		db.SaveRGExtendedFilters(context.Background())
 		_, _ = msg.ReplyText(
 			"**Deleted extended release filter Successfully**",
 		)

@@ -1,6 +1,7 @@
 package transfer
 
 import (
+	"context"
 	"fmt"
 	//"os"
 	"path/filepath"
@@ -419,7 +420,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 	waitQueue := bot.WaitQueueM
 	waitQueue.Enqueue(id)
 	if waitQueue.Waiting() {
-		if res, _ := waitQueue.WaitForTurn(ctx, id, sMsg); res == 0 {
+		if res, _ := waitQueue.WaitForTurn(context.Background(), id, sMsg); res == 0 {
 			return nil
 		}
 	}
@@ -513,7 +514,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 			thumbPath = thumb.Name
 		}
 	}
-	r := parser.DynamicThumb(ctx, fileName, thumbPath, !nparse, nil)
+	r := parser.DynamicThumb(context.Background(), fileName, thumbPath, !nparse, nil)
 	if !r.Downloaded {
 		thumbPath = ""
 	}

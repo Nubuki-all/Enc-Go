@@ -1,6 +1,7 @@
 package manage
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -46,7 +47,7 @@ func ChangeEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 		cmd = args
 		bot.FFmpegArgs = cmd
 	}
-	db.SaveFFmpegArgs(ctx)
+	db.SaveFFmpegArgs(context.Background())
 	if alt != "" {
 		utils.EJob.Reset(false)
 	}
@@ -148,6 +149,7 @@ func ResetEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 			return needHelp()
 		}
 	}
+	db.SaveFFmpegArgs(context.Background())
 	_, _ = msg.Reply(
 		fmt.Sprintf("<pre language=\"Reset encoding CLI parameters to:\">%s</pre>", config.Conf.FFmpeg),
 		&tele.ReplyOptions{HTMLParseMode: true},
@@ -187,6 +189,7 @@ func ResetSEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg 
 			return envNotSet()
 		}
 	}
+	db.SaveFFmpegArgs(context.Background())
 	if defaultEnv == "" {
 		_, _ = msg.ReplyText(fmt.Sprintf(
 			"Encoding params%s deleted.\nTry again to reset to the param in .env",
@@ -225,7 +228,7 @@ func SetMuxArgs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 			return nil
 		}
 		bot.MuxArgs = ""
-		db.SaveMuxArgs(ctx)
+		db.SaveMuxArgs(context.Background())
 		_, _ = msg.ReplyText("**Successfully unset mux_args**")
 		return nil
 	}
@@ -237,7 +240,7 @@ func SetMuxArgs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		args = config.Conf.MuxArgs
 	}
 	bot.MuxArgs = args
-	db.SaveMuxArgs(ctx)
+	db.SaveMuxArgs(context.Background())
 	_, _ = msg.Reply(
 		fmt.Sprintf("<pre language=\"Changed mux_args to:\">%s</pre>", args),
 		&tele.ReplyOptions{HTMLParseMode: true},

@@ -6,6 +6,7 @@ import (
 	"github.com/gotd/td/tg"
 
 	//"enc/config"
+	"enc/internal/clients/telegram"
 	"enc/internal/logger"
 )
 
@@ -22,7 +23,7 @@ type CallbackQuery struct {
 func NewQueryFromGotg(q *tg.UpdateBotCallbackQuery, c *ext.Context, chatID int64, senderID int64) *CallbackQuery {
 	return &CallbackQuery{
 		Query:    q,
-		Ctx:      c,
+		Ctx:      telegram.Context,
 		ChatID:   chatID,
 		SenderID: senderID,
 		ID:       q.MsgID,
@@ -30,7 +31,7 @@ func NewQueryFromGotg(q *tg.UpdateBotCallbackQuery, c *ext.Context, chatID int64
 }
 
 func (query *CallbackQuery) Answer(msg string, alert bool) error {
-	_, err := query.Ctx.AnswerCallback(&tg.MessagesSetBotCallbackAnswerRequest{
+	_, err := telegram.Context.AnswerCallback(&tg.MessagesSetBotCallbackAnswerRequest{
 		Alert:   alert,
 		QueryID: query.Query.QueryID,
 		Message: msg,
@@ -50,7 +51,7 @@ func (query *CallbackQuery) GetMessage() *Message {
 	if err != nil {
 		logger.Warn(err)
 		return &Message{
-			Ctx:      query.Ctx,
+			Ctx:      telegram.Context,
 			ChatID:   query.ChatID,
 			SenderID: query.SenderID,
 			ID:       query.ID,
@@ -58,7 +59,7 @@ func (query *CallbackQuery) GetMessage() *Message {
 	}
 	return NewMsgFromGotg(
 		msgs[0],
-		query.Ctx,
+		telegram.Context,
 		query.ChatID,
 		query.SenderID,
 	)
