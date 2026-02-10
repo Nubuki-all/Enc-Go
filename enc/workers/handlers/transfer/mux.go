@@ -366,10 +366,12 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 			dlInfo = downloaders.GetQbitDlInfo(link)
 		} else if ytdl {
 			dlInfo = downloaders.GetYdlInfo(link)
+			s -= 1
 		} else if utils.IsMegaLink(link) {
 			dlInfo = downloaders.GetMegaDlInfo(link)
 		} else {
 			dlInfo = downloaders.GetAria2DlInfo(link)
+			s -= 1
 		}
 		if dlInfo.Error != nil {
 			_, _ = sMsg.EditText("**Error:** " + dlInfo.Error.Error())

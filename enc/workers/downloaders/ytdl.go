@@ -91,6 +91,7 @@ func (dl *YtdlDownload) Start() (err error) {
 		Quiet().
 		Print("after_move:filepath").
 		SetSeparateProcessGroup(true).
+		ReplaceInMetadata("title", "/", "").
 		Output(filepath.Join(dl.Path, "%(title)s.%(ext)s"))
 	if dlInfo.Count > 1 {
 		if dl.selected != "" {

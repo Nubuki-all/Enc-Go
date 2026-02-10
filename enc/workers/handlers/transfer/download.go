@@ -690,6 +690,7 @@ func MediaInfo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	err = download.Start()
 	if err != nil || download.IsCancelled {
 		_, _ = download.ReportStatus()
+		return nil
 	}
 	defer download.CleanDownload()
 	_, _ = sMsg.Edit("__Generating media info for__ `"+download.FileName+"` __...__", nil)
