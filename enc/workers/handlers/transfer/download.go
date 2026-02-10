@@ -693,7 +693,7 @@ func MediaInfo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 		return nil
 	}
 	defer download.CleanDownload()
-	_, _ = sMsg.Edit("__Generating media info for__ `"+download.FileName+"` __...__", nil)
+	_, _ = sMsg.Edit("__Generating media info for__ `"+download.Path+"` __...__", nil)
 	mInfo, err := utils.MediaInfoText(ctx, download.Path, full)
 	if err != nil {
 		_, _ = sMsg.Edit("Error: "+err.Error(), nil)

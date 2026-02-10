@@ -75,7 +75,7 @@ func MediaInfoText(ctx context.Context, file string, full bool) (string, error) 
 			return "", fmt.Errorf("mediainfo failed: %w", err)
 		}
 	}
-	return output, nil
+	return output, err
 }
 
 func PostMediaInfo(path string) (string, error) {

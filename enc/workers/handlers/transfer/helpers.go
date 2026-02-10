@@ -78,17 +78,17 @@ func ListYtdlFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 	}
 	var sb strings.Builder
 	if dlInfo.Count > 0 {
-		fmt.Fprintf(&sb, "**Playlist Name:**\n`%s`\n\n", dlInfo.Name)
+		fmt.Fprintf(&sb, "<b>Playlist Name:</b>\n<code>%s</code>\n\n", dlInfo.Name)
 	}
 	for i, item := range dlInfo.Files {
-		fmt.Fprintf(&sb, "%d. `%s`\n", i+1, item)
+		fmt.Fprintf(&sb, "%d. <code>%s</code>\n", i+1, item)
 	}
-	fmt.Fprintf(&sb, "\n**Total files:** %d", dlInfo.Count)
+	fmt.Fprintf(&sb, "\n<b>Total files:</b> %d", dlInfo.Count)
 	text := sb.String()
 	parts := utils.SplitText(text, "\n", false)
 	prevMsg := msg
 	for _, part := range parts {
-		prevMsg, _ = prevMsg.ReplyText(part)
+		prevMsg, _ = prevMsg.Reply(part, &tele.ReplyOptions{HTMLParseMode: true})
 		time.Sleep(1 * time.Second)
 	}
 	return nil
