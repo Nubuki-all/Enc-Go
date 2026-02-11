@@ -232,6 +232,9 @@ func SplitText(text, sep string, pre bool) []string {
 		chunks  []string
 	)
 	for part := range strings.SplitSeq(text, sep) {
+		if part == "" {
+			continue
+		}
 		line := part + sep
 		if pre {
 			line = sep + part
