@@ -199,7 +199,7 @@ func subRss(msg *tele.Message, args string) error {
 			current = true
 		} else if chatTop := strings.Split(c, ":"); len(chatTop) == 2 {
 			chatID, err := strconv.ParseInt(chatTop[0], 10, 64)
-			if err != nil {
+			if err == nil {
 				if i, err := strconv.Atoi(chatTop[1]); err != nil {
 					fc.TopicID = i
 					fc.ChatID = chatID
@@ -359,84 +359,87 @@ func editRss(msg *tele.Message, args string) error {
 	pause := pargs["pause"].(bool)
 	resume := pargs["resume"].(bool)
 	rmChats := pargs["rm-chat"].([]string)
-	if cmd != "" && strings.HasPrefix(cmd, "/") {
+	if cmd != "" && !strings.HasPrefix(cmd, "/") {
 		cmd = "/" + cmd
 	}
-	bot.RSSDictMutex.Lock()
-	defer bot.RSSDictMutex.Unlock()
-	defer db.SaveRSSDict(context.Background())
-	rssData.Command = cmp.Or(cmd, rssData.Command)
-	rssData.Link = cmp.Or(link, rssData.Link)
-	if len(rmChats) != 0 {
-		var chatsIdx []int
-		for _, str := range rmChats {
-			if i, err := strconv.Atoi(str); err != nil {
-				chatsIdx = append(chatsIdx, i)
+	func() {
+		bot.RSSDictMutex.Lock()
+		defer bot.RSSDictMutex.Unlock()
+		rssData.Command = cmp.Or(cmd, rssData.Command)
+		rssData.Link = cmp.Or(link, rssData.Link)
+		if len(rmChats) != 0 {
+			var chatsIdx []int
+			for _, str := range rmChats {
+				if i, err := strconv.Atoi(str); err != nil {
+					chatsIdx = append(chatsIdx, i)
+				}
 			}
+			rssData.Chat = utils.DeleteByIndices(rssData.Chat, chatsIdx)
 		}
-		rssData.Chat = utils.DeleteByIndices(rssData.Chat, chatsIdx)
-	}
-	for _, chatid := range chatID {
-		if slices.ContainsFunc(rssData.Chat, func(fc types.FeedChat) bool {
-			return fc.ChatID == chatid
-		}) {
-			logger.WarnW("Duplicate ChatID @rssEdit", zap.Int64("ChatID", chatid))
+		for _, chatid := range chatID {
+			if slices.ContainsFunc(rssData.Chat, func(fc types.FeedChat) bool {
+				return fc.ChatID == chatid
+			}) {
+				logger.WarnW("Duplicate ChatID @rssEdit", zap.Int64("ChatID", chatid))
+			}
+			rssData.Chat = append(rssData.Chat, types.FeedChat{ChatID: chatid})
 		}
-		rssData.Chat = append(rssData.Chat, types.FeedChat{ChatID: chatid})
-	}
-	var current, def bool
-	for _, c := range chat {
-		var fc types.FeedChat
-		if strings.EqualFold(c, "default") && !def {
-			fc.Default = true
-			def = true
-		} else if strings.EqualFold(c, ".") && !current {
-			fc.ChatID = msg.ChatID
-			fc.TopicID = msg.TopicID
-			current = true
-		} else if chatTop := strings.Split(c, ":"); len(chatTop) == 2 {
-			chatID, err := strconv.ParseInt(chatTop[0], 10, 64)
-			if err != nil {
-				if i, err := strconv.Atoi(chatTop[1]); err != nil {
-					fc.TopicID = i
-					fc.ChatID = chatID
+		var current, def bool
+		for _, c := range chat {
+			var fc types.FeedChat
+			if strings.EqualFold(c, "default") && !def {
+				fc.Default = true
+				def = true
+			} else if strings.EqualFold(c, ".") && !current {
+				fc.ChatID = msg.ChatID
+				fc.TopicID = msg.TopicID
+				current = true
+			} else if chatTop := strings.Split(c, ":"); len(chatTop) == 2 {
+				chatID, err := strconv.ParseInt(chatTop[0], 10, 64)
+				if err == nil {
+					if i, err := strconv.Atoi(chatTop[1]); err != nil {
+						fc.TopicID = i
+						fc.ChatID = chatID
+					} else {
+						_, _ = msg.ReplyText("Failed extracting TopicID from: " + c + " skipping!")
+					}
 				} else {
-					_, _ = msg.ReplyText("Failed extracting TopicID from: " + c + " skipping!")
+					_, _ = msg.ReplyText(c + ": Not Valid; skipping.")
 				}
 			} else {
-				_, _ = msg.ReplyText(c + ": Not Valid; skipping.")
+				logger.WarnW("Chat was not added!", zap.String("Chat", c))
 			}
-		} else {
-			logger.WarnW("Chat was not added!", zap.String("Chat", c))
+			rssData.Chat = append(rssData.Chat, fc)
 		}
-		rssData.Chat = append(rssData.Chat, fc)
-	}
 
-	var exfSlice, infSlice [][]string
-	for _, x := range exf {
-		exfSlice = append(exfSlice, strings.Split(x, " || "))
-	}
-	for _, x := range inf {
-		infSlice = append(infSlice, strings.Split(x, " || "))
-	}
-	if len(exfSlice) != 0 {
-		rssData.Exf = exfSlice
-	}
-	if len(infSlice) != 0 {
-		rssData.Inf = infSlice
-	}
-	if nodirect {
-		rssData.Direct = false
-	} else {
-		rssData.Direct = cmp.Or(rssData.Direct, direct)
-	}
-	if resume && rssData.Paused {
-		pause = false
-	}
-	rssData.Paused = pause
+		var exfSlice, infSlice [][]string
+		for _, x := range exf {
+			exfSlice = append(exfSlice, strings.Split(x, " || "))
+		}
+		for _, x := range inf {
+			infSlice = append(infSlice, strings.Split(x, " || "))
+		}
+		if len(exfSlice) != 0 {
+			rssData.Exf = exfSlice
+		}
+		if len(infSlice) != 0 {
+			rssData.Inf = infSlice
+		}
+		if nodirect {
+			rssData.Direct = false
+		} else {
+			rssData.Direct = cmp.Or(rssData.Direct, direct)
+		}
+		if resume && rssData.Paused {
+			pause = false
+		}
+		rssData.Paused = pause
+	}()
 
 	_, _ = msg.Reply("Updated Rss configuration successfully.",
 		&tele.ReplyOptions{HTMLParseMode: true})
+	db.SaveRSSDict(context.Background())
+
 	logger.InfoW(
 		"RSS Feed Updated:",
 		zap.Int64("By", msg.SenderID),
