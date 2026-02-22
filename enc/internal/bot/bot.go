@@ -27,8 +27,6 @@ var (
 	Started            bool
 	CustomRename       string
 	TempUsers          []int64
-	BatchQueue         map[string]any
-	ECancel            map[string]any
 	RSSDictMutex       sync.RWMutex
 	ECallbackDataMutex sync.RWMutex
 	DownloaderMutex    sync.RWMutex

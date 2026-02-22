@@ -378,6 +378,7 @@ func (e *encodeWorker) start(encodeArgs string) error {
 		return nil
 	}
 	encode.Callback(e.dlPath, outPath, "")
+	defer encode.CleanUp()
 	_ = encode.AwaitCompletion()
 	_ = encode.ReportStatus("")
 	defer utils.SRemove(false, outPath)

@@ -17,11 +17,6 @@ func BotIsPaused() bool {
 	return bot.Paused.Any()
 }
 
-// EnCanceller returns the encode cancellation map
-func EnCanceller() map[string]any {
-	return bot.ECancel
-}
-
 func IndexToPauseType(i int) (state.PauseType, bool) {
 	pt := state.PauseType(i)
 	switch pt {
@@ -79,11 +74,6 @@ func RmPause(idx int, duration time.Duration) error {
 	}
 	RmPauseByType(pt, duration)
 	return nil
-}
-
-// GetBatchQueue returns the current batch queue
-func GetBatchQueue() map[string]any {
-	return bot.BatchQueue
 }
 
 // GetQueue returns the main queue

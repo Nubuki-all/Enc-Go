@@ -472,6 +472,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 
 	encode.ExtraFlags = "mux"
 	encode.Callback(download.Path, tFile, "%s **Currently Muxing:**\n└`%s`\n\n`using provided parameters…`%s")
+	defer encode.CleanUp()
 	_ = encode.AwaitCompletion()
 	_ = encode.ReportStatus("Muxing")
 	if !encode.Process.Success() {

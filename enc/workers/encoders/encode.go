@@ -229,13 +229,13 @@ func (e *Encoder) AwaitCompletion() (err error) {
 	e.stderr = e.errBuf.String()
 	e.stdout = e.outBuf.String()
 	close(ch)
-	if e.clean {
-		e.cleanUp()
-	}
 	return err
 }
 
-func (e *Encoder) cleanUp() {
+func (e *Encoder) CleanUp() {
+	if !e.clean {
+		return
+	}
 	cInfo := utils.GetCallbackInfo(e.ID)
 	if cInfo == nil {
 		return
