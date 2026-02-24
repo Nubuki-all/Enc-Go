@@ -307,6 +307,9 @@ func (dl *QbitDownload) Select(ctx context.Context, hash string) (err error) {
 	if err != nil {
 		return err
 	}
+	if files < 2 {
+		return nil
+	}
 	s, _ := strconv.Atoi(dl.selected)
 	if s > (len(files) - 1) {
 		return fmt.Errorf("qbittorrent: file_id not found")
