@@ -1,8 +1,8 @@
 module enc
 
-go 1.24.0
+go 1.25.0
 
-toolchain go1.24.6
+toolchain go1.24.0
 
 require (
 	github.com/5rahim/tanuki v0.1.6
