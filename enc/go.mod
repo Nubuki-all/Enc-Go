@@ -2,8 +2,6 @@ module enc
 
 go 1.25.0
 
-toolchain go1.25.0
-
 require (
 	github.com/5rahim/tanuki v0.1.6
 	github.com/autobrr/go-qbittorrent v1.14.0
