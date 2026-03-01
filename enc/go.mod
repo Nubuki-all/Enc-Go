@@ -2,11 +2,9 @@ module enc
 
 go 1.25.0
 
-<<<<<<< HEAD
 =======
 toolchain go1.25.0
 
->>>>>>> 0dedaa5 (fixes)
 require (
 	github.com/5rahim/tanuki v0.1.6
 	github.com/autobrr/go-qbittorrent v1.14.0
