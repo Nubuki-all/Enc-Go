@@ -242,7 +242,6 @@ func LoadDB() {
 
 	// 3) Otherwise, load persisted state into bot.* variables
 	logger.InfoW("Loading state from MongoDB")
-	db.LoadMap(db.QueueCol, "batches", &bot.BatchQueue)
 	db.LoadQueue()
 	db.LoadRSSDict()
 	// db.LoadMap(db.RSSCol, "rss", &bot.RSSDict)

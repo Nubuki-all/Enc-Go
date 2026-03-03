@@ -307,7 +307,7 @@ func (dl *QbitDownload) Select(ctx context.Context, hash string) (err error) {
 	if err != nil {
 		return err
 	}
-	if files < 2 {
+	if len(files) < 2 {
 		return nil
 	}
 	s, _ := strconv.Atoi(dl.selected)

@@ -276,7 +276,6 @@ func LoadRenameFilters(coll *mongo.Collection) {
 
 func SaveAll(ctx context.Context) {
 	SaveQueue(ctx)
-	SaveBatchQueue(ctx)
 	SaveTempUsers(ctx)
 	SaveFFmpegArgs(ctx)
 	SaveMuxArgs(ctx)
@@ -305,21 +304,6 @@ func SaveQueue(ctx context.Context) {
 	opts := options.Update().SetUpsert(true)
 	if _, err := QueueCol.UpdateOne(ctx, filter, update, opts); err != nil {
 		logger.WarnW("SaveQueue failed", zap.Error(err))
-	}
-}
-
-func SaveBatchQueue(ctx context.Context) {
-	if !useMongo || QueueCol == nil {
-		if err := SaveBatchQueueLocal(); err != nil {
-			logger.WarnW("SaveBatchQueueLocal failed", zap.Error(err))
-		}
-		return
-	}
-	filter := bson.M{"_id": config.Rconf.BotID}
-	update := bson.M{"$set": bson.M{"batches": bot.BatchQueue}}
-	opts := options.Update().SetUpsert(true)
-	if _, err := QueueCol.UpdateOne(ctx, filter, update, opts); err != nil {
-		logger.WarnW("SaveBatchQueue failed", zap.Error(err))
 	}
 }
 

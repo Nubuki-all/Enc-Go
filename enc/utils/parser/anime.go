@@ -136,15 +136,15 @@ func AnimeArch(query string, useMal bool, isID bool) (string, string, error) {
 		charsBuf.WriteString("<br>")
 		charsBuf.WriteString(imgPart)
 		charsBuf.WriteString("<br>")
-		charsBuf.WriteString(fmt.Sprintf("<h3>%s</h3>", html.EscapeString(character.Name.Full)))
-		charsBuf.WriteString(fmt.Sprintf("<em>%s %s</em><br>", cFlag, html.EscapeString(character.Name.Native)))
-		charsBuf.WriteString(fmt.Sprintf("<b>Character ID</b>: %d<br>", character.ID))
+		fmt.Fprintf(&charsBuf, "<h3>%s</h3>", html.EscapeString(character.Name.Full))
+		fmt.Fprintf(&charsBuf, "<em>%s %s</em><br>", cFlag, html.EscapeString(character.Name.Native))
+		fmt.Fprintf(&charsBuf, "<b>Character ID</b>: %d<br>", character.ID)
 		// description is HTML already (asHtml=true)
 		desc := character.Description
 		if desc == "" {
 			desc = "N/A"
 		}
-		charsBuf.WriteString(fmt.Sprintf("<h4>About Character and Role:</h4>%s", desc))
+		fmt.Fprintf(&charsBuf, "<h4>About Character and Role:</h4>%s", desc)
 		charsBuf.WriteString("<br><br>")
 	}
 
@@ -152,9 +152,9 @@ func AnimeArch(query string, useMal bool, isID bool) (string, string, error) {
 	var studiosBuf strings.Builder
 	for _, s := range media.Studios.Nodes {
 		if s.SiteURL != "" {
-			studiosBuf.WriteString(fmt.Sprintf(`<a href="%s">• %s</a> `, html.EscapeString(s.SiteURL), html.EscapeString(s.Name)))
+			fmt.Fprintf(&studiosBuf, `<a href="%s">• %s</a> `, html.EscapeString(s.SiteURL), html.EscapeString(s.Name))
 		} else {
-			studiosBuf.WriteString(fmt.Sprintf("• %s ", html.EscapeString(s.Name)))
+			fmt.Fprintf(&studiosBuf, "• %s ", html.EscapeString(s.Name))
 		}
 	}
 	studios := studiosBuf.String()
@@ -166,9 +166,9 @@ func AnimeArch(query string, useMal bool, isID bool) (string, string, error) {
 		titleImg = bannerImg
 	}
 	if titleImg != "" {
-		pageBuf.WriteString(fmt.Sprintf(`<img src="%s" title="%s"/>`, html.EscapeString(titleImg), html.EscapeString(romaji)))
+		fmt.Fprintf(&pageBuf, `<img src="%s" title="%s"/>`, html.EscapeString(titleImg), html.EscapeString(romaji))
 	}
-	pageBuf.WriteString(fmt.Sprintf(`<h1>[%s] %s</h1>`, html.EscapeString(cFlag), html.EscapeString(native)))
+	fmt.Fprintf(&pageBuf, `<h1>[%s] %s</h1>`, html.EscapeString(cFlag), html.EscapeString(native))
 	pageBuf.WriteString("<h3>Synopsis:</h3>")
 	pageBuf.WriteString(synopsis)
 	pageBuf.WriteString("<br>")
@@ -179,17 +179,17 @@ func AnimeArch(query string, useMal bool, isID bool) (string, string, error) {
 	}
 	pageBuf.WriteString("<h3>More Info:</h3>")
 	if media.StartDate.Year != 0 {
-		pageBuf.WriteString(fmt.Sprintf("<b>Started On:</b> %02d/%02d/%04d", media.StartDate.Day, media.StartDate.Month, media.StartDate.Year))
+		fmt.Fprintf(&pageBuf, "<b>Started On:</b> %02d/%02d/%04d", media.StartDate.Day, media.StartDate.Month, media.StartDate.Year)
 	}
-	pageBuf.WriteString(fmt.Sprintf("<br><b>Studios:</b> %s<br>", studios))
+	fmt.Fprintf(&pageBuf, "<br><b>Studios:</b> %s<br>", studios)
 	if idmal != 0 {
-		pageBuf.WriteString(fmt.Sprintf(`<a href="https://myanimelist.net/anime/%d">View on MAL</a>`, idmal))
+		fmt.Fprintf(&pageBuf, `<a href="https://myanimelist.net/anime/%d">View on MAL</a>`, idmal)
 	}
 	if media.SiteURL != "" {
-		pageBuf.WriteString(fmt.Sprintf(`<a href="%s"> View on anilist.co</a>`, html.EscapeString(media.SiteURL)))
+		fmt.Fprintf(&pageBuf, `<a href="%s"> View on anilist.co</a>`, html.EscapeString(media.SiteURL))
 	}
 	if bannerImg != "" {
-		pageBuf.WriteString(fmt.Sprintf(`<img src="%s"/>`, html.EscapeString(bannerImg)))
+		fmt.Fprintf(&pageBuf, `<img src="%s"/>`, html.EscapeString(bannerImg))
 	}
 
 	// upload the HTML page (PostToTGPH assumed to exist and return (url string, err error))
@@ -301,15 +301,15 @@ func AiringAnim(query string, useMal bool, useID bool) (coverImg string, out str
 
 	// Build output the same way as Python
 	var b strings.Builder
-	b.WriteString(fmt.Sprintf("[%s] <b>%s</b> \n   (<code>%s</code>)", cFlag, native, title_))
-	b.WriteString(fmt.Sprintf("\n\n<b>ID:</b> <code>%d</code>", mid))
-	b.WriteString(fmt.Sprintf("\n<b>Status:</b> <code>%s</code>\n", status))
-	b.WriteString(fmt.Sprintf("<b>Source:</b> <code>%s</code>\n", source))
-	b.WriteString(fmt.Sprintf("<b>Score:</b> <code>%d</code>\n", score))
-	b.WriteString(fmt.Sprintf("<b>Genres:</b> <code>%s</code>\n", genre))
+	fmt.Fprintf(&b, "[%s] <b>%s</b> \n   (<code>%s</code>)", cFlag, native, title_)
+	fmt.Fprintf(&b, "\n\n<b>ID:</b> <code>%d</code>", mid)
+	fmt.Fprintf(&b, "\n<b>Status:</b> <code>%s</code>\n", status)
+	fmt.Fprintf(&b, "<b>Source:</b> <code>%s</code>\n", source)
+	fmt.Fprintf(&b, "<b>Score:</b> <code>%d</code>\n", score)
+	fmt.Fprintf(&b, "<b>Genres:</b> <code>%s</code>\n", genre)
 	if airOn != "" {
-		b.WriteString(fmt.Sprintf("<b>Airing Episode:</b> <code>[%d/%d]</code>\n", epNum, episodes))
-		b.WriteString(fmt.Sprintf("\n<code>%s</code>", airOn))
+		fmt.Fprintf(&b, "<b>Airing Episode:</b> <code>[%d/%d]</code>\n", epNum, episodes)
+		fmt.Fprintf(&b, "\n<code>%s</code>", airOn)
 	}
 
 	return coverImg, b.String(), nil

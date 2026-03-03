@@ -124,7 +124,7 @@ func ListToStr(lst []string, sep string, start int, numbered bool) string {
 	var sb strings.Builder
 	if numbered {
 		for i, item := range lst {
-			sb.WriteString(fmt.Sprintf("%d. `%s`%s", start+i, item, sep))
+			fmt.Fprintf(&sb, "%d. `%s`%s", start+i, item, sep)
 		}
 	} else {
 		for _, item := range lst {

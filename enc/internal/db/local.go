@@ -307,28 +307,6 @@ func SaveRSSLocal() {
 	}).Create(&rec)
 }
 
-// SaveBatchQueueLocal persists bot.BatchQueue to SQLite
-func SaveBatchQueueLocal() error {
-	if config.Conf.DatabaseURL != "" || localdb == nil {
-		return nil
-	}
-	// store BatchQueue as JSON in the same queueRecord table under key "batches"
-	// For simplicity, reuse settingRecord schema to store map[string]interface{} as JSON:
-	data, err := json.Marshal(bot.BatchQueue)
-	if err != nil {
-		return err
-	}
-	rec := settingRecord{
-		BotID: config.Rconf.BotID,
-		Key:   "batches",
-		Value: string(data),
-	}
-	return localdb.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "bot_id"}, {Name: "key"}},
-		UpdateAll: true,
-	}).Create(&rec).Error
-}
-
 // SaveFilterDataLocal writes the entire FilterData struct into one JSON column.
 // On conflict (same bot_id), it updates the row.
 func SaveFilterDataLocal() {
