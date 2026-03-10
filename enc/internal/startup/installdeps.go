@@ -775,7 +775,7 @@ func InstallYtdlp(ctx context.Context, binDir string) (string, error) {
 	if config.Conf.NoExternalDL {
 		return "", nil
 	}
-	baseURL := "https://github.com/yt-dlp/yt-dlp/releases/download/2026.02.04/"
+	baseURL := "https://github.com/yt-dlp/yt-dlp/releases/download/2026.03.03/"
 	denoURL := "https://github.com/denoland/deno/releases/download/v2.6.3/"
 
 	goos := runtime.GOOS
