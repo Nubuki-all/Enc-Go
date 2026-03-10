@@ -12,9 +12,9 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.13
 	github.com/google/uuid v1.6.0
 	github.com/gotd/contrib v0.21.1
-	github.com/gotd/td v0.140.0
+	github.com/gotd/td v0.141.0
 	github.com/k0kubun/go-ansi v0.0.0-20180517002512-3bf9e2903213
-	github.com/lrstanley/go-ytdlp v1.3.1
+	github.com/lrstanley/go-ytdlp v1.3.3
 	github.com/mattn/go-sqlite3 v1.14.34
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/schollz/progressbar/v3 v3.19.0
@@ -27,9 +27,9 @@ require (
 	go.mongodb.org/mongo-driver v1.17.9
 	go.uber.org/zap v1.27.1
 	golang.org/x/net v0.51.0
-	golang.org/x/sync v0.19.0
+	golang.org/x/sync v0.20.0
 	golang.org/x/text v0.34.0
-	golang.org/x/time v0.14.0
+	golang.org/x/time v0.15.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gorm.io/datatypes v1.2.7
 	gorm.io/driver/sqlite v1.6.0
@@ -107,21 +107,21 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
-	go.opentelemetry.io/otel v1.41.0 // indirect
-	go.opentelemetry.io/otel/metric v1.41.0 // indirect
-	go.opentelemetry.io/otel/trace v1.41.0 // indirect
+	go.opentelemetry.io/otel v1.42.0 // indirect
+	go.opentelemetry.io/otel/metric v1.42.0 // indirect
+	go.opentelemetry.io/otel/trace v1.42.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/crypto v0.48.0 // indirect
 	golang.org/x/exp v0.0.0-20260218203240-3dfff04db8fa // indirect
 	golang.org/x/mod v0.33.0 // indirect
-	golang.org/x/sys v0.41.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/term v0.40.0 // indirect
 	golang.org/x/tools v0.42.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gorm.io/driver/mysql v1.6.0 // indirect
-	modernc.org/libc v1.69.0 // indirect
+	modernc.org/libc v1.70.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
 	modernc.org/sqlite v1.46.1 // indirect
