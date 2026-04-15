@@ -4,16 +4,16 @@ jobs:
   Lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
       - name: Setup Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v6
         with:
           go-version-file: 'enc/go.mod'
           cache-dependency-path: 'enc/go.sum'
       - name: tidy golang dependencies
         run: cd enc && go mod tidy
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         continue-on-error: true
         with:
           #version: v2.1 # Specify a golangci-lint version
@@ -25,7 +25,7 @@ jobs:
       - name: reformat go
         run: cd enc && gofumpt -l -w .
       # commit changes
-      - uses: stefanzweifel/git-auto-commit-action@v4
+      - uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: 'GoLint: auto-fixes'
           commit_options: '--no-verify'
