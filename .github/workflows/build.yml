@@ -10,7 +10,7 @@ on:
 env:
   BINARY: enc
   PACKAGE: enc
-  GO_VERSION: 1.24.7
+  GO_VERSION: 1.26.1
 
 jobs:
   # Native amd64 musl on runner
@@ -21,10 +21,10 @@ jobs:
       artifact-path: ${{ env.PACKAGE }}/dist/${{ env.BINARY }}-linux-amd64-musl
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Cache Go modules & build cache (amd64)
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cache/go-build
@@ -34,7 +34,7 @@ jobs:
           key: go-mod-cache-${{ env.GO_VERSION }}-${{ hashFiles('**/go.sum') }}
 
       - name: Setup Go on runner (amd64)
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v6
         with:
           go-version-file: 'enc/go.mod'
           cache-dependency-path: 'enc/go.sum'
@@ -64,7 +64,7 @@ jobs:
 
 
       - name: Upload artifact (amd64)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.BINARY }}-linux-amd64-musl
           path: ${{ env.PACKAGE }}/dist/${{ env.BINARY }}-linux-amd64-musl
@@ -89,10 +89,10 @@ jobs:
             goarm: "7"
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Restore cached Go tarball (matrix)
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: cache-go-tar
         with:
           path: ./.cache/go.tgz
@@ -111,7 +111,7 @@ jobs:
         shell: bash
 
       - name: Restore module/build cache (workspace-scoped cache)
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ./.cache/go
           key: go-mod-workspace-${{ env.GO_VERSION }}-${{ hashFiles('**/go.sum') }}-${{ matrix.name }}
@@ -178,7 +178,7 @@ jobs:
 
 
       - name: Upload artifact (matrix)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.BINARY }}-${{ matrix.output_suffix }}
           path: ${{ env.PACKAGE }}/dist/${{ env.BINARY }}-${{ matrix.output_suffix }}
@@ -188,16 +188,16 @@ jobs:
     needs: [build-amd64-musl, build-arm-matrix]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           merge-multiple: true
           path: binaries
   
       - name: Delete workflow artifacts
-        uses: geekyeggo/delete-artifact@v5
+        uses: geekyeggo/delete-artifact@v6
         with:
           name: |
             enc*
@@ -218,7 +218,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
 
       - name: Upload static executable
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           draft: false
           files: |
@@ -227,7 +227,7 @@ jobs:
           tag_name: ${{ env.CURRENT_TIME }}
 
       - name: Upload static executable as latest release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           draft: false
           files: |
