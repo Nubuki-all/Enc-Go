@@ -12,6 +12,7 @@ jobs:
           cache-dependency-path: 'enc/go.sum'
       - name: tidy golang dependencies
         run: cd enc && go mod tidy
+      - run: go get github.com/siku2/arigo@main
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v9
         continue-on-error: true
