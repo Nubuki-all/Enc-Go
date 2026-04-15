@@ -218,7 +218,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
 
       - name: Upload static executable
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           draft: false
           files: |
@@ -227,7 +227,7 @@ jobs:
           tag_name: ${{ env.CURRENT_TIME }}
 
       - name: Upload static executable as latest release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           draft: false
           files: |
