@@ -19,7 +19,7 @@ require (
 	github.com/mmcdole/gofeed v1.3.0
 	github.com/schollz/progressbar/v3 v3.19.0
 	github.com/shirou/gopsutil/v3 v3.24.5
-	github.com/siku2/arigo v0.3.0
+	github.com/siku2/arigo v0.3.1-0.20260126182741-983bcbb0cf1a
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0
 	github.com/traefik/yaegi v0.16.1
@@ -46,7 +46,7 @@ require (
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/avast/retry-go v3.0.0+incompatible // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
-	github.com/cenkalti/hub v1.0.1-0.20160527103212-11382a9960d3 // indirect
+	github.com/cenkalti/hub v1.0.2 // indirect
 	github.com/cenkalti/rpc2 v0.0.0-20180727162946-9642ea02d0aa // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
@@ -65,7 +65,7 @@ require (
 	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/gorilla/websocket v1.4.1 // indirect
+	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/gotd/ige v0.2.2 // indirect
 	github.com/gotd/neo v0.1.5 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
@@ -81,6 +81,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
+	github.com/nubuki-all/rpc2 v1.0.0 // indirect
 	github.com/ogen-go/ogen v1.19.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

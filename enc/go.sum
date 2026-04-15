@@ -29,6 +29,8 @@ github.com/cenkalti/backoff/v4 v4.3.0 h1:MyRJ/UdXutAwSAT+s3wNd7MfTIcy71VQueUuFK3
 github.com/cenkalti/backoff/v4 v4.3.0/go.mod h1:Y3VNntkOUPxTVeUxJ/G5vcM//AlwfmyYozVcomhLiZE=
 github.com/cenkalti/hub v1.0.1-0.20160527103212-11382a9960d3 h1:JoNNeZqjMj74cMtMUi456vOlL/4Kwk1C3sU6e62caJA=
 github.com/cenkalti/hub v1.0.1-0.20160527103212-11382a9960d3/go.mod h1:tcYwtS3a2d9NO/0xDXVJWx3IedurUjYCqFCmpi0lpHs=
+github.com/cenkalti/hub v1.0.2 h1:Nqv9TNaA9boeO2wQFW8o87BY3zKthtnzXmWGmJqhAV8=
+github.com/cenkalti/hub v1.0.2/go.mod h1:8LAFAZcCasb83vfxatMUnZHRoQcffho2ELpHb+kaTJU=
 github.com/cenkalti/rpc2 v0.0.0-20180727162946-9642ea02d0aa h1:t+iWhuJE2aropY4uxKMVbyP+IJ29o422f7YAd73aTjg=
 github.com/cenkalti/rpc2 v0.0.0-20180727162946-9642ea02d0aa/go.mod h1:v2npkhrXyk5BCnkNIiPdRI23Uq6uWPUQGL2hnRcRr/M=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
@@ -97,6 +99,8 @@ github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
 github.com/gorilla/websocket v1.4.1 h1:q7AeDBpnBk8AogcD4DSag/Ukw/KV+YhzLj2bP5HvKCM=
 github.com/gorilla/websocket v1.4.1/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
+github.com/gorilla/websocket v1.5.3 h1:saDtZ6Pbx/0u+bgYQ3q96pZgCzfhKXGPqt7kZ72aNNg=
+github.com/gorilla/websocket v1.5.3/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/gotd/contrib v0.21.1 h1:NSF+0YEnosQ34QEo2o4s6MA5YFDAor1LVvLhN1L3H1M=
 github.com/gotd/contrib v0.21.1/go.mod h1:trVJBP9Q/TJbjmJbVnLc0cnX/8T4N0RpQBULVa3BNnE=
 github.com/gotd/ige v0.2.2 h1:XQ9dJZwBfDnOGSTxKXBGP4gMud3Qku2ekScRjDWWfEk=
@@ -160,6 +164,8 @@ github.com/montanaflynn/stats v0.7.1 h1:etflOAAHORrCC44V+aR6Ftzort912ZU+YLiSTuV8
 github.com/montanaflynn/stats v0.7.1/go.mod h1:etXPPgVO6n31NxCd9KQUMvCM+ve0ruNzt6R8Bnaayow=
 github.com/ncruces/go-strftime v0.1.9 h1:bY0MQC28UADQmHmaF5dgpLmImcShSi2kHU9XLdhx/f4=
 github.com/ncruces/go-strftime v0.1.9/go.mod h1:Fwc5htZGVVkseilnfgOVb9mKy6w1naJmn9CehxcKcls=
+github.com/nubuki-all/rpc2 v1.0.0 h1:9I2yZTHqxpfYSQHPK9IzVcIuNFyeZF+kjKP4H7pjzUQ=
+github.com/nubuki-all/rpc2 v1.0.0/go.mod h1:+MrQdTszT+WuqIkY7p+gbFdFQ9QfegL7HzjoXJ5i+Bw=
 github.com/ogen-go/ogen v1.19.0 h1:YvdNpeQJ8A8dLLpS6Vs4WxXL53BT6tBPxH0VSjfALhA=
 github.com/ogen-go/ogen v1.19.0/go.mod h1:DeShwO+TEpLYXNCuZliSAedphphXsJaTGGbmSomWUjE=
 github.com/pelletier/go-toml/v2 v2.2.4 h1:mye9XuhQ6gvn5h28+VilKrrPoQVanw5PMw/TB0t5Ec4=
@@ -193,6 +199,8 @@ github.com/shopspring/decimal v1.4.0 h1:bxl37RwXBklmTi0C79JfXCEBD1cqqHt0bbgBAGFp
 github.com/shopspring/decimal v1.4.0/go.mod h1:gawqmDU56v4yIKSwfBSFip1HdCCXN8/+DMd9qYNcwME=
 github.com/siku2/arigo v0.3.0 h1:9e9qtSHU7FNEdEzWXZ33STI1dgGx0YBAsDepoQEUZjs=
 github.com/siku2/arigo v0.3.0/go.mod h1:/slSGOCL5awvY4Q9SlyR15wBjeGllHLrLE1E/2MztMQ=
+github.com/siku2/arigo v0.3.1-0.20260126182741-983bcbb0cf1a h1:vZMsnwUpTwARW1rXzeACviTySXP3THfzo1JhCoR9cdU=
+github.com/siku2/arigo v0.3.1-0.20260126182741-983bcbb0cf1a/go.mod h1:/5RntQunAQzHN2HLvv5UKYn0IBfpG+hW5bMJLJG6WXA=
 github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 h1:+jumHNA0Wrelhe64i8F6HNlS8pkoyMv5sreGx2Ry5Rw=
 github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8/go.mod h1:3n1Cwaq1E1/1lhQhtRK2ts/ZwZEhjcQeJQ1RuC6Q/8U=
 github.com/spf13/afero v1.15.0 h1:b/YBCLWAJdFWJTN9cLhiXXcD7mzKn9Dm86dNnfyQw1I=
