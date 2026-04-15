@@ -193,13 +193,13 @@ func InstallFFmpeg(ctx context.Context, binDir string) (map[string]string, error
 
 	switch {
 	case goos == "linux" && goarch == "amd64":
-		archiveName = "ffmpeg-n8.0-latest-linux64-gpl-8.0.tar.xz"
+		archiveName = "ffmpeg-n8.1-latest-linux64-gpl-8.1.tar.xz"
 	case goos == "linux" && goarch == "arm64":
-		archiveName = "ffmpeg-n8.0-latest-linuxarm64-gpl-8.0.tar.xz"
+		archiveName = "ffmpeg-n8.1-latest-linuxarm64-gpl-8.1.tar.xz"
 	case goos == "windows" && goarch == "arm64":
-		archiveName = "ffmpeg-n8.0-latest-winarm64-gpl-8.0.zip"
+		archiveName = "ffmpeg-n8.1-latest-winarm64-gpl-8.1.zip"
 	case goos == "windows" && goarch == "amd64":
-		archiveName = "ffmpeg-n8.0-latest-win64-gpl-8.0.zip"
+		archiveName = "ffmpeg-n8.1-latest-win64-gpl-8.1.zip"
 	default:
 		return nil, fmt.Errorf("platform not supported: os=%s arch=%s", goos, goarch)
 	}
