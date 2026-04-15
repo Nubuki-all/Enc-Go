@@ -10,8 +10,8 @@ jobs:
         with:
           go-version-file: 'enc/go.mod'
           cache-dependency-path: 'enc/go.sum'
-      - name: update golang dependencies
-        run: cd enc && go get -u && go mod tidy
+      - name: tidy golang dependencies
+        run: cd enc && go mod tidy
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v8
         continue-on-error: true
