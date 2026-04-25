@@ -36,7 +36,7 @@ func PostToTelegraph(title, text string) (*telegraph.Page, error) {
 	for i := 0; i < 5; i++ {
 		if tgph.Account == nil {
 			tgph.Account, lastErr = tgph.Client.CreateAccount("Mediainfo", &telegraph.CreateAccountOpts{
-				AuthorName: config.Rconf.TgpAuthor
+				AuthorName: config.Rconf.TgpAuthor,
 			})
 			if lastErr != nil {
 				time.Sleep(time.Second)
