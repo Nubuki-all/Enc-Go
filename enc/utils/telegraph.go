@@ -34,6 +34,15 @@ func PostToTelegraph(title, text string) (*telegraph.Page, error) {
 	var lastErr error
 	// Use the Account object directly to create pages
 	for i := 0; i < 5; i++ {
+		if tgph.Account == nil {
+			tgph.Account, lastErr = tgph.Client.CreateAccount("Mediainfo", &telegraph.CreateAccountOpts{
+				AuthorName: config.Rconf.TgpAuthor
+			})
+			if lastErr != nil {
+				time.Sleep(time.Second)
+				continue
+			}
+		}
 		page, err := tgph.Account.CreatePage(
 			tgph.Client,
 			title,
