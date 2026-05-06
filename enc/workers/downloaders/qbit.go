@@ -165,13 +165,13 @@ func (dl *QbitDownload) Start() (err error) {
 				return
 			case <-pTicker.C:
 				if !ok {
-					done <- nil
+					done <- dl.err
 					return
 				}
 				ok = dl.ProgressCallback(ctx, start, tag)
 			case <-uTicker.C:
 				if !ok {
-					done <- nil
+					done <- dl.err
 					return
 				}
 				ok = dl.UpdateCallback(ctx, tag)

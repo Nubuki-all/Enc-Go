@@ -153,13 +153,13 @@ func (dl *Aria2Download) Start() error {
 				return
 			case <-pTicker.C:
 				if curGID == "" {
-					done <- nil
+					done <- dl.err
 					return
 				}
 				curGID = dl.ProgressCallback(start, curGID)
 			case <-uTicker.C:
 				if curGID == "" {
-					done <- nil
+					done <- dl.err
 					return
 				}
 				curGID = dl.UpdateCallback(curGID)
