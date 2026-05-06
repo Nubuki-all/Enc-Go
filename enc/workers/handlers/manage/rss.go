@@ -51,6 +51,7 @@ func RssHandler(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		argparser.CreateDBoolFlag("get", "g", "To get previous feeds for given TITLE"),
 		argparser.CreateDBoolFlag("list-chat", "c", "To get all chats for given rss feed by TITLE"),
 		argparser.CreateDBoolFlag("list", "l", "To list all subscribed feeds."),
+		argparser.CreateDBoolFlag("rollback", "r", "To rollback a rss feed."),
 		argparser.CreateDBoolFlag("subscribe", "s", "To subscribe to a rss feed."),
 	)
 	pargs := arg.Values
@@ -60,7 +61,8 @@ func RssHandler(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	list := pargs["list"].(bool)
 	sub := pargs["subscribe"].(bool)
 	lc := pargs["list-chat"].(bool)
-	if !del && !edit && !get && !list && !sub && !lc {
+	rollback := pargs["rollback"].(bool)
+	if !del && !edit && !get && !list && !sub && !lc && !rollback {
 		if out := arg.Output; out != "" {
 			_, _ = msg.Reply(utils.CodeBlock(out, true),
 				&tele.ReplyOptions{HTMLParseMode: true},
@@ -85,6 +87,9 @@ func RssHandler(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	}
 	if get {
 		return getRss(msg, args)
+	}
+	if rollback {
+		return rollbackRss(msg, args)
 	}
 	if list {
 		return listRss(msg, "")
@@ -640,5 +645,67 @@ func listRssChat(msg *tele.Message, args string) error {
 		}
 		time.Sleep(1 * time.Second)
 	}
+	return nil
+}
+
+func rollbackRss(msg *tele.Message, args string) error {
+	helpMsg := "Rollback a rss feed!\n" +
+		"simply pass the rss title with the following arguments:"
+	argList, err := utils.SplitQuotedFieldsErr(args)
+	if err != nil {
+		_, _ = msg.ReplyText(err.Error())
+		return nil
+	}
+	arg := argparser.ParseFlags(
+		"rss",
+		helpMsg,
+		argList,
+		argparser.CreateDBoolFlag("rollback", "r", "HEAD PARAM"),
+		argparser.CreateDStringFlag("last-title", "t", "The last title to rollback to."),
+	)
+	if out := arg.Output; out != "" {
+		_, _ = msg.Reply(utils.CodeBlock(out, true),
+			&tele.ReplyOptions{HTMLParseMode: true},
+		)
+		return nil
+	} else if err := arg.Err; err != nil {
+		_, _ = msg.ReplyText(err.Error())
+		return nil
+	}
+	title := strings.Join(arg.UnknownArgs, " ")
+	title = strings.TrimSpace(title)
+	if title == "" {
+		_, _ = msg.ReplyText("Title is Required. Append --help for help")
+		return nil
+	}
+	bot.RSSDictMutex.RLock()
+	rssData, found := bot.RSSDict[title]
+	bot.RSSDictMutex.RUnlock()
+	if !found {
+		_, _ = msg.ReplyText(
+			"Title: " + title +
+				" was not found in subscribed feeds.",
+		)
+		return nil
+	}
+	pargs := arg.Values
+	lastTitle := pargs["last-title"].(string)
+
+	bot.RSSDictMutex.Lock()
+	rssData.LastFeed = ""
+	rssData.LastTitle = lastTitle
+	rssData.AllowSpam = true
+	bot.RSSDictMutex.Unlock()
+
+	_, _ = msg.Reply("Rollbacked Rss configuration successfully.",
+		&tele.ReplyOptions{HTMLParseMode: true})
+	db.SaveRSSDict(context.Background())
+
+	logger.InfoW(
+		"RSS Feed Rollbacked:",
+		zap.Int64("By", msg.SenderID),
+		zap.String("Title", title),
+		zap.String("LastTitle", lastTitle),
+	)
 	return nil
 }
