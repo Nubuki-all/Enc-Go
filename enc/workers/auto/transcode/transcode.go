@@ -121,7 +121,7 @@ func thing(entry types.QueueEntry) {
 		return
 	}
 	defer download.CleanDownload()
-	var downloadTime string 
+	var downloadTime string
 	if d := download.CompletedTime; d > 0 {
 		downloadTime = utils.TimeFormatter(d)
 	} else {
