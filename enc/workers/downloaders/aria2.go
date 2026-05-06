@@ -85,7 +85,8 @@ func (dl *Aria2Download) Start() error {
 	resp, err := dl.client.AddURI(
 		arigo.URIs(dl.uri), &arigo.Options{
 			Dir: dl.dir,
-		})
+		},
+	)
 	if err != nil {
 		return err
 	}

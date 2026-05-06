@@ -354,14 +354,16 @@ func (ul *TgUpload) uploadThumbnail(ctx context.Context) (thumb tg.InputFileClas
 
 func (ul *TgUpload) sendMedia() (err error) {
 	if ul.reply != nil {
-		_, err = ul.reply.ReplyMediaDoc(ul.media,
+		_, err = ul.reply.ReplyMediaDoc(
+			ul.media,
 			&tele.UploadOptions{
 				Quote:   true,
 				Caption: ul.caption,
 			},
 		)
 	} else {
-		_, err = ul.msg.Edit(ul.caption,
+		_, err = ul.msg.Edit(
+			ul.caption,
 			&tele.EditOptions{Media: ul.media},
 		)
 	}

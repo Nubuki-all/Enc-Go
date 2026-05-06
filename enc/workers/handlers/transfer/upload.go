@@ -102,7 +102,8 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			),
 		)
 		if out := arg.Output; out != "" {
-			_, _ = msg.Reply(utils.CodeBlock(out, true),
+			_, _ = msg.Reply(
+				utils.CodeBlock(out, true),
 				&tele.ReplyOptions{HTMLParseMode: true},
 			)
 			return nil
@@ -198,7 +199,8 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 				),
 			),
 		}
-		ctrlMsg, err := msg.Reply("Folder upload control panel.",
+		ctrlMsg, err := msg.Reply(
+			"Folder upload control panel.",
 			&tele.ReplyOptions{
 				ReplyMarkup: markup.InlineKeyboard(buttonRows...),
 			},
@@ -208,9 +210,10 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		}
 		ctrlID := fmt.Sprintf("%d:%d", ctrlMsg.ChatID, ctrlMsg.ID)
 		dirUpload := &types.TransferInfo{ID: ctrlID, Sender: msg.SenderID}
-		_ = utils.StoreCallbackInfo(&types.CallbackInfo{
-			TransferInfo: dirUpload,
-		}, ctrlID,
+		_ = utils.StoreCallbackInfo(
+			&types.CallbackInfo{
+				TransferInfo: dirUpload,
+			}, ctrlID,
 		)
 		_ = ctrlMsg.Pin(true)
 		defer ctrlMsg.Unpin(true) //nolint:errcheck

@@ -173,7 +173,8 @@ func (dl *Downloader) GenButtons() tg.ReplyMarkupClass {
 			),
 		}
 	}
-	buttonRows = append(buttonRows,
+	buttonRows = append(
+		buttonRows,
 		markup.Row(
 			markup.Callback(
 				random.Enmoji()+" Cancel Download",
@@ -255,7 +256,8 @@ func (dl *Downloader) ReportStatus() (*tele.Message, error) {
 			}(text, reportee)
 		}
 	}
-	return msg.Edit(text,
+	return msg.Edit(
+		text,
 		&tele.EditOptions{HTMLParseMode: true},
 	)
 }

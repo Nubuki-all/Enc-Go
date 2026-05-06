@@ -76,7 +76,8 @@ func Finalize(ctx context.Context) {
 func startRPC() {
 	bot.DownloaderMutex.RLock()
 	defer bot.DownloaderMutex.RUnlock()
-	cmd := exec.Command("aria2c",
+	cmd := exec.Command(
+		"aria2c",
 		"--enable-rpc=true",
 		"--rpc-listen-all",
 		"--rpc-max-request-size=1024M",
@@ -146,7 +147,8 @@ func startQbit() {
 
 		cmd := exec.Command("qbittorrent-nox", args...)
 		if err := cmd.Start(); err != nil {
-			logger.WarnW("failed to start qbittorrent-nox",
+			logger.WarnW(
+				"failed to start qbittorrent-nox",
 				zap.Int("port", p),
 				zap.Strings("args", args),
 				zap.Error(err),
@@ -205,7 +207,7 @@ func onStart() {
 		id = config.Conf.LogChannel
 	} else {
 		id, _ = strconv.ParseInt(
-			(strings.Split(config.Conf.Owner, " ")[0]),
+			strings.Split(config.Conf.Owner, " ")[0],
 			10,
 			64,
 		)

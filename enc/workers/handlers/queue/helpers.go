@@ -82,7 +82,8 @@ func Select(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.Reply(utils.CodeBlock(out, true),
+		_, _ = msg.Reply(
+			utils.CodeBlock(out, true),
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
@@ -319,7 +320,8 @@ func ListQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.Reply(utils.CodeBlock(out, true),
+		_, _ = msg.Reply(
+			utils.CodeBlock(out, true),
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
@@ -468,7 +470,8 @@ func EditQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.Reply(utils.CodeBlock(out, true),
+		_, _ = msg.Reply(
+			utils.CodeBlock(out, true),
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil

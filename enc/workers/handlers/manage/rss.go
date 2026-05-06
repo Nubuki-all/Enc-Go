@@ -64,7 +64,8 @@ func RssHandler(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	rollback := pargs["rollback"].(bool)
 	if !del && !edit && !get && !list && !sub && !lc && !rollback {
 		if out := arg.Output; out != "" {
-			_, _ = msg.Reply(utils.CodeBlock(out, true),
+			_, _ = msg.Reply(
+				utils.CodeBlock(out, true),
 				&tele.ReplyOptions{HTMLParseMode: true},
 			)
 			return nil
@@ -153,7 +154,8 @@ func subRss(msg *tele.Message, args string) error {
 		argparser.CreateDBoolFlag("pause", "p", "To pause the rss feed."),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.Reply(utils.CodeBlock(out, true),
+		_, _ = msg.Reply(
+			utils.CodeBlock(out, true),
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
@@ -324,7 +326,8 @@ func editRss(msg *tele.Message, args string) error {
 		argparser.CreateDBoolFlag("resume", "r", "To resume the rss feed."),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.Reply(utils.CodeBlock(out, true),
+		_, _ = msg.Reply(
+			utils.CodeBlock(out, true),
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
@@ -481,7 +484,8 @@ func getRss(msg *tele.Message, args string) error {
 		argparser.CreateDIntFlag("amount", "a", "Amount of links to grab/fetch."),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.Reply(utils.CodeBlock(out, true),
+		_, _ = msg.Reply(
+			utils.CodeBlock(out, true),
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
@@ -528,7 +532,8 @@ func getRss(msg *tele.Message, args string) error {
 	maxEntries := len(feed.Items)
 	var sb strings.Builder
 	for _, entry := range feed.Items[:min(maxEntries, amount)] {
-		fmt.Fprintf(&sb, "<b>Name: </b><code>%s</code>\n",
+		fmt.Fprintf(
+			&sb, "<b>Name: </b><code>%s</code>\n",
 			strings.ReplaceAll(
 				strings.ReplaceAll(entry.Title, "<", ""),
 				">",
@@ -664,7 +669,8 @@ func rollbackRss(msg *tele.Message, args string) error {
 		argparser.CreateDStringFlag("last-title", "t", "The last title to rollback to."),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.Reply(utils.CodeBlock(out, true),
+		_, _ = msg.Reply(
+			utils.CodeBlock(out, true),
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil

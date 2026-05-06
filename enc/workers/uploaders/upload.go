@@ -83,7 +83,8 @@ func (ul *Uploader) Start() error {
 		}
 
 		if errors.Is(err, ErrRetry) && i < maxAttempts-1 {
-			logger.WarnW("Upload failed due to connection, retrying after wait...",
+			logger.WarnW(
+				"Upload failed due to connection, retrying after wait...",
 				zap.Int("attempt", i+1),
 				zap.Error(err),
 			)
@@ -148,7 +149,8 @@ func (ul *Uploader) ReportStatus() (*tele.Message, error) {
 	}
 	text := fmt.Sprintf("Upload of <code>%s</code> %s", ul.FileName, status)
 
-	return ul.Msg.Edit(text,
+	return ul.Msg.Edit(
+		text,
 		&tele.EditOptions{HTMLParseMode: true},
 	)
 }

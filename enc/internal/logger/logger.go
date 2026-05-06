@@ -79,7 +79,8 @@ func Init(logFile string, useJSON bool) error {
 	core := zapcore.NewTee(consoleCore, fileCore)
 
 	// Build the logger
-	Logger = zap.New(core,
+	Logger = zap.New(
+		core,
 		zap.AddCaller(), // include caller
 		zap.AddStacktrace(zapcore.ErrorLevel),
 	)

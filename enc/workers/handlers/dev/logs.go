@@ -38,7 +38,8 @@ func GetLogs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.Reply(utils.CodeBlock(out, true),
+		_, _ = msg.Reply(
+			utils.CodeBlock(out, true),
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
@@ -72,7 +73,8 @@ func GetLogs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 	preMsg := msg
 	for _, chunk := range chunks {
 		out := "<pre>" + chunk + "</pre>"
-		preMsg, err = preMsg.Reply(out,
+		preMsg, err = preMsg.Reply(
+			out,
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		if err != nil {

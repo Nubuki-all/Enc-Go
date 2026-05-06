@@ -172,7 +172,8 @@ func (qp *QueuePreview) update() (err error) {
 	}
 	var buttonRows []tg.KeyboardButtonRow
 	if (total - 1) > qp.limit {
-		buttonRows = append(buttonRows,
+		buttonRows = append(
+			buttonRows,
 			markup.Row(
 				markup.Callback(
 					"<<",
@@ -197,7 +198,8 @@ func (qp *QueuePreview) update() (err error) {
 		return nil
 	}
 	qp.prevMsg = txt
-	buttonRows = append(buttonRows,
+	buttonRows = append(
+		buttonRows,
 		markup.Row(
 			markup.Callback(
 				"Close",
@@ -210,7 +212,8 @@ func (qp *QueuePreview) update() (err error) {
 		&tele.EditOptions{
 			HTMLParseMode: true,
 			ReplyMarkup:   markup.InlineKeyboard(buttonRows...),
-		})
+		},
+	)
 	return err
 }
 

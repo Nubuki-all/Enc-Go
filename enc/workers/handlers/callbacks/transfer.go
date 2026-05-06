@@ -142,7 +142,8 @@ func ViewDlInfo(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery)
 	info.Mutex.Lock()
 	defer info.Mutex.Unlock()
 	info.PauseProgress = true
-	_, _ = msg.Edit(vidStat,
+	_, _ = msg.Edit(
+		vidStat,
 		&tele.EditOptions{HTMLParseMode: true, ReplyMarkup: replyMarkup},
 	)
 	return nil

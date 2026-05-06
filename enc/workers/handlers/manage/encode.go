@@ -359,7 +359,8 @@ func MGlobalPOptions(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.Reply(fmt.Sprintf("<pre>%s</pre>", out),
+		_, _ = msg.Reply(
+			fmt.Sprintf("<pre>%s</pre>", out),
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
@@ -413,10 +414,11 @@ func MGlobalPOptions(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 			reply = "**Enabled caption parsing successfully**"
 		}
 	} else {
-		_, _ = msg.Reply("Invaid arguments."+
-			"\nNeed help? Send <code>"+
-			cmd+
-			" --help</code>.",
+		_, _ = msg.Reply(
+			"Invaid arguments."+
+				"\nNeed help? Send <code>"+
+				cmd+
+				" --help</code>.",
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
@@ -458,10 +460,11 @@ func Pause(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string)
 			reply = "**Pausing Cancelled**"
 		}
 	} else if args != "0" && !utils.IsPositiveNumber(args) {
-		_, _ = msg.Reply("Invaid Number."+
-			"\nNeed help? Send <code>"+
-			update.Args()[0]+
-			" --help</code>.",
+		_, _ = msg.Reply(
+			"Invaid Number."+
+				"\nNeed help? Send <code>"+
+				update.Args()[0]+
+				" --help</code>.",
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil

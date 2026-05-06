@@ -119,7 +119,8 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	}
 	if hostInfo != nil && hostInfo.Platform != "" {
 		b.WriteString(
-			fmt.Sprintf("**OS:** `%s %s %s`\n",
+			fmt.Sprintf(
+				"**OS:** `%s %s %s`\n",
 				hostInfo.Platform,
 				hostInfo.PlatformVersion,
 				runtime.GOARCH,
@@ -175,7 +176,8 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 		),
 	)
 	b.WriteString(
-		fmt.Sprintf("> **Network**\n`↑ %s`\n`↓ %s`\n",
+		fmt.Sprintf(
+			"> **Network**\n`↑ %s`\n`↓ %s`\n",
 			hSent,
 			hRecv,
 		),
@@ -191,7 +193,8 @@ func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	)
 	b.WriteString("\n")
 	b.WriteString(
-		fmt.Sprintf("> **Runtime**\n**Version:** `%s`\n**Arch:** `%s`\n",
+		fmt.Sprintf(
+			"> **Runtime**\n**Version:** `%s`\n**Arch:** `%s`\n",
 			runtime.Version(),
 			runtime.GOARCH,
 		),

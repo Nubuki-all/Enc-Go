@@ -17,7 +17,8 @@ func ListFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 		"Arguments:\n" +
 		"   direct/torrent/magnetic link (Required)"
 	if utils.SendHelp(args) {
-		_, _ = msg.Reply("<pre>"+helpMsg+"</pre>",
+		_, _ = msg.Reply(
+			"<pre>"+helpMsg+"</pre>",
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
@@ -59,7 +60,8 @@ func ListYtdlFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 		"Arguments:\n" +
 		"   link to video (Required)"
 	if utils.SendHelp(args) {
-		_, _ = msg.Reply("<pre>"+helpMsg+"</pre>",
+		_, _ = msg.Reply(
+			"<pre>"+helpMsg+"</pre>",
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil

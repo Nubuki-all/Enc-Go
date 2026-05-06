@@ -166,7 +166,8 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 			),
 		)
 		if out := arg.Output; out != "" {
-			_, _ = msg.Reply(utils.CodeBlock(out, true),
+			_, _ = msg.Reply(
+				utils.CodeBlock(out, true),
 				&tele.ReplyOptions{HTMLParseMode: true},
 			)
 			return nil
@@ -497,7 +498,8 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 	}
 	result, err := parser.ParseName(fileName, pOptions)
 	if err != nil {
-		_, _ = sMsg.Edit("**Parsing failed. check logs for more details**",
+		_, _ = sMsg.Edit(
+			"**Parsing failed. check logs for more details**",
 			nil,
 		)
 		logger.Error(err)

@@ -88,7 +88,8 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 			),
 		)
 		if out := arg.Output; out != "" {
-			_, _ = msg.Reply(utils.CodeBlock(out, true),
+			_, _ = msg.Reply(
+				utils.CodeBlock(out, true),
 				&tele.ReplyOptions{HTMLParseMode: true},
 			)
 			return nil
@@ -302,7 +303,8 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			),
 		)
 		if out := arg.Output; out != "" {
-			_, _ = msg.Reply(utils.CodeBlock(out, true),
+			_, _ = msg.Reply(
+				utils.CodeBlock(out, true),
 				&tele.ReplyOptions{HTMLParseMode: true},
 			)
 			return nil
@@ -488,14 +490,16 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	}
 	result, err := parser.ParseName(fileName, pOptions)
 	if err != nil {
-		_, _ = sMsg.Edit("**Parsing failed. check logs for more details**",
+		_, _ = sMsg.Edit(
+			"**Parsing failed. check logs for more details**",
 			nil,
 		)
 		logger.Error(err)
 		return nil
 	}
 	if result.FileName != download.FileName {
-		_, _ = sMsg.Edit("Renaming:\n`"+download.FileName+"`\n >>>\n`"+result.FileName+"`…",
+		_, _ = sMsg.Edit(
+			"Renaming:\n`"+download.FileName+"`\n >>>\n`"+result.FileName+"`…",
 			nil,
 		)
 		newPath := filepath.Join(filepath.Dir(download.Path), result.FileName)
@@ -602,7 +606,8 @@ func MediaInfo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 			),
 		)
 		if out := arg.Output; out != "" {
-			_, _ = msg.Reply(utils.CodeBlock(out, true),
+			_, _ = msg.Reply(
+				utils.CodeBlock(out, true),
 				&tele.ReplyOptions{HTMLParseMode: true},
 			)
 			return nil

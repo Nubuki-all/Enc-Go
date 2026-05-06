@@ -73,7 +73,8 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 			),
 		)
 		if out := arg.Output; out != "" {
-			_, _ = msg.Reply(utils.CodeBlock(out, true),
+			_, _ = msg.Reply(
+				utils.CodeBlock(out, true),
 				&tele.ReplyOptions{HTMLParseMode: true},
 			)
 			return nil
@@ -186,7 +187,8 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.Reply(utils.CodeBlock(out, true),
+		_, _ = msg.Reply(
+			utils.CodeBlock(out, true),
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
@@ -212,8 +214,9 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	dAni := pargs["disable-anilist"].(bool)
 	cSensitive := pargs["case-sensitive"].(bool)
 	if RenameFilterExists(match, cSensitive) {
-		_, _ = msg.ReplyText("Rename Filter with given matched name already" +
-			" exists. Note: You can not mix case-sensitive and non case-sensitive filters.",
+		_, _ = msg.ReplyText(
+			"Rename Filter with given matched name already" +
+				" exists. Note: You can not mix case-sensitive and non case-sensitive filters.",
 		)
 		return nil
 	}
@@ -344,7 +347,8 @@ func DelAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.Reply(utils.CodeBlock(out, true),
+		_, _ = msg.Reply(
+			utils.CodeBlock(out, true),
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
@@ -442,7 +446,8 @@ func Filter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.Reply(utils.CodeBlock(out, true),
+		_, _ = msg.Reply(
+			utils.CodeBlock(out, true),
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
@@ -485,10 +490,11 @@ func VFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		return nil
 	}
 	filter := bot.Filters
-	filterStr := fmt.Sprintf("Bot Will Automatically:\n\n"+
-		"**Remove:-** `%s`\n"+
-		"**Tag Files as:-** `%s`\n"+
-		"**Tag caption as:-** `%s`",
+	filterStr := fmt.Sprintf(
+		"Bot Will Automatically:\n\n"+
+			"**Remove:-** `%s`\n"+
+			"**Tag Files as:-** `%s`\n"+
+			"**Tag caption as:-** `%s`",
 		filter.Fil1,
 		filter.Fil2,
 		filter.Fil3,
@@ -572,7 +578,8 @@ func MatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.Reply(utils.CodeBlock(out, true),
+		_, _ = msg.Reply(
+			utils.CodeBlock(out, true),
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
@@ -604,8 +611,9 @@ func MatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 		filters = bot.NameFilters
 	}
 	if MatchFilterExists(match, filters) || (release && ReleaseFilterExists(match, cSensitive)) {
-		_, _ = msg.ReplyText("File/Release Filter with given matched name already" +
-			" exists. Note: You can only mix case-sensitive and non case-sensitive filters if not matching release group names.",
+		_, _ = msg.ReplyText(
+			"File/Release Filter with given matched name already" +
+				" exists. Note: You can only mix case-sensitive and non case-sensitive filters if not matching release group names.",
 		)
 		return nil
 	}
@@ -668,7 +676,8 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.Reply(utils.CodeBlock(out, true),
+		_, _ = msg.Reply(
+			utils.CodeBlock(out, true),
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
@@ -832,7 +841,8 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.Reply(utils.CodeBlock(out, true),
+		_, _ = msg.Reply(
+			utils.CodeBlock(out, true),
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
@@ -855,17 +865,19 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	}
 	cSensitive := pargs["case-sensitive"].(bool)
 	if ReleaseExtFilterExists(release, cSensitive) {
-		_, _ = msg.ReplyText("Release Ext Filter with given matched name already" +
-			" exists. Note: You cannot mix case-sensitive and non case-sensitive filters.",
+		_, _ = msg.ReplyText(
+			"Release Ext Filter with given matched name already" +
+				" exists. Note: You cannot mix case-sensitive and non case-sensitive filters.",
 		)
 		return nil
 	}
 	datas := convertStrToMtchFiltr(data)
 	if len(datas) == 0 {
-		_, _ = msg.Reply("Valid filter data could not be constructed from arguments."+
-			"\nNeed help? Send <code>"+
-			cmd+
-			" --help</code>.",
+		_, _ = msg.Reply(
+			"Valid filter data could not be constructed from arguments."+
+				"\nNeed help? Send <code>"+
+				cmd+
+				" --help</code>.",
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil
@@ -921,7 +933,8 @@ func ManageExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message,
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.Reply(utils.CodeBlock(out, true),
+		_, _ = msg.Reply(
+			utils.CodeBlock(out, true),
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil

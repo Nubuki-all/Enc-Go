@@ -89,10 +89,11 @@ func BcMsg(text string, exceptUser int64, mlist []*tele.Message) []*tele.Message
 	AddMessage := func(id int64) {
 		ctx := telegram.Context
 		pText, entities, _ := parser.Parse(text, true)
-		resp, err := ctx.SendMessage(id, &tg.MessagesSendMessageRequest{
-			Message:  pText,
-			Entities: entities,
-		},
+		resp, err := ctx.SendMessage(
+			id, &tg.MessagesSendMessageRequest{
+				Message:  pText,
+				Entities: entities,
+			},
 		)
 		if err != nil {
 			logger.ErrorW(err.Error())

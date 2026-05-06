@@ -106,7 +106,8 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		),
 	)
 	if out := arg.Output; out != "" {
-		_, _ = msg.Reply(utils.CodeBlock(out, true),
+		_, _ = msg.Reply(
+			utils.CodeBlock(out, true),
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)
 		return nil

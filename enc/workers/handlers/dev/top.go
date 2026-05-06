@@ -69,7 +69,8 @@ func top(limit int) string {
 	_, _ = fmt.Fprintln(w, "PID\tUSER\tPROCESS\tCPU%")
 
 	for _, p := range list {
-		_, _ = fmt.Fprintf(w, "%d\t%s\t%s\t%.2f\n",
+		_, _ = fmt.Fprintf(
+			w, "%d\t%s\t%s\t%.2f\n",
 			p.PID,
 			p.User,
 			p.Name,

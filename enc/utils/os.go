@@ -208,7 +208,8 @@ func GetFFprobeMetadata(file string) ([]byte, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, "ffprobe",
+	cmd := exec.CommandContext(
+		ctx, "ffprobe",
 		"-hide_banner",
 		"-show_streams",
 		"-show_format",
@@ -256,7 +257,8 @@ func GetVideoThumbnailAndDuration(file, output string) (string, int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, "ffmpeg",
+	cmd := exec.CommandContext(
+		ctx, "ffmpeg",
 		"-hide_banner",
 		"-loglevel", "error",
 		"-ss", strconv.Itoa(seek),

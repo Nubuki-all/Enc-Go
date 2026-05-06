@@ -196,7 +196,8 @@ func (bp *BatchPreview) Update() (err error) {
 	}
 	var buttonRows []tg.KeyboardButtonRow
 	if total > bp.limit {
-		buttonRows = append(buttonRows,
+		buttonRows = append(
+			buttonRows,
 			markup.Row(
 				markup.Callback(
 					"<<",
@@ -219,7 +220,8 @@ func (bp *BatchPreview) Update() (err error) {
 	if bp.parse {
 		parseBtn = "Raw"
 	}
-	buttonRows = append(buttonRows,
+	buttonRows = append(
+		buttonRows,
 		markup.Row(
 			markup.Callback(
 				parseBtn,
@@ -249,7 +251,8 @@ func (bp *BatchPreview) Update() (err error) {
 		&tele.EditOptions{
 			HTMLParseMode: true,
 			ReplyMarkup:   markup.InlineKeyboard(buttonRows...),
-		})
+		},
+	)
 	return err
 }
 

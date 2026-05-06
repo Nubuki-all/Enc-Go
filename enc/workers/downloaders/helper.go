@@ -185,7 +185,8 @@ func GetAria2DlInfo(uri string) *utils.DLInfo {
 		arigo.URIs(uri), &arigo.Options{
 			Dir:            folder,
 			FileAllocation: "none",
-		})
+		},
+	)
 	if err != nil {
 		dlInfo.Error = err
 		return dlInfo
