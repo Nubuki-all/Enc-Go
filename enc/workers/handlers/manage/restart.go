@@ -29,7 +29,7 @@ func Restart(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		helpMsg,
 		argList,
 		argparser.CreateDBoolFlag("detach", "d", "To restart in detached mode."),
-		argparser.CreateDBoolFlag("no-detach", "nd", "To restart in non-detached mode."),
+		argparser.CreateDBoolFlag("no-detach", "n", "To restart in non-detached mode."),
 	)
 	if out := arg.Output; out != "" {
 		_, _ = msg.Reply(
