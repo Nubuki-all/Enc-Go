@@ -121,7 +121,12 @@ func thing(entry types.QueueEntry) {
 		return
 	}
 	defer download.CleanDownload()
-	downloadTime := utils.TimeFormatter(cmp.Or(download.CompletedTime, time.Since(download.Time).Round(time.Second).Seconds()))
+	var downloadTime string 
+	if d := download.CompletedTime; d > 0 {
+		downloadTime = utils.TimeFormatter(d)
+	} else {
+		downloadTime = utils.TimeFormatter(time.Since(download.Time).Round(time.Second).Seconds())
+	}
 	if Lmsg != nil {
 		_ = Lmsg.Delete()
 	}
