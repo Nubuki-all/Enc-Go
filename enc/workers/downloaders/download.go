@@ -96,6 +96,7 @@ func (dl *Downloader) Attach(id string, Sender int64) error {
 		return dl.err
 	default:
 	}
+	dl.Background = false
 	dl.Msg, _ = dl.Msg.Edit(
 		"<code>Waiting for download handler…</code>",
 		&tele.EditOptions{
@@ -137,7 +138,7 @@ func (dl *Downloader) Start() error {
 		dl.service = NewAria2Dl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
 	}
 	err := dl.service.Start()
-	if err != nil && !dl.PauseProgress && dl.Background {
+	if err != nil && dl.Background {
 		dl.CompletedTime = time.Since(dl.Time).Round(time.Second).Seconds()
 	}
 	if name := dl.service.GetFileName(); name != "" {
