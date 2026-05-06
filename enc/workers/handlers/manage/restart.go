@@ -17,8 +17,8 @@ func Restart(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		return nil
 	}
 	helpMsg := "Restarts bot.\n" +
-		"Accepts the following args:"  
-	
+		"Accepts the following args:"
+
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
 		_, _ = msg.ReplyText(err.Error())
