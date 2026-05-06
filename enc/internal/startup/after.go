@@ -23,7 +23,7 @@ import (
 	"enc/internal/db"
 	"enc/internal/logger"
 
-	//"enc/utils"
+	"enc/utils"
 	"enc/utils/random"
 	"enc/utils/tele"
 
@@ -53,7 +53,20 @@ func Finalize(ctx context.Context) {
 	}()
 
 	// handle restart
-	if len(os.Args) == 3 {
+	var startDetached bool
+	for _, arg := range os.Args {
+		if arg == "--detached" {
+			config.Rconf.Detached = true
+		}
+		if arg == "--start-detached" {
+			startDetached = true
+		}
+	}
+	if startDetached && !config.Rconf.Detached {
+		_ = utils.Restart(0, 0, true)
+	}
+
+	if len(os.Args) >= 3 && os.Args[1] == "restart" {
 		if err := onRestart(); err != nil {
 			logger.WarnW("onRestart failed", zap.Error(err))
 		}
@@ -69,7 +82,36 @@ func Finalize(ctx context.Context) {
 	// start autos
 	channelstatus.Start()
 	transcode.Start()
+	go startAutoRestart()
 	bot.Started = true
+}
+
+func startAutoRestart() {
+	interval := config.Rconf.AutoRestart
+	if interval <= 0 {
+		return
+	}
+	time.Sleep(interval)
+	logger.Info("Auto Restarting...")
+
+	var chatID int64
+	if config.Conf.LogChannel != 0 {
+		chatID = config.Conf.LogChannel
+	} else if len(config.Rconf.Owners) > 0 {
+		chatID = config.Rconf.Owners[0]
+	}
+
+	var msgID int
+	if chatID != 0 {
+		msg, err := tele.SendMsg(chatID, "`Auto Restarting Please Wait…`", nil)
+		if err == nil {
+			msgID = msg.ID
+		} else {
+			chatID = 0
+		}
+	}
+
+	_ = utils.Restart(chatID, msgID, config.Rconf.Detached)
 }
 
 // startRPC launches aria2c in RPC mode, then connects the Go API client
@@ -228,6 +270,11 @@ func onRestart() error {
 	}
 	chatID, _ := strconv.ParseInt(parts[0], 10, 64)
 	msgID, _ := strconv.Atoi(parts[1])
+
+	if chatID == 0 && msgID == 0 {
+		onStart()
+		return nil
+	}
 
 	var msg string
 	if cmd == "restart" {

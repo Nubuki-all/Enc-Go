@@ -353,48 +353,41 @@ func PosInStream(file, lang1, lang2, mode string) (aPos, sPos int) {
 	return aPos, sPos
 }
 
-// Restart current process with new executable at same path
+// Restart current process
 // returns only on error
-func Restart(chatID int64, msgID int) error {
-	err := RestartDetached(chatID, msgID)
-	if err != nil {
-		return err
-	}
-	os.Exit(0)
-	return nil
-}
-
-func RestartDetached(chatID int64, msgID int) error {
+func Restart(chatID int64, msgID int, detached bool) error {
 	exe, err := os.Executable()
 	if err != nil {
 		return err
 	}
 	id := fmt.Sprintf("%d:%d", chatID, msgID)
 	argv := []string{"restart", id}
-	// env := os.Environ()
-	cmd := exec.Command(exe, argv...)
-	devnull, err := os.OpenFile("/dev/null", os.O_RDWR, 0)
-	if err != nil {
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		cmd.Stdin = nil
-	} else {
-		defer devnull.Close() //nolint:errcheck
-		cmd.Stdin = devnull
-		cmd.Stdout = devnull
-		cmd.Stderr = devnull
-	}
+	if detached {
+		argv = append(argv, "--detached")
+		cmd := exec.Command(exe, argv...)
+		devnull, err := os.OpenFile("/dev/null", os.O_RDWR, 0)
+		if err != nil {
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			cmd.Stdin = nil
+		} else {
+			defer devnull.Close() //nolint:errcheck
+			cmd.Stdin = devnull
+			cmd.Stdout = devnull
+			cmd.Stderr = devnull
+		}
 
-	// Detach: create a new session so the child won't be in the parent's process group.
-	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Setsid: true,
-	}
+		// Detach: create a new session so the child won't be in the parent's process group.
+		cmd.SysProcAttr = &syscall.SysProcAttr{
+			Setsid: true,
+		}
 
-	// Optionally close inherited fds by setting cmd.ExtraFiles = nil and redirect streams.
-	if err := cmd.Start(); err != nil {
-		return err
+		if err := cmd.Start(); err != nil {
+			return err
+		}
+		os.Exit(0)
 	}
-	return nil
+	return ReX(argv...)
 }
 
 type TempFile struct {

@@ -20,6 +20,7 @@ type Config struct {
 	APIHash               string
 	Aria2Port             int
 	AutoQVids             bool
+	AutoRestartInterval   float64
 	BotToken              string
 	CacheDL               bool
 	CapDeco               string
@@ -104,6 +105,7 @@ type Config struct {
 // RuntimeConfig holds runtime state
 type RuntimeConfig struct {
 	ADLTimeout            time.Duration
+	AutoRestart           time.Duration
 	BotID                 string
 	Error                 error
 	MDLTimeout            time.Duration
@@ -114,6 +116,7 @@ type RuntimeConfig struct {
 	ReleaseName           string
 	ReleaseNameB          string
 	Started               bool
+	Detached              bool
 	TgpAuthor             string
 	TgpAuthorURL          string
 	TgUlTimeout           time.Duration
@@ -166,6 +169,7 @@ func LoadConfig() error {
 	viper.SetDefault("ALLOW_ACTION", true)
 	viper.SetDefault("ALT_DOWNLOAD_DIR", ".downloads2")
 	viper.SetDefault("ARIA2_PORT", 6800)
+	viper.SetDefault("AUTO_RESTART_INTERVAL", 24)
 	viper.SetDefault("CAP_DECO", "◉")
 	viper.SetDefault("C_LINK", "@ANi_MiNE")
 	viper.SetDefault("CMD_SUFFIX", "")
@@ -215,6 +219,7 @@ func LoadConfig() error {
 		APIHash:               viper.GetString("API_HASH"),
 		Aria2Port:             viper.GetInt("ARIA2_PORT"),
 		AutoQVids:             viper.GetBool("AUTO_QUEUE_VID"),
+		AutoRestartInterval:   viper.GetFloat64("AUTO_RESTART_INTERVAL"),
 		BotToken:              viper.GetString("BOT_TOKEN"),
 		CacheDL:               viper.GetBool("CACHE_DL"),
 		CapDeco:               viper.GetString("CAP_DECO"),
@@ -328,6 +333,13 @@ func LoadConfig() error {
 		Conf.ProgresUpdateInterval = 2
 	}
 	Rconf.ADLTimeout = time.Duration(Conf.ADLTimeout)
+	if Conf.AutoRestartInterval > 0 {
+		interval := Conf.AutoRestartInterval
+		if interval < 1 {
+			interval = 1
+		}
+		Rconf.AutoRestart = time.Duration(interval * float64(time.Hour))
+	}
 	Rconf.MDLTimeout = time.Duration(Conf.MDLTimeout)
 	Rconf.ProgresUpdateInterval = time.Duration(Conf.ProgresUpdateInterval)
 	Rconf.QBitTimeout = time.Duration(Conf.QBitTimeout)
