@@ -138,7 +138,7 @@ func (dl *Downloader) Start() error {
 		dl.service = NewAria2Dl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
 	}
 	err := dl.service.Start()
-	if err != nil && dl.Background {
+	if err == nil && dl.Background {
 		dl.CompletedTime = time.Since(dl.Time).Round(time.Second).Seconds()
 	}
 	if name := dl.service.GetFileName(); name != "" {
