@@ -74,7 +74,7 @@ func Finalize(ctx context.Context) {
 		time.Sleep(1 * time.Second)
 		onStart()
 	}
-	downloaders.CleanAllQbit(ctx) // prevent stale qbit downloads from blocking newer ones 
+	downloaders.CleanAllQbit(ctx) // prevent stale qbit downloads from blocking newer ones
 
 	entimer.Timer.Start()
 	AddAllCommands()
