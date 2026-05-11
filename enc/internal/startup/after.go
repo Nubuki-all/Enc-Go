@@ -84,6 +84,7 @@ func Finalize(ctx context.Context) {
 	channelstatus.Start()
 	transcode.Start()
 	go startAutoRestart()
+	go startTelegramPing()
 	bot.Started = true
 }
 
@@ -113,6 +114,34 @@ func startAutoRestart() {
 	}
 
 	_ = utils.Restart(chatID, msgID, config.Rconf.Detached)
+}
+
+func startTelegramPing() {
+	for {
+		time.Sleep(30 * time.Minute)
+		if err := safePing(); err != nil {
+			logger.WarnW("Telegram ping failed, retrying in 1 minute", zap.Error(err))
+			time.Sleep(1 * time.Minute)
+			if err := safePing(); err != nil {
+				logger.ErrorW("Telegram connection lost, restarting...", zap.Error(err))
+				_ = utils.Restart(0, 0, config.Rconf.Detached)
+			}
+		}
+	}
+}
+
+func safePing() (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("recovered from panic in Ping: %v", r)
+		}
+	}()
+	if telegram.Client == nil {
+		return fmt.Errorf("telegram.Client is nil")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	return telegram.Client.Ping(ctx)
 }
 
 // startRPC launches aria2c in RPC mode, then connects the Go API client
