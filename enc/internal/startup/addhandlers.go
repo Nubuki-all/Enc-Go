@@ -4,6 +4,8 @@ import (
 	//"fmt"
 	"strings"
 
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+
 	"github.com/celestix/gotgproto/dispatcher"
 	onevent "github.com/celestix/gotgproto/dispatcher/handlers"
 	"github.com/celestix/gotgproto/dispatcher/handlers/filters"
@@ -30,17 +32,64 @@ import (
 	"enc/workers/uploaders"
 )
 
+var (
+	cmdHandlers      map[string]func(*ext.Context, *ext.Update) error
+	callbackHandlers map[string]func(*ext.Context, *ext.Update) error
+)
+
 func AddAllHandlers() {
 	d := telegram.Client.Dispatcher
 	AddCmdHandlers(d)
 	AddCBHandlers(d)
+	telegram.HandleBotAPIUpdate = routeBotAPIUpdate
 
 	// dispatcher.AddHandlerToGroup(onevent.NewMessage(filters.Message.Text, handlers.Print), 1)
 	// d.AddHandler(onevent.NewMessage(filters.Message.Text, handlers.Print))
 }
 
+func routeBotAPIUpdate(update tgbotapi.Update) {
+	gpUpdate, msg := tele.BotUpdateToGpUpdate(update)
+	if gpUpdate == nil || msg == nil {
+		return
+	}
+
+	if update.Message != nil {
+		text := update.Message.Text
+		if !strings.HasPrefix(text, "/") {
+			// handle media auto add or other non-command messages if needed
+			_ = queue.AutoAddDocument(telegram.Context, gpUpdate, msg)
+			return
+		}
+
+		cmd := strings.Split(strings.TrimPrefix(text, "/"), " ")[0]
+		cmd = strings.TrimSuffix(cmd, config.Conf.CmdSuffix)
+
+		if handler, ok := cmdHandlers[cmd]; ok {
+			go func() {
+				err := handler(telegram.Context, gpUpdate)
+				if err != nil {
+					logger.ErrorW(err.Error())
+				}
+			}()
+		}
+	} else if update.CallbackQuery != nil {
+		data := update.CallbackQuery.Data
+		for prefix, handler := range callbackHandlers {
+			if strings.HasPrefix(data, prefix) {
+				go func() {
+					err := handler(telegram.Context, gpUpdate)
+					if err != nil {
+						logger.ErrorW(err.Error())
+					}
+				}()
+				break
+			}
+		}
+	}
+}
+
 func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
-	cmdHandlers := map[string]func(*ext.Context, *ext.Update) error{
+	cmdHandlers = map[string]func(*ext.Context, *ext.Update) error{
 		// Welcome Handlers
 		"start": BaseEventHandler(handlers.Start),
 		"help":  BaseEventHandler(handlers.Start),
@@ -143,7 +192,7 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 }
 
 func AddCBHandlers(dispatch dispatcher.Dispatcher) {
-	callbackHandlers := map[string]func(*ext.Context, *ext.Update) error{
+	callbackHandlers = map[string]func(*ext.Context, *ext.Update) error{
 		// Welcome Handlers
 		"ihelp":     CallbackEventHandler(handlers.Help),
 		"iback":     CallbackEventHandler(handlers.StartBack),

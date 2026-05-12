@@ -8,11 +8,12 @@ import (
 
 	"github.com/celestix/gotgproto/ext"
 	gp "github.com/celestix/gotgproto/types"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/gotd/td/telegram/uploader"
 	"github.com/gotd/td/tg"
 
 	// "enc/config"
-	"enc/internal/clients/telegram"
+	tgclient "enc/internal/clients/telegram"
 	"enc/internal/logger"
 	"enc/utils/tele/parser"
 	"enc/utils/tele/parser/htmlparser"
@@ -95,180 +96,215 @@ func (m *Message) RawMessage() *gp.Message {
 }
 
 func (m *Message) ReplyText(text string) (*Message, error) {
-	pText, entities, _ := parser.Parse(text, true)
-	topicID := m.TopicID
-	if topicID == m.ID || topicID == 1 {
-		topicID = 0
-	}
-	inputRep := &tg.InputReplyToMessage{
-		ReplyToMsgID: m.ID,
-		TopMsgID:     topicID,
-	}
-	msg, err := telegram.Context.SendMessage(
-		m.ChatID, &tg.MessagesSendMessageRequest{
-			Message:  pText,
-			Entities: entities,
-			ReplyTo:  inputRep,
-		},
-	)
+	pText, _, _ := parser.Parse(text, false)
+	msg := tgbotapi.NewMessage(m.ChatID, pText)
+	msg.ReplyToMessageID = m.ID
+	msg.ParseMode = "HTML"
+	res, err := tgclient.BotAPI.Send(msg)
 	if err != nil {
 		logger.ErrorW(err.Error())
 		return nil, err
 	}
-	return NewMsgFromGotg(msg, telegram.Context, m.ChatID, telegram.Context.Self.ID), nil
+	return &Message{
+		ChatID:   res.Chat.ID,
+		ID:       res.MessageID,
+		SenderID: res.From.ID,
+		Ctx:      tgclient.Context,
+		Raw: &gp.Message{
+			Message: &tg.Message{
+				ID:      res.MessageID,
+				Message: res.Text,
+				PeerID:  &tg.PeerUser{UserID: res.From.ID},
+			},
+			Text: res.Text,
+		},
+	}, nil
 }
 
 func (m *Message) Reply(text string, replyOptions *ReplyOptions) (*Message, error) {
 	var pText string
-	var entities []tg.MessageEntityClass
+	var parseMode string
 	if replyOptions.HTMLParseMode {
-		pText, entities, _ = htmlparser.Parse(text)
+		pText, _, _ = htmlparser.Parse(text)
+		parseMode = "HTML"
 	} else {
-		pText, entities, _ = parser.Parse(text, true)
+		pText, _, _ = parser.Parse(text, false)
+		parseMode = "HTML"
 	}
-	topicID := m.TopicID
-	if topicID == m.ID || topicID == 1 {
-		topicID = 0
-	}
-	inputRep := &tg.InputReplyToMessage{
-		ReplyToMsgID: m.ID,
-		TopMsgID:     topicID,
-	}
-	msg, err := telegram.Context.SendMessage(
-		m.ChatID, &tg.MessagesSendMessageRequest{
-			Message:     pText,
-			Entities:    entities,
-			ReplyTo:     inputRep,
-			ReplyMarkup: replyOptions.ReplyMarkup,
-			NoWebpage:   replyOptions.DisableWebPreview,
-		},
-	)
+
+	msg := tgbotapi.NewMessage(m.ChatID, pText)
+	msg.ReplyToMessageID = m.ID
+	msg.ParseMode = parseMode
+	msg.DisableWebPagePreview = replyOptions.DisableWebPreview
+	msg.ReplyMarkup = ConvertReplyMarkup(replyOptions.ReplyMarkup)
+
+	res, err := tgclient.BotAPI.Send(msg)
 	if err != nil {
 		logger.ErrorW(err.Error())
 		return nil, err
+	}
+
+	retMsg := &Message{
+		ChatID:   res.Chat.ID,
+		ID:       res.MessageID,
+		SenderID: res.From.ID,
+		Ctx:      tgclient.Context,
+		Raw: &gp.Message{
+			Message: &tg.Message{
+				ID:      res.MessageID,
+				Message: res.Text,
+				PeerID:  &tg.PeerUser{UserID: res.From.ID},
+			},
+			Text: res.Text,
+		},
 	}
 	if replyOptions.SleepDelete != 0 {
 		go func(msg *Message, seconds time.Duration) {
 			time.Sleep(seconds)
 			_ = msg.Delete()
 		}(
-			NewMsgFromGotg(msg, telegram.Context, m.ChatID, telegram.Context.Self.ID),
+			retMsg,
 			time.Duration(replyOptions.SleepDelete)*time.Second,
 		)
 	}
-	return NewMsgFromGotg(msg, telegram.Context, m.ChatID, telegram.Context.Self.ID), nil
+	return retMsg, nil
 }
 
 func (m *Message) RespondText(text string) (*Message, error) {
-	pText, entities, _ := parser.Parse(text, true)
-	topicID := m.TopicID
-	if topicID == 1 {
-		topicID = 0
-	}
-	inputRep := &tg.InputReplyToMessage{
-		ReplyToMsgID: topicID,
-	}
-	msg, err := telegram.Context.SendMessage(
-		m.ChatID, &tg.MessagesSendMessageRequest{
-			Message:  pText,
-			Entities: entities,
-			ReplyTo:  inputRep,
-		},
-	)
+	pText, _, _ := parser.Parse(text, false)
+	msg := tgbotapi.NewMessage(m.ChatID, pText)
+	msg.ParseMode = "HTML"
+	res, err := tgclient.BotAPI.Send(msg)
 	if err != nil {
 		logger.ErrorW(err.Error())
 		return nil, err
 	}
-	return NewMsgFromGotg(msg, telegram.Context, m.ChatID, telegram.Context.Self.ID), nil
+	return &Message{
+		ChatID:   res.Chat.ID,
+		ID:       res.MessageID,
+		SenderID: res.From.ID,
+		Ctx:      tgclient.Context,
+		Raw: &gp.Message{
+			Message: &tg.Message{
+				ID:      res.MessageID,
+				Message: res.Text,
+				PeerID:  &tg.PeerUser{UserID: res.From.ID},
+			},
+			Text: res.Text,
+		},
+	}, nil
 }
 
 func (m *Message) Respond(text string, opt *SendOptions) (*Message, error) {
 	var pText string
-	var entities []tg.MessageEntityClass
+	var parseMode string
 	if opt == nil {
 		opt = &SendOptions{}
 	}
 	if opt.HTMLParseMode {
-		pText, entities, _ = htmlparser.Parse(text)
+		pText, _, _ = htmlparser.Parse(text)
+		parseMode = "HTML"
 	} else {
-		pText, entities, _ = parser.Parse(text, true)
+		pText, _, _ = parser.Parse(text, false)
+		parseMode = "HTML"
 	}
-	topicID := m.TopicID
-	if topicID == 1 {
-		topicID = 0
+
+	msg := tgbotapi.NewMessage(m.ChatID, pText)
+	msg.ParseMode = parseMode
+	if opt.ReplyTo != 0 {
+		msg.ReplyToMessageID = opt.ReplyTo
 	}
-	inputRep := &tg.InputReplyToMessage{
-		ReplyToMsgID: topicID,
-	}
-	msg, err := telegram.Context.SendMessage(
-		m.ChatID, &tg.MessagesSendMessageRequest{
-			Message:     pText,
-			Entities:    entities,
-			ReplyTo:     inputRep,
-			ReplyMarkup: opt.ReplyMarkup,
-		},
-	)
+	msg.ReplyMarkup = ConvertReplyMarkup(opt.ReplyMarkup)
+
+	res, err := tgclient.BotAPI.Send(msg)
 	if err != nil {
 		logger.ErrorW(err.Error())
 		return nil, err
 	}
-	return NewMsgFromGotg(msg, telegram.Context, m.ChatID, telegram.Context.Self.ID), nil
+	return &Message{
+		ChatID:   res.Chat.ID,
+		ID:       res.MessageID,
+		SenderID: res.From.ID,
+		Ctx:      tgclient.Context,
+		Raw: &gp.Message{
+			Message: &tg.Message{
+				ID:      res.MessageID,
+				Message: res.Text,
+				PeerID:  &tg.PeerUser{UserID: res.From.ID},
+			},
+			Text: res.Text,
+		},
+	}, nil
 }
 
 func (m *Message) EditText(text string) (*Message, error) {
-	pText, entities, _ := parser.Parse(text, true)
-	var replyMarkup tg.ReplyMarkupClass
-	if m.Raw != nil {
-		replyMarkup = m.Raw.ReplyMarkup
-	}
-	msg, err := telegram.Context.EditMessage(
-		m.ChatID, &tg.MessagesEditMessageRequest{
-			ID:          m.ID,
-			Message:     pText,
-			Entities:    entities,
-			ReplyMarkup: replyMarkup,
-		},
-	)
+	pText, _, _ := parser.Parse(text, false)
+	msg := tgbotapi.NewEditMessageText(m.ChatID, m.ID, pText)
+	msg.ParseMode = "HTML"
+	res, err := tgclient.BotAPI.Send(msg)
 	if err != nil {
 		logger.ErrorW(err.Error())
 		return nil, err
 	}
-	if m.Raw == nil {
-		return NewMsgFromGotg(msg, telegram.Context, m.ChatID, telegram.Context.Self.ID), nil
-	}
-	return NewMsgFromGotg(msg, telegram.Context, m.ChatID, m.SenderID), nil
+	r := res
+	return &Message{
+		ChatID:   r.Chat.ID,
+		ID:       r.MessageID,
+		SenderID: r.From.ID,
+		Ctx:      tgclient.Context,
+		Raw: &gp.Message{
+			Message: &tg.Message{
+				ID:      r.MessageID,
+				Message: r.Text,
+				PeerID:  &tg.PeerUser{UserID: r.From.ID},
+			},
+			Text: r.Text,
+		},
+	}, nil
 }
 
 func (m *Message) Edit(text string, editOptions *EditOptions) (*Message, error) {
 	var pText string
-	var entities []tg.MessageEntityClass
+	var parseMode string
 	if editOptions == nil {
 		editOptions = &EditOptions{}
 	}
-	if len(editOptions.Entities) != 0 {
-		pText, entities = text, editOptions.Entities
-	} else if editOptions.HTMLParseMode {
-		pText, entities, _ = htmlparser.Parse(text)
+	if editOptions.HTMLParseMode {
+		pText, _, _ = htmlparser.Parse(text)
+		parseMode = "HTML"
 	} else {
-		pText, entities, _ = parser.Parse(text, true)
+		pText, _, _ = parser.Parse(text, false)
+		parseMode = "HTML"
 	}
-	msg, err := telegram.Context.EditMessage(
-		m.ChatID, &tg.MessagesEditMessageRequest{
-			ID:          m.ID,
-			Message:     pText,
-			Entities:    entities,
-			ReplyMarkup: editOptions.ReplyMarkup,
-			Media:       editOptions.Media,
-		},
-	)
+	msg := tgbotapi.NewEditMessageText(m.ChatID, m.ID, pText)
+	msg.ParseMode = parseMode
+	markup := ConvertReplyMarkup(editOptions.ReplyMarkup)
+	if markup != nil {
+		if im, ok := markup.(tgbotapi.InlineKeyboardMarkup); ok {
+			msg.ReplyMarkup = &im
+		}
+	}
+
+	res, err := tgclient.BotAPI.Send(msg)
 	if err != nil {
 		logger.ErrorW(err.Error())
 		return nil, err
 	}
-	if m.Raw == nil {
-		return NewMsgFromGotg(msg, telegram.Context, m.ChatID, telegram.Context.Self.ID), nil
-	}
-	return NewMsgFromGotg(msg, telegram.Context, m.ChatID, m.SenderID), nil
+	r := res
+	return &Message{
+		ChatID:   r.Chat.ID,
+		ID:       r.MessageID,
+		SenderID: r.From.ID,
+		Ctx:      tgclient.Context,
+		Raw: &gp.Message{
+			Message: &tg.Message{
+				ID:      r.MessageID,
+				Message: r.Text,
+				PeerID:  &tg.PeerUser{UserID: r.From.ID},
+			},
+			Text: r.Text,
+		},
+	}, nil
 }
 
 func (m *Message) RawText() (string, error) {
@@ -279,11 +315,13 @@ func (m *Message) RawText() (string, error) {
 }
 
 func (m *Message) Delete() error {
-	return telegram.Context.DeleteMessages(m.ChatID, []int{m.ID})
+	msg := tgbotapi.NewDeleteMessage(m.ChatID, m.ID)
+	_, err := tgclient.BotAPI.Request(msg)
+	return err
 }
 
 func (m *Message) Forward(chatID int64) (*Message, error) {
-	resp, err := telegram.Context.ForwardMessages(
+	resp, err := tgclient.Context.ForwardMessages(
 		m.ChatID, chatID,
 		&tg.MessagesForwardMessagesRequest{
 			DropAuthor: true,
@@ -313,11 +351,11 @@ func (m *Message) Forward(chatID int64) (*Message, error) {
 	} else {
 		return nil, fmt.Errorf("failed to extract message from updates")
 	}
-	return NewMsgFromGotg(msg, telegram.Context, chatID, telegram.Context.Self.ID), nil
+	return NewMsgFromGotg(msg, tgclient.Context, chatID, tgclient.Context.Self.ID), nil
 }
 
 func (m *Message) Pin(silent bool) error {
-	ctx := telegram.Context
+	ctx := tgclient.Context
 	peerID, err := ctx.ResolveInputPeerById(m.ChatID)
 	if err != nil {
 		return err
@@ -332,7 +370,7 @@ func (m *Message) Pin(silent bool) error {
 }
 
 func (m *Message) Unpin(silent bool) error {
-	ctx := telegram.Context
+	ctx := tgclient.Context
 	peerID, err := ctx.ResolveInputPeerById(m.ChatID)
 	if err != nil {
 		return err
@@ -351,7 +389,7 @@ func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
 	var file tg.InputFileClass
 	inputRep := &tg.InputReplyToMessage{}
 	var err error
-	ctx := telegram.Context
+	ctx := tgclient.Context
 	bytes := uploadOptions.Bytes
 	name := uploadOptions.Name
 	path := uploadOptions.Path
@@ -413,13 +451,13 @@ func (m *Message) UploadDoc(uploadOptions *UploadOptions) (*Message, error) {
 		return nil, err
 	}
 	if m.Raw == nil {
-		return NewMsgFromGotg(msg, telegram.Context, m.ChatID, telegram.Context.Self.ID), nil
+		return NewMsgFromGotg(msg, tgclient.Context, m.ChatID, tgclient.Context.Self.ID), nil
 	}
-	return NewMsgFromGotg(msg, telegram.Context, m.ChatID, m.SenderID), nil
+	return NewMsgFromGotg(msg, tgclient.Context, m.ChatID, m.SenderID), nil
 }
 
 func (m *Message) ReplyMediaDoc(media tg.InputMediaClass, uploadOptions *UploadOptions) (*Message, error) {
-	ctx := telegram.Context
+	ctx := tgclient.Context
 	inputRep := &tg.InputReplyToMessage{}
 	if uploadOptions.Quote {
 		inputRep.ReplyToMsgID = m.ID
@@ -448,24 +486,21 @@ func (m *Message) ReplyMediaDoc(media tg.InputMediaClass, uploadOptions *UploadO
 		return nil, err
 	}
 	if m.Raw == nil {
-		return NewMsgFromGotg(msg, telegram.Context, m.ChatID, telegram.Context.Self.ID), nil
+		return NewMsgFromGotg(msg, tgclient.Context, m.ChatID, tgclient.Context.Self.ID), nil
 	}
-	return NewMsgFromGotg(msg, telegram.Context, m.ChatID, m.SenderID), nil
+	return NewMsgFromGotg(msg, tgclient.Context, m.ChatID, m.SenderID), nil
 }
 
 func SendMessage(id int64, text string) error {
-	pText, entities, _ := parser.Parse(text, true)
-	_, err := telegram.Context.SendMessage(
-		id, &tg.MessagesSendMessageRequest{
-			Message:  pText,
-			Entities: entities,
-		},
-	)
+	pText, _, _ := parser.Parse(text, false)
+	msg := tgbotapi.NewMessage(id, pText)
+	msg.ParseMode = "HTML"
+	_, err := tgclient.BotAPI.Send(msg)
 	return err
 }
 
 func (m *Message) Action(action string, prog int) error {
-	ctx := telegram.Context
+	ctx := tgclient.Context
 	inputPeer, err := ctx.ResolveInputPeerById(m.ChatID)
 	if err != nil {
 		return err
@@ -507,7 +542,7 @@ func SendMedia(id int64, media tg.InputMediaClass, opts *SendOptions) (*Message,
 	if opts.ReplyTo != 0 {
 		inputRep.ReplyToMsgID = opts.ReplyTo
 	}
-	msg, err := telegram.Context.SendMedia(
+	msg, err := tgclient.Context.SendMedia(
 		id, &tg.MessagesSendMediaRequest{
 			Message:     pText,
 			Entities:    entities,
@@ -520,55 +555,59 @@ func SendMedia(id int64, media tg.InputMediaClass, opts *SendOptions) (*Message,
 		return nil, err
 	}
 	return NewMsgFromGotg(
-		msg, telegram.Context, id, telegram.Client.Self.ID,
+		msg, tgclient.Context, id, tgclient.Client.Self.ID,
 	), nil
 }
 
 func SendMsg(id int64, text string, opts *SendOptions) (*Message, error) {
 	var pText string
-	var entities []tg.MessageEntityClass
-	inputRep := &tg.InputReplyToMessage{}
+	var parseMode string
 	if opts == nil {
 		opts = &SendOptions{}
 	}
 	if opts.HTMLParseMode {
-		pText, entities, _ = htmlparser.Parse(text)
+		pText, _, _ = htmlparser.Parse(text)
+		parseMode = "HTML"
 	} else {
-		pText, entities, _ = parser.Parse(text, true)
+		pText, _, _ = parser.Parse(text, false)
+		parseMode = "HTML"
 	}
+	msg := tgbotapi.NewMessage(id, pText)
+	msg.ParseMode = parseMode
 	if opts.ReplyTo != 0 {
-		inputRep.ReplyToMsgID = opts.ReplyTo
+		msg.ReplyToMessageID = opts.ReplyTo
 	}
-	msg, err := telegram.Context.SendMessage(
-		id, &tg.MessagesSendMessageRequest{
-			Message:     pText,
-			Entities:    entities,
-			ReplyMarkup: opts.ReplyMarkup,
-			ReplyTo:     inputRep,
-		},
-	)
+	msg.ReplyMarkup = ConvertReplyMarkup(opts.ReplyMarkup)
+	res, err := tgclient.BotAPI.Send(msg)
 	if err != nil {
 		return nil, err
 	}
-	return NewMsgFromGotg(
-		msg, telegram.Context, id, telegram.Client.Self.ID,
-	), nil
+	return &Message{
+		ChatID:   res.Chat.ID,
+		ID:       res.MessageID,
+		SenderID: res.From.ID,
+		Ctx:      tgclient.Context,
+		Raw: &gp.Message{
+			Message: &tg.Message{
+				ID:      res.MessageID,
+				Message: res.Text,
+				PeerID:  &tg.PeerUser{UserID: res.From.ID},
+			},
+			Text: res.Text,
+		},
+	}, nil
 }
 
 func EditMessage(id int64, msgID int, text string) error {
-	pText, entities, _ := parser.Parse(text, true)
-	_, err := telegram.Context.EditMessage(
-		id, &tg.MessagesEditMessageRequest{
-			ID:       msgID,
-			Message:  pText,
-			Entities: entities,
-		},
-	)
+	pText, _, _ := parser.Parse(text, false)
+	msg := tgbotapi.NewEditMessageText(id, msgID, pText)
+	msg.ParseMode = "HTML"
+	_, err := tgclient.BotAPI.Send(msg)
 	return err
 }
 
 func ForwardMessage(fromChatID, toChatID int64, msgID int) (*Message, error) {
-	ctx := telegram.Context
+	ctx := tgclient.Context
 	resp, err := ctx.ForwardMessages(
 		fromChatID, toChatID,
 		&tg.MessagesForwardMessagesRequest{
