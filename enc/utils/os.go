@@ -505,7 +505,7 @@ func SafePath(path string) string {
 	}
 	// Also escape backticks for sh -c
 	p := strings.ReplaceAll(path, "'", "'\\''")
-	p = strings.ReplaceAll(p, "`", "\\`" )
+	p = strings.ReplaceAll(p, "`", "\\`")
 	return "'" + p + "'"
 }
 

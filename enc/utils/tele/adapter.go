@@ -1,14 +1,15 @@
 package tele
 
 import (
+	"strconv"
+	"strings"
+
 	"enc/internal/clients/telegram"
 	gp_ext "github.com/celestix/gotgproto/ext"
 	gp_types "github.com/celestix/gotgproto/types"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/gotd/td/constant"
 	"github.com/gotd/td/tg"
-	"strconv"
-	"strings"
 )
 
 func BotUpdateToGpUpdate(u tgbotapi.Update) (*gp_ext.Update, *Message) {
@@ -133,17 +134,19 @@ type botAPIChat struct {
 	id int64
 }
 
-func (c *botAPIChat) GetID() int64             { return c.id }
-func (c *botAPIChat) GetAccessHash() int64     { return 0 }
-func (c *botAPIChat) IsAChannel() bool         { return constant.TDLibPeerID(c.id).IsChannel() }
-func (c *botAPIChat) IsAChat() bool            { return constant.TDLibPeerID(c.id).IsChat() }
-func (c *botAPIChat) IsAUser() bool            { return constant.TDLibPeerID(c.id).IsUser() }
+func (c *botAPIChat) GetID() int64         { return c.id }
+func (c *botAPIChat) GetAccessHash() int64 { return 0 }
+func (c *botAPIChat) IsAChannel() bool     { return constant.TDLibPeerID(c.id).IsChannel() }
+func (c *botAPIChat) IsAChat() bool        { return constant.TDLibPeerID(c.id).IsChat() }
+func (c *botAPIChat) IsAUser() bool        { return constant.TDLibPeerID(c.id).IsUser() }
 func (c *botAPIChat) GetInputUser() tg.InputUserClass {
 	return &tg.InputUser{UserID: c.id}
 }
+
 func (c *botAPIChat) GetInputChannel() tg.InputChannelClass {
 	return &tg.InputChannel{ChannelID: constant.TDLibPeerID(c.id).ToPlain()}
 }
+
 func (c *botAPIChat) GetInputPeer() tg.InputPeerClass {
 	return &tg.InputPeerUser{UserID: c.id} // simplified
 }
