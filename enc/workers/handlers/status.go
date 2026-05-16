@@ -10,7 +10,6 @@ import (
 	"enc/internal/bot"
 	"enc/utils"
 	"enc/utils/tele"
-	"github.com/celestix/gotgproto/ext"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
 	"github.com/shirou/gopsutil/v3/host"
@@ -22,7 +21,7 @@ import (
 
 // StatusHandler gathers system + bot statistics using gopsutil and sends them
 // as a formatted message. It assumes utils.UserIsAllowed and messaging helpers exist.
-func Status(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
+func Status(ctx *tele.Context, update *tele.Update, msg *tele.Message) error {
 	// permission check
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil

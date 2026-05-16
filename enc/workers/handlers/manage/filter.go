@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/celestix/gotgproto/ext"
 	//"github.com/gotd/td/tg"
 
 	"enc/config"
@@ -19,7 +18,7 @@ import (
 	"enc/utils/tele"
 )
 
-func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func CustomRename(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -125,7 +124,7 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	return nil
 }
 
-func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func AutoRename(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -234,7 +233,7 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	return nil
 }
 
-func VAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func VAutoRename(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -310,7 +309,7 @@ func VAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 	return nil
 }
 
-func DelAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func DelAutoRename(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -402,7 +401,7 @@ func DelAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 	return nil
 }
 
-func Filter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Filter(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -476,7 +475,7 @@ func Filter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	return nil
 }
 
-func VFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func VFilter(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -503,7 +502,7 @@ func VFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 	return nil
 }
 
-func DelFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func DelFilter(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -522,7 +521,7 @@ func DelFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	return nil
 }
 
-func MatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func MatchFilter(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -631,7 +630,7 @@ func MatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 	return nil
 }
 
-func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func ManageMatchFilter(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -801,7 +800,7 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 	return nil
 }
 
-func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func ExtCapFilter(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -893,7 +892,7 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	return nil
 }
 
-func ManageExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func ManageExtCapFilter(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}

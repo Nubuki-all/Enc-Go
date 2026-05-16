@@ -5,14 +5,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/celestix/gotgproto/ext"
-
 	"enc/utils"
 	"enc/utils/tele"
 	"enc/workers/downloaders"
 )
 
-func ListFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func ListFiles(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	helpMsg := "List items in a torrent along with their file_ids\n" +
 		"Arguments:\n" +
 		"   direct/torrent/magnetic link (Required)"
@@ -55,7 +53,7 @@ func ListFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	return nil
 }
 
-func ListYtdlFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func ListYtdlFiles(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	helpMsg := "List videos yt-dlp\n" +
 		"Arguments:\n" +
 		"   link to video (Required)"

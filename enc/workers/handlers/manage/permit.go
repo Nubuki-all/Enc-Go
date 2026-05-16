@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 
 	"enc/internal/db"
@@ -16,7 +15,7 @@ import (
 
 // TempUnauth removes a temporarily allowed user (unpermit).
 // It expects either a reply to a user's message, or an argument containing the user id.
-func TempUnauth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func TempUnauth(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	senderID := msg.SenderID
 	errPrefix := "Failed!,\nCan't remove from temporarily allowed users"
 	help := `Un-authorise a user or chat
@@ -96,7 +95,7 @@ func TempUnauth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	return nil
 }
 
-func TempAuth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func TempAuth(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	senderID := msg.SenderID
 	errPrefix := "Failed!,\nCan't add to temporarily allowed users"
 	help := `Authorise a user or chat

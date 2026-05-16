@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/celestix/gotgproto/ext"
 	//"github.com/gotd/td/tg"
 
 	"enc/config"
@@ -18,7 +17,7 @@ import (
 	"enc/utils/tele"
 )
 
-func ChangeEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func ChangeEParams(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -58,7 +57,7 @@ func ChangeEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 	return nil
 }
 
-func CheckEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func CheckEParams(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -111,7 +110,7 @@ func CheckEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	return nil
 }
 
-func ResetEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func ResetEParams(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -157,7 +156,7 @@ func ResetEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	return nil
 }
 
-func ResetSEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg string) error {
+func ResetSEParams(ctx *tele.Context, update *tele.Update, msg *tele.Message, arg string) error {
 	envNotSet := func() error {
 		_, err := msg.ReplyText(fmt.Sprintf("Encoding param%s not set in .env or bot.", arg))
 		return err
@@ -204,7 +203,7 @@ func ResetSEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg 
 	return nil
 }
 
-func SetMuxArgs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func SetMuxArgs(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -248,7 +247,7 @@ func SetMuxArgs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	return nil
 }
 
-func GetMuxArgs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func GetMuxArgs(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -270,7 +269,7 @@ func GetMuxArgs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	return nil
 }
 
-func Version(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Version(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -314,7 +313,7 @@ func Version(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 	return nil
 }
 
-func MGlobalPOptions(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func MGlobalPOptions(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -427,7 +426,7 @@ func MGlobalPOptions(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 	return nil
 }
 
-func Pause(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Pause(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}

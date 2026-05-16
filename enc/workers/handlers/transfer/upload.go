@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/telegram/message/markup"
 	"github.com/gotd/td/tg"
 
@@ -26,7 +25,7 @@ import (
 
 const maxFileSize = 2126000000
 
-func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Upload(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}

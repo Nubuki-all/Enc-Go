@@ -3,8 +3,6 @@ package manage
 import (
 	"os"
 
-	"github.com/celestix/gotgproto/ext"
-
 	"enc/internal/bot"
 	"enc/internal/db"
 	"enc/utils"
@@ -12,7 +10,7 @@ import (
 	"enc/workers/downloaders"
 )
 
-func Nuke(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Nuke(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}

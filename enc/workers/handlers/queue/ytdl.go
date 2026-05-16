@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 
 	"enc/internal/bot"
@@ -24,7 +23,7 @@ import (
 	"enc/workers/downloaders"
 )
 
-func AddWithYtdl(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func AddWithYtdl(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}

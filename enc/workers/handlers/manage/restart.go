@@ -1,8 +1,6 @@
 package manage
 
 import (
-	"github.com/celestix/gotgproto/ext"
-
 	"enc/config"
 	"enc/internal/bot"
 	"enc/internal/db"
@@ -12,7 +10,7 @@ import (
 	"enc/workers/downloaders"
 )
 
-func Restart(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Restart(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}

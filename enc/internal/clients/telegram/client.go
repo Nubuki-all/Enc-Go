@@ -38,6 +38,15 @@ var (
 // ReAddHandlers quick hack to avoid circular import
 var ReAddHandlers func()
 
+func InitClients() {
+	if config.Conf.TgDispatcher.UsesGotg() || config.Conf.TgTransfer.UsesGotg() {
+		InitClient()
+	}
+	if config.Conf.TgDispatcher.UsesBotAPI() || config.Conf.TgTransfer.UsesBotAPI() {
+		InitBotAPIClient()
+	}
+}
+
 func InitClient() {
 	var err error
 	waiter := floodwait.NewSimpleWaiter()
@@ -70,11 +79,18 @@ func InitClient() {
 }
 
 func Restart() error {
-	if Client == nil {
+	if Client == nil && BotAPI == nil {
 		return errors.New("no telegram client available to restart")
 	}
-	Client.Stop()
-	InitClient()
-	ReAddHandlers()
+	if Client != nil {
+		Client.Stop()
+		Client = nil
+	}
+	StopBotAPI()
+	BotAPI = nil
+	InitClients()
+	if ReAddHandlers != nil {
+		ReAddHandlers()
+	}
 	return nil
 }

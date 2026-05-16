@@ -7,7 +7,6 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/traefik/yaegi/interp"
 	"github.com/traefik/yaegi/stdlib"
 
@@ -18,7 +17,7 @@ import (
 const maxLen = 4000
 
 // EvalGoSnippet runs a Go snippet and returns its stdout and the returned error (if any).
-func EvalGoSnippet(code string, ctx *ext.Context, update *ext.Update, msg *tele.Message) (string, error) {
+func EvalGoSnippet(code string, ctx *tele.Context, update *tele.Update, msg *tele.Message) (string, error) {
 	r, w, err := os.Pipe()
 	if err != nil {
 		return "", err
@@ -64,7 +63,7 @@ func EvalGoSnippet(code string, ctx *ext.Context, update *ext.Update, msg *tele.
 	return output, nil
 }
 
-func Eval(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Eval(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		if !utils.UserIsDev(msg.SenderID) {
 			return nil

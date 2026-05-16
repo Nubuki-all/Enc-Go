@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 
 	"enc/config"
@@ -24,7 +23,7 @@ import (
 	"enc/workers/uploaders"
 )
 
-func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Mux(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}

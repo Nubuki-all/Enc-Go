@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/celestix/gotgproto/ext"
-
 	"enc/utils"
 	"enc/utils/tele"
 )
 
-func Sh(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Sh(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		if !utils.UserIsDev(msg.SenderID) {
 			return nil

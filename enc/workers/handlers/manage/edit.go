@@ -3,11 +3,9 @@ package manage
 import (
 	"enc/utils"
 	"enc/utils/tele"
-
-	"github.com/celestix/gotgproto/ext"
 )
 
-func EditChannelMsg(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func EditChannelMsg(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}

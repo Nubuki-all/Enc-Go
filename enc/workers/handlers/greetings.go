@@ -7,7 +7,6 @@ import (
 	//"strings"
 	"time"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/telegram/message/markup"
 	"github.com/gotd/td/tg"
 
@@ -18,7 +17,7 @@ import (
 	"enc/utils/tele"
 )
 
-func Up(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
+func Up(ctx *tele.Context, update *tele.Update, msg *tele.Message) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		// To delete()
 		return nil
@@ -41,7 +40,7 @@ func Up(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	return nil
 }
 
-func Start(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
+func Start(ctx *tele.Context, update *tele.Update, msg *tele.Message) error {
 	user := update.EffectiveUser()
 	chat := update.EffectiveChat()
 	currentTime := utils.TimeFormatter(time.Since(bot.BotStartTime).Round(time.Second).Seconds())
@@ -105,7 +104,7 @@ func Start(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	return nil
 }
 
-func Help(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
+func Help(ctx *tele.Context, update *tele.Update, query *tele.CallbackQuery) error {
 	chat := update.EffectiveChat()
 	if !utils.UserIsOwner(query.SenderID) && chat.IsAUser() {
 		if !utils.AllowPM() {
@@ -151,7 +150,7 @@ func Help(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error
 	return nil
 }
 
-func StartBack(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
+func StartBack(ctx *tele.Context, update *tele.Update, query *tele.CallbackQuery) error {
 	user := update.EffectiveUser()
 	chat := update.EffectiveChat()
 	currentTime := utils.TimeFormatter(time.Since(bot.BotStartTime).Round(time.Second).Seconds())
@@ -211,7 +210,7 @@ func StartBack(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) 
 	return nil
 }
 
-func Commands(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
+func Commands(ctx *tele.Context, update *tele.Update, query *tele.CallbackQuery) error {
 	chat := update.EffectiveChat()
 	if !utils.UserIsOwner(query.SenderID) && chat.IsAUser() {
 		if !utils.AllowPM() {
@@ -243,7 +242,7 @@ func Commands(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) e
 	return nil
 }
 
-func Print(ctx *ext.Context, update *ext.Update) error {
+func Print(ctx *tele.Context, update *tele.Update) error {
 	fmt.Println(update.EffectiveMessage.Text)
 	/*fmt.Println(update.EffectiveMessage.ReplyToMessage)
 	update.EffectiveMessage.SetRepliedToMessage(context.Background(), ctx.Raw, ctx.PeerStorage)

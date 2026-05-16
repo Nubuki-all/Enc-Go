@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 
 	"enc/internal/bot"
@@ -30,7 +29,7 @@ const (
 	NoBatchmsg = "`Link has multiple files.`\n`To add all files to queue use -b or -s <id> to choose a single file`"
 )
 
-func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func AddLink(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}

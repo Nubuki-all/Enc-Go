@@ -16,7 +16,6 @@ import (
 	"enc/utils/parser"
 	"enc/utils/tele"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/telegram/message/markup"
 	"github.com/gotd/td/tg"
 	"go.uber.org/zap"
@@ -288,7 +287,7 @@ func delBatchCallbackInfo(key string) {
 	delete(batchCallbackData, key)
 }
 
-func PreviewAction(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
+func PreviewAction(ctx *tele.Context, update *tele.Update, query *tele.CallbackQuery) error {
 	id := fmt.Sprintf("%d:%d", query.ChatID, query.ID)
 	preview := GetBatchCallbackInfo(id)
 	if preview == nil {

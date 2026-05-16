@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 
 	"enc/config"
@@ -25,7 +24,7 @@ import (
 
 const notAVid = "`Replied Message is not a Video.`"
 
-func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func AddVideo(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}
@@ -235,7 +234,7 @@ func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	return nil
 }
 
-func AutoAddDocument(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
+func AutoAddDocument(ctx *tele.Context, update *tele.Update, msg *tele.Message) error {
 	if !config.Conf.AutoQVids {
 		return nil
 	}

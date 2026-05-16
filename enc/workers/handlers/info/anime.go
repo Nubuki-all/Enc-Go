@@ -9,11 +9,10 @@ import (
 	"enc/utils/parser"
 	"enc/utils/tele"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 )
 
-func Anime(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Anime(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}
@@ -82,7 +81,7 @@ func Anime(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string)
 	return nil
 }
 
-func AnimeAiring(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func AnimeAiring(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}

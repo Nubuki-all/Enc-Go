@@ -11,7 +11,6 @@ import (
 	"enc/utils"
 	"enc/utils/tele"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/shirou/gopsutil/v3/process"
 )
 
@@ -81,7 +80,7 @@ func top(limit int) string {
 	return sb.String()
 }
 
-func Top(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Top(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		if !utils.UserIsDev(msg.SenderID) {
 			return nil

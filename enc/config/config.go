@@ -11,6 +11,33 @@ import (
 )
 
 // Config holds application configuration loaded from .env
+type TelegramBackend string
+
+const (
+	TelegramBackendNone   TelegramBackend = "none"
+	TelegramBackendGotg   TelegramBackend = "gotgproto"
+	TelegramBackendBotAPI TelegramBackend = "bot-api"
+)
+
+func PickTelegramBackend(botAPIEnabled, gotgEnabled bool, fallback TelegramBackend) TelegramBackend {
+	switch {
+	case botAPIEnabled && gotgEnabled:
+		return fallback
+	case botAPIEnabled:
+		return TelegramBackendBotAPI
+	case gotgEnabled:
+		return TelegramBackendGotg
+	default:
+		return TelegramBackendNone
+	}
+}
+
+func (b TelegramBackend) UsesBotAPI() bool { return b == TelegramBackendBotAPI }
+
+func (b TelegramBackend) UsesGotg() bool { return b == TelegramBackendGotg }
+
+func (b TelegramBackend) Enabled() bool { return b != TelegramBackendNone }
+
 type Config struct {
 	ADLTimeout            int
 	AlwaysDeployLatest    bool
@@ -22,6 +49,7 @@ type Config struct {
 	AutoQVids             bool
 	AutoRestartInterval   float64
 	BotToken              string
+	BotAPIURL             string
 	CacheDL               bool
 	CapDeco               string
 	CLink                 string
@@ -88,6 +116,8 @@ type Config struct {
 	SequentialJobs        bool
 	TelegraphAPI          string
 	TelegraphAuthor       string
+	TgDispatcher          TelegramBackend
+	TgTransfer            TelegramBackend
 	TempDir               string
 	TempUser              string
 	TgUlTimeout           int
@@ -132,8 +162,6 @@ var (
 )
 
 var requiredEnvVars = []string{
-	"APP_ID",
-	"API_HASH",
 	"BOT_TOKEN",
 	"OWNER",
 }
@@ -158,18 +186,17 @@ func LoadConfig() error {
 	if err != nil {
 		log.Println("No .env file found or failed to read .env, falling back to environment variables")
 	}
-	// Check for missing required env vars
-	for _, key := range requiredEnvVars {
-		if viper.GetString(key) == "" {
-			return fmt.Errorf("missing required environment variable: %s", key)
-		}
-	}
 	// set defaults
 	viper.SetDefault("ARIA2_DL_TIMEOUT", 0)
 	viper.SetDefault("ALLOW_ACTION", true)
 	viper.SetDefault("ALT_DOWNLOAD_DIR", ".downloads2")
 	viper.SetDefault("ARIA2_PORT", 6800)
 	viper.SetDefault("AUTO_RESTART_INTERVAL", 24)
+	viper.SetDefault("BOT_API_URL", "")
+	viper.SetDefault("TG_DISPATCHER_BOT_API", true)
+	viper.SetDefault("TG_DISPATCHER_GOTGPROTO", false)
+	viper.SetDefault("TG_TRANSFER_BOT_API", false)
+	viper.SetDefault("TG_TRANSFER_GOTGPROTO", true)
 	viper.SetDefault("CAP_DECO", "◉")
 	viper.SetDefault("C_LINK", "@ANi_MiNE")
 	viper.SetDefault("CMD_SUFFIX", "")
@@ -210,6 +237,20 @@ func LoadConfig() error {
 	viper.SetDefault("USE_CAPTION", true)
 	viper.SetDefault("WORKERS", 2)
 
+	for _, key := range requiredEnvVars {
+		if viper.GetString(key) == "" {
+			return fmt.Errorf("missing required environment variable: %s", key)
+		}
+	}
+	if viper.GetBool("TG_DISPATCHER_GOTGPROTO") || viper.GetBool("TG_TRANSFER_GOTGPROTO") {
+		if viper.GetString("APP_ID") == "" {
+			return fmt.Errorf("missing required environment variable: APP_ID")
+		}
+		if viper.GetString("API_HASH") == "" {
+			return fmt.Errorf("missing required environment variable: API_HASH")
+		}
+	}
+
 	Conf = &Config{
 		ADLTimeout:            viper.GetInt("ARIA2_DL_TIMEOUT"),
 		AlwaysDeployLatest:    viper.GetBool("ALWAYS_DEPLOY_LATEST"),
@@ -221,6 +262,7 @@ func LoadConfig() error {
 		AutoQVids:             viper.GetBool("AUTO_QUEUE_VID"),
 		AutoRestartInterval:   viper.GetFloat64("AUTO_RESTART_INTERVAL"),
 		BotToken:              viper.GetString("BOT_TOKEN"),
+		BotAPIURL:             viper.GetString("BOT_API_URL"),
 		CacheDL:               viper.GetBool("CACHE_DL"),
 		CapDeco:               viper.GetString("CAP_DECO"),
 		CLink:                 viper.GetString("C_LINK"),
@@ -287,6 +329,8 @@ func LoadConfig() error {
 		SequentialJobs:        viper.GetBool("SEQUENTIAL_JOBS"),
 		TelegraphAPI:          viper.GetString("TELEGRAPH_API"),
 		TelegraphAuthor:       viper.GetString("TELEGRAPH_AUTHOR"),
+		TgDispatcher:          PickTelegramBackend(viper.GetBool("TG_DISPATCHER_BOT_API"), viper.GetBool("TG_DISPATCHER_GOTGPROTO"), TelegramBackendBotAPI),
+		TgTransfer:            PickTelegramBackend(viper.GetBool("TG_TRANSFER_BOT_API"), viper.GetBool("TG_TRANSFER_GOTGPROTO"), TelegramBackendGotg),
 		TempDir:               viper.GetString("TEMP_DIR"),
 		TempUser:              viper.GetString("TEMP_USERS"),
 		TgUlTimeout:           viper.GetInt("TG_UL_TIMEOUT"),

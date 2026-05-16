@@ -19,12 +19,11 @@ import (
 	"enc/utils/tele"
 	"enc/workers/auto/rssmonitor"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/mmcdole/gofeed"
 	"go.uber.org/zap"
 )
 
-func RssHandler(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func RssHandler(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}

@@ -42,8 +42,8 @@ func main() {
 	startup.Initialize()
 	extract()
 	telegraph.Init()
-	telegram.InitClient()
-	startup.Finalize(telegram.Context)
+	telegram.InitClients()
+	startup.Finalize(telegram.RuntimeContext())
 	defer bot.Aria2Client.Close() //nolint:errcheck
 	telegram.Idle()
 }

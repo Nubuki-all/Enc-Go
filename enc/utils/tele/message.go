@@ -2,16 +2,18 @@
 package tele
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"time"
 
+	botmodels "enc/internal/clients/telegram/botapi/models"
 	"github.com/celestix/gotgproto/ext"
 	gp "github.com/celestix/gotgproto/types"
 	"github.com/gotd/td/telegram/uploader"
 	"github.com/gotd/td/tg"
 
-	// "enc/config"
+	"enc/config"
 	"enc/internal/clients/telegram"
 	"enc/internal/logger"
 	"enc/utils/tele/parser"
@@ -28,6 +30,7 @@ type Message struct {
 	User      *tg.User
 	ReplyToID int
 	TopicID   int
+	BotAPI    *botmodels.Message
 }
 
 type EditOptions struct {
@@ -65,8 +68,52 @@ type UploadOptions struct {
 	// will add more fields as required
 }
 
+// NewGotgMessageFromBotAPI converts a Bot API message into the gotg-like
+// message shape handlers still use during the transport migration.
+func NewGotgMessageFromBotAPI(m *botmodels.Message) *gp.Message {
+	if m == nil {
+		return nil
+	}
+	msg := &tg.Message{
+		ID:      m.ID,
+		Message: m.Text,
+	}
+	if m.ReplyToMessage != nil {
+		msg.ReplyTo = &tg.MessageReplyHeader{ReplyToMsgID: m.ReplyToMessage.ID}
+	}
+	if m.MessageThreadID != 0 {
+		msg.ReplyTo = &tg.MessageReplyHeader{ReplyToTopID: m.MessageThreadID, ForumTopic: true}
+	}
+	return &gp.Message{Message: msg, Text: m.Text}
+}
+
+// NewMsgFromBotAPI constructs a handler message from a Bot API message.
+func NewMsgFromBotAPI(m *botmodels.Message) *Message {
+	if m == nil {
+		return nil
+	}
+	senderID := int64(0)
+	if m.From != nil {
+		senderID = m.From.ID
+	}
+	replyTo := 0
+	if m.ReplyToMessage != nil {
+		replyTo = m.ReplyToMessage.ID
+	}
+	return &Message{
+		Raw:       NewGotgMessageFromBotAPI(m),
+		ChatID:    m.Chat.ID,
+		SenderID:  senderID,
+		ID:        m.ID,
+		ReplyToID: replyTo,
+		TopicID:   m.MessageThreadID,
+		BotAPI:    m,
+	}
+}
+
 // NewMsgFromGotg constructs a wrapper from a concrete *gp.Message.
-func NewMsgFromGotg(m *gp.Message, c *ext.Context, chatID int64, senderID int64) *Message {
+func NewMsgFromGotg(m *gp.Message, c any, chatID int64, senderID int64) *Message {
+	ctx := unwrapGotgContext(c)
 	var replyTo, topicID int
 	if msgHeader, ok := m.ReplyTo.(*tg.MessageReplyHeader); ok {
 		replyTo = msgHeader.ReplyToMsgID
@@ -80,7 +127,7 @@ func NewMsgFromGotg(m *gp.Message, c *ext.Context, chatID int64, senderID int64)
 	}
 	return &Message{
 		Raw:       m,
-		Ctx:       c,
+		Ctx:       ctx,
 		ChatID:    chatID,
 		SenderID:  senderID,
 		ID:        m.ID,
@@ -95,6 +142,14 @@ func (m *Message) RawMessage() *gp.Message {
 }
 
 func (m *Message) ReplyText(text string) (*Message, error) {
+	if m.BotAPI != nil || telegram.Context == nil {
+		msg, err := telegram.SendBotAPIMessage(context.Background(), m.ChatID, text)
+		if err != nil {
+			logger.ErrorW(err.Error())
+			return nil, err
+		}
+		return NewMsgFromBotAPI(msg), nil
+	}
 	pText, entities, _ := parser.Parse(text, true)
 	topicID := m.TopicID
 	if topicID == m.ID || topicID == 1 {
@@ -119,6 +174,14 @@ func (m *Message) ReplyText(text string) (*Message, error) {
 }
 
 func (m *Message) Reply(text string, replyOptions *ReplyOptions) (*Message, error) {
+	if m.BotAPI != nil || telegram.Context == nil {
+		msg, err := telegram.SendBotAPIMessage(context.Background(), m.ChatID, text)
+		if err != nil {
+			logger.ErrorW(err.Error())
+			return nil, err
+		}
+		return NewMsgFromBotAPI(msg), nil
+	}
 	var pText string
 	var entities []tg.MessageEntityClass
 	if replyOptions.HTMLParseMode {
@@ -160,6 +223,14 @@ func (m *Message) Reply(text string, replyOptions *ReplyOptions) (*Message, erro
 }
 
 func (m *Message) RespondText(text string) (*Message, error) {
+	if m.BotAPI != nil || telegram.Context == nil {
+		msg, err := telegram.SendBotAPIMessage(context.Background(), m.ChatID, text)
+		if err != nil {
+			logger.ErrorW(err.Error())
+			return nil, err
+		}
+		return NewMsgFromBotAPI(msg), nil
+	}
 	pText, entities, _ := parser.Parse(text, true)
 	topicID := m.TopicID
 	if topicID == 1 {
@@ -183,6 +254,14 @@ func (m *Message) RespondText(text string) (*Message, error) {
 }
 
 func (m *Message) Respond(text string, opt *SendOptions) (*Message, error) {
+	if m.BotAPI != nil || telegram.Context == nil {
+		msg, err := telegram.SendBotAPIMessage(context.Background(), m.ChatID, text)
+		if err != nil {
+			logger.ErrorW(err.Error())
+			return nil, err
+		}
+		return NewMsgFromBotAPI(msg), nil
+	}
 	var pText string
 	var entities []tg.MessageEntityClass
 	if opt == nil {
@@ -216,6 +295,14 @@ func (m *Message) Respond(text string, opt *SendOptions) (*Message, error) {
 }
 
 func (m *Message) EditText(text string) (*Message, error) {
+	if m.BotAPI != nil || telegram.Context == nil {
+		msg, err := telegram.EditBotAPIMessage(context.Background(), m.ChatID, m.ID, text)
+		if err != nil {
+			logger.ErrorW(err.Error())
+			return nil, err
+		}
+		return NewMsgFromBotAPI(msg), nil
+	}
 	pText, entities, _ := parser.Parse(text, true)
 	var replyMarkup tg.ReplyMarkupClass
 	if m.Raw != nil {
@@ -240,6 +327,14 @@ func (m *Message) EditText(text string) (*Message, error) {
 }
 
 func (m *Message) Edit(text string, editOptions *EditOptions) (*Message, error) {
+	if m.BotAPI != nil || telegram.Context == nil {
+		msg, err := telegram.EditBotAPIMessage(context.Background(), m.ChatID, m.ID, text)
+		if err != nil {
+			logger.ErrorW(err.Error())
+			return nil, err
+		}
+		return NewMsgFromBotAPI(msg), nil
+	}
 	var pText string
 	var entities []tg.MessageEntityClass
 	if editOptions == nil {
@@ -279,6 +374,9 @@ func (m *Message) RawText() (string, error) {
 }
 
 func (m *Message) Delete() error {
+	if m.BotAPI != nil || telegram.Context == nil {
+		return telegram.DeleteBotAPIMessage(context.Background(), m.ChatID, m.ID)
+	}
 	return telegram.Context.DeleteMessages(m.ChatID, []int{m.ID})
 }
 
@@ -454,6 +552,13 @@ func (m *Message) ReplyMediaDoc(media tg.InputMediaClass, uploadOptions *UploadO
 }
 
 func SendMessage(id int64, text string) error {
+	if config.Conf.TgDispatcher.UsesBotAPI() && telegram.BotAPI != nil {
+		_, err := telegram.SendBotAPIMessage(context.Background(), id, text)
+		return err
+	}
+	if telegram.Context == nil {
+		return fmt.Errorf("no telegram messaging client is initialized")
+	}
 	pText, entities, _ := parser.Parse(text, true)
 	_, err := telegram.Context.SendMessage(
 		id, &tg.MessagesSendMessageRequest{
@@ -525,6 +630,16 @@ func SendMedia(id int64, media tg.InputMediaClass, opts *SendOptions) (*Message,
 }
 
 func SendMsg(id int64, text string, opts *SendOptions) (*Message, error) {
+	if config.Conf.TgDispatcher.UsesBotAPI() && telegram.BotAPI != nil {
+		msg, err := telegram.SendBotAPIMessage(context.Background(), id, text)
+		if err != nil {
+			return nil, err
+		}
+		return NewMsgFromBotAPI(msg), nil
+	}
+	if telegram.Context == nil {
+		return nil, fmt.Errorf("no telegram messaging client is initialized")
+	}
 	var pText string
 	var entities []tg.MessageEntityClass
 	inputRep := &tg.InputReplyToMessage{}
@@ -556,6 +671,13 @@ func SendMsg(id int64, text string, opts *SendOptions) (*Message, error) {
 }
 
 func EditMessage(id int64, msgID int, text string) error {
+	if config.Conf.TgDispatcher.UsesBotAPI() && telegram.BotAPI != nil {
+		_, err := telegram.EditBotAPIMessage(context.Background(), id, msgID, text)
+		return err
+	}
+	if telegram.Context == nil {
+		return fmt.Errorf("no telegram messaging client is initialized")
+	}
 	pText, entities, _ := parser.Parse(text, true)
 	_, err := telegram.Context.EditMessage(
 		id, &tg.MessagesEditMessageRequest{

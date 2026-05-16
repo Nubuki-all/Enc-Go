@@ -5,8 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/celestix/gotgproto/ext"
-
 	"enc/config"
 	"enc/internal/bot"
 	"enc/internal/bot/types"
@@ -14,7 +12,7 @@ import (
 	"enc/utils/tele"
 )
 
-func FCForward(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func FCForward(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	fchannel := config.Conf.FChannel
 	chatID := msg.ChatID
 	if !utils.UserIsOwner(msg.SenderID) && chatID != fchannel {
@@ -134,7 +132,7 @@ func ReleaseExtFilterExists(name string, caseSensitive bool) bool {
 	return false
 }
 
-func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func CancelProcesses(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	helpMsg := "Cancels all download/upload/encode processes\n" +
 		"Arguments:\n" +
 		"  'transfer' - Cancels all ongoing download and upload\n" +

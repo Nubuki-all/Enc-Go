@@ -2,8 +2,12 @@ package startup
 
 import (
 	//"fmt"
+	"context"
+	"regexp"
 	"strings"
 
+	botapi "enc/internal/clients/telegram/botapi"
+	"enc/internal/clients/telegram/botapi/models"
 	"github.com/celestix/gotgproto/dispatcher"
 	onevent "github.com/celestix/gotgproto/dispatcher/handlers"
 	"github.com/celestix/gotgproto/dispatcher/handlers/filters"
@@ -31,9 +35,18 @@ import (
 )
 
 func AddAllHandlers() {
-	d := telegram.Client.Dispatcher
-	AddCmdHandlers(d)
-	AddCBHandlers(d)
+	if config.Conf.TgDispatcher.UsesGotg() {
+		if telegram.Client == nil {
+			logger.WarnW("gotgproto handler registration skipped: client is not initialized")
+			return
+		}
+		d := telegram.Client.Dispatcher
+		AddCmdHandlers(d)
+		AddCBHandlers(d)
+	}
+	if config.Conf.TgDispatcher.UsesBotAPI() {
+		AddBotAPIHandlers(telegram.BotAPI)
+	}
 
 	// dispatcher.AddHandlerToGroup(onevent.NewMessage(filters.Message.Text, handlers.Print), 1)
 	// d.AddHandler(onevent.NewMessage(filters.Message.Text, handlers.Print))
@@ -184,7 +197,7 @@ func addSuffixcmd(cmd string) string {
 	return cmd + config.Conf.CmdSuffix
 }
 
-func BaseEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message) error) func(*ext.Context, *ext.Update) error {
+func BaseEventHandler(handler func(*tele.Context, *tele.Update, *tele.Message) error) func(*ext.Context, *ext.Update) error {
 	return func(ctx *ext.Context, update *ext.Update) error {
 		// user := update.EffectiveUser()
 		chat := update.EffectiveChat()
@@ -195,7 +208,9 @@ func BaseEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message) err
 			// user.ID,
 			tele.GetSenderIDFromMessage(update.EffectiveMessage),
 		)
-		err := handler(ctx, update, msg)
+		eventCtx := tele.NewGotgContext(ctx)
+		eventUpdate := tele.NewGotgUpdate(update)
+		err := handler(eventCtx, eventUpdate, msg)
 		if err != nil {
 			logger.ErrorW(err.Error())
 		}
@@ -203,7 +218,7 @@ func BaseEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message) err
 	}
 }
 
-func CallbackEventHandler(handler func(*ext.Context, *ext.Update, *tele.CallbackQuery) error) func(*ext.Context, *ext.Update) error {
+func CallbackEventHandler(handler func(*tele.Context, *tele.Update, *tele.CallbackQuery) error) func(*ext.Context, *ext.Update) error {
 	return func(ctx *ext.Context, update *ext.Update) error {
 		user := update.EffectiveUser()
 		chat := update.EffectiveChat()
@@ -213,7 +228,9 @@ func CallbackEventHandler(handler func(*ext.Context, *ext.Update, *tele.Callback
 			chat.GetID(),
 			user.ID,
 		)
-		err := handler(ctx, update, query)
+		eventCtx := tele.NewGotgContext(ctx)
+		eventUpdate := tele.NewGotgUpdate(update)
+		err := handler(eventCtx, eventUpdate, query)
 		if err != nil {
 			logger.ErrorW(err.Error())
 		}
@@ -221,7 +238,7 @@ func CallbackEventHandler(handler func(*ext.Context, *ext.Update, *tele.Callback
 	}
 }
 
-func EventHandlerWithArgs(handler func(*ext.Context, *ext.Update, *tele.Message, string) error) func(*ext.Context, *ext.Update) error {
+func EventHandlerWithArgs(handler func(*tele.Context, *tele.Update, *tele.Message, string) error) func(*ext.Context, *ext.Update) error {
 	return func(ctx *ext.Context, update *ext.Update) error {
 		// user := update.EffectiveUser()
 		chat := update.EffectiveChat()
@@ -234,7 +251,9 @@ func EventHandlerWithArgs(handler func(*ext.Context, *ext.Update, *tele.Message,
 			// user.ID,
 			tele.GetSenderIDFromMessage(update.EffectiveMessage),
 		)
-		err := handler(ctx, update, msg, args)
+		eventCtx := tele.NewGotgContext(ctx)
+		eventUpdate := tele.NewGotgUpdate(update)
+		err := handler(eventCtx, eventUpdate, msg, args)
 		if err != nil {
 			logger.ErrorW(err.Error())
 		}
@@ -242,7 +261,7 @@ func EventHandlerWithArgs(handler func(*ext.Context, *ext.Update, *tele.Message,
 	}
 }
 
-func EventHandlerWithRawArgs(handler func(*ext.Context, *ext.Update, *tele.Message, string) error) func(*ext.Context, *ext.Update) error {
+func EventHandlerWithRawArgs(handler func(*tele.Context, *tele.Update, *tele.Message, string) error) func(*ext.Context, *ext.Update) error {
 	return func(ctx *ext.Context, update *ext.Update) error {
 		// user := update.EffectiveUser()
 		chat := update.EffectiveChat()
@@ -264,10 +283,171 @@ func EventHandlerWithRawArgs(handler func(*ext.Context, *ext.Update, *tele.Messa
 			// user.ID,
 			tele.GetSenderIDFromMessage(update.EffectiveMessage),
 		)
-		err = handler(ctx, update, msg, args)
+		eventCtx := tele.NewGotgContext(ctx)
+		eventUpdate := tele.NewGotgUpdate(update)
+		err = handler(eventCtx, eventUpdate, msg, args)
 		if err != nil {
 			logger.ErrorW(err.Error())
 		}
 		return err
 	}
+}
+
+func AddBotAPIHandlers(b *botapi.Bot) {
+	if b == nil {
+		logger.WarnW("bot api handler registration skipped: client is not initialized")
+		return
+	}
+	AddBotAPICmdHandlers(b)
+	AddBotAPICBHandlers(b)
+}
+
+func AddBotAPICmdHandlers(b *botapi.Bot) {
+	cmdHandlers := map[string]botapi.HandlerFunc{
+		"start": BotAPIBaseEventHandler(handlers.Start),
+		"help":  BotAPIBaseEventHandler(handlers.Start),
+
+		"ping":   BotAPIBaseEventHandler(handlers.Up),
+		"status": BotAPIBaseEventHandler(handlers.Status),
+
+		"unpermit": BotAPIEventHandlerWithArgs(manage.TempUnauth),
+		"permit":   BotAPIEventHandlerWithArgs(manage.TempAuth),
+
+		"setrename": BotAPIEventHandlerWithArgs(manage.CustomRename),
+		"name":      BotAPIEventHandlerWithArgs(manage.AutoRename),
+		"vname":     BotAPIEventHandlerWithArgs(manage.VAutoRename),
+		"delname":   BotAPIEventHandlerWithArgs(manage.DelAutoRename),
+		"filter":    BotAPIEventHandlerWithArgs(manage.Filter),
+		"vfilter":   BotAPIEventHandlerWithArgs(manage.VFilter),
+		"delfilter": BotAPIEventHandlerWithArgs(manage.DelFilter),
+		"mtag":      BotAPIEventHandlerWithArgs(manage.MatchFilter),
+		"etag":      BotAPIEventHandlerWithArgs(manage.ManageMatchFilter),
+		"xtag":      BotAPIEventHandlerWithArgs(manage.ExtCapFilter),
+		"extag":     BotAPIEventHandlerWithArgs(manage.ManageExtCapFilter),
+
+		"set":   BotAPIEventHandlerWithArgs(manage.ChangeEParams),
+		"get":   BotAPIEventHandlerWithArgs(manage.CheckEParams),
+		"reset": BotAPIEventHandlerWithArgs(manage.ResetEParams),
+		"mset":  BotAPIEventHandlerWithArgs(manage.SetMuxArgs),
+		"mget":  BotAPIEventHandlerWithArgs(manage.GetMuxArgs),
+		"v":     BotAPIEventHandlerWithArgs(manage.Version),
+		"parse": BotAPIEventHandlerWithArgs(manage.MGlobalPOptions),
+		"pause": BotAPIEventHandlerWithArgs(manage.Pause),
+
+		"forward":   BotAPIEventHandlerWithArgs(manage.FCForward),
+		"editmedia": BotAPIEventHandlerWithArgs(manage.EditChannelMsg),
+		"restart":   BotAPIEventHandlerWithArgs(manage.Restart),
+		"nuke":      BotAPIEventHandlerWithArgs(manage.Nuke),
+		"rss":       BotAPIEventHandlerWithArgs(manage.RssHandler),
+
+		"bash": BotAPIEventHandlerWithRawArgs(dev.Bash),
+		"eval": BotAPIEventHandlerWithRawArgs(dev.Eval),
+		"logs": BotAPIEventHandlerWithArgs(dev.GetLogs),
+		"sh":   BotAPIEventHandlerWithArgs(dev.Sh),
+		"top":  BotAPIEventHandlerWithArgs(dev.Top),
+
+		"download": BotAPIEventHandlerWithArgs(transfer.Download),
+		"dl":       BotAPIEventHandlerWithArgs(transfer.Download),
+		"rename":   BotAPIEventHandlerWithArgs(transfer.Rename),
+		"list":     BotAPIEventHandlerWithArgs(transfer.ListFiles),
+		"listv":    BotAPIEventHandlerWithArgs(transfer.ListYtdlFiles),
+		"m":        BotAPIEventHandlerWithArgs(transfer.MediaInfo),
+		"mux":      BotAPIEventHandlerWithArgs(transfer.Mux),
+		"upload":   BotAPIEventHandlerWithArgs(transfer.Upload),
+		"ul":       BotAPIEventHandlerWithArgs(transfer.Upload),
+
+		"l":         BotAPIEventHandlerWithArgs(queue.AddLink),
+		"ql":        BotAPIEventHandlerWithArgs(queue.AddTorrent),
+		"yl":        BotAPIEventHandlerWithArgs(queue.AddWithYtdl),
+		"add":       BotAPIEventHandlerWithArgs(queue.AddVideo),
+		"queue":     BotAPIEventHandlerWithArgs(queue.ListQueue),
+		"batch":     BotAPIEventHandlerWithArgs(queue.EditBatch),
+		"clear":     BotAPIEventHandlerWithArgs(queue.ClearQueue),
+		"editq":     BotAPIEventHandlerWithArgs(queue.EditQueue),
+		"select":    BotAPIEventHandlerWithArgs(queue.Select),
+		"cancelall": BotAPIEventHandlerWithArgs(manage.CancelProcesses),
+
+		"anime":  BotAPIEventHandlerWithArgs(info.Anime),
+		"airing": BotAPIEventHandlerWithArgs(info.AnimeAiring),
+	}
+	for cmd, handler := range cmdHandlers {
+		pattern := regexp.MustCompile(`^/` + regexp.QuoteMeta(addSuffixcmd(cmd)) + `(?:@\w+)?(?:\s|$)`)
+		b.RegisterHandlerRegexp(botapi.HandlerTypeMessageText, pattern, handler)
+	}
+}
+
+func AddBotAPICBHandlers(b *botapi.Bot) {
+	callbackHandlers := map[string]botapi.HandlerFunc{
+		"ihelp":     BotAPICallbackEventHandler(handlers.Help),
+		"iback":     BotAPICallbackEventHandler(handlers.StartBack),
+		"icommands": BotAPICallbackEventHandler(handlers.Commands),
+
+		downloaders.CallbackData:  BotAPICallbackEventHandler(callbacks.CancelDownload),
+		downloaders.CallbackDataB: BotAPICallbackEventHandler(callbacks.RevertView),
+		downloaders.CallbackDataM: BotAPICallbackEventHandler(callbacks.DLStat),
+		downloaders.CallbackDataI: BotAPICallbackEventHandler(callbacks.ViewDlInfo),
+		uploaders.CallbackData:    BotAPICallbackEventHandler(callbacks.CancelUpload),
+
+		encoders.CallbackData:             BotAPICallbackEventHandler(callbacks.EncodeInfo),
+		encoders.SCallbackData:            BotAPICallbackEventHandler(callbacks.EncodeStats),
+		encoders.CancelCallbackData:       BotAPICallbackEventHandler(callbacks.CancelEncode),
+		"j" + encoders.CancelCallbackData: BotAPICallbackEventHandler(callbacks.CancelEncodeJobs),
+
+		"cancel_rturn": BotAPICallbackEventHandler(callbacks.CancelRTurn),
+		"cancel_mturn": BotAPICallbackEventHandler(callbacks.CancelMTurn),
+
+		batchutils.CallbackData: BotAPICallbackEventHandler(batchutils.PreviewAction),
+		queueutils.CallbackData: BotAPICallbackEventHandler(queueutils.PreviewAction),
+	}
+	for prefix, handler := range callbackHandlers {
+		b.RegisterHandler(botapi.HandlerTypeCallbackQueryData, prefix, botapi.MatchTypePrefix, handler)
+	}
+}
+
+func BotAPIBaseEventHandler(handler func(*tele.Context, *tele.Update, *tele.Message) error) botapi.HandlerFunc {
+	return func(ctx context.Context, b *botapi.Bot, update *models.Update) {
+		if update == nil || update.Message == nil {
+			return
+		}
+		msg := tele.NewMsgFromBotAPI(update.Message)
+		eventCtx := tele.NewBotAPIContext(ctx, b)
+		eventUpdate := tele.NewBotAPIUpdate(update)
+		if err := handler(eventCtx, eventUpdate, msg); err != nil {
+			logger.ErrorW(err.Error())
+		}
+	}
+}
+
+func BotAPICallbackEventHandler(handler func(*tele.Context, *tele.Update, *tele.CallbackQuery) error) botapi.HandlerFunc {
+	return func(ctx context.Context, b *botapi.Bot, update *models.Update) {
+		if update == nil || update.CallbackQuery == nil {
+			return
+		}
+		eventCtx := tele.NewBotAPIContext(ctx, b)
+		eventUpdate := tele.NewBotAPIUpdate(update)
+		query := tele.NewQueryFromBotAPI(update.CallbackQuery)
+		if err := handler(eventCtx, eventUpdate, query); err != nil {
+			logger.ErrorW(err.Error())
+		}
+	}
+}
+
+func BotAPIEventHandlerWithArgs(handler func(*tele.Context, *tele.Update, *tele.Message, string) error) botapi.HandlerFunc {
+	return func(ctx context.Context, b *botapi.Bot, update *models.Update) {
+		if update == nil || update.Message == nil {
+			return
+		}
+		_, args, _ := strings.Cut(update.Message.Text, " ")
+		args = strings.Trim(args, " ")
+		msg := tele.NewMsgFromBotAPI(update.Message)
+		eventCtx := tele.NewBotAPIContext(ctx, b)
+		eventUpdate := tele.NewBotAPIUpdate(update)
+		if err := handler(eventCtx, eventUpdate, msg, args); err != nil {
+			logger.ErrorW(err.Error())
+		}
+	}
+}
+
+func BotAPIEventHandlerWithRawArgs(handler func(*tele.Context, *tele.Update, *tele.Message, string) error) botapi.HandlerFunc {
+	return BotAPIEventHandlerWithArgs(handler)
 }

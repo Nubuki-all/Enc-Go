@@ -77,14 +77,21 @@ func Finalize(ctx context.Context) {
 	downloaders.CleanAllQbit(ctx) // prevent stale qbit downloads from blocking newer ones
 
 	entimer.Timer.Start()
-	AddAllCommands()
-	AddAllHandlers()
+	if config.Conf.TgDispatcher.Enabled() {
+		AddAllCommands()
+		AddAllHandlers()
+	}
+	if config.Conf.TgDispatcher.UsesBotAPI() {
+		telegram.StartBotAPIDispatcher()
+	}
 
 	// start autos
 	channelstatus.Start()
 	transcode.Start()
 	go startAutoRestart()
-	go startTelegramPing()
+	if config.Conf.TgDispatcher.UsesGotg() || config.Conf.TgTransfer.UsesGotg() {
+		go startTelegramPing()
+	}
 	bot.Started = true
 }
 

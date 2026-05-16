@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 
 	"enc/config"
@@ -23,7 +22,7 @@ import (
 	"enc/workers/uploaders"
 )
 
-func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Download(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -214,7 +213,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	return nil
 }
 
-func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Rename(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -553,7 +552,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	return nil
 }
 
-func MediaInfo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func MediaInfo(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}

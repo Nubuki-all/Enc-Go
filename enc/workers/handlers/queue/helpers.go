@@ -17,11 +17,9 @@ import (
 	"enc/utils/parser"
 	queueutils "enc/utils/queue"
 	"enc/utils/tele"
-
-	"github.com/celestix/gotgproto/ext"
 )
 
-func Select(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Select(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}
@@ -296,7 +294,7 @@ func listQueueP(msg *tele.Message, args string) error {
 	return nil
 }
 
-func ListQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func ListQueue(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}
@@ -337,7 +335,7 @@ func ListQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	return previewQueue(msg, true)
 }
 
-func EditBatch(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func EditBatch(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	cmd := update.Args()[0]
 	helpMsg := "Command for viewing queued batches;\n" +
 		"Argument:\n" +
@@ -396,7 +394,7 @@ func EditBatch(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	}
 }
 
-func EditQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func EditQueue(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}
@@ -559,7 +557,7 @@ func EditQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	return nil
 }
 
-func ClearQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func ClearQueue(ctx *tele.Context, update *tele.Update, msg *tele.Message, args string) error {
 	helpMsg := "Clears an item or all items from queue\n" +
 		"Arguments:\n" +
 		"-  A number or a range of numbers (queue ids) to remove\n" +
