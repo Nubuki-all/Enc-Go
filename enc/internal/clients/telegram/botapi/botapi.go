@@ -13,13 +13,15 @@ import (
 	"enc/internal/clients/telegram/botapi/models"
 )
 
-type HandlerFunc func(context.Context, *Bot, *models.Update)
-type HandlerType int
-type MatchType int
-type Option func(*Bot)
-type HttpClient interface {
-	Do(*http.Request) (*http.Response, error)
-}
+type (
+	HandlerFunc func(context.Context, *Bot, *models.Update)
+	HandlerType int
+	MatchType   int
+	Option      func(*Bot)
+	HttpClient  interface {
+		Do(*http.Request) (*http.Response, error)
+	}
+)
 
 const (
 	HandlerTypeMessageText HandlerType = iota
@@ -162,18 +164,22 @@ func (b *Bot) SendMessage(ctx context.Context, params *SendMessageParams) (*mode
 	var out models.Message
 	return &out, b.call(ctx, "sendMessage", params, &out)
 }
+
 func (b *Bot) EditMessageText(ctx context.Context, params *EditMessageTextParams) (*models.Message, error) {
 	var out models.Message
 	return &out, b.call(ctx, "editMessageText", params, &out)
 }
+
 func (b *Bot) DeleteMessage(ctx context.Context, params *DeleteMessageParams) (bool, error) {
 	var out bool
 	return out, b.call(ctx, "deleteMessage", params, &out)
 }
+
 func (b *Bot) AnswerCallbackQuery(ctx context.Context, params *AnswerCallbackQueryParams) (bool, error) {
 	var out bool
 	return out, b.call(ctx, "answerCallbackQuery", params, &out)
 }
+
 func (b *Bot) SetMyCommands(ctx context.Context, params *SetMyCommandsParams) (bool, error) {
 	var out bool
 	return out, b.call(ctx, "setMyCommands", params, &out)
