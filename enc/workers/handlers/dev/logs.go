@@ -4,7 +4,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/celestix/gotgproto/ext"
 
 	"enc/config"
 	"enc/utils"
@@ -12,13 +11,13 @@ import (
 	"enc/utils/tele"
 )
 
-func GetLogs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func GetLogs(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		if !utils.UserIsDev(msg.SenderID) {
 			return nil
 		}
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
 		_, _ = msg.ReplyText(err.Error())

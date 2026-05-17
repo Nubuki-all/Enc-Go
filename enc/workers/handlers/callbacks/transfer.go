@@ -8,7 +8,6 @@ import (
 
 	//"strings"
 
-	"github.com/celestix/gotgproto/ext"
 	"go.uber.org/zap"
 
 	"github.com/gotd/td/telegram/message/markup"
@@ -26,7 +25,7 @@ import (
 
 const notAllowed = "You're not allowed to do this!"
 
-func CancelDownload(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
+func CancelDownload(query *tele.CallbackQuery error {
 	id := fmt.Sprintf("%d:%d", query.ChatID, query.ID)
 	info := utils.GetCallbackInfo(id)
 	if info == nil {
@@ -43,7 +42,7 @@ func CancelDownload(ctx *ext.Context, update *ext.Update, query *tele.CallbackQu
 	return nil
 }
 
-func CancelUpload(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
+func CancelUpload(query *tele.CallbackQuery error {
 	id := fmt.Sprintf("%d:%d", query.ChatID, query.ID)
 	info := utils.GetCallbackInfo(id)
 	if info == nil {
@@ -60,7 +59,7 @@ func CancelUpload(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuer
 	return nil
 }
 
-func DLStat(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
+func DLStat(query *tele.CallbackQuery error {
 	id := fmt.Sprintf("%d:%d", query.ChatID, query.ID)
 	info := utils.GetCallbackInfo(id)
 	if info == nil {
@@ -102,7 +101,7 @@ func DLStat(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) err
 	return nil
 }
 
-func ViewDlInfo(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
+func ViewDlInfo(query *tele.CallbackQuery error {
 	id := fmt.Sprintf("%d:%d", query.ChatID, query.ID)
 	info := utils.GetCallbackInfo(id)
 	if info == nil {
@@ -149,7 +148,7 @@ func ViewDlInfo(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery)
 	return nil
 }
 
-func RevertView(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
+func RevertView(query *tele.CallbackQuery error {
 	id := fmt.Sprintf("%d:%d", query.ChatID, query.ID)
 	info := utils.GetCallbackInfo(id)
 	if info == nil {

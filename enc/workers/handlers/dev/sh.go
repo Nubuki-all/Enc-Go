@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/celestix/gotgproto/ext"
 
 	"enc/utils"
 	"enc/utils/tele"
 )
 
-func Sh(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Sh(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		if !utils.UserIsDev(msg.SenderID) {
 			return nil
@@ -31,7 +30,7 @@ func Sh(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) er
 
 	bMsg, _ := msg.ReplyText("Processing ...")
 
-	cmdExec := exec.CommandContext(ctx, "sh", "-c", args)
+	cmdExec := exec.CommandContext(context.Background(), "sh", "-c", args)
 
 	var stdoutBuf, stderrBuf bytes.Buffer
 	cmdExec.Stdout = &stdoutBuf

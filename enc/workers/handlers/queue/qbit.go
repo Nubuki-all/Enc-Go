@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"context"
 	"cmp"
 	"fmt"
 	"path/filepath"
@@ -8,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 
 	"enc/internal/bot"
@@ -24,11 +24,11 @@ import (
 	"enc/workers/downloaders"
 )
 
-func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func AddTorrent(msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	var err error
 
 	helpMsg := "Adds a torrent or magnetic link to encoding queue via qbittorrent:\n" +
@@ -125,13 +125,12 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	link := pargs["link"].(string)
 	if link == "" {
 		if msg.ReplyToID != 0 {
-			message := update.EffectiveMessage
-			err = message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
+			err = msg.SetRepliedToMessage()
 			if err != nil {
 				_, _ = msg.ReplyText(err.Error())
 				return nil
 			}
-			link = utils.ExtractMessageText(message.ReplyToMessage)
+			link = msg.ReplyToMessage.Text
 		} else {
 			link = xtraArg
 		}
@@ -186,7 +185,7 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 				_, _ = msg.ReplyText("Could not fetch next message in chain")
 				break
 			}
-			pMsg := tele.NewMsgFromGotg(gtMsgs[0], ctx, msg.ChatID, 0)
+			pMsg := tele.NewMsgFromGotg(gtMsgs[0], msg.Ctx, msg.ChatID, 0)
 			uri := utils.ExtractMessageText(gtMsgs[0])
 			if uri == "" {
 				_, _ = pMsg.ReplyText("Not a link.")
@@ -259,7 +258,7 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 			go func() { _ = previewQueue(m, false) }()
 		}
 		if toSave {
-			db.SaveQueue(ctx)
+			db.SaveQueue(context.Background())
 		}
 		return nil
 	}
@@ -337,7 +336,7 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		Doc:       nil,
 		Batch:     batches,
 	})
-	db.SaveQueue(ctx)
+	db.SaveQueue(context.Background())
 	total := bot.Queue.Len()
 	if total > 1 || bot.Paused.Any() {
 		m, err := msg.ReplyText("**Link added To Queue ⏰, POS:** `" + strconv.Itoa(id) + "`\n`Please Wait , Encode will start soon`")

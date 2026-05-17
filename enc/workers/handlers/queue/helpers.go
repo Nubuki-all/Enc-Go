@@ -2,6 +2,7 @@
 package queue
 
 import (
+	"context"
 	"cmp"
 	"fmt"
 	"slices"
@@ -18,25 +19,22 @@ import (
 	queueutils "enc/utils/queue"
 	"enc/utils/tele"
 
-	"github.com/celestix/gotgproto/ext"
 )
 
-func Select(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Select(msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	var preview *batchutils.BatchPreview
 	if args == "" || msg.ReplyToID == 0 {
 		args = "--help"
 	} else {
-		message := update.EffectiveMessage
-		err := message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
+		err := msg.SetRepliedToMessage(); repMsg := msg.ReplyToMessage
 		if err != nil {
 			_, _ = msg.ReplyText(err.Error())
 			return nil
 		}
-		repMsg := message.ReplyToMessage
 		id := fmt.Sprintf("%d:%d", utils.GetChatID(repMsg), repMsg.ID)
 		p := batchutils.GetBatchCallbackInfo(id)
 		if p == nil {
@@ -296,11 +294,11 @@ func listQueueP(msg *tele.Message, args string) error {
 	return nil
 }
 
-func ListQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func ListQueue(msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
 		_, _ = msg.ReplyText(err.Error())
@@ -337,8 +335,8 @@ func ListQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	return previewQueue(msg, true)
 }
 
-func EditBatch(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
-	cmd := update.Args()[0]
+func EditBatch(msg *tele.Message, args string) error {
+	cmd := "cmd"
 	helpMsg := "Command for viewing queued batches;\n" +
 		"Argument:\n" +
 		"Queue ID of the batch, enables to preview & edit the batch."
@@ -391,16 +389,16 @@ func EditBatch(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 		return msg.Delete()
 	} else {
 		_, _ = msg.ReplyText("Edited batch:- `" + entry.Name + "` successfully!")
-		db.SaveQueue(ctx)
+		db.SaveQueue(context.Background())
 		return nil
 	}
 }
 
-func EditQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func EditQueue(msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
 		_, _ = msg.ReplyText(err.Error())
@@ -554,18 +552,18 @@ func EditQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 		entry.Name = name
 		bot.Queue.Replace(prevName, entry)
 	}
-	db.SaveQueue(ctx)
+	db.SaveQueue(context.Background())
 	_, _ = msg.ReplyText("`Edited queued item successfully.`")
 	return nil
 }
 
-func ClearQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func ClearQueue(msg *tele.Message, args string) error {
 	helpMsg := "Clears an item or all items from queue\n" +
 		"Arguments:\n" +
 		"-  A number or a range of numbers (queue ids) to remove\n" +
 		"-  'all' (not case sensitive) to 'pending' queue items\n" +
 		"-  '0' Remove the topmost queued item (QID 0) (not recommended)"
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	if args == "" || utils.SendHelp(args) {
 		_, _ = msg.Reply(utils.CodeBlock(helpMsg, true), &tele.ReplyOptions{HTMLParseMode: true})
 		return nil
@@ -612,7 +610,7 @@ func ClearQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 			_, _ = msg.ReplyText("`Nothing was cleared.`")
 		} else {
 			_, _ = msg.ReplyText(btchClrMsg + txt)
-			db.SaveQueue(ctx)
+			db.SaveQueue(context.Background())
 		}
 		return nil
 	}
@@ -633,7 +631,7 @@ func ClearQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		_, _ = msg.ReplyText("`Nothing was cleared.`")
 	} else {
 		_, _ = msg.ReplyText(btchClrMsg + txt)
-		db.SaveQueue(ctx)
+		db.SaveQueue(context.Background())
 	}
 	return nil
 }

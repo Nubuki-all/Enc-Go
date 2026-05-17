@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 
 	"enc/internal/db"
@@ -16,7 +15,7 @@ import (
 
 // TempUnauth removes a temporarily allowed user (unpermit).
 // It expects either a reply to a user's message, or an argument containing the user id.
-func TempUnauth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func TempUnauth(msg *tele.Message, args string) error {
 	senderID := msg.SenderID
 	errPrefix := "Failed!,\nCan't remove from temporarily allowed users"
 	help := `Un-authorise a user or chat
@@ -35,17 +34,15 @@ func TempUnauth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 
 	var newID int64
 	var err error
-	message := update.EffectiveMessage
 
 	// If the command is a reply, extract ID from replied-to message
 	if msg.ReplyToID != 0 {
-		err = message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
+		err = msg.SetRepliedToMessage()
 		if err != nil {
 			_, _ = msg.ReplyText(err.Error())
 			return nil
 		}
 	}
-	if repMsg := message.ReplyToMessage; repMsg != nil {
 		peer := repMsg.FromID
 		if peerUser, ok := peer.(*tg.PeerUser); ok {
 			newID = peerUser.UserID
@@ -96,7 +93,7 @@ func TempUnauth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	return nil
 }
 
-func TempAuth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func TempAuth(msg *tele.Message, args string) error {
 	senderID := msg.SenderID
 	errPrefix := "Failed!,\nCan't add to temporarily allowed users"
 	help := `Authorise a user or chat
@@ -113,17 +110,15 @@ func TempAuth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	}
 	var newID int64
 	var err error
-	message := update.EffectiveMessage
 
 	// If the command is a reply, extract SenderID from replied message
 	if msg.ReplyToID != 0 {
-		err = message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
+		err = msg.SetRepliedToMessage()
 		if err != nil {
 			_, _ = msg.ReplyText(err.Error())
 			return nil
 		}
 	}
-	if repMsg := message.ReplyToMessage; repMsg != nil {
 		peer := repMsg.FromID
 		if peerUser, ok := peer.(*tg.PeerUser); ok {
 			newID = peerUser.UserID

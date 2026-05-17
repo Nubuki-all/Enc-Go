@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/celestix/gotgproto/ext"
 	//"github.com/gotd/td/tg"
 
 	"enc/config"
@@ -18,7 +17,7 @@ import (
 	"enc/utils/tele"
 )
 
-func ChangeEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func ChangeEParams(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -58,11 +57,11 @@ func ChangeEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 	return nil
 }
 
-func CheckEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func CheckEParams(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	helpMsg := "Get custom encoding params.\n" +
 		"Arguments:\n" +
 		"    -2\n" +
@@ -111,11 +110,11 @@ func CheckEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	return nil
 }
 
-func ResetEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func ResetEParams(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	helpMsg := "Reset encoding params.\n" +
 		"Behavior changes depending on whether its a suffixed encoding param or otherwise\n" +
 		"Arguments:\n" +
@@ -157,7 +156,7 @@ func ResetEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	return nil
 }
 
-func ResetSEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg string) error {
+func ResetSEParams(msg *tele.Message, arg string) error {
 	envNotSet := func() error {
 		_, err := msg.ReplyText(fmt.Sprintf("Encoding param%s not set in .env or bot.", arg))
 		return err
@@ -204,7 +203,7 @@ func ResetSEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg 
 	return nil
 }
 
-func SetMuxArgs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func SetMuxArgs(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -248,7 +247,7 @@ func SetMuxArgs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	return nil
 }
 
-func GetMuxArgs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func GetMuxArgs(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -270,7 +269,7 @@ func GetMuxArgs(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	return nil
 }
 
-func Version(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Version(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -314,14 +313,14 @@ func Version(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 	return nil
 }
 
-func MGlobalPOptions(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func MGlobalPOptions(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
 	if args == "" {
 		args = "--help"
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
 		_, _ = msg.ReplyText(err.Error())
@@ -427,7 +426,7 @@ func MGlobalPOptions(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 	return nil
 }
 
-func Pause(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Pause(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -463,7 +462,7 @@ func Pause(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string)
 		_, _ = msg.Reply(
 			"Invaid Number."+
 				"\nNeed help? Send <code>"+
-				update.Args()[0]+
+				"cmd"+
 				" --help</code>.",
 			&tele.ReplyOptions{HTMLParseMode: true},
 		)

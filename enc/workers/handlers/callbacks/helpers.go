@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/celestix/gotgproto/ext"
 	//"github.com/gotd/td/telegram/message/markup"
 	//"github.com/gotd/td/tg"
 
@@ -17,7 +16,7 @@ import (
 	"enc/utils/tele"
 )
 
-func cleanOldMessage(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
+func cleanOldMessage(query *tele.CallbackQuery error {
 	_ = query.Answer("⛔ Old button.  Removing…", false)
 	time.Sleep(5 * time.Second)
 	err := query.GetMessage().Delete()

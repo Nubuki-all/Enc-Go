@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"context"
 	"cmp"
 	"fmt"
 	"slices"
@@ -8,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 
 	"enc/config"
@@ -25,11 +25,11 @@ import (
 
 const notAVid = "`Replied Message is not a Video.`"
 
-func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func AddVideo(msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	var err error
 
 	helpMsg := "Adds a  Video to encoding queue:\n" +
@@ -96,14 +96,12 @@ func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		_, _ = msg.ReplyText(err.Error())
 		return nil
 	}
-	message := update.EffectiveMessage
-	err = message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
+	err = msg.SetRepliedToMessage()
 	if err != nil {
 		_, _ = msg.ReplyText(err.Error())
 		return nil
 	}
-	repMsg := message.ReplyToMessage
-	if repMsg.Media == nil {
+	if repMsg.Raw.Media == nil {
 		_, _ = msg.ReplyText(notAVid)
 		return nil
 	}
@@ -142,7 +140,7 @@ func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 				break
 			}
 			gtMsg := gtMsgs[0]
-			pMsg := tele.NewMsgFromGotg(gtMsg, ctx, msg.ChatID, 0)
+			pMsg := tele.NewMsgFromGotg(gtMsg, msg.Ctx, msg.ChatID, 0)
 			fMeta := utils.MediaToFileMeta(gtMsg.Media)
 			if fMeta == nil || !slices.Contains(utils.VideoMimetype, fMeta.MimeType) {
 				_, _ = pMsg.ReplyText(notAVid)
@@ -185,11 +183,11 @@ func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 			go func() { _ = previewQueue(m, false) }()
 		}
 		if toSave {
-			db.SaveQueue(ctx)
+			db.SaveQueue(context.Background())
 		}
 		return nil
 	}
-	fMeta := utils.MediaToFileMeta(repMsg.Media)
+	fMeta := utils.MediaToFileMeta(repMsg.Raw.Media)
 	if fMeta == nil || !slices.Contains(utils.VideoMimetype, fMeta.MimeType) {
 		_, _ = msg.ReplyText(notAVid)
 		return nil
@@ -224,7 +222,7 @@ func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		AniList:   !dAnilist,
 		Doc:       fMeta,
 	})
-	db.SaveQueue(ctx)
+	db.SaveQueue(context.Background())
 	total := bot.Queue.Len()
 	if total > 1 || bot.Paused.Any() {
 		m, err := msg.ReplyText("**Video added To Queue ⏰, POS:** `" + strconv.Itoa(id) + "`\n`Please Wait , Encode will start soon`")
@@ -235,14 +233,13 @@ func AddVideo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	return nil
 }
 
-func AutoAddDocument(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
+func AutoAddDocument(msg *tele.Message) error {
 	if !config.Conf.AutoQVids {
 		return nil
 	}
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}
-	message := update.EffectiveMessage
 	fMeta := utils.MediaToFileMeta(message.Media)
 	if fMeta == nil || !slices.Contains(utils.VideoMimetype, fMeta.MimeType) {
 		return nil
@@ -270,7 +267,7 @@ func AutoAddDocument(ctx *ext.Context, update *ext.Update, msg *tele.Message) er
 		AniList:   true,
 		Doc:       fMeta,
 	})
-	db.SaveQueue(ctx)
+	db.SaveQueue(context.Background())
 	total := bot.Queue.Len()
 	if total > 1 || bot.Paused.Any() {
 		m, err := msg.ReplyText("**Video added To Queue ⏰, POS:** `" + strconv.Itoa(id) + "`\n`Please Wait , Encode will start soon`")

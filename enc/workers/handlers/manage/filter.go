@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/celestix/gotgproto/ext"
 	//"github.com/gotd/td/tg"
 
 	"enc/config"
@@ -19,11 +18,11 @@ import (
 	"enc/utils/tele"
 )
 
-func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func CustomRename(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	helpMsg := "Set a custom rename format if args are passed without parameters\n" +
 		"Available variables:\n" +
 		"    {season} Season number ('S' not added)\n" +
@@ -125,14 +124,14 @@ func CustomRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	return nil
 }
 
-func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func AutoRename(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
 	if args == "" {
 		args = "--help"
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
 		_, _ = msg.ReplyText(err.Error())
@@ -234,7 +233,7 @@ func AutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	return nil
 }
 
-func VAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func VAutoRename(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -310,14 +309,14 @@ func VAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 	return nil
 }
 
-func DelAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func DelAutoRename(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
 	if args == "" {
 		args = "--help"
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
 		_, _ = msg.ReplyText(err.Error())
@@ -402,14 +401,14 @@ func DelAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 	return nil
 }
 
-func Filter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Filter(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
 	if args == "" {
 		args = "--help"
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
 		_, _ = msg.ReplyText(err.Error())
@@ -476,7 +475,7 @@ func Filter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	return nil
 }
 
-func VFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func VFilter(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -503,7 +502,7 @@ func VFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 	return nil
 }
 
-func DelFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func DelFilter(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -522,14 +521,14 @@ func DelFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	return nil
 }
 
-func MatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func MatchFilter(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
 	if args == "" {
 		args = "--help"
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
 		_, _ = msg.ReplyText(err.Error())
@@ -631,14 +630,14 @@ func MatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 	return nil
 }
 
-func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func ManageMatchFilter(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
 	if args == "" {
 		args = "--help"
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
 		_, _ = msg.ReplyText(err.Error())
@@ -801,14 +800,14 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 	return nil
 }
 
-func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func ExtCapFilter(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
 	if args == "" {
 		args = "--help"
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
 		_, _ = msg.ReplyText(err.Error())
@@ -893,14 +892,14 @@ func ExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args 
 	return nil
 }
 
-func ManageExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func ManageExtCapFilter(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
 	if args == "" {
 		args = "--help"
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	argList, err := utils.SplitQuotedFieldsErr(args)
 	if err != nil {
 		_, _ = msg.ReplyText(err.Error())

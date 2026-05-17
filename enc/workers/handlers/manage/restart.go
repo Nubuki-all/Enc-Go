@@ -1,7 +1,7 @@
 package manage
 
 import (
-	"github.com/celestix/gotgproto/ext"
+	"context"
 
 	"enc/config"
 	"enc/internal/bot"
@@ -12,7 +12,7 @@ import (
 	"enc/workers/downloaders"
 )
 
-func Restart(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Restart(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -58,7 +58,7 @@ func Restart(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		return nil
 	}
 	downloaders.CleanAllQbit(ctx)
-	db.SaveAll(ctx)
+	db.SaveAll(context.Background())
 	if bot.Aria2Client != nil {
 		bot.Aria2Client.Close() //nolint:errcheck
 	}

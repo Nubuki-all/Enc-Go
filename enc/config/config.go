@@ -94,9 +94,11 @@ type Config struct {
 	Thumb                 string
 	UnfinishedProgressStr string
 	UploadAsDoc           bool
+	UseBotAPI             bool
+	LocalBotAPI           bool
+	BotAPIURL             string
 	UseAniList            bool
 	UseCaption            bool
-	UseBotAPI             bool
 	UVS                   bool
 	Workers               int
 	YDLTimeout            int
@@ -207,9 +209,11 @@ func LoadConfig() error {
 	viper.SetDefault("TEMP_DIR", ".temp")
 	viper.SetDefault("UN_FINISHED_PROGRESS_STR", "🤍")
 	viper.SetDefault("UPLOAD_AS_DOCUMENT", true)
+	viper.SetDefault("USE_BOT_API", true)
+	viper.SetDefault("LOCAL_BOT_API", false)
+	viper.SetDefault("BOT_API_URL", "")
 	viper.SetDefault("USE_ANILIST", true)
 	viper.SetDefault("USE_CAPTION", true)
-	viper.SetDefault("USE_BOT_API", true)
 	viper.SetDefault("WORKERS", 2)
 
 	Conf = &Config{
@@ -295,9 +299,11 @@ func LoadConfig() error {
 		Thumb:                 viper.GetString("THUMBNAIL"),
 		UnfinishedProgressStr: viper.GetString("UN_FINISHED_PROGRESS_STR"),
 		UploadAsDoc:           viper.GetBool("UPLOAD_AS_DOCUMENT"),
+		UseBotAPI:             viper.GetBool("USE_BOT_API"),
+		LocalBotAPI:           viper.GetBool("LOCAL_BOT_API"),
+		BotAPIURL:             viper.GetString("BOT_API_URL"),
 		UseAniList:            viper.GetBool("USE_ANILIST"),
 		UseCaption:            viper.GetBool("USE_CAPTION"),
-		UseBotAPI:             viper.GetBool("USE_BOT_API"),
 		UVS:                   viper.GetBool("UPLOAD_VIDEO_AS_SPOILER"),
 		YDLTimeout:            viper.GetInt("YT_DL_TIMEOUT"),
 		YtdlpTimeout:          viper.GetInt("YTDLP_TIMEOUT"),

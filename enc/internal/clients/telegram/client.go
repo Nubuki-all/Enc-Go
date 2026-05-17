@@ -24,9 +24,6 @@ import (
 	"enc/utils/floodwait"
 )
 
-// HandleBotAPIUpdate quick hack to avoid circular import
-var HandleBotAPIUpdate func(update tgbotapi.Update)
-
 var (
 	Client   *gotgproto.Client
 	BotAPI   *tgbotapi.BotAPI
@@ -46,7 +43,11 @@ var ReAddHandlers func()
 func InitClient() {
 	var err error
 	if config.Conf.UseBotAPI {
-		BotAPI, err = tgbotapi.NewBotAPI(config.Conf.BotToken)
+		if config.Conf.BotAPIURL != "" {
+			BotAPI, err = tgbotapi.NewBotAPIWithAPIEndpoint(config.Conf.BotToken, config.Conf.BotAPIURL)
+		} else {
+			BotAPI, err = tgbotapi.NewBotAPI(config.Conf.BotToken)
+		}
 		if err != nil {
 			logger.CriticalW("failed to start bot api client:", zap.Error(err))
 		}
@@ -81,6 +82,8 @@ func InitClient() {
 	logger.Infof("client (@%s) has been started...\n", Client.Self.Username)
 	Context = Client.CreateContext()
 }
+
+var HandleBotAPIUpdate func(update tgbotapi.Update)
 
 func StartUpdates() {
 	if config.Conf.UseBotAPI && BotAPI != nil {

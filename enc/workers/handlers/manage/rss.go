@@ -19,16 +19,15 @@ import (
 	"enc/utils/tele"
 	"enc/workers/auto/rssmonitor"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/mmcdole/gofeed"
 	"go.uber.org/zap"
 )
 
-func RssHandler(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func RssHandler(msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	var err error
 	helpMsg := "Base command for rss:\n" +
 		"    for additional help send the above arguments with -h/--help or without additional params.\n" +

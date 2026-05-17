@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 
 	"enc/config"
@@ -23,11 +22,11 @@ import (
 	"enc/workers/uploaders"
 )
 
-func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Download(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	var err error
 	var pargs map[string]any
 	helpMsg := "Downloads the replied media/link: to a location (specified or the ALT_DOWNLOAD_DIR env var) locally\n" +
@@ -100,9 +99,8 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 		pargs = arg.Values
 	}
 	var link string
-	message := update.EffectiveMessage
 	if msg.ReplyToID != 0 {
-		err = message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
+		err = msg.SetRepliedToMessage()
 		if err != nil {
 			_, _ = msg.ReplyText(err.Error())
 			return nil
@@ -110,15 +108,14 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	} else {
 		return helpFunc("Reply the media message to download.")
 	}
-	repMsg := message.ReplyToMessage
-	if repMsg.Media != nil {
-		switch repMsg.Media.(type) {
+	if repMsg.Raw.Media != nil {
+		switch repMsg.Raw.Media.(type) {
 		case *tg.MessageMediaWebPage:
-			repMsg.Media = nil
+			repMsg.Raw.Media = nil
 		default:
 		}
 	}
-	if repMsg.Media == nil {
+	if repMsg.Raw.Media == nil {
 		if link = repMsg.Text; link == "" {
 			return helpFunc("Replied message is not a media/document/link.")
 		}
@@ -126,7 +123,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 			return helpFunc("`Not a valid link`.")
 		}
 	}
-	inputLoc, fInfo, err := utils.GetInputFileLocationAndSize(repMsg.Media)
+	inputLoc, fInfo, err := utils.GetInputFileLocationAndSize(repMsg.Raw.Media)
 	if err != nil {
 		return helpFunc(err.Error())
 	}
@@ -214,11 +211,11 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	return nil
 }
 
-func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Rename(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	var err error
 	var pargs map[string]any
 	helpMsg := "Reply to a file/link to download,rename and upload it.\n" +
@@ -315,9 +312,8 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		pargs = arg.Values
 	}
 	var link string
-	message := update.EffectiveMessage
 	if msg.ReplyToID != 0 {
-		err = message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
+		err = msg.SetRepliedToMessage()
 		if err != nil {
 			_, _ = msg.ReplyText(err.Error())
 			return nil
@@ -325,15 +321,14 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	} else {
 		return helpFunc("Reply the media message to rename.")
 	}
-	repMsg := message.ReplyToMessage
-	if repMsg.Media != nil {
-		switch repMsg.Media.(type) {
+	if repMsg.Raw.Media != nil {
+		switch repMsg.Raw.Media.(type) {
 		case *tg.MessageMediaWebPage:
-			repMsg.Media = nil
+			repMsg.Raw.Media = nil
 		default:
 		}
 	}
-	if repMsg.Media == nil {
+	if repMsg.Raw.Media == nil {
 		if link = repMsg.Text; link == "" {
 			return helpFunc("Replied message is not a media/document/link.")
 		}
@@ -341,7 +336,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			return helpFunc("`Not a valid link`.")
 		}
 	}
-	inputLoc, fInfo, err := utils.GetInputFileLocationAndSize(repMsg.Media)
+	inputLoc, fInfo, err := utils.GetInputFileLocationAndSize(repMsg.Raw.Media)
 	if err != nil {
 		return helpFunc(err.Error())
 	}
@@ -553,11 +548,11 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	return nil
 }
 
-func MediaInfo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func MediaInfo(msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	var err error
 	var pargs map[string]any
 	helpMsg := "Downloads the replied message and gets its media info.\n" +
@@ -618,9 +613,8 @@ func MediaInfo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 		pargs = arg.Values
 	}
 	var link string
-	message := update.EffectiveMessage
 	if msg.ReplyToID != 0 {
-		err = message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
+		err = msg.SetRepliedToMessage()
 		if err != nil {
 			_, _ = msg.ReplyText(err.Error())
 			return nil
@@ -628,15 +622,14 @@ func MediaInfo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	} else {
 		return helpFunc("Reply the media message to download.")
 	}
-	repMsg := message.ReplyToMessage
-	if repMsg.Media != nil {
-		switch repMsg.Media.(type) {
+	if repMsg.Raw.Media != nil {
+		switch repMsg.Raw.Media.(type) {
 		case *tg.MessageMediaWebPage:
-			repMsg.Media = nil
+			repMsg.Raw.Media = nil
 		default:
 		}
 	}
-	if repMsg.Media == nil {
+	if repMsg.Raw.Media == nil {
 		if link = repMsg.Text; link == "" {
 			return helpFunc("Replied message is not a media/document/link.")
 		}
@@ -644,7 +637,7 @@ func MediaInfo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 			return helpFunc("`Not a valid link`.")
 		}
 	}
-	inputLoc, fInfo, err := utils.GetInputFileLocationAndSize(repMsg.Media)
+	inputLoc, fInfo, err := utils.GetInputFileLocationAndSize(repMsg.Raw.Media)
 	if err != nil {
 		return helpFunc(err.Error())
 	}

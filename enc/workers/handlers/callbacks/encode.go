@@ -8,7 +8,6 @@ import (
 	//"strings"
 	"time"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
 
@@ -23,7 +22,7 @@ import (
 	"enc/workers/auto/transcode"
 )
 
-func EncodeInfo(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
+func EncodeInfo(query *tele.CallbackQuery) error {
 	id := fmt.Sprintf("%d:%d", query.ChatID, query.ID)
 	info := utils.GetCallbackInfo(id)
 	if info == nil {
@@ -79,7 +78,7 @@ func EncodeInfo(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery)
 	return query.Answer(ans, true)
 }
 
-func EncodeStats(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
+func EncodeStats(query *tele.CallbackQuery) error {
 	id := fmt.Sprintf("%d:%d", query.ChatID, query.ID)
 	info := utils.GetCallbackInfo(id)
 	if info == nil {
@@ -138,11 +137,11 @@ func EncodeStats(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery
 	return query.Answer(ans, true)
 }
 
-func CancelEncode(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
+func CancelEncode(query *tele.CallbackQuery) error {
 	return cancelEncode(ctx, update, query, false)
 }
 
-func CancelEncodeJobs(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
+func CancelEncodeJobs(query *tele.CallbackQuery) error {
 	return cancelEncode(ctx, update, query, true)
 }
 

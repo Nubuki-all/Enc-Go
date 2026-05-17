@@ -1,9 +1,9 @@
 package manage
 
 import (
+	"context"
 	"os"
 
-	"github.com/celestix/gotgproto/ext"
 
 	"enc/internal/bot"
 	"enc/internal/db"
@@ -12,7 +12,7 @@ import (
 	"enc/workers/downloaders"
 )
 
-func Nuke(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Nuke(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -20,7 +20,7 @@ func Nuke(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) 
 	_, _ = msg.ReplyText("`Nuking the bot. Goodbye…`")
 
 	downloaders.CleanAllQbit(ctx)
-	db.SaveAll(ctx)
+	db.SaveAll(context.Background())
 	if bot.Aria2Client != nil {
 		bot.Aria2Client.Close() //nolint:errcheck
 	}

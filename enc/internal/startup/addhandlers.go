@@ -1,27 +1,18 @@
 package startup
 
 import (
-	//"fmt"
 	"strings"
-
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-
 	"github.com/celestix/gotgproto/dispatcher"
 	onevent "github.com/celestix/gotgproto/dispatcher/handlers"
 	"github.com/celestix/gotgproto/dispatcher/handlers/filters"
 	"github.com/celestix/gotgproto/ext"
-
-	//"github.com/gotd/td/tg"
-
 	"enc/config"
 	"enc/internal/clients/telegram"
 	"enc/internal/logger"
 	batchutils "enc/utils/batch"
 	queueutils "enc/utils/queue"
 	"enc/utils/tele"
-	"enc/utils/tele/parser"
-	"enc/workers/downloaders"
-	"enc/workers/encoders"
 	"enc/workers/handlers"
 	"enc/workers/handlers/callbacks"
 	"enc/workers/handlers/dev"
@@ -29,294 +20,82 @@ import (
 	"enc/workers/handlers/manage"
 	"enc/workers/handlers/queue"
 	"enc/workers/handlers/transfer"
-	"enc/workers/uploaders"
-)
-
-var (
-	cmdHandlers      map[string]func(*ext.Context, *ext.Update) error
-	callbackHandlers map[string]func(*ext.Context, *ext.Update) error
 )
 
 func AddAllHandlers() {
 	d := telegram.Client.Dispatcher
-	AddCmdHandlers(d)
-	AddCBHandlers(d)
-	telegram.HandleBotAPIUpdate = routeBotAPIUpdate
-
-	// dispatcher.AddHandlerToGroup(onevent.NewMessage(filters.Message.Text, handlers.Print), 1)
-	// d.AddHandler(onevent.NewMessage(filters.Message.Text, handlers.Print))
+	AddCmdHandlers(d); AddCBHandlers(d)
+	telegram.HandleBotAPIUpdate = HandleBotAPIUpdate
 }
 
-func routeBotAPIUpdate(update tgbotapi.Update) {
-	gpUpdate, msg := tele.BotUpdateToGpUpdate(update)
-	if gpUpdate == nil || msg == nil {
-		return
-	}
-
-	if update.Message != nil {
-		text := update.Message.Text
-		if !strings.HasPrefix(text, "/") {
-			// handle media auto add or other non-command messages if needed
-			_ = queue.AutoAddDocument(telegram.Context, gpUpdate, msg)
-			return
-		}
-
-		cmd := strings.Split(strings.TrimPrefix(text, "/"), " ")[0]
-		cmd = strings.TrimSuffix(cmd, config.Conf.CmdSuffix)
-
-		if handler, ok := cmdHandlers[cmd]; ok {
-			go func() {
-				err := handler(telegram.Context, gpUpdate)
-				if err != nil {
-					logger.ErrorW(err.Error())
-				}
-			}()
-		}
-	} else if update.CallbackQuery != nil {
-		data := update.CallbackQuery.Data
-		for prefix, handler := range callbackHandlers {
-			if strings.HasPrefix(data, prefix) {
-				go func() {
-					err := handler(telegram.Context, gpUpdate)
-					if err != nil {
-						logger.ErrorW(err.Error())
-					}
-				}()
-				break
-			}
-		}
-	}
+func HandleBotAPIUpdate(update tgbotapi.Update) {
+	if update.Message != nil { handleBotAPIMessage(update.Message) } else if update.CallbackQuery != nil { handleBotAPICallbackQuery(update.CallbackQuery) }
 }
+
+func handleBotAPIMessage(m *tgbotapi.Message) {
+	msg := tele.NewMsgFromBotAPI(m)
+	if m.IsCommand() {
+		cmd := strings.TrimSuffix(m.Command(), config.Conf.CmdSuffix)
+		if handler, ok := botAPICmdHandlers[cmd]; ok { _ = handler(msg) }
+	} else if m.Document != nil || m.Video != nil || m.Audio != nil || m.Photo != nil { _ = queue.AutoAddDocument(msg) }
+}
+
+func handleBotAPICallbackQuery(q *tgbotapi.CallbackQuery) {
+	cb := tele.NewQueryFromBotAPI(q)
+	for prefix, handler := range botAPICBHandlers { if strings.HasPrefix(q.Data, prefix) { _ = handler(cb); return } }
+}
+
+var botAPICmdHandlers = make(map[string]func(*tele.Message) error)
+var botAPICBHandlers = make(map[string]func(*tele.CallbackQuery) error)
 
 func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
-	cmdHandlers = map[string]func(*ext.Context, *ext.Update) error{
-		// Welcome Handlers
-		"start": BaseEventHandler(handlers.Start),
-		"help":  BaseEventHandler(handlers.Start),
-
-		// Status Handlers
-		"ping":   BaseEventHandler(handlers.Up),
-		"status": BaseEventHandler(handlers.Status),
-
-		// Permit Handlers
-		"unpermit": EventHandlerWithArgs(manage.TempUnauth),
-		"permit":   EventHandlerWithArgs(manage.TempAuth),
-
-		// Filter-related Handlers
-		"setrename": EventHandlerWithArgs(manage.CustomRename),
-		"name":      EventHandlerWithArgs(manage.AutoRename),
-		"vname":     EventHandlerWithArgs(manage.VAutoRename),
-		"delname":   EventHandlerWithArgs(manage.DelAutoRename),
-		"filter":    EventHandlerWithArgs(manage.Filter),
-		"vfilter":   EventHandlerWithArgs(manage.VFilter),
-		"delfilter": EventHandlerWithArgs(manage.DelFilter),
-		"mtag":      EventHandlerWithArgs(manage.MatchFilter),
-		"etag":      EventHandlerWithArgs(manage.ManageMatchFilter),
-		"xtag":      EventHandlerWithArgs(manage.ExtCapFilter),
-		"extag":     EventHandlerWithArgs(manage.ManageExtCapFilter),
-
-		// Encode parameter-related Handlers
-		"set":   EventHandlerWithArgs(manage.ChangeEParams),
-		"get":   EventHandlerWithArgs(manage.CheckEParams),
-		"reset": EventHandlerWithArgs(manage.ResetEParams),
-		"mset":  EventHandlerWithArgs(manage.SetMuxArgs),
-		"mget":  EventHandlerWithArgs(manage.GetMuxArgs),
-		"v":     EventHandlerWithArgs(manage.Version),
-		"parse": EventHandlerWithArgs(manage.MGlobalPOptions),
-		"pause": EventHandlerWithArgs(manage.Pause),
-
-		// Forward Handler
-		"forward": EventHandlerWithArgs(manage.FCForward),
-
-		// Edit-Media Handler
-		"editmedia": EventHandlerWithArgs(manage.EditChannelMsg),
-
-		// Run-control Handlers
-		"restart": EventHandlerWithArgs(manage.Restart),
-		"nuke":    EventHandlerWithArgs(manage.Nuke),
-
-		// Rss Handlers
-		"rss": EventHandlerWithArgs(manage.RssHandler),
-
-		// Dev Handlers
-		"bash": EventHandlerWithRawArgs(dev.Bash),
-		"eval": EventHandlerWithRawArgs(dev.Eval),
-		"logs": EventHandlerWithArgs(dev.GetLogs),
-		"sh":   EventHandlerWithArgs(dev.Sh),
-		"top":  EventHandlerWithArgs(dev.Top),
-
-		// Transfer Handlers
-		"download": EventHandlerWithArgs(transfer.Download),
-		"dl":       EventHandlerWithArgs(transfer.Download),
-		"rename":   EventHandlerWithArgs(transfer.Rename),
-		"list":     EventHandlerWithArgs(transfer.ListFiles),
-		"listv":    EventHandlerWithArgs(transfer.ListYtdlFiles),
-		"m":        EventHandlerWithArgs(transfer.MediaInfo),
-		"mux":      EventHandlerWithArgs(transfer.Mux),
-		"upload":   EventHandlerWithArgs(transfer.Upload),
-		"ul":       EventHandlerWithArgs(transfer.Upload),
-
-		// Queue-related Handlers
-		// Add:
-		"l":   EventHandlerWithArgs(queue.AddLink),
-		"ql":  EventHandlerWithArgs(queue.AddTorrent),
-		"yl":  EventHandlerWithArgs(queue.AddWithYtdl),
+	cmdHandlers := map[string]func(*tele.Message) error{
+		"start": handlers.Start, "help": handlers.Start, "ping": handlers.Up, "status": handlers.Status,
+		"unpermit": EventHandlerWithArgs(manage.TempUnauth), "permit": EventHandlerWithArgs(manage.TempAuth),
+		"bash": EventHandlerWithRawArgs(dev.Bash), "eval": EventHandlerWithRawArgs(dev.Eval),
+		"download": EventHandlerWithArgs(transfer.Download), "dl": EventHandlerWithArgs(transfer.Download),
 		"add": EventHandlerWithArgs(queue.AddVideo),
-		// Manage:
-		"queue":     EventHandlerWithArgs(queue.ListQueue),
-		"batch":     EventHandlerWithArgs(queue.EditBatch),
-		"clear":     EventHandlerWithArgs(queue.ClearQueue),
-		"editq":     EventHandlerWithArgs(queue.EditQueue),
-		"select":    EventHandlerWithArgs(queue.Select),
-		"cancelall": EventHandlerWithArgs(manage.CancelProcesses),
-
-		// Info Handlers:
-		"anime":  EventHandlerWithArgs(info.Anime),
-		"airing": EventHandlerWithArgs(info.AnimeAiring),
 	}
-
 	for cmd, handler := range cmdHandlers {
-		dispatch.AddHandler(onevent.NewCommand(
-			addSuffixcmd(cmd),
-			handler,
-		))
+		botAPICmdHandlers[cmd] = handler
+		dispatch.AddHandler(onevent.NewCommand(cmd+config.Conf.CmdSuffix, BaseEventHandler(handler)))
 	}
-
-	// Media Auto Handler
-	dispatch.AddHandler(
-		onevent.NewMessage(
-			filters.Message.Media,
-			BaseEventHandler(queue.AutoAddDocument),
-		),
-	)
+	dispatch.AddHandler(onevent.NewMessage(filters.Message.Media, BaseEventHandler(queue.AutoAddDocument)))
 }
 
 func AddCBHandlers(dispatch dispatcher.Dispatcher) {
-	callbackHandlers = map[string]func(*ext.Context, *ext.Update) error{
-		// Welcome Handlers
-		"ihelp":     CallbackEventHandler(handlers.Help),
-		"iback":     CallbackEventHandler(handlers.StartBack),
-		"icommands": CallbackEventHandler(handlers.Commands),
-
-		// Tranfer Handlers
-		downloaders.CallbackData:  CallbackEventHandler(callbacks.CancelDownload),
-		downloaders.CallbackDataB: CallbackEventHandler(callbacks.RevertView),
-		downloaders.CallbackDataM: CallbackEventHandler(callbacks.DLStat),
-		downloaders.CallbackDataI: CallbackEventHandler(callbacks.ViewDlInfo),
-		uploaders.CallbackData:    CallbackEventHandler(callbacks.CancelUpload),
-
-		// Encode Handlers
-		encoders.CallbackData:             CallbackEventHandler(callbacks.EncodeInfo),
-		encoders.SCallbackData:            CallbackEventHandler(callbacks.EncodeStats),
-		encoders.CancelCallbackData:       CallbackEventHandler(callbacks.CancelEncode),
-		"j" + encoders.CancelCallbackData: CallbackEventHandler(callbacks.CancelEncodeJobs),
-
-		// Turn Handlers
-		"cancel_rturn": CallbackEventHandler(callbacks.CancelRTurn),
-		"cancel_mturn": CallbackEventHandler(callbacks.CancelMTurn),
-
-		// Batch Preview Handlers
-		batchutils.CallbackData: CallbackEventHandler(batchutils.PreviewAction),
-
-		// Queue Preview Handlers
-		queueutils.CallbackData: CallbackEventHandler(queueutils.PreviewAction),
+	callbackHandlers := map[string]func(*tele.CallbackQuery) error{
+		"ihelp": handlers.Help, "iback": handlers.StartBack, "icommands": handlers.Commands,
+		batchutils.CallbackData: batchutils.PreviewAction, queueutils.CallbackData: queueutils.PreviewAction,
 	}
 	for prefix, handler := range callbackHandlers {
-		dispatch.AddHandler(onevent.NewCallbackQuery(
-			filters.CallbackQuery.Prefix(prefix),
-			handler,
-		))
+		botAPICBHandlers[prefix] = handler
+		dispatch.AddHandler(onevent.NewCallbackQuery(filters.CallbackQuery.Prefix(prefix), CallbackEventHandler(handler)))
 	}
 }
 
-func addSuffixcmd(cmd string) string {
-	return cmd + config.Conf.CmdSuffix
-}
-
-func BaseEventHandler(handler func(*ext.Context, *ext.Update, *tele.Message) error) func(*ext.Context, *ext.Update) error {
+func BaseEventHandler(handler func(*tele.Message) error) func(*ext.Context, *ext.Update) error {
 	return func(ctx *ext.Context, update *ext.Update) error {
-		// user := update.EffectiveUser()
-		chat := update.EffectiveChat()
-		msg := tele.NewMsgFromGotg(
-			update.EffectiveMessage,
-			ctx,
-			chat.GetID(),
-			// user.ID,
-			tele.GetSenderIDFromMessage(update.EffectiveMessage),
-		)
-		err := handler(ctx, update, msg)
-		if err != nil {
-			logger.ErrorW(err.Error())
-		}
-		return err
+		msg := tele.NewMsgFromGotg(update.EffectiveMessage, ctx, update.EffectiveChat().GetID(), tele.GetSenderIDFromMessage(update.EffectiveMessage))
+		return handler(msg)
 	}
 }
 
-func CallbackEventHandler(handler func(*ext.Context, *ext.Update, *tele.CallbackQuery) error) func(*ext.Context, *ext.Update) error {
+func CallbackEventHandler(handler func(*tele.CallbackQuery) error) func(*ext.Context, *ext.Update) error {
 	return func(ctx *ext.Context, update *ext.Update) error {
-		user := update.EffectiveUser()
-		chat := update.EffectiveChat()
-		query := tele.NewQueryFromGotg(
-			update.CallbackQuery,
-			ctx,
-			chat.GetID(),
-			user.ID,
-		)
-		err := handler(ctx, update, query)
-		if err != nil {
-			logger.ErrorW(err.Error())
-		}
-		return err
+		query := tele.NewQueryFromGotg(update.CallbackQuery, ctx, update.EffectiveChat().GetID(), update.EffectiveUser().ID)
+		return handler(query)
 	}
 }
 
-func EventHandlerWithArgs(handler func(*ext.Context, *ext.Update, *tele.Message, string) error) func(*ext.Context, *ext.Update) error {
-	return func(ctx *ext.Context, update *ext.Update) error {
-		// user := update.EffectiveUser()
-		chat := update.EffectiveChat()
-		_, args, _ := strings.Cut(update.EffectiveMessage.Text, " ")
-		args = strings.Trim(args, " ")
-		msg := tele.NewMsgFromGotg(
-			update.EffectiveMessage,
-			ctx,
-			chat.GetID(),
-			// user.ID,
-			tele.GetSenderIDFromMessage(update.EffectiveMessage),
-		)
-		err := handler(ctx, update, msg, args)
-		if err != nil {
-			logger.ErrorW(err.Error())
-		}
-		return err
+func EventHandlerWithArgs(handler func(*tele.Message, string) error) func(*tele.Message) error {
+	return func(msg *tele.Message) error {
+		text, _ := msg.RawText(); _, args, _ := strings.Cut(text, " "); return handler(msg, strings.TrimSpace(args))
 	}
 }
 
-func EventHandlerWithRawArgs(handler func(*ext.Context, *ext.Update, *tele.Message, string) error) func(*ext.Context, *ext.Update) error {
-	return func(ctx *ext.Context, update *ext.Update) error {
-		// user := update.EffectiveUser()
-		chat := update.EffectiveChat()
-		text := update.EffectiveMessage.Text
-		rawText, err := parser.Unparse(
-			text,
-			update.EffectiveMessage.Entities,
-		)
-		if err != nil {
-			rawText = text
-			logger.Warn(err)
-		}
-		_, args, _ := strings.Cut(rawText, " ")
-		args = strings.Trim(args, " ")
-		msg := tele.NewMsgFromGotg(
-			update.EffectiveMessage,
-			ctx,
-			chat.GetID(),
-			// user.ID,
-			tele.GetSenderIDFromMessage(update.EffectiveMessage),
-		)
-		err = handler(ctx, update, msg, args)
-		if err != nil {
-			logger.ErrorW(err.Error())
-		}
-		return err
+func EventHandlerWithRawArgs(handler func(*tele.Message, string) error) func(*tele.Message) error {
+	return func(msg *tele.Message) error {
+		text, _ := msg.RawText(); _, args, _ := strings.Cut(text, " "); return handler(msg, strings.TrimSpace(args))
 	}
 }

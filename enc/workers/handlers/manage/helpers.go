@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/celestix/gotgproto/ext"
 
 	"enc/config"
 	"enc/internal/bot"
@@ -14,7 +13,7 @@ import (
 	"enc/utils/tele"
 )
 
-func FCForward(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func FCForward(msg *tele.Message, args string) error {
 	fchannel := config.Conf.FChannel
 	chatID := msg.ChatID
 	if !utils.UserIsOwner(msg.SenderID) && chatID != fchannel {
@@ -134,7 +133,7 @@ func ReleaseExtFilterExists(name string, caseSensitive bool) bool {
 	return false
 }
 
-func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func CancelProcesses(msg *tele.Message, args string) error {
 	helpMsg := "Cancels all download/upload/encode processes\n" +
 		"Arguments:\n" +
 		"  'transfer' - Cancels all ongoing download and upload\n" +
@@ -228,7 +227,7 @@ func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 		return nil
 	}
 	_, _ = msg.Reply(
-		"Unknown args, for help send "+update.Args()[0]+" --help",
+		"Unknown args, for help send "+"cmd"+" --help",
 		&tele.ReplyOptions{HTMLParseMode: true},
 	)
 	return nil

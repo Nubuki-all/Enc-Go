@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/telegram/message/markup"
 	"github.com/gotd/td/tg"
 
@@ -26,11 +25,11 @@ import (
 
 const maxFileSize = 2126000000
 
-func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Upload(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	helpMsg := "Uploads a file/files from local directory or direct/torrent link\n" +
 		"Just pass any of the following:\n" +
 		"    - the file (with -f) e.g -f \"something.txt\"\n" +

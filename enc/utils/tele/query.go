@@ -2,65 +2,46 @@ package tele
 
 import (
 	"github.com/celestix/gotgproto/ext"
-	// gp "github.com/celestix/gotgproto/types"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/gotd/td/tg"
-
-	//"enc/config"
+	"enc/config"
 	"enc/internal/clients/telegram"
-	"enc/internal/logger"
 )
 
 type CallbackQuery struct {
 	ChatID   int64
 	SenderID int64
 	ID       int
-	Ctx      *ext.Context
-	Query    *tg.UpdateBotCallbackQuery
-	Chat     *tg.Chat
-	User     *tg.User
+	QueryID  string
+	Data     string
+	IsPrivate bool
+	Ctx   *ext.Context
+	Query *tg.UpdateBotCallbackQuery
+	BotCB *tgbotapi.CallbackQuery
 }
 
 func NewQueryFromGotg(q *tg.UpdateBotCallbackQuery, c *ext.Context, chatID int64, senderID int64) *CallbackQuery {
-	return &CallbackQuery{
-		Query:    q,
-		Ctx:      telegram.Context,
-		ChatID:   chatID,
-		SenderID: senderID,
-		ID:       q.MsgID,
-	}
+	return &CallbackQuery{Query: q, Ctx: c, ChatID: chatID, SenderID: senderID, ID: q.MsgID, Data: string(q.Data), IsPrivate: chatID == senderID}
+}
+
+func NewQueryFromBotAPI(q *tgbotapi.CallbackQuery) *CallbackQuery {
+	msgID := 0; if q.Message != nil { msgID = q.Message.MessageID }
+	return &CallbackQuery{BotCB: q, ChatID: q.Message.Chat.ID, SenderID: q.From.ID, ID: msgID, QueryID: q.ID, Data: q.Data, IsPrivate: q.Message.Chat.Type == "private"}
 }
 
 func (query *CallbackQuery) Answer(msg string, alert bool) error {
-	_, err := telegram.Context.AnswerCallback(&tg.MessagesSetBotCallbackAnswerRequest{
-		Alert:   alert,
-		QueryID: query.Query.QueryID,
-		Message: msg,
-	})
-	if err != nil {
-		logger.ErrorW(err.Error())
+	if config.Conf.UseBotAPI && telegram.BotAPI != nil && query.BotCB != nil {
+		_, err := telegram.BotAPI.Request(tgbotapi.NewCallback(query.QueryID, msg))
+		return err
 	}
+	_, err := telegram.Context.AnswerCallback(&tg.MessagesSetBotCallbackAnswerRequest{Alert: alert, QueryID: query.Query.QueryID, Message: msg})
 	return err
 }
 
 func (query *CallbackQuery) GetMessage() *Message {
-	ids := &tg.InputMessageCallbackQuery{
-		ID:      query.ID,            // message id (int)
-		QueryID: query.Query.QueryID, // callback query id (int64)
-	}
+	if query.BotCB != nil && query.BotCB.Message != nil { return NewMsgFromBotAPI(query.BotCB.Message) }
+	ids := &tg.InputMessageCallbackQuery{ID: query.ID, QueryID: query.Query.QueryID}
 	msgs, err := GetMessages(query.ChatID, ids)
-	if err != nil {
-		logger.Warn(err)
-		return &Message{
-			Ctx:      telegram.Context,
-			ChatID:   query.ChatID,
-			SenderID: query.SenderID,
-			ID:       query.ID,
-		}
-	}
-	return NewMsgFromGotg(
-		msgs[0],
-		telegram.Context,
-		query.ChatID,
-		query.SenderID,
-	)
+	if err != nil { return &Message{Ctx: telegram.Context, ChatID: query.ChatID, SenderID: query.SenderID, ID: query.ID} }
+	return NewMsgFromGotg(msgs[0], telegram.Context, query.ChatID, query.SenderID)
 }

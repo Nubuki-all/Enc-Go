@@ -5,18 +5,17 @@ import (
 	"github.com/gotd/td/tg"
 )
 
-func ConvertReplyMarkup(markup tg.ReplyMarkupClass) interface{} {
+func ToBotMarkup(markup tg.ReplyMarkupClass) interface{} {
 	if markup == nil {
 		return nil
 	}
-
 	switch m := markup.(type) {
 	case *tg.ReplyInlineMarkup:
 		var rows [][]tgbotapi.InlineKeyboardButton
 		for _, row := range m.Rows {
 			var buttons []tgbotapi.InlineKeyboardButton
-			for _, btn := range row.Buttons {
-				switch b := btn.(type) {
+			for _, button := range row.Buttons {
+				switch b := button.(type) {
 				case *tg.KeyboardButtonCallback:
 					buttons = append(buttons, tgbotapi.NewInlineKeyboardButtonData(b.Text, string(b.Data)))
 				case *tg.KeyboardButtonURL:
@@ -27,45 +26,30 @@ func ConvertReplyMarkup(markup tg.ReplyMarkupClass) interface{} {
 				rows = append(rows, buttons)
 			}
 		}
-		if len(rows) > 0 {
-			return tgbotapi.NewInlineKeyboardMarkup(rows...)
-		}
-
+		return tgbotapi.NewInlineKeyboardMarkup(rows...)
 	case *tg.ReplyKeyboardMarkup:
 		var rows [][]tgbotapi.KeyboardButton
 		for _, row := range m.Rows {
 			var buttons []tgbotapi.KeyboardButton
-			for _, btn := range row.Buttons {
-				switch b := btn.(type) {
+			for _, button := range row.Buttons {
+				switch b := button.(type) {
 				case *tg.KeyboardButton:
 					buttons = append(buttons, tgbotapi.NewKeyboardButton(b.Text))
-				case *tg.KeyboardButtonRequestPhone:
-					buttons = append(buttons, tgbotapi.NewKeyboardButtonContact(b.Text))
-				case *tg.KeyboardButtonRequestGeoLocation:
-					buttons = append(buttons, tgbotapi.NewKeyboardButtonLocation(b.Text))
 				}
 			}
 			if len(buttons) > 0 {
 				rows = append(rows, buttons)
 			}
 		}
-		if len(rows) > 0 {
-			km := tgbotapi.NewReplyKeyboard(rows...)
-			km.ResizeKeyboard = m.Resize
-			km.OneTimeKeyboard = m.SingleUse
-			km.Selective = m.Selective
-			return km
-		}
-
+		res := tgbotapi.NewReplyKeyboard(rows...)
+		res.ResizeKeyboard = m.Resize
+		res.OneTimeKeyboard = m.SingleUse
+		res.Selective = m.Selective
+		return res
 	case *tg.ReplyKeyboardHide:
 		return tgbotapi.NewRemoveKeyboard(m.Selective)
-
 	case *tg.ReplyKeyboardForceReply:
-		return tgbotapi.ForceReply{
-			ForceReply: true,
-			Selective:  m.Selective,
-		}
+		return tgbotapi.ForceReply{ForceReply: true, Selective: m.Selective}
 	}
-
 	return nil
 }

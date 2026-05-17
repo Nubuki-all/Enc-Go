@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 
 	"enc/config"
@@ -24,11 +23,11 @@ import (
 	"enc/workers/uploaders"
 )
 
-func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Mux(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	var err error
 	var pargs map[string]any
 	helpMsg := "Remuxes/encodes a replied video/link.\n" +
@@ -181,9 +180,8 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 	}
 	ffmpegArgs = strings.TrimSuffix(ffmpegArgs, " ")
 	var link string
-	message := update.EffectiveMessage
 	if msg.ReplyToID != 0 {
-		err = message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
+		err = msg.SetRepliedToMessage()
 		if err != nil {
 			_, _ = msg.ReplyText(err.Error())
 			return nil
@@ -191,15 +189,14 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 	} else {
 		return helpFunc("Reply the media message to mux.")
 	}
-	repMsg := message.ReplyToMessage
-	if repMsg.Media != nil {
-		switch repMsg.Media.(type) {
+	if repMsg.Raw.Media != nil {
+		switch repMsg.Raw.Media.(type) {
 		case *tg.MessageMediaWebPage:
-			repMsg.Media = nil
+			repMsg.Raw.Media = nil
 		default:
 		}
 	}
-	if repMsg.Media == nil {
+	if repMsg.Raw.Media == nil {
 		if link = repMsg.Text; link == "" {
 			return helpFunc("Replied message is not a media/document/link.")
 		}
@@ -207,7 +204,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 			return helpFunc("`Not a valid link`.")
 		}
 	}
-	inputLoc, fInfo, err := utils.GetInputFileLocationAndSize(repMsg.Media)
+	inputLoc, fInfo, err := utils.GetInputFileLocationAndSize(repMsg.Raw.Media)
 	if err != nil {
 		return helpFunc(err.Error())
 	}

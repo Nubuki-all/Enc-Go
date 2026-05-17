@@ -4,7 +4,6 @@ import (
 	// "fmt"
 	"strings"
 
-	"github.com/celestix/gotgproto/ext"
 	//"github.com/gotd/td/telegram/message/markup"
 	//"github.com/gotd/td/tg"
 
@@ -14,7 +13,7 @@ import (
 	"enc/utils/tele"
 )
 
-func CancelRTurn(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
+func CancelRTurn(query *tele.CallbackQuery error {
 	// id := fmt.Sprintf("%d:%d", query.ChatID, query.ID)
 	_, turnID, _ := strings.Cut(string(query.Query.Data), " ")
 	if !bot.WaitQueueR.Contains(turnID) {
@@ -31,7 +30,7 @@ func CancelRTurn(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery
 	return nil
 }
 
-func CancelMTurn(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
+func CancelMTurn(query *tele.CallbackQuery error {
 	// id := fmt.Sprintf("%d:%d", query.ChatID, query.ID)
 	_, turnID, _ := strings.Cut(string(query.Query.Data), " ")
 	if !bot.WaitQueueM.Contains(turnID) {

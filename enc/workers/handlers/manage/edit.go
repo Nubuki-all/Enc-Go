@@ -4,10 +4,9 @@ import (
 	"enc/utils"
 	"enc/utils/tele"
 
-	"github.com/celestix/gotgproto/ext"
 )
 
-func EditChannelMsg(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func EditChannelMsg(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		return nil
 	}
@@ -21,13 +20,11 @@ func EditChannelMsg(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg
 		return nil
 	}
 
-	message := update.EffectiveMessage
-	err := message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
+	err := msg.SetRepliedToMessage(); repMsg := msg.ReplyToMessage
 	if err != nil {
 		_, _ = msg.ReplyText(err.Error())
 		return nil
 	}
-	repMsg := message.ReplyToMessage
 	if repMsg == nil {
 		_, _ = msg.ReplyText("No replied message.")
 		return nil

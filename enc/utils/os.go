@@ -503,10 +503,7 @@ func SafePath(path string) string {
 		cleanPath := strings.ReplaceAll(path, "\"", "")
 		return `"` + cleanPath + `"`
 	}
-	// Also escape backticks for sh -c
-	p := strings.ReplaceAll(path, "'", "'\\''")
-	p = strings.ReplaceAll(p, "`", "\\`")
-	return "'" + p + "'"
+	return "'" + strings.ReplaceAll(path, "'", "'\\''") + "'"
 }
 
 func SantizeText(t string) string {

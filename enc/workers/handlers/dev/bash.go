@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"os/exec"
 
-	"github.com/celestix/gotgproto/ext"
 
 	"enc/utils"
 	"enc/utils/tele"
 )
 
-func Bash(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func Bash(msg *tele.Message, args string) error {
 	if !utils.UserIsOwner(msg.SenderID) {
 		if !utils.UserIsDev(msg.SenderID) {
 			return nil
@@ -31,7 +30,7 @@ func Bash(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) 
 
 	bMsg, _ := msg.ReplyText("Processing ...")
 
-	cmdExec := exec.CommandContext(ctx, "bash", "-lc", args)
+	cmdExec := exec.CommandContext(context.Background(), "bash", "-lc", args)
 
 	var stdoutBuf, stderrBuf bytes.Buffer
 	cmdExec.Stdout = &stdoutBuf

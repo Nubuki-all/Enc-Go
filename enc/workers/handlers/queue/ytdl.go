@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"context"
 	"cmp"
 	"fmt"
 	"path/filepath"
@@ -8,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/celestix/gotgproto/ext"
 	"github.com/gotd/td/tg"
 
 	"enc/internal/bot"
@@ -24,11 +24,11 @@ import (
 	"enc/workers/downloaders"
 )
 
-func AddWithYtdl(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+func AddWithYtdl(msg *tele.Message, args string) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		return nil
 	}
-	cmd := update.Args()[0]
+	cmd := "cmd"
 	var err error
 
 	helpMsg := "Adds a link to encoding queue using YT-DLP:\n" +
@@ -125,13 +125,12 @@ func AddWithYtdl(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 	link := pargs["link"].(string)
 	if link == "" {
 		if msg.ReplyToID != 0 {
-			message := update.EffectiveMessage
-			err = message.SetRepliedToMessage(ctx, ctx.Raw, ctx.PeerStorage)
+			err = msg.SetRepliedToMessage()
 			if err != nil {
 				_, _ = msg.ReplyText(err.Error())
 				return nil
 			}
-			link = utils.ExtractMessageText(message.ReplyToMessage)
+			link = utils.ExtractMessageText(msg.ReplyToMessage)
 		} else {
 			link = xtraArg
 		}
@@ -249,7 +248,7 @@ func AddWithYtdl(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 			m, _ = pMsg.ReplyText("**Link added To Queue ⏰, POS:** `" + strconv.Itoa(id) + "`\n`Please Wait , Encode will start soon`")
 		}
 		if toSave {
-			db.SaveQueue(ctx)
+			db.SaveQueue(context.Background())
 		}
 		if bot.Queue.Len() > 1 && m != nil {
 			go func() { _ = previewQueue(m, false) }()
@@ -320,7 +319,7 @@ func AddWithYtdl(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 		Doc:       nil,
 		Batch:     batches,
 	})
-	db.SaveQueue(ctx)
+	db.SaveQueue(context.Background())
 	total := bot.Queue.Len()
 	if total > 1 || bot.Paused.Any() {
 		m, err := msg.ReplyText("**Link added To Queue ⏰, POS:** `" + strconv.Itoa(id) + "`\n`Please Wait , Encode will start soon`")

@@ -18,7 +18,7 @@ import (
 	"enc/utils/tele"
 )
 
-func Up(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
+func Up(msg *tele.Message) error {
 	if !utils.UserIsAllowed(msg.SenderID) {
 		// To delete()
 		return nil
@@ -41,16 +41,16 @@ func Up(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	return nil
 }
 
-func Start(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
+func Start(msg *tele.Message) error {
 	user := update.EffectiveUser()
 	chat := update.EffectiveChat()
 	currentTime := utils.TimeFormatter(time.Since(bot.BotStartTime).Round(time.Second).Seconds())
-	msg1 := fmt.Sprintf("Hi `%s`\n", user.FirstName)
+	msg1 := fmt.Sprintf("Hi `%s`\n", msg.SenderName)
 	msg2 := fmt.Sprintf("%sI've been alive for `%s` and i'm ready to encode videos 😗", msg1, currentTime)
 	msg3 := fmt.Sprintf("%s\nand by the way you're a temporary user", msg2)
 
 	var outMsg string
-	if !utils.UserIsOwner(msg.SenderID) && chat.IsAUser() {
+	if !utils.UserIsOwner(msg.SenderID) && msg.IsPrivate {
 		if !utils.AllowPM() {
 			return nil
 		}
@@ -62,7 +62,7 @@ func Start(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 		user, err := tele.GetUser(ownerID)
 		ownerName := strconv.FormatInt(ownerID, 10)
 		if err == nil && user != nil {
-			ownerName = user.FirstName
+			ownerName = msg.SenderName
 		}
 		outMsg = fmt.Sprintf("%sYou're not allowed access to this bot\nAsk [%s](tg://user?id=%d) (nicely) to grant you access.", msg1, ownerName, ownerID)
 	} else {
@@ -105,9 +105,9 @@ func Start(ctx *ext.Context, update *ext.Update, msg *tele.Message) error {
 	return nil
 }
 
-func Help(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
+func Help(query *tele.CallbackQuery) error {
 	chat := update.EffectiveChat()
-	if !utils.UserIsOwner(query.SenderID) && chat.IsAUser() {
+	if !utils.UserIsOwner(query.SenderID) && msg.IsPrivate {
 		if !utils.AllowPM() {
 			query := update.CallbackQuery
 			_, _ = ctx.AnswerCallback(&tg.MessagesSetBotCallbackAnswerRequest{
@@ -151,16 +151,16 @@ func Help(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error
 	return nil
 }
 
-func StartBack(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
+func StartBack(query *tele.CallbackQuery) error {
 	user := update.EffectiveUser()
 	chat := update.EffectiveChat()
 	currentTime := utils.TimeFormatter(time.Since(bot.BotStartTime).Round(time.Second).Seconds())
-	msg1 := fmt.Sprintf("Hi `%s`\n", user.FirstName)
+	msg1 := fmt.Sprintf("Hi `%s`\n", msg.SenderName)
 	msg2 := fmt.Sprintf("%sI've been alive for `%s` and i'm ready to encode videos 😗", msg1, currentTime)
 	msg3 := fmt.Sprintf("%s\nand by the way you're a temporary user", msg2)
 
 	var outMsg string
-	if !utils.UserIsOwner(query.SenderID) && chat.IsAUser() {
+	if !utils.UserIsOwner(query.SenderID) && msg.IsPrivate {
 		if !utils.AllowPM() {
 			return nil
 		}
@@ -172,7 +172,7 @@ func StartBack(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) 
 		user, err := tele.GetUser(ownerID)
 		ownerName := strconv.FormatInt(ownerID, 10)
 		if err == nil && user != nil {
-			ownerName = user.FirstName
+			ownerName = msg.SenderName
 		}
 		outMsg = fmt.Sprintf("%sYou're not allowed access to this bot\nAsk [%s](tg://user?id=%d) (nicely) to grant you access.", msg1, ownerName, ownerID)
 	} else {
@@ -211,9 +211,9 @@ func StartBack(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) 
 	return nil
 }
 
-func Commands(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery) error {
+func Commands(query *tele.CallbackQuery) error {
 	chat := update.EffectiveChat()
-	if !utils.UserIsOwner(query.SenderID) && chat.IsAUser() {
+	if !utils.UserIsOwner(query.SenderID) && msg.IsPrivate {
 		if !utils.AllowPM() {
 			_ = query.Answer("Nope!", false)
 			return nil

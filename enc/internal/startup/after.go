@@ -79,7 +79,6 @@ func Finalize(ctx context.Context) {
 	entimer.Timer.Start()
 	AddAllCommands()
 	AddAllHandlers()
-	telegram.StartUpdates()
 
 	// start autos
 	channelstatus.Start()
