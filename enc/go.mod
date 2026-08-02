@@ -66,7 +66,6 @@ require (
 	github.com/gotd/log v0.1.0 // indirect
 	github.com/gotd/log/logzap v0.1.1 // indirect
 	github.com/gotd/neo v0.1.5 // indirect
-	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -118,11 +117,8 @@ require (
 	golang.org/x/tools v0.48.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gorm.io/gorm v1.31.1 // indirect
-	modernc.org/gc/v3 v3.1.3 // indirect
 	modernc.org/libc v1.73.4 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
-	modernc.org/strutil v1.2.1 // indirect
-	modernc.org/token v1.1.0 // indirect
 	rsc.io/qr v0.2.0 // indirect
 )
