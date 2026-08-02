@@ -246,6 +246,9 @@ func GetAria2DlInfo(uri string) *utils.DLInfo {
 		}
 		dlInfo.Count = len(dlInfo.Files)
 		dlInfo.Name = name
+		if dlInfo.Count == 1 {
+			dlInfo.Name = filepath.Base(dlInfo.Files[0])
+		}
 	}
 	var statuses []arigo.Status
 	for _, gid := range status.FollowedBy {
@@ -374,6 +377,9 @@ func GetQbitDlInfo(uri string) *utils.DLInfo {
 		dlInfo.Name = filepath.Base(torrents[0].ContentPath)
 	}*/
 	dlInfo.Name = torrents[0].Name
+	if dlInfo.Count == 1 {
+		dlInfo.Name = dlInfo.Files[0]
+	}
 	err = qb.DeleteTagsCtx(ctx, []string{tag})
 	if err != nil {
 		dlInfo.Error = fmt.Errorf("error cleaning up after fetching torrent files: %w", err)

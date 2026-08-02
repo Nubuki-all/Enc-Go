@@ -1,17 +1,13 @@
 package db
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 
-	_ "github.com/mattn/go-sqlite3"
 	"go.uber.org/zap"
-	"gorm.io/datatypes"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
-	"moul.io/zapgorm2"
+	_ "modernc.org/sqlite"
 
 	"enc/config"
 	"enc/internal/bot"
@@ -19,59 +15,45 @@ import (
 	"enc/internal/logger"
 )
 
-// ————————————————————————————————
-// GORM models for SQL fallback
-// ————————————————————————————————
+const schemaSQL = `
+CREATE TABLE IF NOT EXISTS queue_records (
+	bot_id TEXT PRIMARY KEY,
+	queue TEXT,
+	queue_keys TEXT
+);
 
-// queueRecord stores the ordered queue as JSON
-type queueRecord struct {
-	BotID     string         `gorm:"primaryKey"`
-	Queue     datatypes.JSON `gorm:"type:JSON"`
-	QueueKeys datatypes.JSON `gorm:"type:JSON"`
-}
+CREATE TABLE IF NOT EXISTS setting_records (
+	bot_id TEXT NOT NULL,
+	key TEXT NOT NULL,
+	value TEXT,
+	PRIMARY KEY (bot_id, key)
+);
 
-/*type queueRecord struct {
-	BotID string             `gorm:"primaryKey"`
-	Queue []types.QueueEntry `gorm:"type:TEXT"`
-}*/
+CREATE TABLE IF NOT EXISTS arr_records (
+	bot_id TEXT NOT NULL,
+	key TEXT NOT NULL,
+	value TEXT,
+	PRIMARY KEY (bot_id, key)
+);
 
-// settingRecord stores simple string settings
-type settingRecord struct {
-	BotID string `gorm:"primaryKey"`
-	Key   string `gorm:"primaryKey"`
-	Value string
-}
+CREATE TABLE IF NOT EXISTS map_records (
+	bot_id TEXT NOT NULL,
+	key TEXT NOT NULL,
+	value TEXT,
+	PRIMARY KEY (bot_id, key)
+);
 
-// arrRecord stores slices of strings as JSON
-type arrRecord struct {
-	BotID string     `gorm:"primaryKey"`
-	Key   string     `gorm:"primaryKey"`
-	Value Int64Slice `gorm:"type:json"`
-}
+CREATE TABLE IF NOT EXISTS filters (
+	bot_id TEXT PRIMARY KEY,
+	data TEXT,
+	name_filters TEXT,
+	release_filters TEXT,
+	rg_extended TEXT,
+	rename_filters TEXT
+);
+`
 
-// mapRecord stores arbitrary maps (e.g. RSSDict) as JSON
-type mapRecord struct {
-	BotID string `gorm:"primaryKey"`
-	Key   string `gorm:"primaryKey"`
-	Value string // JSON-serialized map[string]interface{}
-}
-
-// filterRecord holds all filter settings in one JSON column.
-type filterRecord struct {
-	BotID          string                        `gorm:"column:bot_id;primaryKey"`
-	Data           *types.FilterData             `gorm:"column:data;type:JSON"` // JSON column
-	NameFilters    []*types.MatchedFilterData    `gorm:"column:name_filters;type:JSON"`
-	ReleaseFilters []*types.MatchedFilterData    `gorm:"column:release_filters;type:JSON"`
-	RGExtended     []*types.RGExtendedFilterData `gorm:"column:rg_extended;type:JSON"`
-	RenameFilters  []*types.RenameFilterData     `gorm:"column:rename_filters;type:JSON"`
-}
-
-// TableName ensures GORM uses your `filters` table.
-func (filterRecord) TableName() string {
-	return "filters"
-}
-
-var localdb *gorm.DB
+var localdb *sql.DB
 
 // InitLocalDB sets up the SQLite file & tables
 func InitLocalDB() error {
@@ -80,24 +62,14 @@ func InitLocalDB() error {
 		path = ".encbot.db"
 	}
 	var err error
-	glogger := zapgorm2.New(logger.Logger)
-	glogger.IgnoreRecordNotFoundError = true
-	localdb, err = gorm.Open(sqlite.Open(path), &gorm.Config{
-		Logger: glogger,
-	})
+	localdb, err = sql.Open("sqlite", path)
 	if err != nil {
 		return fmt.Errorf("local sqlite open failed: %w", err)
 	}
-	// Use WAL mode for better concurrency
-	sqlDB, _ := localdb.DB()
-	_, err = sqlDB.Exec("PRAGMA journal_mode=WAL;")
-	if err != nil {
+	if _, err := localdb.Exec("PRAGMA journal_mode=WAL;"); err != nil {
 		logger.Error(err)
 	}
-
-	// Auto-migrate schemas
-	err = localdb.AutoMigrate(&queueRecord{}, &settingRecord{}, &arrRecord{}, &mapRecord{}, &filterRecord{})
-	if err != nil {
+	if _, err := localdb.Exec(schemaSQL); err != nil {
 		return fmt.Errorf("sqlite migrate: %w", err)
 	}
 	return nil
@@ -111,114 +83,176 @@ func LoadLocalDB() {
 		return
 	}
 
-	// Load queue
-	var qr queueRecord
-	if err := localdb.First(&qr, "bot_id = ?", config.Rconf.BotID).Error; nil == err {
-		var queueSlice []types.QueueEntry
-		var queueKeysMap map[string]struct{}
-
-		if len(qr.Queue) > 0 {
-			if err := json.Unmarshal(qr.Queue, &queueSlice); err != nil {
-				logger.WarnW("Failed to unmarshal queue", zap.Error(err))
-				return
-			}
-		}
-
-		// Check if the JSON keys data is empty before unmarshaling.
-		if len(qr.QueueKeys) > 0 {
-			if err := json.Unmarshal(qr.QueueKeys, &queueKeysMap); err != nil {
-				logger.WarnW("Failed to unmarshal queue keys", zap.Error(err))
-				return
-			}
-		}
-
-		sLen, mLen := len(queueSlice), len(queueKeysMap)
-		if sLen > 0 && mLen > 0 {
-			if sLen != mLen {
-				logger.Warn("Length of keys is different from Length of entries")
-				return
-			}
-			bot.Queue.LoadFromMapSlice(queueKeysMap, queueSlice)
-			logger.InfoW("Loaded queue from SQLite", zap.Int("count", len(queueSlice)))
-		}
-	}
-
-	// Load settings
-	var settings []settingRecord
-	if err := localdb.Find(&settings, "bot_id = ?", config.Rconf.BotID).Error; err == nil {
-		for _, r := range settings {
-			switch r.Key {
-			case "cus_rename":
-				bot.CustomRename = r.Value
-			case "ffmpeg":
-				bot.FFmpegArgs = r.Value
-			case "ffmpeg2":
-				bot.FFmpeg2Args = r.Value
-			case "ffmpeg3":
-				bot.FFmpeg3Args = r.Value
-			case "ffmpeg4":
-				bot.FFmpeg4Args = r.Value
-			case "mux_args":
-				bot.MuxArgs = r.Value
-			}
-		}
-	}
-
-	// Load arrays (e.g. temp users)
-	var arrs []arrRecord
-	if err := localdb.Find(&arrs, "bot_id = ?", config.Rconf.BotID).Error; err == nil {
-		for _, a := range arrs {
-			if a.Key == "t_users" {
-				bot.TempUsers = a.Value
-			}
-		}
-	}
-
-	// Load maps (e.g. RSSDict)
-	loadRSSDict := func() {
-		var rec mapRecord
-		err := localdb.First(&rec, "bot_id = ? AND key = ?", config.Rconf.BotID, "rss").Error
-		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				// nothing saved yet
-				return
-			}
-			logger.Error(err)
-			return
-		}
-
-		var m map[string]*types.FeedData
-		if err := json.Unmarshal([]byte(rec.Value), &m); err != nil {
-			logger.WarnW("LoadRSSLocal: could not unmarshal rss json", zap.Error(err))
-			return
-		}
-		if m == nil {
-			return
-		}
-		bot.RSSDictMutex.Lock()
-		bot.RSSDict = m
-		bot.RSSDictMutex.Unlock()
-	}
+	loadQueue()
+	loadSettings()
+	loadArrays()
 	loadRSSDict()
+	loadFilters()
 
-	var rec filterRecord
-	err := localdb.First(&rec, "bot_id = ?", config.Rconf.BotID).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return
-		}
-		logger.ErrorW(err.Error())
-		return
-	}
-	bot.Filters = rec.Data
-	bot.RGExtendedFilters = rec.RGExtended
-	bot.NameFilters = rec.NameFilters
-	bot.ReleaseFilters = rec.ReleaseFilters
-	bot.RenameFilters = rec.RenameFilters
 	logger.InfoW("SQLite state loaded")
 }
 
-// SaveQueueLocal writes current queue to SQLite
+func loadQueue() {
+	var queueJSON, queueKeysJSON sql.NullString
+	err := localdb.QueryRow(
+		`SELECT queue, queue_keys FROM queue_records WHERE bot_id = ?`,
+		config.Rconf.BotID,
+	).Scan(&queueJSON, &queueKeysJSON)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			logger.Error(err)
+		}
+		return
+	}
+
+	var queueSlice []types.QueueEntry
+	var queueKeysMap map[string]struct{}
+
+	if queueJSON.Valid && queueJSON.String != "" {
+		if err := json.Unmarshal([]byte(queueJSON.String), &queueSlice); err != nil {
+			logger.WarnW("Failed to unmarshal queue", zap.Error(err))
+			return
+		}
+	}
+	if queueKeysJSON.Valid && queueKeysJSON.String != "" {
+		if err := json.Unmarshal([]byte(queueKeysJSON.String), &queueKeysMap); err != nil {
+			logger.WarnW("Failed to unmarshal queue keys", zap.Error(err))
+			return
+		}
+	}
+
+	sLen, mLen := len(queueSlice), len(queueKeysMap)
+	if sLen > 0 && mLen > 0 {
+		if sLen != mLen {
+			logger.Warn("Length of keys is different from Length of entries")
+			return
+		}
+		bot.Queue.LoadFromMapSlice(queueKeysMap, queueSlice)
+		logger.InfoW("Loaded queue from SQLite", zap.Int("count", len(queueSlice)))
+	}
+}
+
+func loadSettings() {
+	rows, err := localdb.Query(`SELECT key, value FROM setting_records WHERE bot_id = ?`, config.Rconf.BotID)
+	if err != nil {
+		return
+	}
+	defer func() { _ = rows.Close() }()
+
+	for rows.Next() {
+		var key, value string
+		if err := rows.Scan(&key, &value); err != nil {
+			logger.Error(err)
+			continue
+		}
+		switch key {
+		case "cus_rename":
+			bot.CustomRename = value
+		case "ffmpeg":
+			bot.FFmpegArgs = value
+		case "ffmpeg2":
+			bot.FFmpeg2Args = value
+		case "ffmpeg3":
+			bot.FFmpeg3Args = value
+		case "ffmpeg4":
+			bot.FFmpeg4Args = value
+		case "mux_args":
+			bot.MuxArgs = value
+		}
+	}
+}
+
+func loadArrays() {
+	rows, err := localdb.Query(`SELECT key, value FROM arr_records WHERE bot_id = ?`, config.Rconf.BotID)
+	if err != nil {
+		return
+	}
+	defer func() { _ = rows.Close() }()
+
+	for rows.Next() {
+		var key string
+		var arr Int64Slice
+		if err := rows.Scan(&key, &arr); err != nil {
+			logger.Error(err)
+			continue
+		}
+		if key == "t_users" {
+			bot.TempUsers = arr
+		}
+	}
+}
+
+func loadRSSDict() {
+	var value string
+	err := localdb.QueryRow(
+		`SELECT value FROM map_records WHERE bot_id = ? AND key = ?`,
+		config.Rconf.BotID, "rss",
+	).Scan(&value)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			logger.Error(err)
+		}
+		return
+	}
+
+	var m map[string]*types.FeedData
+	if err := json.Unmarshal([]byte(value), &m); err != nil {
+		logger.WarnW("LoadRSSLocal: could not unmarshal rss json", zap.Error(err))
+		return
+	}
+	if m == nil {
+		return
+	}
+	bot.RSSDictMutex.Lock()
+	bot.RSSDict = m
+	bot.RSSDictMutex.Unlock()
+}
+
+func loadFilters() {
+	var dataJSON, nameJSON, releaseJSON, rgJSON, renameJSON sql.NullString
+	err := localdb.QueryRow(
+		`SELECT data, name_filters, release_filters, rg_extended, rename_filters
+		 FROM filters WHERE bot_id = ?`,
+		config.Rconf.BotID,
+	).Scan(&dataJSON, &nameJSON, &releaseJSON, &rgJSON, &renameJSON)
+	if err != nil {
+		if !errors.Is(err, sql.ErrNoRows) {
+			logger.ErrorW(err.Error())
+		}
+		return
+	}
+
+	if dataJSON.Valid && dataJSON.String != "" {
+		var d types.FilterData
+		if err := json.Unmarshal([]byte(dataJSON.String), &d); err != nil {
+			logger.WarnW("Failed to unmarshal filter data", zap.Error(err))
+		} else {
+			bot.Filters = &d
+		}
+	}
+	if nameJSON.Valid && nameJSON.String != "" {
+		if err := json.Unmarshal([]byte(nameJSON.String), &bot.NameFilters); err != nil {
+			logger.WarnW("Failed to unmarshal name filters", zap.Error(err))
+		}
+	}
+	if releaseJSON.Valid && releaseJSON.String != "" {
+		if err := json.Unmarshal([]byte(releaseJSON.String), &bot.ReleaseFilters); err != nil {
+			logger.WarnW("Failed to unmarshal release filters", zap.Error(err))
+		}
+	}
+	if rgJSON.Valid && rgJSON.String != "" {
+		if err := json.Unmarshal([]byte(rgJSON.String), &bot.RGExtendedFilters); err != nil {
+			logger.WarnW("Failed to unmarshal rg extended filters", zap.Error(err))
+		}
+	}
+	if renameJSON.Valid && renameJSON.String != "" {
+		if err := json.Unmarshal([]byte(renameJSON.String), &bot.RenameFilters); err != nil {
+			logger.WarnW("Failed to unmarshal rename filters", zap.Error(err))
+		}
+	}
+}
+
+// SaveQueueLocal writes the current queue to SQLite.
 func SaveQueueLocal() {
 	if config.Conf.DatabaseURL != "" || localdb == nil {
 		return
@@ -226,32 +260,34 @@ func SaveQueueLocal() {
 	m, s, unlock := bot.Queue.LockForSave()
 	defer unlock()
 
-	if len(s) == 0 {
-		// No data to save, so return early.
-		return
+	if s == nil {
+		s = []types.QueueEntry{}
 	}
+	if m == nil {
+		m = map[string]struct{}{}
+	}
+
 	queueJSON, err := json.Marshal(s)
 	if err != nil {
 		logger.WarnW("Failed to marshal queue slice to JSON", zap.Error(err))
 		return
 	}
-
 	queueKeysJSON, err := json.Marshal(m)
 	if err != nil {
 		logger.WarnW("Failed to marshal queue keys to JSON", zap.Error(err))
 		return
 	}
 
-	obj := queueRecord{
-		BotID:     config.Rconf.BotID,
-		Queue:     datatypes.JSON(queueJSON),
-		QueueKeys: datatypes.JSON(queueKeysJSON),
+	_, err = localdb.Exec(`
+		INSERT INTO queue_records (bot_id, queue, queue_keys)
+		VALUES (?, ?, ?)
+		ON CONFLICT(bot_id) DO UPDATE SET
+			queue = excluded.queue,
+			queue_keys = excluded.queue_keys
+	`, config.Rconf.BotID, string(queueJSON), string(queueKeysJSON))
+	if err != nil {
+		logger.ErrorW(err.Error())
 	}
-
-	localdb.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "bot_id"}},
-		UpdateAll: true,
-	}).Create(&obj)
 }
 
 // SaveSettingsLocal persists settings and ffmpeg templates
@@ -268,11 +304,14 @@ func SaveSettingsLocal() {
 		"mux_args":   bot.MuxArgs,
 	}
 	for k, v := range toSave {
-		rec := settingRecord{BotID: config.Rconf.BotID, Key: k, Value: v}
-		localdb.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "bot_id"}, {Name: "key"}},
-			UpdateAll: true,
-		}).Create(&rec)
+		_, err := localdb.Exec(`
+			INSERT INTO setting_records (bot_id, key, value)
+			VALUES (?, ?, ?)
+			ON CONFLICT(bot_id, key) DO UPDATE SET value = excluded.value
+		`, config.Rconf.BotID, k, v)
+		if err != nil {
+			logger.ErrorW(err.Error())
+		}
 	}
 }
 
@@ -281,11 +320,14 @@ func SaveTempUsersLocal() {
 	if config.Conf.DatabaseURL != "" || localdb == nil {
 		return
 	}
-	rec := arrRecord{BotID: config.Rconf.BotID, Key: "t_users", Value: bot.TempUsers}
-	localdb.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "bot_id"}, {Name: "key"}},
-		UpdateAll: true,
-	}).Create(&rec)
+	_, err := localdb.Exec(`
+		INSERT INTO arr_records (bot_id, key, value)
+		VALUES (?, ?, ?)
+		ON CONFLICT(bot_id, key) DO UPDATE SET value = excluded.value
+	`, config.Rconf.BotID, "t_users", bot.TempUsers)
+	if err != nil {
+		logger.ErrorW(err.Error())
+	}
 }
 
 // SaveRSSLocal persists the RSSDict map
@@ -300,93 +342,109 @@ func SaveRSSLocal() {
 		logger.WarnW("could not marshal RSSDict", zap.Error(err))
 		return
 	}
-	rec := mapRecord{BotID: config.Rconf.BotID, Key: "rss", Value: string(data)}
-	localdb.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "bot_id"}, {Name: "key"}},
-		UpdateAll: true,
-	}).Create(&rec)
+	_, err = localdb.Exec(`
+		INSERT INTO map_records (bot_id, key, value)
+		VALUES (?, ?, ?)
+		ON CONFLICT(bot_id, key) DO UPDATE SET value = excluded.value
+	`, config.Rconf.BotID, "rss", string(data))
+	if err != nil {
+		logger.ErrorW(err.Error())
+	}
 }
 
-// SaveFilterDataLocal writes the entire FilterData struct into one JSON column.
-// On conflict (same bot_id), it updates the row.
+// SaveFilterDataLocal, SaveRGExtendedFiltersLocal, SaveNameFiltersLocal,
+// SaveReleaseFiltersLocal, and SaveRenameFiltersLocal each upsert only their
+// own column of the filters row.
 func SaveFilterDataLocal() {
-	rec := filterRecord{
-		BotID: config.Rconf.BotID,
-		Data:  bot.Filters,
+	if localdb == nil {
+		return
 	}
-	err := localdb.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "bot_id"}},
-		UpdateAll: true,
-	}).
-		Create(&rec).
-		Error
+	data, err := json.Marshal(bot.Filters)
+	if err != nil {
+		logger.ErrorW(err.Error())
+		return
+	}
+	_, err = localdb.Exec(`
+		INSERT INTO filters (bot_id, data)
+		VALUES (?, ?)
+		ON CONFLICT(bot_id) DO UPDATE SET data = excluded.data
+	`, config.Rconf.BotID, string(data))
 	if err != nil {
 		logger.ErrorW(err.Error())
 	}
 }
 
 func SaveRGExtendedFiltersLocal() {
-	rec := filterRecord{
-		BotID:      config.Rconf.BotID,
-		RGExtended: bot.RGExtendedFilters,
+	if localdb == nil {
+		return
 	}
-	err := localdb.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "bot_id"}},
-		UpdateAll: true,
-	}).
-		Create(&rec).
-		Error
+	data, err := json.Marshal(bot.RGExtendedFilters)
+	if err != nil {
+		logger.ErrorW(err.Error())
+		return
+	}
+	_, err = localdb.Exec(`
+		INSERT INTO filters (bot_id, rg_extended)
+		VALUES (?, ?)
+		ON CONFLICT(bot_id) DO UPDATE SET rg_extended = excluded.rg_extended
+	`, config.Rconf.BotID, string(data))
 	if err != nil {
 		logger.ErrorW(err.Error())
 	}
 }
 
-// SaveNameFiltersLocal writes the NameFilters slice.
 func SaveNameFiltersLocal() {
-	rec := filterRecord{
-		BotID:       config.Rconf.BotID,
-		NameFilters: bot.NameFilters,
+	if localdb == nil {
+		return
 	}
-	err := localdb.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "bot_id"}},
-		UpdateAll: true,
-	}).
-		Create(&rec).
-		Error
+	data, err := json.Marshal(bot.NameFilters)
+	if err != nil {
+		logger.ErrorW(err.Error())
+		return
+	}
+	_, err = localdb.Exec(`
+		INSERT INTO filters (bot_id, name_filters)
+		VALUES (?, ?)
+		ON CONFLICT(bot_id) DO UPDATE SET name_filters = excluded.name_filters
+	`, config.Rconf.BotID, string(data))
 	if err != nil {
 		logger.ErrorW(err.Error())
 	}
 }
 
-// SaveReleaseFiltersLocal writes the ReleaseFilters slice.
 func SaveReleaseFiltersLocal() {
-	rec := filterRecord{
-		BotID:          config.Rconf.BotID,
-		ReleaseFilters: bot.ReleaseFilters,
+	if localdb == nil {
+		return
 	}
-	err := localdb.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "bot_id"}},
-		UpdateAll: true,
-	}).
-		Create(&rec).
-		Error
+	data, err := json.Marshal(bot.ReleaseFilters)
+	if err != nil {
+		logger.ErrorW(err.Error())
+		return
+	}
+	_, err = localdb.Exec(`
+		INSERT INTO filters (bot_id, release_filters)
+		VALUES (?, ?)
+		ON CONFLICT(bot_id) DO UPDATE SET release_filters = excluded.release_filters
+	`, config.Rconf.BotID, string(data))
 	if err != nil {
 		logger.ErrorW(err.Error())
 	}
 }
 
-// SaveRenameFiltersLocal writes the Rename array.
 func SaveRenameFiltersLocal() {
-	rec := filterRecord{
-		BotID:         config.Rconf.BotID,
-		RenameFilters: bot.RenameFilters,
+	if localdb == nil {
+		return
 	}
-	err := localdb.Clauses(clause.OnConflict{
-		Columns:   []clause.Column{{Name: "bot_id"}},
-		UpdateAll: true,
-	}).
-		Create(&rec).
-		Error
+	data, err := json.Marshal(bot.RenameFilters)
+	if err != nil {
+		logger.ErrorW(err.Error())
+		return
+	}
+	_, err = localdb.Exec(`
+		INSERT INTO filters (bot_id, rename_filters)
+		VALUES (?, ?)
+		ON CONFLICT(bot_id) DO UPDATE SET rename_filters = excluded.rename_filters
+	`, config.Rconf.BotID, string(data))
 	if err != nil {
 		logger.ErrorW(err.Error())
 	}

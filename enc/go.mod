@@ -31,14 +31,11 @@ require (
 	golang.org/x/text v0.36.0
 	golang.org/x/time v0.15.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
-	gorm.io/datatypes v1.2.7
 	gorm.io/driver/sqlite v1.6.0
-	gorm.io/gorm v1.31.1
-	moul.io/zapgorm2 v1.3.0
+	modernc.org/sqlite v1.34.4
 )
 
 require (
-	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/AnimeKaizoku/cacher v1.0.3-0.20250508132714-ddc7471efeef // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/ProtonMail/go-crypto v1.3.0 // indirect
@@ -61,12 +58,12 @@ require (
 	github.com/go-faster/xor v1.0.0 // indirect
 	github.com/go-faster/yaml v0.4.6 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
-	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/gotd/ige v0.2.2 // indirect
 	github.com/gotd/neo v0.1.5 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -115,10 +112,12 @@ require (
 	golang.org/x/term v0.42.0 // indirect
 	golang.org/x/tools v0.43.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gorm.io/driver/mysql v1.5.6 // indirect
+	gorm.io/gorm v1.31.1 // indirect
+	modernc.org/gc/v3 v3.0.0-20240107210532-573471604cb6 // indirect
 	modernc.org/libc v1.61.8 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.8.2 // indirect
-	modernc.org/sqlite v1.34.4 // indirect
+	modernc.org/strutil v1.2.1 // indirect
+	modernc.org/token v1.1.0 // indirect
 	rsc.io/qr v0.2.0 // indirect
 )
