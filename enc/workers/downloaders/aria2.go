@@ -3,6 +3,7 @@ package downloaders
 import (
 	"context"
 	"fmt"
+
 	//"io"
 	"math"
 	"path/filepath"
@@ -224,6 +225,9 @@ func (dl *Aria2Download) ProgressCallback(start time.Time, gid string) string {
 	}
 	var name string
 	dl.name, _ = arigo.GetDownloadName(status)
+	if len(status.Files) > 1 {
+		dl.name = filepath.Base(status.Files[0].Path)
+	}
 	if dl.selectedName != "" {
 		name = dl.selectedName
 	} else {
@@ -302,6 +306,10 @@ func (dl *Aria2Download) Select(gid string) (err error) {
 		return err
 	}
 	err = dl.client.Unpause(gid)
+	if strings.Contains(err.Error(), "cannot be unpaused now") {
+		time.Sleep(5 * time.Second)
+		err = dl.client.Unpause(gid)
+	}
 	if err != nil {
 		return err
 	}
