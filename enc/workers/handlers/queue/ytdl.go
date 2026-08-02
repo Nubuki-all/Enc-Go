@@ -201,6 +201,7 @@ func AddWithYtdl(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 			}
 			dlInfo := downloaders.GetYdlInfo(uri)
 			qSource := types.QueueSource{}
+			qSource.Source = source.Ytdl
 			if dlInfo.Error != nil {
 				_, _ = pMsg.ReplyText("**Error:** " + dlInfo.Error.Error())
 				time.Sleep(5 * time.Second)
@@ -275,7 +276,7 @@ func AddWithYtdl(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 		qSource.Select = selected
 	} else if batch && dlInfo.Count > 1 {
 		forcedFileName = ""
-		batches = batchutils.GetBatches(dlInfo.Files, true, y)
+		batches = batchutils.GetYtdlBatches(dlInfo.Files)
 		if !y {
 			batchPreview := batchutils.BatchPreview{
 				Bmsg:       msg,

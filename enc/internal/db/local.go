@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"go.uber.org/zap"
-	_ "modernc.org/sqlite"
+	//_ "modernc.org/sqlite"
 
 	"enc/config"
 	"enc/internal/bot"
