@@ -130,7 +130,7 @@ func GetInputFileLocationAndSize(media tg.MessageMediaClass) (tg.InputFileLocati
 			Name: fileName,
 			Size: f.Size,
 		}
-		return f.AsInputDocumentFileLocation(), file, nil
+		return f.AsInputDocumentFileLocation(""), file, nil
 	}
 	return nil, nil, mtp_errors.ErrUnknownTypeMedia
 }
