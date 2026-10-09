@@ -123,7 +123,9 @@ func (dl *QbitDownload) Start() (err error) {
 		}
 	}
 	if torrents[0].State == qbit.TorrentStateMetaDl {
-		_, _ = dl.msg.EditText("`Getting torrent's metadata. Please wait…`")
+		if dl.msg != nil {
+			_, _ = dl.msg.EditText("`Getting torrent's metadata. Please wait…`")
+		}
 	}
 	for torrents[0].State == qbit.TorrentStateMetaDl {
 		select {
@@ -293,7 +295,9 @@ func (dl *QbitDownload) ProgressCallback(ctx context.Context, start time.Time, t
 		logger.Info(torrent.State) // debug
 	}
 	txt := msgHead + "\n" + tmp
-	_, _ = dl.msg.EditText(txt)
+	if dl.msg != nil && !dl.PauseProgress {
+		_, _ = dl.msg.EditText(txt)
+	}
 	return ok
 }
 
