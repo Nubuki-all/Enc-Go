@@ -154,6 +154,7 @@ func subRss(msg *tele.Message, args string) error {
 		argparser.CreateDBoolFlag("nodirect", "", "To disable rss message getting passed directly* to bot"),
 		argparser.CreateDBoolFlag("direct", "", "To enable rss message getting passed directly* to bot"),
 		argparser.CreateDBoolFlag("pause", "p", "To pause the rss feed."),
+		argparser.CreateDBoolFlag("match-both", "", "Treat an item as already seen only if its title and link both match (catches re-releases with the same title)."),
 	)
 	if out := arg.Output; out != "" {
 		_, _ = msg.Reply(
@@ -184,6 +185,7 @@ func subRss(msg *tele.Message, args string) error {
 	nodirect := pargs["nodirect"].(bool)
 	direct := pargs["direct"].(bool)
 	pause := pargs["pause"].(bool)
+	matchBoth := pargs["match-both"].(bool)
 	if cmd != "" && !strings.HasPrefix(cmd, "/") {
 		cmd = "/" + cmd
 	}
@@ -272,11 +274,12 @@ func subRss(msg *tele.Message, args string) error {
 	bot.RSSDictMutex.Lock()
 	bot.RSSDict[title] = &types.FeedData{
 		Link:      link,
-		LastFeed:  feed.Items[0].Link,
+		LastFeed:  rssmonitor.ItemLink(feed.Items[0]),
 		LastTitle: feed.Items[0].Title,
 		Chat:      chats,
 		Command:   cmd,
 		Direct:    direct,
+		MatchBoth: matchBoth,
 		Exf:       exfSlice,
 		Inf:       infSlice,
 		Paused:    pause,
@@ -329,6 +332,8 @@ func editRss(msg *tele.Message, args string) error {
 		argparser.CreateDBoolFlag("direct", "", "To enable rss message getting passed directly* to bot"),
 		argparser.CreateDBoolFlag("pause", "p", "To pause the rss feed."),
 		argparser.CreateDBoolFlag("resume", "r", "To resume the rss feed."),
+		argparser.CreateDBoolFlag("match-both", "", "Treat an item as already seen only if its title and link both match (catches re-releases with the same title)."),
+		argparser.CreateDBoolFlag("match-either", "", "Treat an item as already seen if its title or link matches [default]."),
 	)
 	if out := arg.Output; out != "" {
 		_, _ = msg.Reply(
@@ -371,6 +376,8 @@ func editRss(msg *tele.Message, args string) error {
 	direct := pargs["direct"].(bool)
 	pause := pargs["pause"].(bool)
 	resume := pargs["resume"].(bool)
+	matchBoth := pargs["match-both"].(bool)
+	matchEither := pargs["match-either"].(bool)
 	rmChats := pargs["rm-chat"].([]string)
 	if cmd != "" && !strings.HasPrefix(cmd, "/") {
 		cmd = "/" + cmd
@@ -446,6 +453,11 @@ func editRss(msg *tele.Message, args string) error {
 		} else {
 			rssData.Direct = cmp.Or(rssData.Direct, direct)
 		}
+		if matchEither {
+			rssData.MatchBoth = false
+		} else if matchBoth {
+			rssData.MatchBoth = true
+		}
 		if resume && rssData.Paused {
 			pause = false
 		}
@@ -463,6 +475,7 @@ func editRss(msg *tele.Message, args string) error {
 		zap.String("Link", rssData.Link),
 		zap.String("Command", rssData.Command),
 		zap.Bool("Direct", rssData.Direct),
+		zap.Bool("MatchBoth", rssData.MatchBoth),
 		zap.Bool("Paused", rssData.Paused),
 	)
 	if pause {
@@ -600,6 +613,7 @@ func listRss(msg *tele.Message, args string) error {
 		fmt.Fprintf(&sb, "<b>Chats:</b> <code>(%d)</code>\n", len(data.Chat))
 		fmt.Fprintf(&sb, "<b>Command:</b> <code>%s</code>\n", data.Command)
 		fmt.Fprintf(&sb, "<b>Direct:</b> <code>%v</code>\n", data.Direct)
+		fmt.Fprintf(&sb, "<b>Match both title and link:</b> <code>%v</code>\n", data.MatchBoth)
 		fmt.Fprintf(&sb, "<b>Include filter:</b> <code>%s</code>\n", parseFilter(data.Inf))
 		fmt.Fprintf(&sb, "<b>Exclude filter:</b> <code>%s</code>\n", parseFilter(data.Exf))
 		fmt.Fprintf(&sb, "<b>Paused:</b> <code>%v</code>", data.Paused)

@@ -9,6 +9,7 @@ type FeedData struct {
 	Command   string
 	Chat      []FeedChat // chat to send to
 	Direct    bool       // whether to pass to fakeEventHandler
+	MatchBoth bool       // an item counts as seen only if title and link both match
 	Inf       [][]string // inclusion lists (list of lists)
 	Exf       [][]string // exclusion lists
 }

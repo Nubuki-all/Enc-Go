@@ -221,16 +221,22 @@ func rssMonitorOnce(ctx context.Context) {
 			continue
 		}
 
-		lastLink := ""
-		if len(feed.Items[0].Links) > 1 {
-			lastLink = feed.Items[0].Links[1]
-		} else {
-			lastLink = feed.Items[0].Link
-		}
+		lastLink := ItemLink(feed.Items[0])
 		lastTitle := feed.Items[0].Title
 
+		// By default an item was seen before if its title or link matches.
+		// With MatchBoth both must match, so a re-release with the same title
+		// counts as new; a rollback stores only the title (LastFeed is ""),
+		// and then the title alone decides.
+		seen := func(link, title string) bool {
+			if !data.MatchBoth {
+				return link == data.LastFeed || title == data.LastTitle
+			}
+			return title == data.LastTitle && (data.LastFeed == "" || link == data.LastFeed)
+		}
+
 		// If no change, continue
-		if data.LastFeed == lastLink || data.LastTitle == lastTitle {
+		if seen(lastLink, lastTitle) {
 			continue
 		}
 		// If first run, allow spam
@@ -244,15 +250,10 @@ func rssMonitorOnce(ctx context.Context) {
 		for idx := 0; idx < len(feed.Items); idx++ {
 			item := feed.Items[idx]
 			itemTitle := item.Title
-			itemURL := ""
-			if len(item.Links) > 1 {
-				itemURL = item.Links[1]
-			} else {
-				itemURL = item.Link
-			}
+			itemURL := ItemLink(item)
 
 			// stop if we've reached last seen
-			if itemURL == data.LastFeed || itemTitle == data.LastTitle {
+			if seen(itemURL, itemTitle) {
 				foundLast = true
 				break
 			}
@@ -347,6 +348,16 @@ func rssMonitorOnce(ctx context.Context) {
 	} else if !bot.RSSRanOnce {
 		bot.RSSRanOnce = true
 	}
+}
+
+// ItemLink returns the link the monitor tracks for a feed item: the second
+// link when there are several (e.g. the torrent rather than the page).
+// Anything storing LastFeed must use this so the seen-check matches.
+func ItemLink(item *gofeed.Item) string {
+	if len(item.Links) > 1 {
+		return item.Links[1]
+	}
+	return item.Link
 }
 
 // ----- Public helper to schedule RSS -----
