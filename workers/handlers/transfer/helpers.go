@@ -30,6 +30,8 @@ func ListFiles(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	var dlInfo *utils.DLInfo
 	if utils.IsMegaLink(args) {
 		dlInfo = downloaders.GetMegaDlInfo(args)
+	} else if utils.IsGDriveLink(args) {
+		dlInfo = downloaders.GetGDriveDlInfo(args)
 	} else {
 		dlInfo = downloaders.GetQbitDlInfo(args)
 	}

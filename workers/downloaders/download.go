@@ -138,6 +138,8 @@ func (dl *Downloader) Start() error {
 		dl.service = NewYTDl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
 	} else if dl.URI != "" && utils.IsMegaLink(dl.URI) {
 		dl.service = NewMegaDl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
+	} else if dl.URI != "" && utils.IsGDriveLink(dl.URI) {
+		dl.service = NewGDriveDl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
 	} else if dl.URI != "" {
 		dl.service = NewAria2Dl(dl.URI, folder, dl.Selected, dl.Msg, dl.TransferInfo)
 	}

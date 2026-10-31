@@ -22,6 +22,7 @@ import (
 	"enc/config"
 	"enc/internal/bot"
 	"enc/internal/bot/types"
+	"enc/internal/clients/gdrive"
 )
 
 // Regex patterns
@@ -29,6 +30,11 @@ var (
 	MagnetRegex = regexp.MustCompile(`magnet:\?xt=urn:[a-z0-9]+:[a-zA-Z0-9]{32}`)
 	URLRegex    = regexp.MustCompile(`^(https?://|ftp://)?(www\.)?[^/\s]+\.[^/\s:]+(:\d+)?(/[^?\s]*[\s\S]*)?(\?[^#\s]*[\s\S]*)?(#.*)?$`)
 )
+
+// IsGDriveLink checks if a string is a Google Drive file or folder link.
+func IsGDriveLink(link string) bool {
+	return gdrive.IsLink(link)
+}
 
 // IsMegaLink checks if a string is a valid mega.nz or mega.co.nz link.
 func IsMegaLink(link string) bool {

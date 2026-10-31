@@ -4,6 +4,7 @@ go 1.26.1
 
 require (
 	github.com/5rahim/tanuki v0.1.6
+	github.com/PuerkitoBio/goquery v1.11.0
 	github.com/autobrr/go-qbittorrent v1.14.0
 	github.com/briandowns/spinner v1.23.2
 	github.com/celestix/gotgproto v1.0.0-beta22.0.20260717065349-0ea177af28e8
@@ -38,7 +39,6 @@ require (
 	github.com/AnimeKaizoku/cacher v1.0.3 // indirect
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/ProtonMail/go-crypto v1.3.0 // indirect
-	github.com/PuerkitoBio/goquery v1.11.0 // indirect
 	github.com/andybalholm/brotli v1.2.1 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/avast/retry-go v3.0.0+incompatible // indirect

@@ -400,6 +400,8 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 				if utils.IsMegaLink(link) {
 					dlInfo = downloaders.GetMegaDlInfo(link)
 					zIdx = true
+				} else if utils.IsGDriveLink(link) {
+					dlInfo = downloaders.GetGDriveDlInfo(link)
 				} else {
 					dlInfo = downloaders.GetAria2DlInfo(link)
 				}
@@ -424,6 +426,8 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			if utils.IsMegaLink(link) {
 				dlInfo = downloaders.GetMegaDlInfo(link)
 				zIdx = true
+			} else if utils.IsGDriveLink(link) {
+				dlInfo = downloaders.GetGDriveDlInfo(link)
 			} else {
 				dlInfo = downloaders.GetAria2DlInfo(link)
 			}

@@ -211,6 +211,9 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 				mega = true
 				qSource.Source = source.Mega
 				dlInfo = downloaders.GetMegaDlInfo(uri)
+			} else if utils.IsGDriveLink(uri) {
+				qSource.Source = source.GDrive
+				dlInfo = downloaders.GetGDriveDlInfo(uri)
 			} else {
 				qSource.Source = source.Aria2
 				dlInfo = downloaders.GetAria2DlInfo(uri)
@@ -292,6 +295,9 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		mega = true
 		qSource.Source = source.Mega
 		dlInfo = downloaders.GetMegaDlInfo(link)
+	} else if utils.IsGDriveLink(link) {
+		qSource.Source = source.GDrive
+		dlInfo = downloaders.GetGDriveDlInfo(link)
 	} else {
 		qSource.Source = source.Aria2
 		dlInfo = downloaders.GetAria2DlInfo(link)

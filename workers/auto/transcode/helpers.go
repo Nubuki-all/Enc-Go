@@ -239,7 +239,7 @@ func cacheNextDownload(entries []types.QueueEntry, batchItem *types.BatchItem) {
 		case source.Ytdl:
 			download.Ytdl = true
 		default:
-			if !utils.IsMegaLink(entry.URI) {
+			if !utils.IsMegaLink(entry.URI) && !utils.IsGDriveLink(entry.URI) {
 				return
 			}
 		}
