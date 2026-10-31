@@ -310,6 +310,9 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 				} else {
 					if utils.IsMegaLink(input2) {
 						dlInfo = downloaders.GetMegaDlInfo(input2)
+					} else if utils.IsGDriveLink(input2) {
+						dlInfo = downloaders.GetGDriveDlInfo(input2)
+						s -= 1
 					} else {
 						dlInfo = downloaders.GetAria2DlInfo(input2)
 						s -= 1
@@ -370,6 +373,9 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 			s -= 1
 		} else if utils.IsMegaLink(link) {
 			dlInfo = downloaders.GetMegaDlInfo(link)
+		} else if utils.IsGDriveLink(link) {
+			dlInfo = downloaders.GetGDriveDlInfo(link)
+			s -= 1
 		} else {
 			dlInfo = downloaders.GetAria2DlInfo(link)
 			s -= 1

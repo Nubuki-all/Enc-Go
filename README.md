@@ -2,7 +2,7 @@
 
 [![Checks](https://github.com/Nubuki-all/Enc-Go/actions/workflows/GoLint.yml/badge.svg?branch=main)](https://github.com/Nubuki-all/Enc-Go/actions/workflows/GoLint.yml)
 
-A Telegram bot that downloads videos from Telegram, direct links, torrents, Mega and yt-dlp sites, encodes them with your own FFmpeg (or HandBrakeCLI) commands, and uploads the results back to Telegram, with anime-aware naming, captions and thumbnails.
+A Telegram bot that downloads videos from Telegram, direct links, torrents, Mega, Google Drive and yt-dlp sites, encodes them with your own FFmpeg (or HandBrakeCLI) commands, and uploads the results back to Telegram, with anime-aware naming, captions and thumbnails.
 
 __Still in beta…__
 
@@ -19,6 +19,7 @@ __Still in beta…__
 **Sources**
 - Telegram videos and documents, auto-queued from private chat if `AUTO_QUEUE_VID` is set
 - Direct links via aria2, torrents and magnets via qBittorrent, Mega links, and any site yt-dlp supports
+- Google Drive files and folders: public links with no setup, or private ones shared with a service account (`GDRIVE_SA_JSON`); Docs, Sheets and Slides are saved as Office files
 - Pick single files from torrents, folders and playlists, or queue the whole thing as a batch (`/select`, `/batch`)
 - Download-only and upload-only commands for moving files without encoding (`/download`, `/upload`)
 
@@ -145,6 +146,7 @@ Variable | Default | Description
 `CACHE_DL` | `false` | Download the next queued item while the current one encodes
 `DL_STUFF` | | Comma-separated links to download on startup
 `NO_EXTERNAL_DL_SERVICE` | `false` | Don't start aria2 and qBittorrent
+`GDRIVE_SA_JSON` | | Google service account key (a file path, or the JSON itself) for Google Drive links. Without it only publicly shared links work; with it, items shared with the service account's email work too, and anything it can't see is still tried as a public link
 `PODI` | `true` | Keep a download paused while its file list is shown; `false` to disable
 `ARIA2_PORT` | `6800` | aria2 RPC port
 `QBIT_PORT` `QBIT_PORT2` | `8090` `9090` | qBittorrent ports (downloads, file-list lookups)
@@ -197,7 +199,7 @@ Command | Description
 Command | Description
 :--- | :---
 `/add` | Queue a replied video
-`/l` | Queue a direct link (aria2) or Mega link
+`/l` | Queue a direct link (aria2), Mega link or Google Drive file/folder link
 `/ql` | Queue a torrent or magnet link (qBittorrent)
 `/yl` | Queue a link via yt-dlp
 `/queue` | List the queue
@@ -233,7 +235,7 @@ Command | Description
 `/rename` | Download, rename and re-upload a file or link
 `/mux` | Remux a file with new metadata, subtitles or default tracks
 `/m` | MediaInfo of a replied file or link
-`/list` | List the files in a link or torrent
+`/list` | List the files in a link, torrent, Mega or Google Drive folder
 `/listv` | List the videos at a yt-dlp link
 
 **Channels and RSS**

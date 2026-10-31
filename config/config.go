@@ -54,6 +54,7 @@ type Config struct {
 	ForceRestartOnRPCFail bool
 	FSThreshold           int
 	FSticker              string
+	GDriveSA              string // service account key file (path or JSON) for Google Drive
 	JSONLog               bool
 	LocalDBPath           string
 	LockOnStartup         bool
@@ -256,6 +257,7 @@ func LoadConfig() error {
 		ForceRestartOnRPCFail: viper.GetBool("FORCE_RESTART_ON_RPC_FAILURE"),
 		FSThreshold:           viper.GetInt("FLOOD_SLEEP_THRESHOLD"),
 		FSticker:              viper.GetString("FSTICKER"),
+		GDriveSA:              viper.GetString("GDRIVE_SA_JSON"),
 		JSONLog:               viper.GetBool("JSON_LOGFILE"),
 		LocalDBPath:           viper.GetString("LOCAL_DB_PATH"),
 		LockOnStartup:         viper.GetBool("LOCK_ON_STARTUP"),

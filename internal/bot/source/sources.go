@@ -16,6 +16,7 @@ const (
 	Qbit     QueueSourceType = "Qbit"
 	Ytdl     QueueSourceType = "Ytdl"
 	Telegram QueueSourceType = "Telegram"
+	GDrive   QueueSourceType = "GDrive"
 )
 
 func (qst *QueueSourceType) UnmarshalJSON(data []byte) error {
@@ -25,7 +26,7 @@ func (qst *QueueSourceType) UnmarshalJSON(data []byte) error {
 	}
 
 	switch QueueSourceType(s) {
-	case Mega, Aria2, Qbit, Ytdl, Telegram:
+	case Mega, Aria2, Qbit, Ytdl, Telegram, GDrive:
 		*qst = QueueSourceType(s)
 		return nil
 	default:
