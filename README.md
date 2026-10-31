@@ -56,7 +56,7 @@ The bot reads its settings from a `.env` file in the directory it runs from (or 
 The runtime image is Fedora. It needs glibc, because the yt-dlp and Deno builds the bot downloads are glibc binaries (they don't run on Alpine's musl), and it needs a shell with `bash` for `/bash`. For a smaller image, `debian:trixie-slim` with `ca-certificates` also works.
 
 **Without Docker**
-- Download the executable for your architecture (Linux amd64, arm64 or armv7) from releases and run it from a directory containing your `.env`
+- Download the executable for your platform from releases (Linux amd64, arm64 or armv7; Windows amd64 or arm64) and run it from a directory containing your `.env`
 
 **From source**
 - Install Go 1.26 or newer

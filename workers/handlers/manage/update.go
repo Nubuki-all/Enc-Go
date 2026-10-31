@@ -88,16 +88,15 @@ func Update(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 
 // releaseAssetName is the name the build workflow gives the binary for a platform.
 func releaseAssetName(goos, goarch string) (string, error) {
-	if goos != "linux" {
-		return "", fmt.Errorf("no release builds for %s", goos)
-	}
-	switch goarch {
-	case "amd64", "arm64":
+	switch {
+	case goos == "linux" && (goarch == "amd64" || goarch == "arm64"):
 		return "enc-linux-" + goarch + "-musl", nil
-	case "arm":
+	case goos == "linux" && goarch == "arm":
 		return "enc-linux-armv7-musl", nil
+	case goos == "windows" && (goarch == "amd64" || goarch == "arm64"):
+		return "enc-windows-" + goarch + ".exe", nil
 	}
-	return "", fmt.Errorf("no release builds for linux/%s", goarch)
+	return "", fmt.Errorf("no release builds for %s/%s", goos, goarch)
 }
 
 // parseRepo accepts "owner/repo" or a github.com URL and returns "owner/repo".
@@ -211,7 +210,7 @@ func downloadLatest(ctx context.Context, exe string) (string, error) {
 	if asset.Size > 0 && n != asset.Size {
 		return "", fmt.Errorf("%s: got %d of %d bytes", name, n, asset.Size)
 	}
-	if err := checkELF(tmp); err != nil {
+	if err := checkExecutable(tmp, goos); err != nil {
 		return "", fmt.Errorf("%s: %w", name, err)
 	}
 
@@ -233,22 +232,40 @@ func downloadLatest(ctx context.Context, exe string) (string, error) {
 	if err := tmp.Close(); err != nil {
 		return "", err
 	}
-	// The running binary can't be written to (ETXTBSY), but it can be
-	// replaced by renaming over it; the restart then execs the new file.
-	if err := os.Rename(tmp.Name(), exe); err != nil {
+	// The running binary can't be written to, but it can be renamed: on
+	// Linux the new file is renamed over it; Windows won't replace a running
+	// .exe, so the old one is moved aside first. The restart then runs the
+	// new file.
+	if goos == "windows" {
+		old := exe + ".old"
+		_ = os.Remove(old) // left by the previous update
+		if err := os.Rename(exe, old); err != nil {
+			return "", err
+		}
+		if err := os.Rename(tmp.Name(), exe); err != nil {
+			_ = os.Rename(old, exe)
+			return "", err
+		}
+	} else if err := os.Rename(tmp.Name(), exe); err != nil {
 		return "", err
 	}
 	done = true
 	return name, nil
 }
 
-func checkELF(f *os.File) error {
-	magic := make([]byte, 4)
-	if _, err := f.ReadAt(magic, 0); err != nil {
+// checkExecutable rejects downloads that aren't an executable for goos
+// (an ELF binary on Linux, a PE "MZ" binary on Windows).
+func checkExecutable(f *os.File, goos string) error {
+	magic := []byte("\x7fELF")
+	if goos == "windows" {
+		magic = []byte("MZ")
+	}
+	head := make([]byte, len(magic))
+	if _, err := f.ReadAt(head, 0); err != nil {
 		return fmt.Errorf("reading header: %w", err)
 	}
-	if !bytes.Equal(magic, []byte("\x7fELF")) {
-		return errors.New("not a Linux executable")
+	if !bytes.Equal(head, magic) {
+		return fmt.Errorf("not a %s executable", goos)
 	}
 	return nil
 }

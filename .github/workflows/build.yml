@@ -1,4 +1,4 @@
-name: Build (musl) amd64, arm64, armv7
+name: Build linux (amd64, arm64, armv7) and windows (amd64, arm64)
 
 on:
   #push:
@@ -13,74 +13,116 @@ env:
   GO_VERSION: 1.26.1
 
 jobs:
-  # Native amd64 musl on runner
-  build-amd64-musl:
-    name: Build linux/amd64 (musl, native)
-    runs-on: ubuntu-latest
-    outputs:
-      artifact-path: ${{ env.PACKAGE }}/dist/${{ env.BINARY }}-linux-amd64-musl
+  # Native builds on x86_64 and arm64 runners, statically linked against musl.
+  build-linux:
+    name: Build linux/${{ matrix.goarch }} (musl, native)
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - goarch: amd64
+            runner: ubuntu-latest
+          - goarch: arm64
+            runner: ubuntu-24.04-arm
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Cache Go modules & build cache (amd64)
-        uses: actions/cache@v5
-        with:
-          path: |
-            ~/.cache/go-build
-            ~/.cache/go-mod
-            ~/.cache/go  # optional local cache in workspace
-            //~ (note: home paths are per-runner)
-          key: go-mod-cache-${{ env.GO_VERSION }}-${{ hashFiles('**/go.sum') }}
-
-      - name: Setup Go on runner (amd64)
+      - name: Setup Go
         uses: actions/setup-go@v6
         with:
           go-version-file: 'go.mod'
           cache-dependency-path: 'go.sum'
-    
 
-      - name: Install musl toolchain and deps
+      - name: Install musl toolchain
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends build-essential musl-tools curl ca-certificates pkg-config || true
+          sudo apt-get install -y --no-install-recommends musl-tools
 
-      - name: Build (amd64 musl)
+      - name: Build
         env:
           CGO_ENABLED: "1"
-          CC: "musl-gcc"
-          GOOS: "linux"
-          GOARCH: "amd64"
+          CC: musl-gcc
+          GOOS: linux
+          GOARCH: ${{ matrix.goarch }}
         run: |
           set -euo pipefail
-          cd "${PACKAGE}"
           mkdir -p dist
-          # build into package/dist so artifacts are predictable
           go build -a -installsuffix cgo -tags netgo \
             -ldflags "-s -w -linkmode external -extldflags '-static'" \
-            -o "dist/${BINARY}-linux-amd64-musl" .
-          file "dist/${BINARY}-linux-amd64-musl" || true
-          ls -l dist/
+            -o "dist/${BINARY}-linux-${GOARCH}-musl" .
+          file "dist/${BINARY}-linux-${GOARCH}-musl"
 
-
-      - name: Upload artifact (amd64)
+      - name: Upload artifact
         uses: actions/upload-artifact@v6
         with:
-          name: ${{ env.BINARY }}-linux-amd64-musl
-          path: ${{ env.PACKAGE }}/dist/${{ env.BINARY }}-linux-amd64-musl
+          name: ${{ env.BINARY }}-linux-${{ matrix.goarch }}-musl
+          path: dist/${{ env.BINARY }}-linux-${{ matrix.goarch }}-musl
 
-  # Cross-build arm64 & armv7 using a matrix with dockcross images
+  # Native Windows builds. cgo is needed for the Telegram session store
+  # (mattn/go-sqlite3), so each runner gets a MinGW toolchain from MSYS2.
+  build-windows:
+    name: Build windows/${{ matrix.goarch }} (native)
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - goarch: amd64
+            runner: windows-latest
+            msystem: UCRT64
+            cc_package: mingw-w64-ucrt-x86_64-gcc
+            cc: gcc
+          - goarch: arm64
+            runner: windows-11-arm
+            msystem: CLANGARM64
+            cc_package: mingw-w64-clang-aarch64-clang
+            cc: clang
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: 'go.sum'
+
+      - name: Setup MSYS2 toolchain
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          path-type: inherit # keep Go from setup-go on PATH
+          install: ${{ matrix.cc_package }}
+
+      - name: Build
+        env:
+          CGO_ENABLED: "1"
+          CC: ${{ matrix.cc }}
+          GOOS: windows
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          go build -ldflags "-s -w -extldflags '-static'" \
+            -o "dist/${BINARY}-windows-${GOARCH}.exe" .
+          file "dist/${BINARY}-windows-${GOARCH}.exe" || true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v6
+        with:
+          name: ${{ env.BINARY }}-windows-${{ matrix.goarch }}
+          path: dist/${{ env.BINARY }}-windows-${{ matrix.goarch }}.exe
+
+  # armv7 has no native runner: cross-build in a dockcross container.
   build-arm-matrix:
-    name: Build linux/arm (matrix)
+    name: Build linux/armv7 (dockcross)
     runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
-          - name: arm64
-            dockcross_image: dockcross/linux-arm64-musl
-            go_tarball_suffix: linux-arm64
-            output_suffix: linux-arm64-musl
-            goarch: arm64
           - name: armv7
             dockcross_image: dockcross/linux-armv7l-musl
             go_tarball_suffix: linux-armv6l
@@ -146,30 +188,17 @@ jobs:
           # - extract /work/.cache/go.tgz into /tmp/go
           # - set GOPATH/GOMODCACHE/GOCACHE to /work/.cache/go* to reuse host cache
           # - run go build with CGO enabled (dockcross image provides the musl toolchain)
-          if [ "${{ matrix.name }}" = "arm64" ]; then
-            ${DOCKCROSS} bash -lc "\
-              set -euo pipefail; \
-              if [ ! -f /work/.cache/go.tgz ]; then echo '/work/.cache/go.tgz not found inside container'; exit 2; fi; \
-              tar -C /tmp -xzf /work/.cache/go.tgz; export PATH=/tmp/go/bin:\$PATH; \
-              go version; mkdir -p /work/${PACKAGE}/dist; mkdir -p /work/.cache/go; \
-              export CGO_ENABLED=1; export GOOS=linux; export GOARCH=${{ matrix.goarch }}; \
-              export GOPATH=/work/.cache/go; export GOMODCACHE=/work/.cache/go/pkg/mod; export GOCACHE=/work/.cache/go-build; \
-              cd /work/${PACKAGE}; \
-              go build -a -installsuffix cgo -tags netgo -ldflags \"-s -w -linkmode external -extldflags '-static'\" -o ${OUTPUT_PATH} .; \
-            "
-          else
-            # armv7: set GOARM=7
-            ${DOCKCROSS} bash -lc "\
-              set -euo pipefail; \
-              if [ ! -f /work/.cache/go.tgz ]; then echo '/work/.cache/go.tgz not found inside container'; exit 2; fi; \
-              tar -C /tmp -xzf /work/.cache/go.tgz; export PATH=/tmp/go/bin:\$PATH; \
-              go version; mkdir -p /work/${PACKAGE}/dist; mkdir -p /work/.cache/go; \
-              export CGO_ENABLED=1; export GOOS=linux; export GOARCH=${{ matrix.goarch }}; export GOARM=7; \
-              export GOPATH=/work/.cache/go; export GOMODCACHE=/work/.cache/go/pkg/mod; export GOCACHE=/work/.cache/go-build; \
-              cd /work/${PACKAGE}; \
-              go build -a -installsuffix cgo -tags netgo -ldflags \"-s -w -linkmode external -extldflags '-static'\" -o ${OUTPUT_PATH} .; \
-            "
-          fi
+          # armv7: set GOARM=7
+          ${DOCKCROSS} bash -lc "\
+            set -euo pipefail; \
+            if [ ! -f /work/.cache/go.tgz ]; then echo '/work/.cache/go.tgz not found inside container'; exit 2; fi; \
+            tar -C /tmp -xzf /work/.cache/go.tgz; export PATH=/tmp/go/bin:\$PATH; \
+            go version; mkdir -p /work/${PACKAGE}/dist; mkdir -p /work/.cache/go; \
+            export CGO_ENABLED=1; export GOOS=linux; export GOARCH=${{ matrix.goarch }}; export GOARM=7; \
+            export GOPATH=/work/.cache/go; export GOMODCACHE=/work/.cache/go/pkg/mod; export GOCACHE=/work/.cache/go-build; \
+            cd /work/${PACKAGE}; \
+            go build -a -installsuffix cgo -tags netgo -ldflags \"-s -w -linkmode external -extldflags '-static'\" -o ${OUTPUT_PATH} .; \
+          "
 
       - name: Show built artifact (runner)
         run: |
@@ -185,7 +214,7 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
-    needs: [build-amd64-musl, build-arm-matrix]
+    needs: [build-linux, build-arm-matrix, build-windows]
     steps:
       - name: Checkout
         uses: actions/checkout@v6

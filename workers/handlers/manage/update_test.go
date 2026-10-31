@@ -22,8 +22,11 @@ func TestReleaseAssetName(t *testing.T) {
 		{"linux", "amd64", "enc-linux-amd64-musl", false},
 		{"linux", "arm64", "enc-linux-arm64-musl", false},
 		{"linux", "arm", "enc-linux-armv7-musl", false},
+		{"windows", "amd64", "enc-windows-amd64.exe", false},
+		{"windows", "arm64", "enc-windows-arm64.exe", false},
 		{"linux", "386", "", true},
-		{"windows", "amd64", "", true},
+		{"windows", "386", "", true},
+		{"darwin", "arm64", "", true},
 	}
 	for _, tt := range tests {
 		got, err := releaseAssetName(tt.goos, tt.goarch)
@@ -57,10 +60,6 @@ func fakeRelease(t *testing.T, body []byte, size int64, token string) {
 	oldOS, oldArch := goos, goarch
 	t.Cleanup(func() { goos, goarch = oldOS, oldArch })
 	goos, goarch = "linux", "amd64"
-	name, err := releaseAssetName(goos, goarch)
-	if err != nil {
-		t.Fatal(err)
-	}
 	var srv *httptest.Server
 	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if token != "" && r.Header.Get("Authorization") != "Bearer "+token {
@@ -71,7 +70,7 @@ func fakeRelease(t *testing.T, body []byte, size int64, token string) {
 		case "/repos/o/r/releases/tags/latest":
 			_ = json.NewEncoder(w).Encode(map[string]any{"assets": []map[string]any{
 				{"name": "other", "url": srv.URL + "/nope", "size": 1},
-				{"name": name, "url": srv.URL + "/asset", "size": size},
+				{"name": currentAssetName(t), "url": srv.URL + "/asset", "size": size},
 			}})
 		case "/asset":
 			if r.Header.Get("Accept") != "application/octet-stream" {
@@ -147,7 +146,7 @@ func TestDownloadLatestRejectsBadDownloads(t *testing.T) {
 		size    int64
 		wantErr string
 	}{
-		{"not an executable", "<html>login</html>", 18, "not a Linux executable"},
+		{"not an executable", "<html>login</html>", 18, "not a linux executable"},
 		{"truncated", "\x7fELF part", 100, "got 9 of 100 bytes"},
 	}
 	for _, tt := range tests {
@@ -177,4 +176,47 @@ func TestDownloadLatestPrivateRepoHint(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "UPSTREAM_TOKEN") {
 		t.Fatalf("err = %v, want a hint about UPSTREAM_TOKEN", err)
 	}
+}
+
+func TestDownloadLatestWindowsMovesOldExeAside(t *testing.T) {
+	newBin := "MZ new build"
+	fakeRelease(t, []byte(newBin), int64(len(newBin)), "")
+	goos, goarch = "windows", "amd64" // fakeRelease restores these
+	exe := writeExe(t, "MZ old build")
+	if err := os.WriteFile(exe+".old", []byte("from an earlier update"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	name, err := downloadLatest(context.Background(), exe)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if name != "enc-windows-amd64.exe" {
+		t.Errorf("asset = %q", name)
+	}
+	if got, _ := os.ReadFile(exe); string(got) != newBin {
+		t.Errorf("exe = %q, want the new build", got)
+	}
+	if got, _ := os.ReadFile(exe + ".old"); string(got) != "MZ old build" {
+		t.Errorf("exe.old = %q, want the previous exe", got)
+	}
+}
+
+func TestDownloadLatestWindowsRejectsELF(t *testing.T) {
+	bin := "\x7fELF linux build"
+	fakeRelease(t, []byte(bin), int64(len(bin)), "")
+	goos, goarch = "windows", "amd64"
+	exe := writeExe(t, "MZ old build")
+	_, err := downloadLatest(context.Background(), exe)
+	if err == nil || !strings.Contains(err.Error(), "not a windows executable") {
+		t.Fatalf("err = %v, want a windows executable check", err)
+	}
+}
+
+func currentAssetName(t *testing.T) string {
+	name, err := releaseAssetName(goos, goarch)
+	if err != nil {
+		t.Error(err)
+	}
+	return name
 }
