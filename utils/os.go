@@ -18,7 +18,6 @@ import (
 	"strings"
 
 	//"sync"
-	"syscall"
 	"time"
 
 	"enc/config"
@@ -191,12 +190,6 @@ func XOr66() {
 	// Not safe or recommended to implement cross-platform
 }
 
-// ReX restarts the bot
-func ReX(args ...string) error {
-	cmd := append([]string{os.Args[0]}, args...)
-	return syscall.Exec(os.Args[0], cmd, os.Environ())
-}
-
 // Placeholder function for Update logic
 
 func Updater(versionPath string) error {
@@ -365,7 +358,7 @@ func Restart(chatID int64, msgID int, detached bool) error {
 	if detached {
 		argv = append(argv, "--detached")
 		cmd := exec.Command(exe, argv...)
-		devnull, err := os.OpenFile("/dev/null", os.O_RDWR, 0)
+		devnull, err := os.OpenFile(os.DevNull, os.O_RDWR, 0)
 		if err != nil {
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
@@ -377,10 +370,8 @@ func Restart(chatID int64, msgID int, detached bool) error {
 			cmd.Stderr = devnull
 		}
 
-		// Detach: create a new session so the child won't be in the parent's process group.
-		cmd.SysProcAttr = &syscall.SysProcAttr{
-			Setsid: true,
-		}
+		// Detach so the child doesn't share the parent's session or console.
+		cmd.SysProcAttr = detachedProcAttr()
 
 		if err := cmd.Start(); err != nil {
 			return err

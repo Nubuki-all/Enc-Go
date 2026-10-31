@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"syscall"
 	"time"
 
 	"enc/config"
@@ -71,7 +70,7 @@ func (e *Encoder) Start(cmdline string) error {
 		cmd = exec.CommandContext(e.Context, "cmd", "/C", cmdline)
 	} else {
 		cmd = exec.CommandContext(e.Context, "sh", "-c", cmdline)
-		cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+		utils.SetProcessGroup(cmd)
 	}
 	cmd.WaitDelay = 2 * time.Second
 	stdin, _ := cmd.StdinPipe()
