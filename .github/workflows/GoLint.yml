@@ -8,22 +8,21 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v6
         with:
-          go-version-file: 'enc/go.mod'
-          cache-dependency-path: 'enc/go.sum'
+          go-version-file: 'go.mod'
+          cache-dependency-path: 'go.sum'
       - name: tidy golang dependencies
-        run: cd enc && go mod tidy
+        run: go mod tidy
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@v9
         continue-on-error: true
         with:
           #version: v2.1 # Specify a golangci-lint version
-          working-directory: enc
           #skip-cache: true
           args: --issues-exit-code=0 # Exit with 0 even if issues are found, useful for reformatting
       - name: Install gofumpt
         run: go install mvdan.cc/gofumpt@latest
       - name: reformat go
-        run: cd enc && gofumpt -l -w .
+        run: gofumpt -l -w .
       # commit changes
       - uses: stefanzweifel/git-auto-commit-action@v7
         with:

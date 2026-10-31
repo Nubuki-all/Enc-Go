@@ -19,6 +19,7 @@ Optional Variables | Explanation
 `THUMBNAIL` `ICON` | input telegraph link of a picture for use as Thumbnail, Watermark.
 `FFMPEG`, `FFMPEG(2-4)` | input Your FFMPEG Code or Handbrake-cli code (after installing it) replace your purported input and output with {input} and {output} respectively. (Eg. __ffmpeg -i {input} -preset veryfast -vcodec libx265 -crf 27 {ouput}__)
 `TEMP_USERS` | Additional restricted users allowed to use the bot
+`DEV` | User id allowed to use the developer commands (`bash`, `eval`, `sh`, `logs`, `top`) besides the owners
 `LOG_CHANNEL` | Input Log Group/Channel ID (bot must be an admin in target group or channel)
 `DATABASE_URL` | input valid Mongodb Database Url (if none is given, a local sql database is used instead)
 `ENCODER` | Encoder's name/nickname to be included in captions can also contain encode info.
@@ -93,7 +94,15 @@ help - same as start
   - `docker run enc`
 
 **Without Docker:**
-- Grab the executable for your host architecture (linux only) from releases and run
+- Grab the executable for your host architecture (linux only) from releases and run it from a directory containing your `.env`
+
+**From source:**
+- Install Go 1.26 or newer
+- Clone the repository; the Go module is at the repository root
+- Build and run:
+  - `go build -o enc .`
+  - `./enc` (reads `.env` from the current directory)
+- Run the tests with `go test ./...`
 
 ### Features:
 __(Coming Soon)__

@@ -9,7 +9,7 @@ on:
 
 env:
   BINARY: enc
-  PACKAGE: enc
+  PACKAGE: .  # Go module root
   GO_VERSION: 1.26.1
 
 jobs:
@@ -36,8 +36,8 @@ jobs:
       - name: Setup Go on runner (amd64)
         uses: actions/setup-go@v6
         with:
-          go-version-file: 'enc/go.mod'
-          cache-dependency-path: 'enc/go.sum'
+          go-version-file: 'go.mod'
+          cache-dependency-path: 'go.sum'
     
 
       - name: Install musl toolchain and deps
