@@ -144,7 +144,7 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	tcaption := pargs["tc"].(string)
 	tfile := pargs["tf"].(string)
 	remove := pargs["rm"].(string)
-	selected := pargs["tf"].(string)
+	selected := pargs["select"].(string)
 	version := pargs["version"].(string)
 	batch := pargs["batch"].(bool)
 	dAnilist := pargs["da"].(bool)
@@ -210,7 +210,7 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 				continue
 			}
 			if selected != "" {
-				if s > (dlInfo.Count - 1) {
+				if s < 0 || s > (dlInfo.Count-1) {
 					lastFileID := dlInfo.Count - 1
 					_, _ = pMsg.ReplyText(fmt.Sprintf("'-s': `%s` is more than last file_id :- `%d`\nTotal files in folder :- `%d`", selected, lastFileID, dlInfo.Count))
 					continue

@@ -447,7 +447,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			if !zIdx {
 				s -= 1
 			}
-			if s > dlInfo.Count-1 {
+			if s < 0 || s > dlInfo.Count-1 || s > len(dlInfo.Files)-1 {
 				_, _ = sMsg.EditText("-s: **Invalid file ID**")
 				return nil
 			}

@@ -246,7 +246,7 @@ func listQueueP(msg *tele.Message, args string) error {
 		return msg.Delete()
 	}
 	if i, err := strconv.Atoi(args); err == nil {
-		if i > (total - 1) {
+		if i < 0 || i > (total-1) {
 			_, _ = msg.ReplyText("Supply a Valid queue id/index")
 			return nil
 		}
@@ -269,6 +269,7 @@ func listQueueP(msg *tele.Message, args string) error {
 	idsL := len(ids)
 	if idsL == 0 {
 		_, _ = msg.ReplyText("Send a range of number (i.e 1-5) (max 10 items) or the index number of item in queue to be parsed.")
+		return nil
 	}
 	if ids[idsL-1] > (total - 1) {
 		_, _ = msg.ReplyText("Range out of bounds")
@@ -560,6 +561,9 @@ func EditQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 }
 
 func ClearQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+	if !utils.UserIsAllowed(msg.SenderID) {
+		return nil
+	}
 	helpMsg := "Clears an item or all items from queue\n" +
 		"Arguments:\n" +
 		"-  A number or a range of numbers (queue ids) to remove\n" +
@@ -581,7 +585,7 @@ func ClearQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 	var id int
 	var err error
 	if id, err = strconv.Atoi(args); err == nil {
-		if id > bot.Queue.Len()-1 {
+		if id < 0 || id > bot.Queue.Len()-1 {
 			return helpFunc("Invalid queue id")
 		}
 		entry := bot.Queue.AsSlice()[id]

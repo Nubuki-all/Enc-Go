@@ -195,7 +195,7 @@ func rssMonitorOnce(ctx context.Context) {
 				zap.String("Title", title),
 				zap.Int("StatusCode", resp.StatusCode),
 			)
-			return
+			continue
 		}
 
 		feed, err := parser.Parse(resp.Body)

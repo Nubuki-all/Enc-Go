@@ -121,7 +121,9 @@ func delRss(msg *tele.Message, args string) error {
 		return nil
 
 	}
+	bot.RSSDictMutex.Lock()
 	delete(bot.RSSDict, args)
+	bot.RSSDictMutex.Unlock()
 	_, _ = msg.ReplyText(fmt.Sprintf(
 		"Succesfully removed '%s' from subscribed feeds!",
 		args,
@@ -207,17 +209,20 @@ func subRss(msg *tele.Message, args string) error {
 		} else if chatTop := strings.Split(c, ":"); len(chatTop) == 2 {
 			chatID, err := strconv.ParseInt(chatTop[0], 10, 64)
 			if err == nil {
-				if i, err := strconv.Atoi(chatTop[1]); err != nil {
+				if i, err := strconv.Atoi(chatTop[1]); err == nil {
 					fc.TopicID = i
 					fc.ChatID = chatID
 				} else {
 					_, _ = msg.ReplyText("Failed extracting TopicID from: " + c + " skipping!")
+					continue
 				}
 			} else {
 				_, _ = msg.ReplyText(c + ": Not Valid; skipping.")
+				continue
 			}
 		} else {
 			logger.WarnW("Chat was not added!", zap.String("Chat", c))
+			continue
 		}
 		chats = append(chats, fc)
 	}
@@ -378,7 +383,7 @@ func editRss(msg *tele.Message, args string) error {
 		if len(rmChats) != 0 {
 			var chatsIdx []int
 			for _, str := range rmChats {
-				if i, err := strconv.Atoi(str); err != nil {
+				if i, err := strconv.Atoi(str); err == nil {
 					chatsIdx = append(chatsIdx, i)
 				}
 			}
@@ -405,17 +410,20 @@ func editRss(msg *tele.Message, args string) error {
 			} else if chatTop := strings.Split(c, ":"); len(chatTop) == 2 {
 				chatID, err := strconv.ParseInt(chatTop[0], 10, 64)
 				if err == nil {
-					if i, err := strconv.Atoi(chatTop[1]); err != nil {
+					if i, err := strconv.Atoi(chatTop[1]); err == nil {
 						fc.TopicID = i
 						fc.ChatID = chatID
 					} else {
 						_, _ = msg.ReplyText("Failed extracting TopicID from: " + c + " skipping!")
+						continue
 					}
 				} else {
 					_, _ = msg.ReplyText(c + ": Not Valid; skipping.")
+					continue
 				}
 			} else {
 				logger.WarnW("Chat was not added!", zap.String("Chat", c))
+				continue
 			}
 			rssData.Chat = append(rssData.Chat, fc)
 		}

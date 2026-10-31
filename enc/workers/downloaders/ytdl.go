@@ -78,7 +78,13 @@ func (dl *YtdlDownload) Start() (err error) {
 		return err
 	}
 	dl.name = dlInfo.Name
-	dl.basePath = filepath.Join(dl.dir, strings.TrimRight(dlInfo.Name, ".mkv"))
+	// basePath is removed with RemoveAll in Clean, so it must never resolve
+	// to dl.dir itself or anything above it.
+	folder := filepath.Base(strings.TrimSuffix(dlInfo.Name, ".mkv"))
+	if folder == "." || folder == ".." || folder == string(filepath.Separator) {
+		folder = "ytdl-" + strconv.FormatInt(time.Now().UnixNano(), 10)
+	}
+	dl.basePath = filepath.Join(dl.dir, folder)
 	dl.Path = dl.basePath
 	ytdl := ytdlp.New().
 		Cookies(".cookies.txt").
@@ -97,7 +103,7 @@ func (dl *YtdlDownload) Start() (err error) {
 	if dlInfo.Count > 1 {
 		if dl.selected != "" {
 			s, _ := strconv.Atoi(dl.selected)
-			if s == 0 || s > len(dlInfo.Files) {
+			if s <= 0 || s > len(dlInfo.Files) {
 				return fmt.Errorf("ytdl: file_id not found")
 			}
 			ytdl = ytdl.PlaylistItems(dl.selected)

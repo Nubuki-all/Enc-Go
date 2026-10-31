@@ -254,7 +254,7 @@ func loadFilters() {
 
 // SaveQueueLocal writes the current queue to SQLite.
 func SaveQueueLocal() {
-	if config.Conf.DatabaseURL != "" || localdb == nil {
+	if localdb == nil {
 		return
 	}
 	m, s, unlock := bot.Queue.LockForSave()
@@ -292,7 +292,7 @@ func SaveQueueLocal() {
 
 // SaveSettingsLocal persists settings and ffmpeg templates
 func SaveSettingsLocal() {
-	if config.Conf.DatabaseURL != "" || localdb == nil {
+	if localdb == nil {
 		return
 	}
 	toSave := map[string]string{
@@ -317,7 +317,7 @@ func SaveSettingsLocal() {
 
 // SaveTempUsersLocal persists temp users
 func SaveTempUsersLocal() {
-	if config.Conf.DatabaseURL != "" || localdb == nil {
+	if localdb == nil {
 		return
 	}
 	_, err := localdb.Exec(`
@@ -332,7 +332,7 @@ func SaveTempUsersLocal() {
 
 // SaveRSSLocal persists the RSSDict map
 func SaveRSSLocal() {
-	if config.Conf.DatabaseURL != "" || localdb == nil {
+	if localdb == nil {
 		return
 	}
 	bot.RSSDictMutex.Lock()

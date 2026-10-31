@@ -315,7 +315,7 @@ func (dl *QbitDownload) Select(ctx context.Context, hash string) (err error) {
 		return nil
 	}
 	s, _ := strconv.Atoi(dl.selected)
-	if s > (len(files) - 1) {
+	if s < 0 || s > (len(files)-1) {
 		return fmt.Errorf("qbittorrent: file_id not found")
 	}
 	fileIDs := make([]string, 0, len(files)-1)

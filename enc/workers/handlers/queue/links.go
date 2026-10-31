@@ -224,10 +224,12 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 				continue
 			}
 			if selected != "" {
+				// -s is 1-based except for mega; keep s untouched across links.
+				idx := s
 				if !mega {
-					s -= 1
+					idx -= 1
 				}
-				if s > (dlInfo.Count - 1) {
+				if idx < 0 || idx > (dlInfo.Count-1) {
 					lastFileID := dlInfo.Count
 					if mega {
 						lastFileID -= 1
@@ -235,7 +237,7 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 					_, _ = pMsg.ReplyText(fmt.Sprintf("'-s': `%s` is more than last file_id :- `%d`\nTotal files in folder :- `%d`", selected, lastFileID, dlInfo.Count))
 					continue
 				}
-				if name := dlInfo.Files[s]; utils.IsVideoFile(name) {
+				if name := dlInfo.Files[idx]; utils.IsVideoFile(name) {
 					dlInfo.Name = filepath.Base(name)
 				} else {
 					_, _ = pMsg.ReplyText(fmt.Sprintf("File with name: %s is not a Video", name))
@@ -305,7 +307,7 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 		if !mega {
 			s -= 1
 		}
-		if s > (dlInfo.Count - 1) {
+		if s < 0 || s > (dlInfo.Count-1) {
 			lastFileID := dlInfo.Count
 			if mega {
 				lastFileID -= 1

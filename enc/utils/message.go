@@ -21,16 +21,19 @@ func UserIsAllowed(userID int64) bool {
 	return (UserIsOwner(userID) || UserIsTemp(userID))
 }
 
+// A sender ID of 0 means the sender is unknown (channel posts, anonymous
+// admins), so it is never granted any permission.
+
 func UserIsOwner(userID int64) bool {
-	return slices.Contains(config.Rconf.Owners, userID)
+	return userID != 0 && slices.Contains(config.Rconf.Owners, userID)
 }
 
 func UserIsTemp(userID int64) bool {
-	return slices.Contains(bot.TempUsers, userID)
+	return userID != 0 && slices.Contains(bot.TempUsers, userID)
 }
 
 func UserIsDev(userID int64) bool {
-	return userID == config.Conf.Dev
+	return userID != 0 && userID == config.Conf.Dev
 }
 
 func AllowPM() bool {
@@ -170,6 +173,10 @@ func Range2Slice(s string) (out []int) {
 	if end, err = strconv.Atoi(e); err != nil {
 		return out
 	}
+	// Queue ids are small; refuse huge ranges instead of allocating them.
+	if start < 0 || end < start || end-start >= 10000 {
+		return out
+	}
 	for i := start; i < end+1; i++ {
 		out = append(out, i)
 	}
@@ -189,6 +196,10 @@ func Range2StringSlice(s string) (out []string) {
 		return out
 	}
 	if end, err = strconv.Atoi(e); err != nil {
+		return out
+	}
+	// Refuse huge ranges instead of allocating them.
+	if start < 0 || end < start || end-start >= 10000 {
 		return out
 	}
 	for i := start; i < end+1; i++ {

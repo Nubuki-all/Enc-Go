@@ -543,16 +543,17 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 		args2 = strings.ReplaceAll(args2, "Fileinfo", result.MediaInfoName)
 	}
 	if defaultAudio != "" || defaultSubtitle != "" {
-		aPosInStm, sPosInStm := utils.PosInStream(tFile, defaultAudio, "", "")
 		if defaultAudio != "" {
+			aPosInStm, _ := utils.PosInStream(tFile, defaultAudio, "", "a")
 			args2 += " -disposition:a 0"
 			if aPosInStm >= 0 {
 				args2 += " -disposition:a:" + strconv.Itoa(aPosInStm) + " default"
 			}
 		}
 		if defaultSubtitle != "" {
+			_, sPosInStm := utils.PosInStream(tFile, defaultSubtitle, "", "s")
 			args2 += " -disposition:s 0"
-			if aPosInStm >= 0 {
+			if sPosInStm >= 0 {
 				args2 += " -disposition:s:" + strconv.Itoa(sPosInStm) + " default"
 			}
 		}

@@ -135,6 +135,9 @@ func ReleaseExtFilterExists(name string, caseSensitive bool) bool {
 }
 
 func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) error {
+	if !utils.UserIsOwner(msg.SenderID) {
+		return nil
+	}
 	helpMsg := "Cancels all download/upload/encode processes\n" +
 		"Arguments:\n" +
 		"  'transfer' - Cancels all ongoing download and upload\n" +

@@ -306,7 +306,7 @@ func (dl *Aria2Download) Select(gid string) (err error) {
 		return err
 	}
 	err = dl.client.Unpause(gid)
-	if strings.Contains(err.Error(), "cannot be unpaused now") {
+	if err != nil && strings.Contains(err.Error(), "cannot be unpaused now") {
 		time.Sleep(5 * time.Second)
 		err = dl.client.Unpause(gid)
 	}

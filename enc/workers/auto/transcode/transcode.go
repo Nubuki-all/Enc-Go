@@ -405,11 +405,11 @@ func (e *encodeWorker) start(encodeArgs string) error {
 				Path:           outPath,
 			},
 		)
-		if err != nil {
+		if err == nil {
 			result = result2
 		}
-		fn = result2.MediaInfoName + " (Muxed)"
-		if e.no > 1 && !config.Conf.SequentialJobs {
+		fn = result.MediaInfoName + " (Muxed)"
+		if e.no > 0 && !config.Conf.SequentialJobs {
 			fn += "-" + strconv.Itoa(e.no)
 		}
 		fn += filepath.Ext(result.FileName)

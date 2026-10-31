@@ -66,6 +66,11 @@ func TempUnauth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 		}
 	}
 
+	if newID == 0 {
+		_, _ = msg.ReplyText("Could not find a user id; that message wasn't sent by a user.")
+		return nil
+	}
+
 	// disallow self-unpermit
 	if newID == senderID {
 		_, _ = msg.ReplyText("Why, oh why did you try to unpermit yourself?")
@@ -142,6 +147,11 @@ func TempAuth(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 			_, _ = msg.ReplyText(fmt.Sprintf("Failed to parse id `%s`: %v", args, err))
 			return nil
 		}
+	}
+
+	if newID == 0 {
+		_, _ = msg.ReplyText("Could not find a user id; that message wasn't sent by a user.")
+		return nil
 	}
 
 	// disallow self-unpermit

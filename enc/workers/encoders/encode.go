@@ -6,6 +6,7 @@ import (
 	"cmp"
 	"context"
 	"fmt"
+	"html"
 	"io"
 	"os"
 	"os/exec"
@@ -154,8 +155,8 @@ func (e *Encoder) Callback(dlPath, enPath, text string) {
 		}
 		_ = utils.StoreCallbackInfo(cInfo, e.LogID)
 		sender := "Unknown"
-		if user, err := tele.GetUser(e.Sender); err != nil {
-			sender = user.FirstName
+		if user, err := tele.GetUser(e.Sender); err == nil && user != nil {
+			sender = html.EscapeString(user.FirstName)
 		}
 		buttonRows := []tg.KeyboardButtonRow{
 			markup.Row(
@@ -185,7 +186,7 @@ func (e *Encoder) Callback(dlPath, enPath, text string) {
 		}
 		_, _ = e.LMsg.Edit(
 			fmt.Sprintf(
-				"<b>User:</b>\n└<a href=\"tg://user?id=%d\"%s</a>\n\n%s<b>Currently Encoding:</b>\n└<code>%s</code>\n\n<b>Source File:</b>\n└<code>%s</code>",
+				"<b>User:</b>\n└<a href=\"tg://user?id=%d\">%s</a>\n\n%s<b>Currently Encoding:</b>\n└<code>%s</code>\n\n<b>Source File:</b>\n└<code>%s</code>",
 				e.Sender,
 				sender,
 				addMsg,
@@ -279,7 +280,7 @@ func (e *Encoder) ReportStatus(action string) (err error) {
 				if err != nil {
 					logger.Warn(err)
 				} else {
-					name = user.FirstName
+					name = html.EscapeString(user.FirstName)
 				}
 				text += fmt.Sprintf(" by <a href=\"tg://user?id=%d\">%s</a>.", e.Canceller, name)
 			} else {

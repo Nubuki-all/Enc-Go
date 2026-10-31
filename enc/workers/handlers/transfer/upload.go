@@ -138,8 +138,8 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		}
 		if mkv {
 			ext = ".mkv"
-		} else if ext != "" && ext[0] == '.' {
-			ext += "."
+		} else if ext != "" && ext[0] != '.' {
+			ext = "." + ext
 		}
 	} else {
 		if utils.IsURL(args) || utils.IsMagnet(args) {

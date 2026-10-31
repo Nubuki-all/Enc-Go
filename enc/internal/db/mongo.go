@@ -146,7 +146,13 @@ func LoadRSSDict() {
 		if err == mongo.ErrNoDocuments {
 			return
 		}
+		// Keep the current feeds; swapping in nil would panic on the next
+		// add and the next save would overwrite the stored feeds.
 		logger.Errorf("FindOne decode: %w", err)
+		return
+	}
+	if doc.RSS == nil {
+		return
 	}
 	// swap in under lock
 	bot.RSSDictMutex.Lock()
