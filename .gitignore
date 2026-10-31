@@ -10,3 +10,7 @@ venv.bak/
 .vscode
 *.jpg
 *.session
+
+# Build output
+/enc
+/dist/
