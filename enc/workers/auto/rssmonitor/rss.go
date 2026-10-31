@@ -224,19 +224,8 @@ func rssMonitorOnce(ctx context.Context) {
 		lastLink := ItemLink(feed.Items[0])
 		lastTitle := feed.Items[0].Title
 
-		// By default an item was seen before if its title or link matches.
-		// With MatchBoth both must match, so a re-release with the same title
-		// counts as new; a rollback stores only the title (LastFeed is ""),
-		// and then the title alone decides.
-		seen := func(link, title string) bool {
-			if !data.MatchBoth {
-				return link == data.LastFeed || title == data.LastTitle
-			}
-			return title == data.LastTitle && (data.LastFeed == "" || link == data.LastFeed)
-		}
-
 		// If no change, continue
-		if seen(lastLink, lastTitle) {
+		if itemSeen(data, lastLink, lastTitle) {
 			continue
 		}
 		// If first run, allow spam
@@ -244,55 +233,7 @@ func rssMonitorOnce(ctx context.Context) {
 			data.AllowSpam = true
 		}
 
-		feedTasks := []feedTask{}
-		foundLast := false
-		// collect items from newest to older until we hit last_seen
-		for idx := 0; idx < len(feed.Items); idx++ {
-			item := feed.Items[idx]
-			itemTitle := item.Title
-			itemURL := ItemLink(item)
-
-			// stop if we've reached last seen
-			if seen(itemURL, itemTitle) {
-				foundLast = true
-				break
-			}
-
-			// check includes/excludes
-			lowerTitle := strings.ToLower(itemTitle)
-			if !matchIncludeExclude(lowerTitle, data.Inf, data.Exf) {
-				continue
-			}
-
-			// build command as Python did
-			cmdParts := strings.Fields(data.Command)
-			if len(cmdParts) == 0 {
-				feedTasks = append(feedTasks, feedTask{msg: fmt.Sprintf("Title: %s\nLink: %s", itemTitle, itemURL)})
-				continue
-			}
-			// insert url after first element
-			// equivalent to: cmd = data["command"].split(maxsplit=1); cmd.insert(1, url)
-			newCmdParts := make([]string, 0, len(cmdParts)+1)
-			newCmdParts = append(newCmdParts, cmdParts[0])
-			newCmdParts = append(newCmdParts, itemURL)
-			if len(cmdParts) > 1 {
-				newCmdParts = append(newCmdParts, strings.Join(cmdParts[1:], " "))
-			}
-			feedMsg := strings.Join(newCmdParts, " ")
-			if !strings.HasPrefix(feedMsg, "/") {
-				feedMsg = "/" + feedMsg
-			}
-			feedTasks = append(feedTasks, feedTask{msg: feedMsg, url: itemURL})
-		}
-		// Every item was new: some may have been missed. A one-item feed
-		// always ends up here, so it is exempt from spam prevention.
-		if items := len(feed.Items); !foundLast && items > 1 {
-			logger.WarnW("Rss Monitor: Reached Max index no for this feed. Maybe you need to use less RSS_DELAY to not miss some torrents.", zap.String("Title", title), zap.Int("Items", items))
-			if !data.AllowSpam {
-				logger.Warn("Due to spam prevention, RSS feed has been reset.")
-				feedTasks = make([]feedTask, 0)
-			}
-		}
+		feedTasks := collectFeedTasks(title, data, feed.Items)
 
 		for i := len(feedTasks) - 1; i >= 0; i-- {
 			feedTask := feedTasks[i]
@@ -348,6 +289,72 @@ func rssMonitorOnce(ctx context.Context) {
 	} else if !bot.RSSRanOnce {
 		bot.RSSRanOnce = true
 	}
+}
+
+// itemSeen reports whether an item matches the last one sent for a feed.
+// By default the title or the link matching is enough. With MatchBoth both
+// must match, so a re-release with the same title counts as new; a rollback
+// stores only the title (LastFeed is ""), and then the title alone decides.
+func itemSeen(data *types.FeedData, link, title string) bool {
+	if !data.MatchBoth {
+		return link == data.LastFeed || title == data.LastTitle
+	}
+	return title == data.LastTitle && (data.LastFeed == "" || link == data.LastFeed)
+}
+
+// collectFeedTasks returns the tasks for the items newer than the last one
+// sent, newest first, after the include/exclude filters.
+func collectFeedTasks(title string, data *types.FeedData, items []*gofeed.Item) []feedTask {
+	feedTasks := []feedTask{}
+	foundLast := false
+	// collect items from newest to older until we hit last_seen
+	for idx := 0; idx < len(items); idx++ {
+		item := items[idx]
+		itemTitle := item.Title
+		itemURL := ItemLink(item)
+
+		// stop if we've reached last seen
+		if itemSeen(data, itemURL, itemTitle) {
+			foundLast = true
+			break
+		}
+
+		// check includes/excludes
+		lowerTitle := strings.ToLower(itemTitle)
+		if !matchIncludeExclude(lowerTitle, data.Inf, data.Exf) {
+			continue
+		}
+
+		// build command as Python did
+		cmdParts := strings.Fields(data.Command)
+		if len(cmdParts) == 0 {
+			feedTasks = append(feedTasks, feedTask{msg: fmt.Sprintf("Title: %s\nLink: %s", itemTitle, itemURL)})
+			continue
+		}
+		// insert url after first element
+		// equivalent to: cmd = data["command"].split(maxsplit=1); cmd.insert(1, url)
+		newCmdParts := make([]string, 0, len(cmdParts)+1)
+		newCmdParts = append(newCmdParts, cmdParts[0])
+		newCmdParts = append(newCmdParts, itemURL)
+		if len(cmdParts) > 1 {
+			newCmdParts = append(newCmdParts, strings.Join(cmdParts[1:], " "))
+		}
+		feedMsg := strings.Join(newCmdParts, " ")
+		if !strings.HasPrefix(feedMsg, "/") {
+			feedMsg = "/" + feedMsg
+		}
+		feedTasks = append(feedTasks, feedTask{msg: feedMsg, url: itemURL})
+	}
+	// Every item was new: some may have been missed. A one-item feed
+	// always ends up here, so it is exempt from spam prevention.
+	if n := len(items); !foundLast && n > 1 {
+		logger.WarnW("Rss Monitor: Reached Max index no for this feed. Maybe you need to use less RSS_DELAY to not miss some torrents.", zap.String("Title", title), zap.Int("Items", n))
+		if !data.AllowSpam {
+			logger.Warn("Due to spam prevention, RSS feed has been reset.")
+			feedTasks = make([]feedTask, 0)
+		}
+	}
+	return feedTasks
 }
 
 // ItemLink returns the link the monitor tracks for a feed item: the second
