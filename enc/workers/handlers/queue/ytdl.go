@@ -201,6 +201,7 @@ func AddWithYtdl(ctx *ext.Context, update *ext.Update, msg *tele.Message, args s
 			}
 			dlInfo := downloaders.GetYdlInfo(uri)
 			qSource := types.QueueSource{}
+			var batches []types.BatchItem // per link, not shared across links
 			qSource.Source = source.Ytdl
 			if dlInfo.Error != nil {
 				_, _ = pMsg.ReplyText("**Error:** " + dlInfo.Error.Error())

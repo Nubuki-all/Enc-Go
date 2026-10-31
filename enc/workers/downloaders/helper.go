@@ -191,6 +191,10 @@ func GetAria2DlInfo(uri string) *utils.DLInfo {
 		dlInfo.Error = err
 		return dlInfo
 	}
+	// This download only exists to read the file list; remove it and anything
+	// it spawned (magnet -> torrent) on every return path.
+	gids := []string{resp.GID}
+	defer func() { deleteAria2GIDs(aria2, gids) }()
 	status, err := resp.TellStatus()
 	if err != nil {
 		dlInfo.Error = err
@@ -214,6 +218,7 @@ func GetAria2DlInfo(uri string) *utils.DLInfo {
 			return dlInfo
 		}
 		if len(status.FollowedBy) > 0 {
+			gids = append(gids, status.FollowedBy...)
 			status, err = aria2.TellStatus(status.FollowedBy[0])
 			if err != nil {
 				dlInfo.Error = fmt.Errorf("TellStatus while waiting for metadata: %w", err)
@@ -250,16 +255,26 @@ func GetAria2DlInfo(uri string) *utils.DLInfo {
 			dlInfo.Name = filepath.Base(dlInfo.Files[0])
 		}
 	}
+	gids = append(gids, status.FollowedBy...)
+	return dlInfo
+}
+
+func deleteAria2GIDs(aria2 *arigo.Client, gids []string) {
 	var statuses []arigo.Status
-	for _, gid := range status.FollowedBy {
-		status, err := aria2.TellStatus(gid)
-		if err == nil {
+	seen := make(map[string]bool, len(gids))
+	for _, gid := range gids {
+		if seen[gid] {
+			continue
+		}
+		seen[gid] = true
+		if status, err := aria2.TellStatus(gid); err == nil {
 			statuses = append(statuses, status)
+		} else {
+			_ = aria2.ForceRemove(gid)
+			_ = aria2.RemoveDownloadResult(gid)
 		}
 	}
-	statuses = append(statuses, status)
 	aria2.DeleteDownloads(statuses, true, true, true)
-	return dlInfo
 }
 
 func getQbitClient(temp bool) (*qbit.Client, error) {
@@ -321,6 +336,13 @@ func GetQbitDlInfo(uri string) *utils.DLInfo {
 		dlInfo.Error = err
 		return dlInfo
 	}
+	// This torrent only exists to read the file list; remove it on every
+	// return path, including timeouts before its hash is known.
+	defer func() {
+		if err := deleteQbitTagged(qb, tag); err != nil {
+			logger.Error(err)
+		}
+	}()
 	torrents, err := qb.GetTorrentsCtx(ctx, qbit.TorrentFilterOptions{Tag: tag})
 	if err != nil {
 		dlInfo.Error = err
@@ -380,17 +402,28 @@ func GetQbitDlInfo(uri string) *utils.DLInfo {
 	if dlInfo.Count == 1 {
 		dlInfo.Name = dlInfo.Files[0]
 	}
-	err = qb.DeleteTagsCtx(ctx, []string{tag})
-	if err != nil {
-		dlInfo.Error = fmt.Errorf("error cleaning up after fetching torrent files: %w", err)
-		return dlInfo
-	}
-	err = qb.DeleteTorrentsCtx(ctx, []string{dlInfo.Hash}, true)
-	if err != nil {
-		dlInfo.Error = fmt.Errorf("error cleaning up after fetching torrent files: %w", err)
-		return dlInfo
-	}
 	return dlInfo
+}
+
+// deleteQbitTagged removes every torrent carrying tag (with its files) and
+// then the tag. It uses its own context so it still works after a timeout.
+func deleteQbitTagged(qb *qbit.Client, tag string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	torrents, err := qb.GetTorrentsCtx(ctx, qbit.TorrentFilterOptions{Tag: tag})
+	if err != nil {
+		return err
+	}
+	hashes := make([]string, 0, len(torrents))
+	for _, tor := range torrents {
+		hashes = append(hashes, tor.Hash)
+	}
+	if len(hashes) > 0 {
+		if err := qb.DeleteTorrentsCtx(ctx, hashes, true); err != nil {
+			return err
+		}
+	}
+	return qb.DeleteTagsCtx(ctx, []string{tag})
 }
 
 func CleanAllQbit(ctx context.Context) {

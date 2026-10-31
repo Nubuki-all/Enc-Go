@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	"path/filepath"
 	//"crypto/rand"
 	"encoding/base64"
 	"encoding/binary"
@@ -505,8 +506,22 @@ func decryptAttr(key []byte, data string) (attr FileAttr, err error) {
 			str = trimmed
 		}
 		err = json.Unmarshal([]byte(str), &attr)
+		attr.Name = safeName(attr.Name)
 	}
 	return attr, err
+}
+
+// safeName reduces a name chosen by the uploader to a single path element,
+// so joining it under the download dir can't escape it.
+func safeName(name string) string {
+	if name == "" {
+		return ""
+	}
+	name = filepath.Base(strings.ReplaceAll(name, "\\", "/"))
+	if name == "." || name == ".." || name == string(filepath.Separator) {
+		return "_"
+	}
+	return name
 }
 
 /*func encryptAttr(key []byte, attr FileAttr) (b string, err error) {

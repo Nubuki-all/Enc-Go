@@ -161,9 +161,9 @@ func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 			if data.Process == nil || data.ExtraFlags != "" {
 				continue
 			}
-			_ = data.Process.Kill()
 			data.IsCancelled = true
 			data.ReturnFlags = "cancel_jobs"
+			_ = data.Process.Kill()
 		}
 		_, _ = msg.ReplyText("**Cleared all queued encodes and cancelled current encode process(es) (if any)**")
 		return nil
@@ -173,10 +173,10 @@ func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 			data.IsCancelled = true
 			data.Canceller = msg.SenderID
 			if data.Process != nil {
-				_ = data.Process.Kill()
 				if data.ExtraFlags == "" {
 					data.ReturnFlags = "cancel_jobs"
 				}
+				_ = data.Process.Kill()
 			}
 		}
 		bot.Queue.Clear()
@@ -199,9 +199,9 @@ func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 			if data.Process == nil || data.ExtraFlags != "" {
 				continue
 			}
-			_ = data.Process.Kill()
 			data.IsCancelled = true
 			data.ReturnFlags = "cancel_jobs"
+			_ = data.Process.Kill()
 		}
 
 		_, _ = msg.ReplyText("**Cancelled all encodes succesfully**")
@@ -213,8 +213,8 @@ func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 			if data.Process == nil || data.ExtraFlags == "" {
 				continue
 			}
-			_ = data.Process.Kill()
 			data.IsCancelled = true
+			_ = data.Process.Kill()
 		}
 		bot.WaitQueueM.Clear()
 		_, _ = msg.ReplyText("**Cancelled all mux processes succesfully**")

@@ -105,8 +105,10 @@ func (dl *QbitDownload) Start() (err error) {
 	if err != nil {
 		return err
 	}
-	metaTimeout := rconf.QBitTimeout * time.Second
-	metaCtx, metaCancel := context.WithTimeout(ctx, metaTimeout)
+	metaCtx, metaCancel := ctx, context.CancelFunc(func() {})
+	if metaTimeout := rconf.QBitTimeout * time.Second; metaTimeout > 0 {
+		metaCtx, metaCancel = context.WithTimeout(ctx, metaTimeout)
+	}
 	defer metaCancel()
 	// poll until FollowedBy is present or metaCtx expires
 	for len(torrents) == 0 {
@@ -387,14 +389,7 @@ func (dl *QbitDownload) Clean() {
 		logger.WarnW("Qbittorrent Dl: Calling Clean on a download that exited early")
 		return
 	}
-	ctx := context.Background()
-	qb := dl.client
-	err := qb.DeleteTagsCtx(ctx, []string{dl.tag})
-	if err != nil {
-		logger.Error(err)
-	}
-	err = qb.DeleteTorrentsCtx(ctx, []string{dl.hash}, true)
-	if err != nil {
+	if err := deleteQbitTagged(dl.client, dl.tag); err != nil {
 		logger.Error(err)
 	}
 }

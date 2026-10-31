@@ -126,6 +126,10 @@ func (dl *Downloader) Start() error {
 	}()
 	dl.Path = filepath.Join(dl.Folder, dl.FileName)
 	folder, _ := filepath.Abs(dl.Folder)
+	if dl.InputLoc != nil && !utils.IsInsideDir(dl.Folder, dl.Path) {
+		dl.err = fmt.Errorf("refusing to download %q outside %q", dl.FileName, dl.Folder)
+		return dl.err
+	}
 	if dl.InputLoc != nil {
 		dl.service = NewTgDl(dl.InputLoc, dl.Size, dl.Msg, dl.TransferInfo)
 	} else if dl.Qbit && dl.URI != "" {
@@ -159,7 +163,9 @@ func (dl *Downloader) CleanDownload() {
 		return
 	}
 	dl.cleaned = true
-	dl.service.Clean()
+	if dl.service != nil {
+		dl.service.Clean()
+	}
 }
 
 func (dl *Downloader) GenButtons() tg.ReplyMarkupClass {

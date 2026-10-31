@@ -35,7 +35,7 @@ func MediaToFileMeta(m tg.MessageMediaClass) *types.FileMeta {
 		for _, attr := range doc.GetAttributes() {
 			switch a := attr.(type) {
 			case *tg.DocumentAttributeFilename:
-				fileName = a.FileName
+				fileName = SafeFileName(a.FileName)
 			}
 		}
 
@@ -123,7 +123,7 @@ func GetInputFileLocationAndSize(media tg.MessageMediaClass) (tg.InputFileLocati
 		for _, attr := range f.GetAttributes() {
 			switch a := attr.(type) {
 			case *tg.DocumentAttributeFilename:
-				fileName = a.FileName
+				fileName = SafeFileName(a.FileName)
 			}
 		}
 		file := &FileInfo{

@@ -338,7 +338,10 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		_, _ = msg.ReplyText("__File or folder not found__")
 	} else {
 		// ---- single file upload ----
-		rMsg, _ := msg.ReplyText(fmt.Sprintf("`Uploading %s…`", filepath.Base(file)))
+		rMsg, rErr := msg.ReplyText(fmt.Sprintf("`Uploading %s…`", filepath.Base(file)))
+		if rErr != nil {
+			return rErr
+		}
 		f := filepath.Base(file)
 		uID := fmt.Sprintf("%d:%d", rMsg.ChatID, rMsg.ID)
 

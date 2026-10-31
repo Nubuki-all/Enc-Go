@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"html"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -77,18 +76,16 @@ func (e *Encoder) Start(cmdline string) error {
 	cmd.WaitDelay = 2 * time.Second
 	stdin, _ := cmd.StdinPipe()
 	_ = stdin.Close()
-	stdoutPipe, _ := cmd.StdoutPipe()
-	stderrPipe, _ := cmd.StderrPipe()
-
+	// Let exec copy the output: Wait then returns only after the copies are
+	// done, so the buffers are complete and safe to read.
 	e.outBuf = &bytes.Buffer{}
 	e.errBuf = &bytes.Buffer{}
+	cmd.Stdout = e.outBuf
+	cmd.Stderr = e.errBuf
 
 	if err := cmd.Start(); err != nil {
 		return err
 	}
-
-	go io.Copy(e.outBuf, stdoutPipe) //nolint:errcheck
-	go io.Copy(e.errBuf, stderrPipe) //nolint:errcheck
 
 	e.cmd = cmd
 	e.process = types.NewProcess(cmd.Process)

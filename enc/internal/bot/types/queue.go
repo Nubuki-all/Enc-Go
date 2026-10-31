@@ -115,12 +115,16 @@ func (q *Queue) Update(entry QueueEntry) {
 	}
 }
 
-// Replace updates an entry along with its name
-func (q *Queue) Replace(name string, entry QueueEntry) {
+// Replace updates an entry along with its name. It reports false if name is
+// not queued or another entry already uses entry.Name.
+func (q *Queue) Replace(name string, entry QueueEntry) bool {
 	q.mu.Lock()
 	defer q.mu.Unlock()
 	if _, exists := q.keysExist[name]; !exists {
-		return
+		return false
+	}
+	if _, taken := q.keysExist[entry.Name]; taken && entry.Name != name {
+		return false
 	}
 	for i := range q.entries {
 		if q.entries[i].Name == name {
@@ -128,9 +132,10 @@ func (q *Queue) Replace(name string, entry QueueEntry) {
 			q.keysExist[entry.Name] = struct{}{}
 			q.entries[i] = entry
 			go q.notifyWaiters()
-			return
+			return true
 		}
 	}
+	return false
 }
 
 // Get finds an entry by its key and returns a copy.

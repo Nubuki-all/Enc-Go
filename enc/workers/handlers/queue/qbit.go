@@ -198,6 +198,7 @@ func AddTorrent(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 
 			}
 			qSource := types.QueueSource{}
+			var batches []types.BatchItem // per link, not shared across links
 			qSource.Source = source.Qbit
 			dlInfo := downloaders.GetQbitDlInfo(uri)
 			if dlInfo.Error != nil {

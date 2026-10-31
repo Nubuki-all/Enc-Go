@@ -103,6 +103,9 @@ func (dl *MegaDownload) Start() error {
 	}
 	for _, download := range dl.downloadList {
 		if err := dl.downloadFile(ctx, download); err != nil {
+			if dl.IsCancelled {
+				return nil
+			}
 			return err
 		}
 		if dl.IsCancelled {
@@ -118,15 +121,9 @@ func (dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) erro
 		return err
 	}
 	fileName := filepath.Base(d.Name)
-	_, err := os.Stat(path)
-	if os.IsExist(err) {
-		err = os.Remove(path)
-		if err != nil {
-			return err
-		}
-	}
-
-	outfile, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0o600)
+	// Truncate: chunks are written in place, so a stale larger file would
+	// otherwise keep its trailing bytes.
+	outfile, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
 		return err
 	}
@@ -229,7 +226,13 @@ func (dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) erro
 					return
 				}
 
-				progress <- int64(len(chunk))
+				select {
+				case progress <- int64(len(chunk)):
+				case <-cancelCh:
+					return
+				case <-ctx.Done():
+					return
+				}
 			}
 		}()
 	}
@@ -241,6 +244,10 @@ func (dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) erro
 		case workch <- id:
 			id++
 		case err = <-errch:
+		case <-cancelCh:
+			err = ErrDownloadCanceled
+		case <-ctx.Done():
+			err = ctx.Err()
 		}
 	}
 	close(workch)

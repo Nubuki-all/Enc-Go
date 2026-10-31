@@ -231,7 +231,7 @@ func (m *Message) EditText(text string) (*Message, error) {
 	)
 	if err != nil {
 		logger.ErrorW(err.Error())
-		return nil, err
+		return m, err // keep m usable for "m, _ = m.EditText(...)"
 	}
 	if m.Raw == nil {
 		return NewMsgFromGotg(msg, telegram.Context, m.ChatID, telegram.Context.Self.ID), nil
@@ -263,7 +263,7 @@ func (m *Message) Edit(text string, editOptions *EditOptions) (*Message, error) 
 	)
 	if err != nil {
 		logger.ErrorW(err.Error())
-		return nil, err
+		return m, err // keep m usable for "m, _ = m.Edit(...)"
 	}
 	if m.Raw == nil {
 		return NewMsgFromGotg(msg, telegram.Context, m.ChatID, telegram.Context.Self.ID), nil

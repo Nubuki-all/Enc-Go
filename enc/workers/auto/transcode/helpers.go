@@ -121,11 +121,11 @@ func formatArgs(args, title, episode, season, metaName, dlPath string) string {
 			if season != "" {
 				info += " Season " + season
 			}
-			args = strings.ReplaceAll(args, "This Episode", info)
+			args = strings.ReplaceAll(args, "This Episode", utils.ShellSafeText(info))
 		}
 	}
 	if strings.Contains(args, "Fileinfo") {
-		args = strings.ReplaceAll(args, "Fileinfo", metaName)
+		args = strings.ReplaceAll(args, "Fileinfo", utils.ShellSafeText(metaName))
 	}
 	if strings.Contains(args, audíoAutoDisp) || strings.Contains(args, SubtitleAutoDisp) {
 		aPosInSteam, sPosInSteam := utils.PosInStream(dlPath, "eng", "eng-us", "")

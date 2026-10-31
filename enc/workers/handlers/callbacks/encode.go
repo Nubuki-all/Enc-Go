@@ -94,7 +94,10 @@ func EncodeStats(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery
 	if len(name) > 45 {
 		name = name[:45] + "…"
 	}
-	du, _ := disk.Usage("/")
+	du, err := disk.Usage("/")
+	if err != nil || du == nil {
+		du = &disk.UsageStat{}
+	}
 	elapsed := time.Since(info.Time).Round(time.Second).Seconds()
 	uptime := time.Since(bot.BotStartTime).Round(time.Second).Seconds()
 	var cpuUsage float64
@@ -166,10 +169,12 @@ func cancelEncode(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuer
 		info.ReturnFlags = "cancel_jobs"
 	}
 	_ = query.Answer("Cancelling "+action+" please wait…", false)
+	// Mark as cancelled before killing, so the encoder sees it once the
+	// process exits and reports a cancel instead of a failure.
+	info.IsCancelled = true
+	info.Canceller = sender
 	if err := info.Process.Kill(); err != nil {
 		logger.Warn(err)
 	}
-	info.IsCancelled = true
-	info.Canceller = sender
 	return nil
 }

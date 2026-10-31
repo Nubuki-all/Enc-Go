@@ -512,3 +512,50 @@ func SantizeText(t string) string {
 	}
 	return strings.ReplaceAll(t, "'", "'\\''")
 }
+
+// ShellSafeText makes untrusted text (AniList titles, parsed names) safe to
+// paste inside a single- or double-quoted argument of an "sh -c" command.
+// Quotes become their typographic forms so titles stay readable.
+func ShellSafeText(t string) string {
+	return strings.NewReplacer(
+		"'", "’",
+		`"`, "”",
+		"`", "’",
+		"$", "",
+		`\`, "",
+	).Replace(t)
+}
+
+// SplitFlags splits a command line into chunks that each start at a " -"
+// followed by a letter, so values such as 'A - B' stay in one chunk.
+func SplitFlags(cmd string) []string {
+	var out []string
+	start := 0
+	for i := 1; i+1 < len(cmd); i++ {
+		c := cmd[i+1]
+		if cmd[i-1] == ' ' && cmd[i] == '-' && (c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z') {
+			out = append(out, cmd[start:i])
+			start = i
+		}
+	}
+	return append(out, cmd[start:])
+}
+
+// SafeFileName reduces an untrusted name (e.g. a Telegram document's file
+// name) to a single path element. It returns "" when nothing usable is left.
+func SafeFileName(name string) string {
+	name = filepath.Base(strings.ReplaceAll(name, "\\", "/"))
+	if name == "." || name == ".." || name == string(filepath.Separator) {
+		return ""
+	}
+	return name
+}
+
+// IsInsideDir reports whether path lies strictly inside dir.
+func IsInsideDir(dir, path string) bool {
+	rel, err := filepath.Rel(dir, path)
+	if err != nil || rel == "." {
+		return false
+	}
+	return rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
+}

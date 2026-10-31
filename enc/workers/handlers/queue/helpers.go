@@ -527,9 +527,13 @@ func EditQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	df := pargs["disable-filter"].(bool)
 	ea := pargs["enable-anilist"].(bool)
 	if cmp.Or(remove, tcap, tfile) != "" {
-		if entry.Filter == nil {
-			entry.Filter = &types.FilterData{}
+		// Copy: the filter pointer is shared with the live queue entry and,
+		// for multi-link adds, with sibling entries.
+		filter := types.FilterData{}
+		if entry.Filter != nil {
+			filter = *entry.Filter
 		}
+		entry.Filter = &filter
 		entry.Filter.Fil1 = cmp.Or(remove, entry.Filter.Fil1)
 		entry.Filter.Fil2 = cmp.Or(tfile, entry.Filter.Fil2)
 		entry.Filter.Fil3 = cmp.Or(tcap, entry.Filter.Fil3)
@@ -553,7 +557,10 @@ func EditQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	} else {
 		prevName := entry.Name
 		entry.Name = name
-		bot.Queue.Replace(prevName, entry)
+		if !bot.Queue.Replace(prevName, entry) {
+			_, _ = msg.ReplyText("`Could not rename: the item has left the queue or that name is already queued.`")
+			return nil
+		}
 	}
 	db.SaveQueue(ctx)
 	_, _ = msg.ReplyText("`Edited queued item successfully.`")

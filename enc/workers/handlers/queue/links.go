@@ -206,6 +206,7 @@ func AddLink(ctx *ext.Context, update *ext.Update, msg *tele.Message, args strin
 			var dlInfo *utils.DLInfo
 			var mega bool
 			qSource := types.QueueSource{}
+			var batches []types.BatchItem // per link, not shared across links
 			if utils.IsMegaLink(uri) {
 				mega = true
 				qSource.Source = source.Mega

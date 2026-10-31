@@ -524,9 +524,9 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 		thumbPath = ""
 	}
 	var args2 string
-	for arg := range strings.SplitSeq(ffmpegArgs, "-") {
-		if strings.Contains(arg, "metadata") {
-			args2 += "-" + arg + " "
+	for _, arg := range utils.SplitFlags(ffmpegArgs) {
+		if name, _, _ := strings.Cut(arg, " "); strings.HasPrefix(name, "-") && strings.Contains(name, "metadata") {
+			args2 += strings.TrimSpace(arg) + " "
 		}
 	}
 	if strings.Contains(args2, "This Episode") && r.Title != "" {
@@ -537,10 +537,10 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 		if r.Season != "" {
 			strR += " Season " + r.Season
 		}
-		args2 = strings.ReplaceAll(args2, "This Episode", strR)
+		args2 = strings.ReplaceAll(args2, "This Episode", utils.ShellSafeText(strR))
 	}
 	if strings.Contains(args2, "Fileinfo") {
-		args2 = strings.ReplaceAll(args2, "Fileinfo", result.MediaInfoName)
+		args2 = strings.ReplaceAll(args2, "Fileinfo", utils.ShellSafeText(result.MediaInfoName))
 	}
 	if defaultAudio != "" || defaultSubtitle != "" {
 		if defaultAudio != "" {
