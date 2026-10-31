@@ -192,7 +192,7 @@ func LoadConfig() error {
 	viper.SetDefault("MI_IN_CAPTION", true)
 	viper.SetDefault("MEDIAINFO_DIR", ".minfo")
 	viper.SetDefault("MUX_DIR", ".mux")
-	viper.SetDefault("PAUSE_ON_DL_INFO", true)
+	viper.SetDefault("PODI", true)
 	viper.SetDefault("PROGRESS_UPDATE_INTERVAL", 10)
 	viper.SetDefault("QBIT_PORT", 8090)
 	viper.SetDefault("QBIT_PORT2", 9090)
