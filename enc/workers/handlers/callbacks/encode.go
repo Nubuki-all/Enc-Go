@@ -91,9 +91,7 @@ func EncodeStats(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery
 	outSize := utils.SizeOf(info.OutPath)
 	dlSize := utils.SizeOf(info.Path)
 	name := filepath.Base(info.Path)
-	if len(name) > 45 {
-		name = name[:45] + "…"
-	}
+	name = utils.TruncateText(name, 45)
 	du, err := disk.Usage("/")
 	if err != nil || du == nil {
 		du = &disk.UsageStat{}

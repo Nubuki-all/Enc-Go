@@ -258,6 +258,7 @@ func AutoAddDocument(ctx *ext.Context, update *ext.Update, msg *tele.Message) er
 	}
 	if bot.Queue.Find(name) {
 		_, _ = msg.ReplyText("**This video has already been added to queue.**")
+		return nil
 	}
 	qSource := types.QueueSource{}
 	qSource.Source = source.Telegram

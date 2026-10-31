@@ -294,25 +294,30 @@ func (m *Message) Forward(chatID int64) (*Message, error) {
 		logger.ErrorW(err.Error())
 		return nil, err
 	}
-	var msg *gp.Message
 	var updates []tg.UpdateClass
 	switch r := resp.(type) {
 	case *tg.Updates:
 		updates = r.GetUpdates()
+	case *tg.UpdatesCombined:
+		updates = r.GetUpdates()
 	}
-	update := updates[0]
+	// The new message isn't necessarily the first update.
 	var rawMsg tg.MessageClass
-	switch update := update.(type) {
-	case *tg.UpdateNewMessage:
-		rawMsg = update.GetMessage()
-	case *tg.UpdateNewChannelMessage:
-		rawMsg = update.GetMessage()
+	for _, update := range updates {
+		switch u := update.(type) {
+		case *tg.UpdateNewMessage:
+			rawMsg = u.GetMessage()
+		case *tg.UpdateNewChannelMessage:
+			rawMsg = u.GetMessage()
+		}
+		if rawMsg != nil {
+			break
+		}
 	}
-	if rawMsg != nil {
-		msg = gp.ConstructMessage(rawMsg)
-	} else {
+	if rawMsg == nil {
 		return nil, fmt.Errorf("failed to extract message from updates")
 	}
+	msg := gp.ConstructMessage(rawMsg)
 	return NewMsgFromGotg(msg, telegram.Context, chatID, telegram.Context.Self.ID), nil
 }
 
@@ -580,17 +585,22 @@ func ForwardMessage(fromChatID, toChatID int64, msgID int) (*Message, error) {
 		logger.ErrorW(err.Error())
 		return nil, err
 	}
-	var msg *gp.Message
 	var updates []tg.UpdateClass
 	switch r := resp.(type) {
 	case *tg.Updates:
 		updates = r.GetUpdates()
+	case *tg.UpdatesCombined:
+		updates = r.GetUpdates()
 	}
-	update := updates[0]
-	switch update := update.(type) {
-	case *tg.UpdateNewMessage:
-		m := update.GetMessage()
-		msg = gp.ConstructMessage(m)
+	// The forwarded message isn't necessarily the first update (an
+	// UpdateMessageID usually comes first), and channels use their own type.
+	for _, update := range updates {
+		switch u := update.(type) {
+		case *tg.UpdateNewMessage:
+			return NewMsgFromGotg(gp.ConstructMessage(u.GetMessage()), ctx, toChatID, ctx.Self.ID), nil
+		case *tg.UpdateNewChannelMessage:
+			return NewMsgFromGotg(gp.ConstructMessage(u.GetMessage()), ctx, toChatID, ctx.Self.ID), nil
+		}
 	}
-	return NewMsgFromGotg(msg, ctx, toChatID, ctx.Self.ID), nil
+	return nil, fmt.Errorf("forward: no new message in response")
 }

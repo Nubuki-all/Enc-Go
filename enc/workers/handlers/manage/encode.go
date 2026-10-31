@@ -183,7 +183,7 @@ func ResetSEParams(ctx *ext.Context, update *ext.Update, msg *tele.Message, arg 
 	case "-4":
 		if bot.FFmpeg4Args != "" {
 			bot.FFmpeg4Args = ""
-		} else if defaultEnv := config.Conf.FFmpeg4; defaultEnv != "" {
+		} else if defaultEnv = config.Conf.FFmpeg4; defaultEnv != "" {
 			bot.FFmpeg4Args = defaultEnv
 		} else {
 			return envNotSet()

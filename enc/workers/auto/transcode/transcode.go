@@ -234,7 +234,7 @@ func thing(entry types.QueueEntry) {
 	stkMsg := sendSticker(entry, batchItem)
 	_ = g.Wait()
 	// On All jobs fail, remove all associated FCHANNEL entry
-	if totalJobs == Einfo.FailedJobs {
+	if totalJobs == Einfo.Failed() {
 		if Bmsg != nil {
 			_ = Bmsg.Delete()
 		}
@@ -276,11 +276,9 @@ type encodeWorker struct {
 
 func (e *encodeWorker) start(encodeArgs string) error {
 	codec := utils.GetCodec(encodeArgs)
-	Einfo.WorkersCodec = append(Einfo.WorkersCodec, codec)
-	Einfo.Workers++
+	Einfo.AddWorker(codec)
 	defer func() {
-		Einfo.WorkersCodec = remove(Einfo.WorkersCodec, codec)
-		Einfo.Workers--
+		Einfo.RemoveWorker(codec)
 		e.job.Done()
 	}()
 	_ = workerSemaphore.Acquire(context.Background(), 1)
@@ -297,7 +295,7 @@ func (e *encodeWorker) start(encodeArgs string) error {
 	var succeded bool
 	defer func() {
 		if !succeded {
-			Einfo.FailedJobs++
+			Einfo.AddFailed()
 		}
 	}()
 	sMsg, err := tele.SendMsg(e.item.ChatID, "`Waiting for encoder worker…`", &tele.SendOptions{ReplyTo: e.item.MessageID})

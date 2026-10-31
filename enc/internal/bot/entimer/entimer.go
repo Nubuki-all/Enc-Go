@@ -38,6 +38,12 @@ func NewEnTimer() *EnTimer {
 // Start launches the timer loop once
 func (et *EnTimer) Start() {
 	et.once.Do(func() {
+		// LOCK_ON_STARTUP sets indPause; the queue only checks bot.Paused.
+		et.mu.Lock()
+		if et.indPause {
+			bot.Paused.Set(state.DefaultPause, true)
+		}
+		et.mu.Unlock()
 		go et.loop()
 	})
 }

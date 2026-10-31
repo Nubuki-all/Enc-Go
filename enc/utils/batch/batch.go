@@ -81,8 +81,8 @@ func GetPendingItems(items []types.BatchItem, except string, limit int, anilist 
 		if e != nil {
 			q = n
 		}
-		if truncate && len(q) > 45 {
-			q = q[:45] + "…"
+		if truncate {
+			q = utils.TruncateText(q, 45)
 		}
 		list = append(list, q)
 	}

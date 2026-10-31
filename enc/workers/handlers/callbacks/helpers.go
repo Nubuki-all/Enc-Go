@@ -12,7 +12,7 @@ import (
 
 	"enc/internal/bot"
 	//"enc/internal/logger"
-	//"enc/utils"
+	"enc/utils"
 	"enc/utils/parser"
 	"enc/utils/tele"
 )
@@ -46,9 +46,7 @@ func getNext() (n1 string, n2 string) {
 		} else {
 			n1 = "[Batch]: " + entry.Name
 		}
-		if len(n1) > 45 {
-			n1 = n1[:45] + "…"
-		}
+		n1 = utils.TruncateText(n1, 45)
 	}
 	if total > 2 {
 		entry := queue[2]
@@ -63,14 +61,12 @@ func getNext() (n1 string, n2 string) {
 				},
 			)
 			if err != nil {
-				n1 = entry.Name
+				n2 = entry.Name
 			}
 		} else {
 			n2 = "[Batch]: " + entry.Name
 		}
-		if len(n2) > 45 {
-			n2 = n2[:45] + "…"
-		}
+		n2 = utils.TruncateText(n2, 45)
 		if total > 3 {
 			n2 += fmt.Sprintf(" (+%d)", total-3)
 		}

@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -110,10 +111,15 @@ func rssMonitorOnce(ctx context.Context) {
 
 	if config.Conf.RSSChat == 0 {
 		logger.InfoW("RSS_CHAT not added! Shutting down rss scheduler...")
-		StopRSS()
+		// Stop waits for the scheduler goroutine, which is running this job,
+		// so it must not be called synchronously from here.
+		go StopRSS()
 		return
 	}
-	if len(bot.RSSDict) == 0 {
+	bot.RSSDictMutex.RLock()
+	feeds := len(bot.RSSDict)
+	bot.RSSDictMutex.RUnlock()
+	if feeds == 0 {
 		// no feeds -> pause scheduler
 		PauseRSS()
 		return
@@ -143,8 +149,15 @@ func rssMonitorOnce(ctx context.Context) {
 	parser := gofeed.NewParser()
 
 	for _, title := range keys {
+		// Work on a snapshot: /rss edits change the feed under the lock while
+		// this sweep runs. Chat is cloned since --rm-chat edits it in place.
 		bot.RSSDictMutex.RLock()
-		data := bot.RSSDict[title]
+		var data *types.FeedData
+		if d := bot.RSSDict[title]; d != nil {
+			snap := *d
+			snap.Chat = slices.Clone(d.Chat)
+			data = &snap
+		}
 		bot.RSSDictMutex.RUnlock()
 
 		if data == nil {
@@ -226,6 +239,7 @@ func rssMonitorOnce(ctx context.Context) {
 		}
 
 		feedTasks := []feedTask{}
+		foundLast := false
 		// collect items from newest to older until we hit last_seen
 		for idx := 0; idx < len(feed.Items); idx++ {
 			item := feed.Items[idx]
@@ -239,15 +253,7 @@ func rssMonitorOnce(ctx context.Context) {
 
 			// stop if we've reached last seen
 			if itemURL == data.LastFeed || itemTitle == data.LastTitle {
-				break
-			}
-
-			if items := len(feed.Items); idx == (items - 1) {
-				logger.WarnW("Rss Monitor: Reached Max index no for this feed. Maybe you need to use less RSS_DELAY to not miss some torrents.", zap.String("Title", title), zap.Int("Items", items))
-				if !data.AllowSpam {
-					logger.Warn("Due to spam prevention, RSS feed has been reset.")
-					feedTasks = make([]feedTask, 0)
-				}
+				foundLast = true
 				break
 			}
 
@@ -276,6 +282,15 @@ func rssMonitorOnce(ctx context.Context) {
 				feedMsg = "/" + feedMsg
 			}
 			feedTasks = append(feedTasks, feedTask{msg: feedMsg, url: itemURL})
+		}
+		// Every item was new: some may have been missed. A one-item feed
+		// always ends up here, so it is exempt from spam prevention.
+		if items := len(feed.Items); !foundLast && items > 1 {
+			logger.WarnW("Rss Monitor: Reached Max index no for this feed. Maybe you need to use less RSS_DELAY to not miss some torrents.", zap.String("Title", title), zap.Int("Items", items))
+			if !data.AllowSpam {
+				logger.Warn("Due to spam prevention, RSS feed has been reset.")
+				feedTasks = make([]feedTask, 0)
+			}
 		}
 
 		for i := len(feedTasks) - 1; i >= 0; i-- {
@@ -340,6 +355,9 @@ var DefaultScheduler *scheduler.Scheduler
 
 // ScheduleRSS creates and starts the scheduler with given delay (seconds).
 func ScheduleRSS(delaySeconds int) {
+	if delaySeconds <= 0 {
+		delaySeconds = 60 // time.NewTicker panics on a non-positive interval
+	}
 	job := func(ctx context.Context) {
 		rssMonitorOnce(ctx) // your function
 	}

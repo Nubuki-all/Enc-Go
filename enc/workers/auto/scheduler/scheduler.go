@@ -15,8 +15,6 @@ type Scheduler struct {
 	job         JobFn
 	ticker      *time.Ticker
 	stopCh      chan struct{}
-	pauseCh     chan struct{}
-	resumeCh    chan struct{}
 	paused      bool
 	pausedMu    sync.RWMutex
 	started     bool
@@ -36,8 +34,6 @@ func New(interval time.Duration, job JobFn) *Scheduler {
 		interval:   interval,
 		job:        job,
 		stopCh:     make(chan struct{}),
-		pauseCh:    make(chan struct{}, 1),
-		resumeCh:   make(chan struct{}, 1),
 		JobTimeout: 30 * time.Second, // default job timeout
 	}
 }
@@ -87,10 +83,6 @@ func (s *Scheduler) Start(initialDelay time.Duration) {
 				// wrap this in a goroutine and consider limiting concurrency with a semaphore)
 				s.job(ctx)
 				cancel()
-			case <-s.pauseCh:
-				s.setPaused(true)
-			case <-s.resumeCh:
-				s.setPaused(false)
 			case <-s.stopCh:
 				return
 			}
@@ -117,20 +109,15 @@ func (s *Scheduler) Stop() {
 	})
 }
 
-// Pause signals the scheduler to pause; Pause is non-blocking.
+// Pause pauses the scheduler; the job is skipped on ticks until Resume.
+// It sets the state directly so the last of Pause/Resume always wins.
 func (s *Scheduler) Pause() {
-	select {
-	case s.pauseCh <- struct{}{}:
-	default:
-	}
+	s.setPaused(true)
 }
 
-// Resume signals the scheduler to resume; Resume is non-blocking.
+// Resume resumes the scheduler.
 func (s *Scheduler) Resume() {
-	select {
-	case s.resumeCh <- struct{}{}:
-	default:
-	}
+	s.setPaused(false)
 }
 
 // IsPaused returns true if the scheduler is currently paused.

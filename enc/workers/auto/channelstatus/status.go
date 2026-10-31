@@ -110,7 +110,7 @@ func autoStat() {
 		var msg string
 		start := 0
 		if transcode.Einfo.Current != "" {
-			msg += fmt.Sprintf("```Currently Encoding\n%s (%s)```\n\n", transcode.Einfo.Current, strings.Join(transcode.Einfo.WorkersCodec, ","))
+			msg += fmt.Sprintf("```Currently Encoding\n%s (%s)```\n\n", transcode.Einfo.Current, strings.Join(transcode.Einfo.Codecs(), ","))
 			start = 1
 		}
 		if itms := getBatchStatusPreview(); itms != "" {

@@ -29,7 +29,7 @@ func FCForward(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	repMsgID := msg.ReplyToID
 	if fchannel == 0 {
 		reply = "`FCHANNEL env not set.`"
-	} else if repMsgID != 0 {
+	} else if repMsgID == 0 {
 		reply = "`Reply with a message to forward to FCHANNEL`"
 	}
 	if reply != "" {

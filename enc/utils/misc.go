@@ -17,6 +17,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"enc/config"
 	"enc/internal/bot"
@@ -650,4 +651,13 @@ func StructToMap(data any) (map[string]any, error) {
 	}
 	err = json.Unmarshal(bytes, &result)
 	return result, err
+}
+
+// TruncateText cuts s to at most n runes plus "…" when it is longer than n
+// runes. It never splits a multi-byte character.
+func TruncateText(s string, n int) string {
+	if utf8.RuneCountInString(s) <= n {
+		return s
+	}
+	return string([]rune(s)[:n]) + "…"
 }

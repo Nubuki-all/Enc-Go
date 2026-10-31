@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/5rahim/tanuki"
 	"go.uber.org/zap"
@@ -212,8 +213,8 @@ func ParseName(
 	title = strings.ReplaceAll(title, "/", " ")
 	// 10) Title truncation
 	shortTitle := title
-	if len(shortTitle) > 33 {
-		shortTitle = shortTitle[:32] + "…"
+	if utf8.RuneCountInString(shortTitle) > 33 {
+		shortTitle = utils.TruncateText(shortTitle, 32)
 		shortTitle = strings.SplitN(shortTitle, ":", 2)[0]
 	}
 

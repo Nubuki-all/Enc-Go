@@ -95,7 +95,9 @@ func (dl *MegaDownload) Start() error {
 	if dl.selectedName == "" {
 		dl.Path = dl.basePath
 	} else {
-		dl.Path = filepath.Join(dl.dir, dl.selectedName)
+		// The selected file is fetched through its own single-file link,
+		// which saves it under its bare name, without the subfolder.
+		dl.Path = filepath.Join(dl.dir, filepath.Base(dl.selectedName))
 	}
 	dl.downloadList, err = dl.client.NewDownloadFromLink(dl.uri)
 	if err != nil {
@@ -327,7 +329,7 @@ func (dl *MegaDownload) Select(files []mega.File) error {
 	}
 	var fileID string
 	sl, _ := strconv.Atoi(dl.selected)
-	if sl > (len(files) - 1) {
+	if sl < 0 || sl > (len(files)-1) {
 		return fmt.Errorf("mega: file_id not found")
 	}
 	for x, file := range files {

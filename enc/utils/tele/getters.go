@@ -107,6 +107,9 @@ func GetMessageFromLink(url string) *Message {
 		return nil
 	}
 	tokens := strings.Split(strings.Trim(url, "/"), "/")
+	if len(tokens) < 2 {
+		return nil
+	}
 	var chatID int64
 	var msgID int
 	msgID, err := strconv.Atoi(tokens[len(tokens)-1])

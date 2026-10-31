@@ -225,6 +225,9 @@ func (dl *Aria2Download) ProgressCallback(start time.Time, gid string) string {
 	}
 	var name string
 	dl.name, _ = arigo.GetDownloadName(status)
+	// Path must use the download's own name (the torrent folder for
+	// multi-file torrents), as UpdateCallback does, not the first file.
+	pathName := dl.name
 	if len(status.Files) > 1 {
 		dl.name = filepath.Base(status.Files[0].Path)
 	}
@@ -277,7 +280,7 @@ func (dl *Aria2Download) ProgressCallback(start time.Time, gid string) string {
 		if dl.selectedPath != "" {
 			dl.Path = dl.selectedPath
 		} else {
-			dl.Path = filepath.Join(status.Dir, name)
+			dl.Path = filepath.Join(status.Dir, pathName)
 		}
 		msgHead = fmt.Sprintf("**Downloading:**\n`%s`\n**via:** ", name)
 		if status.BitTorrent.Info.Name != "" {

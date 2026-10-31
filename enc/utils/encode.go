@@ -2,6 +2,8 @@ package utils
 
 import (
 	//"os"
+	"slices"
+	"sync"
 
 	//"enc/config"
 	"enc/internal/bot"
@@ -36,6 +38,7 @@ func (d *DLInfo) String() string {
 // EncodeInfo tracks encoding status
 // Equivalent to Python's Encode_info
 type EncodeInfo struct {
+	mu           sync.Mutex // guards Workers, WorkersCodec and FailedJobs
 	Current      string
 	Workers      int
 	WorkersCodec []string
@@ -47,7 +50,7 @@ type EncodeInfo struct {
 
 // NewEncodeInfo creates and resets an EncodeInfo
 func NewEncodeInfo() *EncodeInfo {
-	ei := &EncodeInfo{}
+	ei := &EncodeInfo{Event: make(chan struct{}, 1)}
 	ei.Reset()
 	return ei
 }
@@ -57,10 +60,55 @@ func (e *EncodeInfo) Reset() {
 	// e.Previous = e.Current
 	e.Current = ""
 	e.BatchID = ""
-	e.Event = make(chan struct{}, 1)
+	// Keep the same Event channel: the status goroutine may be waiting on it.
+	select {
+	case <-e.Event:
+	default:
+	}
+	e.mu.Lock()
 	e.Workers = 0
 	e.WorkersCodec = make([]string, 0)
 	e.FailedJobs = 0
+	e.mu.Unlock()
+}
+
+// AddWorker records a running worker using codec.
+func (e *EncodeInfo) AddWorker(codec string) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	e.WorkersCodec = append(e.WorkersCodec, codec)
+	e.Workers++
+}
+
+// RemoveWorker removes one worker using codec.
+func (e *EncodeInfo) RemoveWorker(codec string) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if i := slices.Index(e.WorkersCodec, codec); i >= 0 {
+		e.WorkersCodec = slices.Delete(e.WorkersCodec, i, i+1)
+	}
+	e.Workers--
+}
+
+// AddFailed counts one failed job.
+func (e *EncodeInfo) AddFailed() {
+	e.mu.Lock()
+	e.FailedJobs++
+	e.mu.Unlock()
+}
+
+// Failed returns the number of failed jobs.
+func (e *EncodeInfo) Failed() int {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	return e.FailedJobs
+}
+
+// Codecs returns a copy of the running workers' codecs.
+func (e *EncodeInfo) Codecs() []string {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	return slices.Clone(e.WorkersCodec)
 }
 
 // EncodeJob manages which ffmpeg scripts to run

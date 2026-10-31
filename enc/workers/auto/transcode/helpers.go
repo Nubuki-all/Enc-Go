@@ -306,12 +306,3 @@ func cacheNextDownload(entries []types.QueueEntry, batchItem *types.BatchItem) {
 	download.Go()
 	downloaders.CachedDL[entry.Name] = download
 }
-
-func remove(s []string, r string) []string {
-	for i, v := range s {
-		if v == r {
-			return append(s[:i], s[i+1:]...)
-		}
-	}
-	return s
-}
