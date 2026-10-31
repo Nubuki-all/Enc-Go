@@ -94,6 +94,8 @@ type Config struct {
 	Thumb                 string
 	UnfinishedProgressStr string
 	UploadAsDoc           bool
+	UpstreamRepo          string // owner/repo that /update pulls releases from
+	UpstreamToken         string // GitHub token for a private UPSTREAM_REPO
 	UseAniList            bool
 	UseCaption            bool
 	UVS                   bool
@@ -206,6 +208,7 @@ func LoadConfig() error {
 	viper.SetDefault("TEMP_DIR", ".temp")
 	viper.SetDefault("UN_FINISHED_PROGRESS_STR", "🤍")
 	viper.SetDefault("UPLOAD_AS_DOCUMENT", true)
+	viper.SetDefault("UPSTREAM_REPO", "Nubuki-all/Enc-Go")
 	viper.SetDefault("USE_ANILIST", true)
 	viper.SetDefault("USE_CAPTION", true)
 	viper.SetDefault("WORKERS", 2)
@@ -293,6 +296,8 @@ func LoadConfig() error {
 		Thumb:                 viper.GetString("THUMBNAIL"),
 		UnfinishedProgressStr: viper.GetString("UN_FINISHED_PROGRESS_STR"),
 		UploadAsDoc:           viper.GetBool("UPLOAD_AS_DOCUMENT"),
+		UpstreamRepo:          viper.GetString("UPSTREAM_REPO"),
+		UpstreamToken:         viper.GetString("UPSTREAM_TOKEN"),
 		UseAniList:            viper.GetBool("USE_ANILIST"),
 		UseCaption:            viper.GetBool("USE_CAPTION"),
 		UVS:                   viper.GetBool("UPLOAD_VIDEO_AS_SPOILER"),

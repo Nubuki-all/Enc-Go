@@ -84,6 +84,7 @@ func AddCmdHandlers(dispatch dispatcher.Dispatcher) {
 
 		// Run-control Handlers
 		"restart": EventHandlerWithArgs(manage.Restart),
+		"update":  EventHandlerWithArgs(manage.Update),
 		"nuke":    EventHandlerWithArgs(manage.Nuke),
 
 		// Rss Handlers

@@ -37,6 +37,7 @@ __Still in beta…__
 
 **Operations**
 - Downloads its own static builds of FFmpeg, aria2, qBittorrent-nox, MediaInfo, anitomy and yt-dlp (with Deno) into `.bin/` on first start
+- Self-update from GitHub releases (`/update`)
 - Owner and temporary-user permissions (`OWNER`, `TEMP_USERS`, `/permit`), with developer commands for a separate `DEV` user
 - Bot status with CPU, RAM, disk and uptime (`/status`), shell access (`/bash`, `/sh`), Go eval (`/eval`), logs (`/logs`) and a process view (`/top`)
 - Flood-wait handling, auto-restart interval and optional pprof endpoint
@@ -174,8 +175,10 @@ Variable | Default | Description
 `AUTO_RESTART_INTERVAL` | `24` | Restart the bot every this many hours; `0` disables
 `FORCE_RESTART_ON_RPC_FAILURE` | `false` | Restart the Telegram client when an upload loses its connection, instead of waiting for it to reconnect
 `ENABLE_PPROF` | `false` | Serve Go pprof profiles on `localhost:6060`
+`UPSTREAM_REPO` | `Nubuki-all/Enc-Go` | GitHub repo (`owner/repo` or URL) whose `latest` release `/update` installs
+`UPSTREAM_TOKEN` | | GitHub token, needed by `/update` while `UPSTREAM_REPO` is private
 
-`COMPATIBILITY_MODE`, `EXTENDED_CAPTIONS`, `MI_IN_CAPTION`, `OVR`, `DYNO`, `ALWAYS_DEPLOY_LATEST`, `UPSTREAM_REPO`, `UPSTREAM_BRANCH`, `FLOOD_SLEEP_THRESHOLD` and `WORKERS` are read or listed but currently have no effect.
+`COMPATIBILITY_MODE`, `EXTENDED_CAPTIONS`, `MI_IN_CAPTION`, `OVR`, `DYNO`, `ALWAYS_DEPLOY_LATEST`, `UPSTREAM_BRANCH`, `FLOOD_SLEEP_THRESHOLD` and `WORKERS` are read or listed but currently have no effect.
 
 ## Commands
 
@@ -247,6 +250,7 @@ Command | Description
 :--- | :---
 `/permit` `/unpermit` | Add or remove a temporary user
 `/restart` | Restart the bot
+`/update` | Replace the bot with the latest release's binary and restart; does nothing if already on it
 `/nuke` | Save state, clear qBittorrent and shut the bot down
 `/bash` `/sh` | Run a shell command
 `/eval` | Run Go code inside the bot
