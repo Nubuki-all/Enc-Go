@@ -44,6 +44,8 @@ __Still in beta…__
 
 ## Deployment
 
+> Coming from [Enc](https://github.com/Nubuki-all/Enc), the Python bot? Read the [migration guide](docs/MIGRATING_FROM_ENC.md) first: a few settings changed, and saved data doesn't carry over.
+
 The bot reads its settings from a `.env` file in the directory it runs from (or from environment variables). Copy [.env.sample](.env.sample) to `.env` and fill in at least the compulsory variables below.
 
 **With Docker**
