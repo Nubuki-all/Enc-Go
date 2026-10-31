@@ -44,7 +44,7 @@ func DumpDl(path, name string, user int64, msg *tele.Message) error {
 		Caption: caption,
 	}
 	upload.Init(uID, dmpPath, user)
-	if err := upload.Start(); err != nil || upload.IsCancelled {
+	if err := upload.Start(); err != nil || upload.IsCancelled.Load() {
 		_, _ = upload.ReportStatus()
 	}
 	return nil

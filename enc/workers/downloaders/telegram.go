@@ -124,7 +124,7 @@ func (dl *TgDownload) Start() error {
 	// replaces older queued values when overloaded.
 	progressFunc := func(start time.Time, done, total int64, w *progressWriter, wa *progressWriterAt) {
 		// would switch to atomic if becomes a problem
-		if dl.IsCancelled {
+		if dl.IsCancelled.Load() {
 			// mark writer(s) cancelled immediately
 			if w != nil {
 				w.Cancel = true
@@ -176,20 +176,26 @@ func (dl *TgDownload) Start() error {
 func (dl *TgDownload) ProgressCallback(start time.Time, done, total int64) {
 	dl.Mutex.Lock()
 	defer dl.Mutex.Unlock()
-	if dl.PauseProgress {
+	if dl.PauseProgress.Load() {
 		return
 	}
 	if total < done {
 		return
 	}
 	diff := time.Since(start).Round(time.Second).Seconds()
-	percentage := float64(done * 100 / total)
+	var percentage float64
+	if total > 0 {
+		percentage = float64(done * 100 / total)
+	}
 	var speed int64
 	if diff > 0 {
 		speed = done / int64(diff)
 	}
 	elapsedTime := utils.TimeFormatter(diff)
-	timeToCompletion := utils.TimeFormatter(float64(total-done) / float64(speed))
+	var timeToCompletion string
+	if remaining := total - done; remaining > 0 && speed > 0 {
+		timeToCompletion = utils.TimeFormatter(float64(remaining) / float64(speed))
+	}
 	filled := int(math.Floor(percentage / 10.0))
 	finStr := dl.fstr
 	unfinStr := dl.ufstr

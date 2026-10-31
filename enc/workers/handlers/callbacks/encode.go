@@ -169,7 +169,7 @@ func cancelEncode(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuer
 	_ = query.Answer("Cancelling "+action+" please wait…", false)
 	// Mark as cancelled before killing, so the encoder sees it once the
 	// process exits and reports a cancel instead of a failure.
-	info.IsCancelled = true
+	info.IsCancelled.Store(true)
 	info.Canceller = sender
 	if err := info.Process.Kill(); err != nil {
 		logger.Warn(err)

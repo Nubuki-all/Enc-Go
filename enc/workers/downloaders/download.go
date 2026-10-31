@@ -82,7 +82,7 @@ func (dl *Downloader) Go() {
 	}
 	dl.pauseOnDLInfo = config.Conf.PauseOnDLInfo
 	dl.Background = true
-	dl.PauseProgress = true
+	dl.PauseProgress.Store(true)
 	go func() { _ = dl.Start() }()
 }
 
@@ -109,7 +109,7 @@ func (dl *Downloader) Attach(id string, Sender int64) error {
 	dl.Sender = Sender
 	dl.Register()
 	defer dl.UnRegister() // Just in case
-	dl.PauseProgress = false
+	dl.PauseProgress.Store(false)
 	dl.initLMsg()
 	<-dl.Done
 	return dl.err
@@ -148,10 +148,10 @@ func (dl *Downloader) Start() error {
 	if name := dl.service.GetFileName(); name != "" {
 		dl.FileName = name
 	}
-	if err != nil || dl.IsCancelled { // for downloaders that don't return an err on download cancel
+	if err != nil || dl.IsCancelled.Load() { // for downloaders that don't return an err on download cancel
 		dl.err = err
 		dl.CleanDownload()
-		if !dl.IsCancelled {
+		if !dl.IsCancelled.Load() {
 			logger.Error(err)
 		}
 	}
@@ -233,7 +233,7 @@ func (dl *Downloader) UnRegister() {
 func (dl *Downloader) ReportStatus() (*tele.Message, error) {
 	var status string
 	var err error
-	if dl.IsCancelled {
+	if dl.IsCancelled.Load() {
 		status = "was cancelled"
 		if cncl := dl.Canceller; cncl != 0 && cncl != dl.Sender {
 			userName := "Unknown"
@@ -254,7 +254,7 @@ func (dl *Downloader) ReportStatus() (*tele.Message, error) {
 
 	if bot.ReportFailedDl {
 		reportee := config.Rconf.Owners[0]
-		if reportee != msg.ChatID && dl.err != nil && !dl.IsCancelled {
+		if reportee != msg.ChatID && dl.err != nil && !dl.IsCancelled.Load() {
 			go func(text string, id int64) {
 				_, err := tele.SendMsg(id, text, &tele.SendOptions{HTMLParseMode: true})
 				if err != nil {

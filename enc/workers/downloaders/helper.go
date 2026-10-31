@@ -521,7 +521,8 @@ func GetYdlInfo(uri string) *utils.DLInfo {
 	}
 	info := infos[0]
 	if info.PlaylistTitle == nil {
-		if *info.Title == "" {
+		// infos[0] may have been skipped above for having no title.
+		if info.Title == nil || *info.Title == "" {
 			n := "Unknown Title"
 			info.Title = &n
 		}

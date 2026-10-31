@@ -600,7 +600,12 @@ func ClearQueue(ctx *ext.Context, update *ext.Update, msg *tele.Message, args st
 			_, _ = msg.ReplyText("`This item wasn't added to queue by you.`")
 			return nil
 		}
-		bot.Queue.Remove(id)
+		// Remove by name: the index may have shifted since the snapshot.
+		if _, ok := bot.Queue.Pop(entry.Name); !ok {
+			_, _ = msg.ReplyText("`" + entry.Name + "` is no longer in the queue")
+			return nil
+		}
+		db.SaveQueue(ctx)
 		_, _ = msg.ReplyText("`" + entry.Name + "` has been removed from queue")
 		return nil
 	}

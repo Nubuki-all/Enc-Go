@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 
 	"go.uber.org/zap"
 	//_ "modernc.org/sqlite"
@@ -177,7 +178,12 @@ func loadArrays() {
 			continue
 		}
 		if key == "t_users" {
-			bot.TempUsers = arr
+			// Merge like the Mongo loader, keeping users added from TEMP_USERS.
+			for _, id := range arr {
+				if !slices.Contains(bot.TempUsers, id) {
+					bot.TempUsers = append(bot.TempUsers, id)
+				}
+			}
 		}
 	}
 }

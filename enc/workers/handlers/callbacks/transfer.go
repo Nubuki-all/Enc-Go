@@ -38,7 +38,7 @@ func CancelDownload(ctx *ext.Context, update *ext.Update, query *tele.CallbackQu
 		return nil
 	}
 	_ = query.Answer("Cancelling download please wait…", false)
-	info.IsCancelled = true
+	info.IsCancelled.Store(true)
 	info.Canceller = sender
 	return nil
 }
@@ -55,7 +55,7 @@ func CancelUpload(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuer
 		return nil
 	}
 	_ = query.Answer("Cancelling upload please wait…", false)
-	info.IsCancelled = true
+	info.IsCancelled.Store(true)
 	info.Canceller = sender
 	return nil
 }
@@ -114,7 +114,7 @@ func ViewDlInfo(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery)
 		return nil
 	}
 	_ = query.Answer("Please wait…", false)
-	if info.PauseProgress {
+	if info.PauseProgress.Load() {
 		return nil
 	}
 	vidStat := parser.VideoInfo(filepath.Base(info.Path))
@@ -141,7 +141,7 @@ func ViewDlInfo(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery)
 	msg := query.GetMessage()
 	info.Mutex.Lock()
 	defer info.Mutex.Unlock()
-	info.PauseProgress = true
+	info.PauseProgress.Store(true)
 	_, _ = msg.Edit(
 		vidStat,
 		&tele.EditOptions{HTMLParseMode: true, ReplyMarkup: replyMarkup},
@@ -161,7 +161,7 @@ func RevertView(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery)
 		return nil
 	}
 	_ = query.Answer("Please wait…", false)
-	if !info.PauseProgress {
+	if !info.PauseProgress.Load() {
 		return nil
 	}
 	replyMarkup := markup.InlineKeyboard(
@@ -182,6 +182,6 @@ func RevertView(ctx *ext.Context, update *ext.Update, query *tele.CallbackQuery)
 	info.Mutex.Lock()
 	defer info.Mutex.Unlock()
 	_, _ = msg.Edit("`...`", &tele.EditOptions{ReplyMarkup: replyMarkup})
-	info.PauseProgress = false
+	info.PauseProgress.Store(false)
 	return nil
 }

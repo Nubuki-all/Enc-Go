@@ -57,12 +57,14 @@ func DownloadToFile(ctx context.Context, url string, outPath string) error {
 	}
 	_, err = io.Copy(f, resp.Body)
 	if err != nil {
+		_ = f.Close()
 		_ = os.Remove(tmpPath)
 		return err
 	}
-	err = f.Close()
-	if err != nil {
-		logger.Warn(err)
+	// A failed close can mean the data never reached the disk.
+	if err = f.Close(); err != nil {
+		_ = os.Remove(tmpPath)
+		return err
 	}
 	return os.Rename(tmpPath, outPath)
 }
@@ -138,11 +140,14 @@ func DownloadFileWithProgress(ctx context.Context, url, destPath string) error {
 
 	// Copy to temp file
 	if _, err := io.Copy(file, &reader); err != nil {
+		_ = file.Close()
+		_ = os.Remove(destPath) // don't leave a partial file behind
 		return fmt.Errorf("write file: %w", err)
 	}
 
 	// Ensure file is closed before moving
 	if err := file.Close(); err != nil {
+		_ = os.Remove(destPath)
 		return fmt.Errorf("close file: %w", err)
 	}
 	_ = bar.Finish()

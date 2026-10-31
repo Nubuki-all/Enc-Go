@@ -430,7 +430,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 	defer waitQueue.Remove(id)
 	download.Init(id, msg.SenderID)
 	err = download.Start()
-	if err != nil || download.IsCancelled {
+	if err != nil || download.IsCancelled.Load() {
 		_, _ = download.ReportStatus()
 		return nil
 	}
@@ -438,7 +438,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 	if downloadInput != nil {
 		downloadInput.Init(id, msg.SenderID)
 		err = downloadInput.Start()
-		if err != nil || downloadInput.IsCancelled {
+		if err != nil || downloadInput.IsCancelled.Load() {
 			_, _ = downloadInput.ReportStatus()
 			return nil
 		}
@@ -600,7 +600,7 @@ func Mux(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string) e
 	}
 	upload.Init(id, tFile2, msg.SenderID)
 	err = upload.Start()
-	if err != nil || upload.IsCancelled {
+	if err != nil || upload.IsCancelled.Load() {
 		_, _ = upload.ReportStatus()
 		return nil
 	}

@@ -8,6 +8,7 @@ import (
 	"html"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"unicode/utf16"
 
@@ -182,6 +183,15 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 	// helper: validate language token (only allow simple tokens, no spaces)
 	langValidRe := regexp.MustCompile(`^[A-Za-z0-9_\-\+]{1,25}$`)
 
+	// Finished code blocks and link targets are swapped for placeholders so
+	// the bold/italic/... regexes below can't inject tags into them (e.g.
+	// "--" or "__" in a file name or URL).
+	var protected []string
+	protect := func(s string) string {
+		protected = append(protected, s)
+		return "\x00" + strconv.Itoa(len(protected)-1) + "\x00"
+	}
+
 	// fenced pre with optional language (DOTALL) - same regex, but we'll validate the captured lang
 	rePre := regexp.MustCompile("(?s)```([^\n]*)\n(.*?)```")
 	text = rePre.ReplaceAllStringFunc(text, func(m string) string {
@@ -214,9 +224,9 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 
 		if lang != "" {
 			// Escape attribute value safely (quotes etc.)
-			return `<pre language="` + escapeAttr(lang) + `">` + body + `</pre>`
+			return protect(`<pre language="` + escapeAttr(lang) + `">` + body + `</pre>`)
 		}
-		return `<pre>` + body + `</pre>`
+		return protect(`<pre>` + body + `</pre>`)
 	})
 
 	// emoji notation: ![emoji_char](tg://emoji?id=123)
@@ -230,12 +240,14 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 		parts := reLink.FindStringSubmatch(m)
 		label := html.EscapeString(parts[1])
 		url := html.EscapeString(parts[2])
-		return `<a href="` + url + `">` + label + `</a>`
+		return protect(`<a href="`+url+`">`) + label + `</a>`
 	})
 
 	// inline code: `code`  (explicitly disallow newlines inside inline code)
 	reCode := regexp.MustCompile("`([^`\\n]+)`")
-	text = reCode.ReplaceAllString(text, `<code>$1</code>`)
+	text = reCode.ReplaceAllStringFunc(text, func(m string) string {
+		return protect(`<code>` + m[1:len(m)-1] + `</code>`)
+	})
 
 	// bold: **text**  — allow newlines inside bold (DOTALL)
 	reBold := regexp.MustCompile(`(?s)\*\*(.+?)\*\*`)
@@ -256,6 +268,15 @@ func Parse(input string, strict bool) (string, []tg.MessageEntityClass, error) {
 	// spoiler: ||text||  — allow newlines
 	reSpoiler := regexp.MustCompile(`(?s)\|\|(.+?)\|\|`)
 	text = reSpoiler.ReplaceAllString(text, `<spoiler>$1</spoiler>`)
+
+	// Restore protected pieces; repeat since a code span can hold a link.
+	reProtected := regexp.MustCompile("\x00(\\d+)\x00")
+	for reProtected.MatchString(text) {
+		text = reProtected.ReplaceAllStringFunc(text, func(m string) string {
+			i, _ := strconv.Atoi(m[1 : len(m)-1])
+			return protected[i]
+		})
+	}
 
 	// 3) Now pass HTML-like result to htmlparser which will produce message + entities.
 	// fmt.Println(text)

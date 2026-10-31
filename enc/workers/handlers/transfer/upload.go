@@ -177,7 +177,7 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 			Ytdl:     ytdl,
 		}
 		download.Init(dID, msg.SenderID)
-		if err := download.Start(); err != nil || download.IsCancelled {
+		if err := download.Start(); err != nil || download.IsCancelled.Load() {
 			_, _ = download.ReportStatus()
 			return nil
 		}
@@ -256,7 +256,7 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 
 			for _, name := range files {
 				// cancellation check: UCancelled returns list-like; adapt accordingly
-				if dirUpload.IsCancelled {
+				if dirUpload.IsCancelled.Load() {
 					if !clean {
 						_, _ = msg.ReplyText(uCanMsg)
 					}
@@ -272,7 +272,7 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 				// upload loop (retry on certain recoverable errors)
 				for {
 					// cancellation checked in loop condition
-					if dirUpload.IsCancelled {
+					if dirUpload.IsCancelled.Load() {
 						if !clean {
 							_, _ = msg.ReplyText(uCanMsg)
 						}
@@ -301,7 +301,7 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 						_, _ = ulMsg.Edit(fmt.Sprintf("Uploading of `%s` failed: %v", name, uerr), nil)
 						break
 					}
-					if !upload.IsCancelled {
+					if !upload.IsCancelled.Load() {
 						chainMsg = ulMsg
 						uploadedCount++
 					} else {
@@ -361,7 +361,7 @@ func Upload(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		}
 		upload.Init(uID, file, msg.SenderID)
 		err = upload.Start()
-		if err != nil || upload.IsCancelled {
+		if err != nil || upload.IsCancelled.Load() {
 			if clean {
 				_ = rMsg.Delete()
 			} else {

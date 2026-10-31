@@ -112,7 +112,7 @@ func thing(entry types.QueueEntry) {
 		download.Init(ID, entry.Sender)
 		err = download.Start()
 	}
-	if err != nil || download.IsCancelled {
+	if err != nil || download.IsCancelled.Load() {
 		_, _ = download.ReportStatus()
 		_, _ = bot.Queue.Pop(entry.Name)
 		if Bmsg != nil {
@@ -458,7 +458,7 @@ func (e *encodeWorker) start(encodeArgs string) error {
 	}
 	upload.Init(id, outPath, e.item.Sender)
 	err = upload.Start()
-	if err != nil || upload.IsCancelled {
+	if err != nil || upload.IsCancelled.Load() {
 		m, e := upload.ReportStatus()
 		if e != nil && Lmsg != nil {
 			t, _ := m.RawText()

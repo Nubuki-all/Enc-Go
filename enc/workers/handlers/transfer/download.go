@@ -200,7 +200,7 @@ func Download(ctx *ext.Context, update *ext.Update, msg *tele.Message, args stri
 	}
 	download.Init(id, msg.SenderID)
 	err = download.Start()
-	if err != nil || download.IsCancelled {
+	if err != nil || download.IsCancelled.Load() {
 		_, _ = download.ReportStatus()
 	} else {
 		_, _ = sMsg.Edit(
@@ -475,7 +475,7 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 	defer waitQueue.Remove(id)
 	download.Init(id, msg.SenderID)
 	err = download.Start()
-	if err != nil || download.IsCancelled {
+	if err != nil || download.IsCancelled.Load() {
 		_, _ = download.ReportStatus()
 		return nil
 	}
@@ -504,10 +504,11 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		)
 		newPath := filepath.Join(filepath.Dir(download.Path), result.FileName)
 		if err = os.Rename(download.Path, newPath); err != nil {
+			// Keep uploading the original file; it is still where it was.
 			logger.Warn(err)
+		} else {
+			download.Path = newPath
 		}
-
-		download.Path = newPath
 	}
 	var thumbPath string
 	if !nparse && direct == "" {
@@ -543,11 +544,12 @@ func Rename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args string
 		Msg:           sMsg,
 		Caption:       caption,
 		ThumbPath:     thumbPath,
+		FileName:      result.FileName,
 		ForceDocument: true,
 	}
 	upload.Init(id, download.Path, msg.SenderID)
 	err = upload.Start()
-	if err != nil || upload.IsCancelled {
+	if err != nil || upload.IsCancelled.Load() {
 		_, _ = upload.ReportStatus()
 	}
 	return nil
@@ -693,7 +695,7 @@ func MediaInfo(ctx *ext.Context, update *ext.Update, msg *tele.Message, args str
 	}
 	download.Init(id, msg.SenderID)
 	err = download.Start()
-	if err != nil || download.IsCancelled {
+	if err != nil || download.IsCancelled.Load() {
 		_, _ = download.ReportStatus()
 		return nil
 	}

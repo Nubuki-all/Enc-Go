@@ -396,7 +396,9 @@ func DelAutoRename(ctx *ext.Context, update *ext.Update, msg *tele.Message, args
 		}
 		iD = ID
 	}
-	bot.RenameFilters = slices.Delete(bot.RenameFilters, iD, iD+1)
+	// Copy instead of slices.Delete: that zeroes the shared array's tail
+	// while the encoder may still be iterating the old slice.
+	bot.RenameFilters = slices.Concat(bot.RenameFilters[:iD], bot.RenameFilters[iD+1:])
 	db.SaveRenameFilters(context.Background())
 	_, _ = msg.ReplyText("**Removed filter from Rename Filters Successfully**")
 	return nil
@@ -753,7 +755,7 @@ func ManageMatchFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message, 
 		return nil
 	}
 	if Delete {
-		filters = slices.Delete(filters, id, id+1)
+		filters = slices.Concat(filters[:id], filters[id+1:]) // copy; see RenameFilters
 		updateMatchFilter(filters, release)
 		db.SaveMatchedFilters(context.Background())
 		_, _ = msg.ReplyText(
@@ -993,7 +995,7 @@ func ManageExtCapFilter(ctx *ext.Context, update *ext.Update, msg *tele.Message,
 		return nil
 	}
 	if Delete {
-		bot.RGExtendedFilters = slices.Delete(bot.RGExtendedFilters, id, id+1)
+		bot.RGExtendedFilters = slices.Concat(bot.RGExtendedFilters[:id], bot.RGExtendedFilters[id+1:]) // copy; see RenameFilters
 		db.SaveRGExtendedFilters(context.Background())
 		_, _ = msg.ReplyText(
 			"**Deleted extended release filter Successfully**",

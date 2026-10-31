@@ -179,7 +179,7 @@ func (dl *Aria2Download) Start() error {
 	if finalErr != nil {
 		return finalErr
 	}
-	if dl.selected != "" && !dl.IsCancelled { // if IsCancelled is atomic.Bool: !dl.IsCancelled.Load()
+	if dl.selected != "" && !dl.IsCancelled.Load() { // if IsCancelled is atomic.Bool: !dl.IsCancelled.Load().Load()
 		finalStatus, sErr := dl.client.TellStatus(gid)
 		if sErr != nil {
 			return sErr
@@ -193,7 +193,7 @@ func (dl *Aria2Download) Start() error {
 func (dl *Aria2Download) ProgressCallback(start time.Time, gid string) string {
 	dl.Mutex.Lock()
 	defer dl.Mutex.Unlock()
-	if dl.PauseProgress {
+	if dl.PauseProgress.Load() {
 		return dl.UpdateCallback(gid)
 	}
 	status, err := dl.client.TellStatus(gid)
@@ -216,7 +216,7 @@ func (dl *Aria2Download) ProgressCallback(start time.Time, gid string) string {
 		dl.completed = true
 		return ""
 	}
-	if dl.IsCancelled {
+	if dl.IsCancelled.Load() {
 		err = dl.client.Remove(gid)
 		if err != nil {
 			dl.err = err
@@ -350,7 +350,7 @@ func (dl *Aria2Download) UpdateCallback(gid string) string {
 		dl.completed = true
 		return ""
 	}
-	if dl.IsCancelled {
+	if dl.IsCancelled.Load() {
 		err = dl.client.Remove(gid)
 		if err != nil {
 			dl.err = err

@@ -120,7 +120,7 @@ func (dl *YtdlDownload) Start() (err error) {
 			case <-ctx.Done():
 				return
 			case <-uTicker.C:
-				if dl.IsCancelled {
+				if dl.IsCancelled.Load() {
 					logger.Info("cancelling")
 					cancel()
 					return
@@ -161,7 +161,7 @@ func (dl *YtdlDownload) Start() (err error) {
 	}()
 	result, err := ytdl.Run(ctx, dl.uri)
 	dl.done = true
-	if err != nil && !dl.IsCancelled {
+	if err != nil && !dl.IsCancelled.Load() {
 		return err
 	}
 	if result.Stdout != "" {
@@ -176,7 +176,7 @@ func (dl *YtdlDownload) Start() (err error) {
 func (dl *YtdlDownload) ProgressCallback(update ytdlp.ProgressUpdate) {
 	dl.Mutex.Lock()
 	defer dl.Mutex.Unlock()
-	if dl.PauseProgress {
+	if dl.PauseProgress.Load() {
 		return
 	}
 

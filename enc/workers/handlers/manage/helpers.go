@@ -161,7 +161,7 @@ func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 			if data.Process == nil || data.ExtraFlags != "" {
 				continue
 			}
-			data.IsCancelled = true
+			data.IsCancelled.Store(true)
 			data.ReturnFlags = "cancel_jobs"
 			_ = data.Process.Kill()
 		}
@@ -170,7 +170,7 @@ func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 	}
 	if strings.EqualFold(args, "all") {
 		for _, data := range bot.ECallbackData {
-			data.IsCancelled = true
+			data.IsCancelled.Store(true)
 			data.Canceller = msg.SenderID
 			if data.Process != nil {
 				if data.ExtraFlags == "" {
@@ -188,7 +188,7 @@ func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 	if strings.EqualFold(args, "transfer") {
 		for _, data := range bot.ECallbackData {
 			if data.Process == nil {
-				data.IsCancelled = true
+				data.IsCancelled.Store(true)
 			}
 		}
 		_, _ = msg.ReplyText("**Cancelled all uploads and downloads**")
@@ -199,7 +199,7 @@ func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 			if data.Process == nil || data.ExtraFlags != "" {
 				continue
 			}
-			data.IsCancelled = true
+			data.IsCancelled.Store(true)
 			data.ReturnFlags = "cancel_jobs"
 			_ = data.Process.Kill()
 		}
@@ -213,7 +213,7 @@ func CancelProcesses(ctx *ext.Context, update *ext.Update, msg *tele.Message, ar
 			if data.Process == nil || data.ExtraFlags == "" {
 				continue
 			}
-			data.IsCancelled = true
+			data.IsCancelled.Store(true)
 			_ = data.Process.Kill()
 		}
 		bot.WaitQueueM.Clear()

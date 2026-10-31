@@ -180,7 +180,7 @@ func (ul *TgUpload) Start() (err error) {
 			}
 			return ErrRetry
 		}
-		if !ul.IsCancelled {
+		if !ul.IsCancelled.Load() {
 			return err
 		} else {
 			return nil
@@ -274,7 +274,7 @@ func (ul *TgUpload) ProgressCallback(start time.Time, upload *uploader.ProgressS
 }
 
 func (ul *TgUpload) Chunk(ctx context.Context, state uploader.ProgressState) error {
-	if ul.IsCancelled {
+	if ul.IsCancelled.Load() {
 		return fmt.Errorf("upload has been cancelled")
 	}
 	select {

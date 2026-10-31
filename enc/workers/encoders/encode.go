@@ -219,7 +219,7 @@ func (e *Encoder) AwaitCompletion() (err error) {
 	}
 	err = e.cmd.Wait()
 	if e.Job != nil && e.Job.Completed {
-		e.IsCancelled = true
+		e.IsCancelled.Store(true)
 	}
 	e.Process = e.cmd.ProcessState
 	e.done = true
@@ -269,7 +269,7 @@ func (e *Encoder) ReportStatus(action string) (err error) {
 		if e.outPath != "" {
 			text += "of <code>" + filepath.Base(e.outPath) + "</code> "
 		}
-		if e.IsCancelled {
+		if e.IsCancelled.Load() {
 			text += "was cancelled"
 			if e.Canceller != 0 && e.Canceller != e.Sender {
 				name := "Unknown"

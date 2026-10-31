@@ -200,7 +200,7 @@ func (dl *QbitDownload) Start() (err error) {
 func (dl *QbitDownload) ProgressCallback(ctx context.Context, start time.Time, tag string) (ok bool) {
 	dl.Mutex.Lock()
 	defer dl.Mutex.Unlock()
-	if dl.PauseProgress {
+	if dl.PauseProgress.Load() {
 		return dl.UpdateCallback(ctx, tag)
 	}
 	qb := dl.client
@@ -225,7 +225,7 @@ func (dl *QbitDownload) ProgressCallback(ctx context.Context, start time.Time, t
 		dl.completed = true
 		return ok
 	}
-	if dl.IsCancelled {
+	if dl.IsCancelled.Load() {
 		err = qb.PauseCtx(ctx, []string{torrent.Hash})
 		if err != nil {
 			dl.err = err
@@ -297,7 +297,7 @@ func (dl *QbitDownload) ProgressCallback(ctx context.Context, start time.Time, t
 		logger.Info(torrent.State) // debug
 	}
 	txt := msgHead + "\n" + tmp
-	if dl.msg != nil && !dl.PauseProgress {
+	if dl.msg != nil && !dl.PauseProgress.Load() {
 		_, _ = dl.msg.EditText(txt)
 	}
 	return ok
@@ -369,7 +369,7 @@ func (dl *QbitDownload) UpdateCallback(ctx context.Context, tag string) (ok bool
 		dl.completed = true
 		return ok
 	}
-	if dl.IsCancelled {
+	if dl.IsCancelled.Load() {
 		err = qb.PauseCtx(ctx, []string{torrent.Hash})
 		if err != nil {
 			dl.err = err

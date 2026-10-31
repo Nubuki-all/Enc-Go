@@ -105,12 +105,12 @@ func (dl *MegaDownload) Start() error {
 	}
 	for _, download := range dl.downloadList {
 		if err := dl.downloadFile(ctx, download); err != nil {
-			if dl.IsCancelled {
+			if dl.IsCancelled.Load() {
 				return nil
 			}
 			return err
 		}
-		if dl.IsCancelled {
+		if dl.IsCancelled.Load() {
 			return nil
 		}
 	}
@@ -169,14 +169,14 @@ func (dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) erro
 				// timeout
 				return
 			case chunk := <-progress:
-				if dl.IsCancelled {
+				if dl.IsCancelled.Load() {
 					close(cancelCh)
 					return
 				}
 				current += chunk
 				stored = true
 			case <-ticker.C:
-				if dl.IsCancelled {
+				if dl.IsCancelled.Load() {
 					close(cancelCh)
 					return
 				}
@@ -276,7 +276,7 @@ func (dl *MegaDownload) downloadFile(ctx context.Context, d *mega.Download) erro
 func (dl *MegaDownload) ProgressCallback(start time.Time, name string, total, current int64) {
 	dl.Mutex.Lock()
 	defer dl.Mutex.Unlock()
-	if dl.PauseProgress {
+	if dl.PauseProgress.Load() {
 		return
 	}
 	remainingSize := total - current

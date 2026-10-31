@@ -131,7 +131,7 @@ func (ul *Uploader) UnRegister() {
 func (ul *Uploader) ReportStatus() (*tele.Message, error) {
 	var status string
 	var err error
-	if ul.IsCancelled {
+	if ul.IsCancelled.Load() {
 		status = "was cancelled"
 		if cncl := ul.Canceller; cncl != 0 && cncl != ul.Sender {
 			userName := "Unknown"

@@ -60,7 +60,7 @@ func getDownload(entry types.QueueEntry, batchItem *types.BatchItem, msg, lmsg *
 				case <-dl.Done:
 					dl.CleanDownload()
 				default:
-					dl.IsCancelled = true
+					dl.IsCancelled.Store(true)
 				}
 			}
 			downloaders.CachedDL = make(map[string]*downloaders.Downloader, 1)
